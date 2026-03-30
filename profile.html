@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AGENT_PROFILE | CIA DOSSIER</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;500;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg: #050506; --cyan: #00f2ff; --border: rgba(0, 242, 255, 0.2); }
+        body { background: var(--bg); color: #fff; font-family: 'JetBrains Mono'; margin: 0; padding: 20px; }
+        
+        .header-nav { display: flex; justify-content: space-between; border-bottom: 1px solid var(--cyan); padding-bottom: 10px; margin-bottom: 20px; }
+        .agent-name { font-size: 20px; font-weight: 800; color: var(--cyan); }
+        
+        .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .section { border: 1px solid var(--border); background: rgba(255,255,255,0.02); padding: 15px; height: 80vh; overflow-y: auto; }
+        .section-title { font-size: 12px; color: var(--cyan); border-bottom: 1px solid var(--border); padding-bottom: 5px; margin-bottom: 15px; letter-spacing: 2px; }
+
+        /* Memoirs Styling */
+        .weapon-group { margin-bottom: 20px; border-left: 2px solid var(--cyan); padding-left: 15px; }
+        .weapon-name { font-weight: 800; color: #fff; background: rgba(0,242,255,0.1); padding: 2px 10px; display: inline-block; margin-bottom: 10px; }
+        
+        .vagent-card { background: #0c0c0f; border: 1px solid #1a1a1f; padding: 10px; margin-bottom: 8px; font-size: 11px; }
+        .info-row { display: flex; justify-content: space-between; margin-top: 5px; color: #888; }
+        .info-val { color: #aaa; }
+        .expired { color: #ff3c3c !important; font-weight: bold; }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+    <div class="header-nav">
+        <div class="agent-name">AGENT: <span id="codenameDisplay">...</span></div>
+        <button onclick="window.location.href='dashboard.html'" style="background:none; border:1px solid var(--cyan); color:var(--cyan); cursor:pointer; font-family:inherit; font-size:10px;">BACK TO DASHBOARD</button>
+    </div>
+
+    <div class="profile-grid">
+        <div class="section">
+            <div class="section-title">MY_MEMOIRS (DEPLOYMENT HISTORY)</div>
+            <div id="memoirsList">Loading encrypted data...</div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">CONFIDENTIAL_INFORMATION</div>
+            <div id="confidentialInfo" style="font-size: 11px; color: #666;">
+                > ACCESSING SECURE SERVER...<br>
+                > STATUS: ACTIVE DUTY<br>
+                > CLEARANCE: LEVEL 5<br><br>
+                <div style="color:var(--cyan)">[REDACTED CONTENT]</div>
+                <p>Ang bahaging ito ay maaaring gamitin para sa iba pang classified notes o personal achievements ng agent.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 1. PROTECTION: Redirect kung walang login
+        const activeAgent = localStorage.getItem("cia_agent");
+        if (!activeAgent) { window.location.href = "index.html"; }
+        document.getElementById('codenameDisplay').innerText = activeAgent;
+
+        // 2. FIREBASE INIT
+        const firebaseConfig = {
+            apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
+            authDomain: "my-admin-portal-12691.firebaseapp.com",
+            projectId: "my-admin-portal-12691",
+            storageBucket: "my-admin-portal-12691.firebasestorage.app",
+            messagingSenderId: "317015091563",
+            appId: "1:317015091563:web:baab5171d8e0a58acd442e",
+            measurementId: "G-150YYLS5FP"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // 3. FETCH MEMOIRS
+        db.collection("bounties")
+          .where("agent", "==", activeAgent) // Filter only for the logged-in agent
+          .orderBy("timestamp", "desc")
+          .onSnapshot((snapshot) => {
+            const memoirsDiv = document.getElementById('memoirsList');
+            if (snapshot.empty) {
+                memoirsDiv.innerHTML = "> NO DEPLOYMENT DATA FOUND.";
+                return;
+            }
+
+            // Grouping by Weapon
+            let weaponsData = {};
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                if (!weaponsData[data.weapon]) weaponsData[data.weapon] = [];
+                weaponsData[data.weapon].push(data);
+            });
+
+            let html = "";
+            for (let wpn in weaponsData) {
+                html += `<div class="weapon-group">
+                            <div class="weapon-name">WEAPON: ${wpn}</div>`;
+                
+                weaponsData[wpn].forEach(item => {
+                    const termDate = item.timestamp ? item.timestamp.toDate() : new Date();
+                    
+                    // Calculation: 1 Month from entry
+                    const expDate = new Date(termDate);
+                    expDate.setMonth(expDate.getMonth() + 1);
+
+                    const isExpired = new Date() > expDate;
+
+                    html += `
+                        <div class="vagent-card">
+                            <div style="color:var(--cyan); font-weight:800;">V-AGENT ID: #${item.vid}</div>
+                            <div class="info-row">
+                                <span>MISSION NO:</span>
+                                <span class="info-val">M-${Math.floor(1000 + Math.random() * 9000)}</span>
+                            </div>
+                            <div class="info-row">
+                                <span>TERM. DATE:</span>
+                                <span class="info-val">${termDate.toLocaleDateString()}</span>
+                            </div>
+                            <div class="info-row">
+                                <span>EXPIRATION:</span>
+                                <span class="info-val ${isExpired ? 'expired' : ''}">${expDate.toLocaleDateString()} ${isExpired ? '[EXPIRED]' : ''}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            }
+            memoirsDiv.innerHTML = html;
+        });
+    </script>
+</body>
+</html>

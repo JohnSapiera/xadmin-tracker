@@ -44,7 +44,7 @@
             padding: 5px 12px; font-size: 10px; cursor: pointer; font-family: inherit;
         }
 
-        /* Root Explorer View (Folders) */
+        /* Folder Grid View */
         .explorer-grid { 
             display: grid; 
             grid-template-columns: repeat(2, 1fr); 
@@ -58,11 +58,10 @@
             align-items: center;
             cursor: pointer;
             padding: 15px;
-            border: 1px solid transparent;
             transition: 0.2s;
         }
 
-        .folder-item:active { background: rgba(0, 242, 255, 0.05); border-color: var(--cyan); }
+        .folder-item:active { background: rgba(0, 242, 255, 0.1); border-radius: 8px; }
 
         .folder-icon {
             width: 70px; height: 50px;
@@ -81,7 +80,6 @@
 
         /* File View (Papers) */
         .file-view-container { display: none; animation: slideUp 0.3s ease-out; }
-        
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         .paper-stack { display: flex; flex-direction: column; gap: 20px; margin-top: 15px; }
@@ -95,7 +93,6 @@
             border-left: 12px solid #bbb;
         }
 
-        /* Stamp Effect */
         .stamp {
             position: absolute; top: 15px; right: 15px;
             border: 3px solid var(--red); color: var(--red);
@@ -107,7 +104,7 @@
         .paper-header { 
             border-bottom: 2px solid #1a1a1a; 
             margin-bottom: 15px; 
-            font-size: 15px; 
+            font-size: 14px; 
             font-weight: 800;
             padding-bottom: 5px;
         }
@@ -125,7 +122,7 @@
         .footer-note { font-size: 8px; color: #888; text-align: right; margin-top: 15px; font-style: italic; }
 
         .hidden { display: none !important; }
-        .empty-msg { text-align: center; color: #444; font-size: 11px; margin-top: 50px; }
+        .empty-msg { text-align: center; color: #666; font-size: 11px; margin-top: 50px; }
     </style>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -134,7 +131,7 @@
 <body>
 
     <div class="nav-header">
-        <div class="breadcrumb">SYSTEM://ARCHIVE/<span id="agentDisplay">...</span></div>
+        <div class="breadcrumb">DATABASE://BLACKLIST/<span id="agentDisplay">...</span></div>
         <button class="back-home" onclick="window.location.href='dashboard.html'">DASHBOARD</button>
     </div>
 
@@ -142,11 +139,11 @@
         <div class="explorer-grid">
             <div class="folder-item" onclick="openFolder('R8P')">
                 <div class="folder-icon"></div>
-                <div class="folder-name">SYS_WEAPON_R8P</div>
+                <div class="folder-name">R8P_FILES</div>
             </div>
             <div class="folder-item" onclick="openFolder('RMN14')">
                 <div class="folder-icon"></div>
-                <div class="folder-name">SYS_WEAPON_RMN14</div>
+                <div class="folder-name">RMN14_FILES</div>
             </div>
         </div>
     </div>
@@ -154,7 +151,7 @@
     <div id="fileView" class="file-view-container">
         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
             <button class="back-home" onclick="closeFolder()"><< BACK</button>
-            <div style="font-size: 10px; color: var(--cyan);">FOLDER: <span id="currentFolder">...</span></div>
+            <div style="font-size: 10px; color: var(--cyan);">DIR: <span id="currentFolder">...</span></div>
         </div>
 
         <div id="paperStack" class="paper-stack">
@@ -162,7 +159,7 @@
     </div>
 
     <script>
-        // 1. Firebase Initialization
+        // 1. Firebase Setup
         const activeAgent = localStorage.getItem("cia_agent") || "GHOST";
         document.getElementById('agentDisplay').innerText = activeAgent;
 
@@ -177,12 +174,12 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // 2. Folder Navigation Logic
+        // 2. Navigation
         function openFolder(weapon) {
             document.getElementById('explorerRoot').classList.add('hidden');
             document.getElementById('fileView').classList.remove('hidden');
             document.getElementById('currentFolder').innerText = weapon;
-            loadDeploymentFiles(weapon);
+            loadBlacklistData(weapon);
         }
 
         function closeFolder() {
@@ -190,45 +187,52 @@
             document.getElementById('explorerRoot').classList.remove('hidden');
         }
 
-        // 3. Database Fetching (Real-time)
-        function loadDeploymentFiles(weaponType) {
+        // 3. Load Data from 'blacklist' collection
+        function loadBlacklistData(weaponType) {
             const stack = document.getElementById('paperStack');
-            stack.innerHTML = "<div style='color:var(--cyan); font-size:10px;'>DECRYPTING_FILES...</div>";
+            stack.innerHTML = "<div style='color:var(--cyan); font-size:10px;'>DECRYPTING_BLACKLIST...</div>";
 
-            db.collection("bounties")
-              .where("agent", "==", activeAgent)
-              .orderBy("timestamp", "desc")
-              .onSnapshot(snapshot => {
-                  stack.innerHTML = "";
-                  
-                  // Filter by weapon (Case Insensitive)
-                  const filtered = snapshot.docs.filter(doc => {
-                      const d = doc.data();
-                      return d.weapon && d.weapon.toUpperCase() === weaponType.toUpperCase();
-                  });
+            // Direct fetch from 'blacklist' collection
+            db.collection("blacklist").onSnapshot(snapshot => {
+                stack.innerHTML = "";
+                
+                // CLIENT-SIDE FILTERING (No Index Required)
+                const filtered = snapshot.docs.filter(doc => {
+                    const data = doc.data();
+                    const aMatch = data.agent && data.agent.toUpperCase() === activeAgent.toUpperCase();
+                    const wMatch = data.weapon && data.weapon.toUpperCase() === weaponType.toUpperCase();
+                    return aMatch && wMatch;
+                });
 
-                  if(filtered.length === 0) {
-                      stack.innerHTML = `<div class="empty-msg">NO RECORDS FOUND IN ${weaponType} DIRECTORY.</div>`;
-                      return;
-                  }
+                // Manual Sort: Newest First
+                filtered.sort((a, b) => {
+                    const tA = a.data().timestamp?.seconds || 0;
+                    const tB = b.data().timestamp?.seconds || 0;
+                    return tB - tA;
+                });
 
-                  filtered.forEach(doc => {
-                      const data = doc.data();
-                      
-                      // Handle Dates
-                      const deployDate = data.timestamp ? data.timestamp.toDate() : new Date();
-                      const termDate = new Date(deployDate);
-                      termDate.setDate(termDate.getDate() + 30); // 30 Day Termination logic
+                if(filtered.length === 0) {
+                    stack.innerHTML = `<div class="empty-msg">EMPTY_DIRECTORY: NO RECORDS FOUND FOR ${weaponType}</div>`;
+                    return;
+                }
 
-                      const isExpired = new Date() > termDate;
+                filtered.forEach(doc => {
+                    const data = doc.data();
+                    
+                    // Date Calculations
+                    const dDate = data.timestamp ? data.timestamp.toDate() : new Date();
+                    const tDate = new Date(dDate);
+                    tDate.setDate(tDate.getDate() + 30); // Auto 30-Day Limit
 
-                      stack.innerHTML += `
+                    const isExpired = new Date() > tDate;
+
+                    stack.innerHTML += `
                         <div class="mission-paper">
-                            <div class="stamp">CLASSIFIED</div>
-                            <div class="paper-header">MO_NUM: #${data.missionOrder || 'N/A'}</div>
+                            <div class="stamp">BLACKLISTED</div>
+                            <div class="paper-header">MISSION ORDER: #${data.missionOrder || 'N/A'}</div>
                             
                             <div class="data-row">
-                                <span class="label">V-AGENT ID:</span>
+                                <span class="label">V-ID:</span>
                                 <span class="value">V-${data.vid || '0000'}</span>
                             </div>
                             
@@ -239,24 +243,24 @@
 
                             <div class="data-row">
                                 <span class="label">DEPLOYMENT_DATE:</span>
-                                <span class="value">${deployDate.toLocaleDateString()}</span>
+                                <span class="value">${dDate.toLocaleDateString()}</span>
                             </div>
 
                             <div class="data-row" style="${isExpired ? 'color:var(--red); font-weight:800;' : ''}">
                                 <span class="label">TERMINATION_DATE:</span>
-                                <span class="value">${termDate.toLocaleDateString()} ${isExpired ? '[EXPIRED]' : ''}</span>
+                                <span class="value">${tDate.toLocaleDateString()} ${isExpired ? '[EXPIRED]' : ''}</span>
                             </div>
 
                             <div class="footer-note">
-                                SECURITY_HASH: ${doc.id.substring(0,10).toUpperCase()}
+                                ARCHIVE_REF: ${doc.id.substring(0,8).toUpperCase()}
                             </div>
                         </div>
-                      `;
-                  });
-              }, error => {
-                  console.error(error);
-                  stack.innerHTML = "<div style='color:red; font-size:10px;'>ACCESS_ERROR: PLEASE CHECK FIREBASE INDEXES.</div>";
-              });
+                    `;
+                });
+            }, error => {
+                console.error(error);
+                stack.innerHTML = "<div style='color:red; font-size:10px;'>ACCESS_DENIED: CHECK CONNECTION.</div>";
+            });
         }
     </script>
 </body>

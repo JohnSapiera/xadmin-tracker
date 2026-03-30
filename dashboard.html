@@ -227,8 +227,8 @@
             log.innerHTML = "> REGISTERING TO CLOUD SERVER...";
 
             try {
-                // I-save sa 'bounties' (Para sa Profile)
-                await db.collection("bounties").add({
+                // I-save sa 'system_registry' (Para sa Profile)
+                await db.collection("system_registryy").add({
                     agent: activeAgent,
                     weapon: currentWpn,
                     vid: vID,
@@ -265,7 +265,7 @@
         }
 
         // 3. FETCH RECENT DEPLOYMENTS
-        db.collection("bounties").orderBy("timestamp", "desc").limit(5).onSnapshot(snap => {
+        db.collection("system_registry").orderBy("timestamp", "desc").limit(5).onSnapshot(snap => {
             const list = document.getElementById('deploymentList');
             list.innerHTML = "";
             snap.forEach(doc => {

@@ -3,29 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DATABASE_MIGRATOR_v1</title>
+    <title>DATABASE_COMMAND_CENTER_v2</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;800&display=swap" rel="stylesheet">
     <style>
+        :root { --neon: #00f2ff; --bg: #0a0a0a; --red: #ff3c3c; }
         body { 
-            background: #0a0a0a; color: #00f2ff; font-family: 'JetBrains Mono', monospace; 
-            display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0;
+            background: var(--bg); color: var(--neon); font-family: 'JetBrains Mono', monospace; 
+            display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px;
         }
         .panel {
-            background: #111; border: 2px solid #00f2ff; padding: 30px;
-            box-shadow: 0 0 20px rgba(0, 242, 255, 0.2); width: 90%; max-width: 400px;
+            background: #111; border: 2px solid var(--neon); padding: 30px;
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.2); width: 100%; max-width: 500px;
         }
-        h2 { font-size: 18px; text-align: center; border-bottom: 1px solid #333; padding-bottom: 15px; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; font-size: 10px; margin-bottom: 5px; color: #888; }
-        select, input {
+        h2 { font-size: 18px; text-align: center; border-bottom: 1px solid #333; padding-bottom: 15px; margin-top: 0; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-size: 10px; margin-bottom: 5px; color: #888; text-transform: uppercase; }
+        select, input, textarea {
             width: 100%; background: #000; border: 1px solid #333; color: #fff;
-            padding: 10px; font-family: inherit; outline: none;
+            padding: 12px; font-family: inherit; outline: none; box-sizing: border-box;
         }
+        textarea { height: 150px; resize: none; font-size: 12px; border-color: var(--neon); }
+        .warning-box { font-size: 9px; color: var(--red); margin-bottom: 15px; border: 1px solid var(--red); padding: 8px; }
         button {
-            width: 100%; background: #00f2ff; color: #000; border: none;
-            padding: 15px; font-weight: 800; cursor: pointer; margin-top: 10px;
+            width: 100%; background: var(--neon); color: #000; border: none;
+            padding: 15px; font-weight: 800; cursor: pointer; transition: 0.2s;
         }
-        #status { font-size: 10px; margin-top: 20px; color: #ff3c3c; white-space: pre-wrap; }
+        button:hover { background: #fff; box-shadow: 0 0 15px var(--neon); }
+        #status { font-size: 10px; margin-top: 20px; color: #fff; white-space: pre-wrap; background: #000; padding: 10px; border: 1px solid #222; }
     </style>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
@@ -33,10 +37,14 @@
 <body>
 
     <div class="panel">
-        <h2>DATABASE_MIGRATOR</h2>
+        <h2>DATABASE_BULK_IMPORTER</h2>
         
+        <div class="warning-box">
+            CRITICAL: Make sure Firebase collection 'blacklist' is EMPTY before proceeding.
+        </div>
+
         <div class="form-group">
-            <label>TARGET AGENT (Legacy Owner)</label>
+            <label>ASSIGN TO AGENT</label>
             <select id="agentId">
                 <option value="LZ">LZ</option>
                 <option value="JFSN">JFSN</option>
@@ -44,17 +52,23 @@
         </div>
 
         <div class="form-group">
-            <label>DEFAULT WEAPON SYSTEM</label>
+            <label>TARGET WEAPON SYSTEM</label>
             <select id="weaponId">
-                <option value="R8P">R8P (For LZ)</option>
-                <option value="RMN">RMN14 (For LZ)</option>
-                <option value="RMN9">RMN9 (For JFSN)</option>
-                <option value="TechnoCP">TechnoCP (For JFSN)</option>
+                <option value="R8P">R8P (LZ)</option>
+                <option value="RMN">RMN (LZ)</option>
+                <option value="RMN14">RMN14 (LZ)</option>
+                <option value="RMN9">RMN9 (JFSN)</option>
+                <option value="TechnoCP">TechnoCP (JFSN)</option>
             </select>
         </div>
 
-        <button onclick="startMigration()">START MIGRATION</button>
-        <div id="status">READY_FOR_COMMAND...</div>
+        <div class="form-group">
+            <label>MISSION ORDER LIST (Paste numbers here, one per line)</label>
+            <textarea id="bulkList" placeholder="10001&#10;10002&#10;10003..."></textarea>
+        </div>
+
+        <button onclick="startBulkImport()">EXECUTE BULK UPLOAD</button>
+        <div id="status">SYSTEM_READY_FOR_DATA_INPUT...</div>
     </div>
 
     <script>
@@ -70,50 +84,54 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        async function startMigration() {
+        async function startBulkImport() {
             const status = document.getElementById('status');
-            const targetAgent = document.getElementById('agentId').value;
-            const targetWeapon = document.getElementById('weaponId').value;
+            const agent = document.getElementById('agentId').value;
+            const weapon = document.getElementById('weaponId').value;
+            const rawData = document.getElementById('bulkList').value.trim();
 
-            if(!confirm(`Warning: This will tag ALL records in 'blacklist' as ${targetAgent} [${targetWeapon}]. Proceed?`)) return;
+            if (!rawData) {
+                alert("Please paste the Mission Order numbers first.");
+                return;
+            }
 
-            status.innerText = "INITIALIZING_BATCH_PROCESS...";
-            
+            // Split lines and remove empty ones
+            const numbers = rawData.split('\n').map(n => n.trim()).filter(n => n !== "");
+
+            if (!confirm(`You are about to upload ${numbers.length} Mission Orders to Agent ${agent} [${weapon}]. Continue?`)) return;
+
+            status.innerText = "UPLOADING_DATA... PLEASE WAIT.";
+            status.style.color = "yellow";
+
+            const batch = db.batch();
+            let count = 0;
+
             try {
-                const snapshot = await db.collection("blacklist").get();
-                if (snapshot.empty) {
-                    status.innerText = "ERROR: NO_RECORDS_FOUND_IN_BLACKLIST";
-                    return;
-                }
-
-                const batch = db.batch();
-                let count = 0;
-
-                snapshot.docs.forEach((doc, index) => {
-                    const data = doc.data();
-                    const docRef = db.collection("blacklist").doc(doc.id);
-
-                    // MIGRATION LOGIC:
-                    // 1. missionOrder = dating 'number' o kung ano mang field yung mission order number mo.
-                    // 2. vid = sequencing (V.Agents)
-                    // 3. agent & weapon = folders
-                    batch.update(docRef, {
-                        agent: targetAgent,
-                        weapon: targetWeapon,
-                        vid: data.vid || (index + 1), // Kung walang vid, automatic 1, 2, 3...
-                        missionOrder: data.missionOrder || data.number || "MO-UNKNOWN",
-                        amount: data.amount || 0,
-                        timestamp: data.timestamp || firebase.firestore.FieldValue.serverTimestamp()
+                // Firebase batch limit is 500 documents per commit
+                // Loop through numbers and add to batch
+                numbers.forEach((num, index) => {
+                    const docRef = db.collection("blacklist").doc(); // Auto-generate ID
+                    batch.set(docRef, {
+                        agent: agent,
+                        weapon: weapon,
+                        vid: index + 1, // Automatic sequence (V.Agent #)
+                        missionOrder: num,
+                        amount: 0, // Default 0 for fresh records
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     });
                     count++;
                 });
 
                 await batch.commit();
-                status.style.color = "#00f2ff";
-                status.innerText = `SUCCESS!\nRECORDS_UPDATED: ${count}\n\nAll data is now mapped to Agent ${targetAgent} under ${targetWeapon} folder.`;
                 
+                status.style.color = "#00f2ff";
+                status.innerText = `UPLOAD_COMPLETE!\nRECORDS_ARCHIVED: ${count}\nAGENT: ${agent}\nWEAPON: ${weapon}\n\nAll numbers are now registered and sorted.`;
+                document.getElementById('bulkList').value = ""; // Clear textarea
+
             } catch (error) {
-                status.innerText = `CRITICAL_ERROR: ${error.message}`;
+                console.error(error);
+                status.style.color = "var(--red)";
+                status.innerText = `CRITICAL_ERROR: ${error.message}\n\nCheck if you exceed 500 records. If yes, upload in smaller chunks.`;
             }
         }
     </script>

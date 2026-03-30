@@ -2,21 +2,162 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>CIA - AUTHORIZATION REQUIRED</title>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;800&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MOSSAD - AUTHORIZATION REQUIRED</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;500;800&display=swap" rel="stylesheet">
     <style>
-        body { background: #050506; color: #00f2ff; font-family: 'JetBrains Mono'; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .login-box { width: 300px; padding: 40px; border: 1px solid #00f2ff; text-align: center; background: rgba(0,0,0,0.8); }
-        input { width: 100%; padding: 12px; margin-bottom: 20px; background: #000; border: 1px solid #333; color: #00f2ff; text-align: center; outline: none; }
-        button { width: 100%; padding: 12px; background: transparent; border: 1px solid #00f2ff; color: #00f2ff; cursor: pointer; font-weight: 800; }
-        button:hover { background: #00f2ff; color: #000; }
+        :root {
+            --accent: #00f2ff;
+            --danger: #ff3c3c;
+            --bg: #050506;
+            --panel: rgba(10, 10, 12, 0.9);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body { 
+            background: var(--bg); 
+            color: var(--accent); 
+            font-family: 'JetBrains Mono', monospace; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+            overflow: hidden;
+            /* Tactical Background Grid */
+            background-image: 
+                linear-gradient(rgba(0, 242, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 242, 255, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        /* CRT Scanline Effect */
+        body::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+            z-index: 2;
+            background-size: 100% 3px, 3px 100%;
+            pointer-events: none;
+        }
+
+        .login-box { 
+            width: 90%; 
+            max-width: 350px; 
+            padding: 30px; 
+            border: 1px solid var(--accent); 
+            text-align: center; 
+            background: var(--panel); 
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        .header-tag {
+            position: absolute;
+            top: -10px;
+            left: 15px;
+            background: var(--bg);
+            padding: 0 10px;
+            font-size: 10px;
+            letter-spacing: 2px;
+            font-weight: 800;
+        }
+
+        .warning-text {
+            font-size: 9px;
+            color: var(--danger);
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            animation: blinker 1.5s linear infinite;
+        }
+
+        @keyframes blinker { 50% { opacity: 0; } }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 25px;
+        }
+
+        input { 
+            width: 100%; 
+            padding: 15px; 
+            background: #000; 
+            border: 1px solid #222; 
+            color: var(--accent); 
+            text-align: center; 
+            outline: none; 
+            font-family: inherit;
+            font-size: 16px; /* Prevents auto-zoom on iOS/Android */
+            letter-spacing: 4px;
+            border-radius: 0;
+            transition: 0.3s;
+        }
+
+        input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 10px rgba(0, 242, 255, 0.2);
+        }
+
+        button { 
+            width: 100%; 
+            padding: 15px; 
+            background: transparent; 
+            border: 1px solid var(--accent); 
+            color: var(--accent); 
+            cursor: pointer; 
+            font-weight: 800; 
+            font-family: inherit;
+            letter-spacing: 2px;
+            transition: 0.3s;
+            text-transform: uppercase;
+        }
+
+        button:active {
+            background: var(--accent);
+            color: #000;
+        }
+
+        /* Subtle Corner Accents */
+        .corner {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border: 2px solid var(--accent);
+        }
+        .top-l { top: -2px; left: -2px; border-right: 0; border-bottom: 0; }
+        .top-r { top: -2px; right: -2px; border-left: 0; border-bottom: 0; }
+        .bot-l { bottom: -2px; left: -2px; border-right: 0; border-top: 0; }
+        .bot-r { bottom: -2px; right: -2px; border-left: 0; border-top: 0; }
+
     </style>
 </head>
 <body>
+
     <div class="login-box">
-        <div style="font-size: 10px; margin-bottom: 20px; letter-spacing: 2px;">SECURE_GATEWAY_v2</div>
-        <input type="text" id="agentInput" placeholder="ENTER CODENAME">
-        <button onclick="auth()">AUTHORIZE</button>
+        <div class="corner top-l"></div>
+        <div class="corner top-r"></div>
+        <div class="corner bot-l"></div>
+        <div class="corner bot-r"></div>
+
+        <div class="header-tag">GATEWAY_7.1</div>
+        
+        <div style="margin-top: 10px; font-weight: 800; font-size: 14px;">MOSSAD UNIT</div>
+        <div style="font-size: 9px; color: #555; margin-bottom: 20px;">ENCRYPTED ACCESS ONLY</div>
+
+        <div class="warning-text">⚠️ Monitoring Active: Unauthorized access is a felony</div>
+
+        <div class="input-group">
+            <input type="text" id="agentInput" placeholder="ID_CODE" autocomplete="off" spellcheck="false">
+        </div>
+
+        <button id="authBtn" onclick="auth()">Initialize Auth</button>
+
+        <div id="statusMsg" style="font-size: 8px; margin-top: 15px; color: #333;">AWAITING_INPUT...</div>
     </div>
 
     <script>
@@ -24,16 +165,51 @@
         const validAgents = ["LZ", "JFSN"];
 
         async function auth() {
-            const code = document.getElementById('agentInput').value.trim().toUpperCase();
+            const inputField = document.getElementById('agentInput');
+            const btn = document.getElementById('authBtn');
+            const status = document.getElementById('statusMsg');
+            const code = inputField.value.trim().toUpperCase();
+
+            if (!code) return;
+
+            // Visual feedback for mobile
+            btn.innerText = "AUTHENTICATING...";
+            status.innerText = "QUERYING_CENTRAL_DB...";
+
             if (validAgents.includes(code)) {
                 localStorage.setItem("cia_agent", code);
-                await fetch(`${TG_URL}&text=${encodeURIComponent("🔓 LOGIN: Agent [" + code + "] has accessed the terminal.")}`);
-                window.location.href = "dashboard.html";
+                
+                // Alert Central via Telegram
+                try {
+                    await fetch(`${TG_URL}&text=${encodeURIComponent("🔓 [MOSSAD]: Agent [" + code + "] has authorized session from device.")}`);
+                } catch(e) {}
+
+                status.style.color = "#00ff00";
+                status.innerText = "ACCESS_GRANTED. REDIRECTING...";
+                
+                setTimeout(() => {
+                    window.location.href = "dashboard.html";
+                }, 1000);
+
             } else {
-                alert("ACCESS DENIED: INVALID CODENAME");
-                fetch(`${TG_URL}&text=${encodeURIComponent("⚠️ ALERT: Unauthorized login attempt with code: " + code)}`);
+                status.style.color = "#ff3c3c";
+                status.innerText = "ERROR: IDENTITY_NOT_VERIFIED";
+                btn.innerText = "RE-TRY AUTH";
+                
+                // Report unauthorized attempt
+                try {
+                    fetch(`${TG_URL}&text=${encodeURIComponent("⚠️ [ALERT]: Breach Attempt with ID: " + code)}`);
+                } catch(e) {}
+
+                // Mobile Vibration (if supported)
+                if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
             }
         }
+
+        // Allow Enter key to trigger auth
+        document.getElementById('agentInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') auth();
+        });
     </script>
 </body>
 </html>

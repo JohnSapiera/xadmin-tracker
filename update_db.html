@@ -2,32 +2,30 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PROFILING_SYSTEM_v3</title>
+    <title>MISSION_DATA_RESERVER</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;800&display=swap" rel="stylesheet">
     <style>
-        :root { --neon: #00f2ff; --bg: #0a0a0a; --gold: #d4af37; }
+        :root { --neon: #00f2ff; --bg: #0a0a0a; }
         body { 
             background: var(--bg); color: var(--neon); font-family: 'JetBrains Mono', monospace; 
             display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0;
         }
         .panel {
             background: #111; border: 2px solid var(--neon); padding: 30px;
-            box-shadow: 0 0 20px rgba(0, 242, 255, 0.2); width: 100%; max-width: 400px;
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.2); width: 100%; max-width: 450px;
         }
-        h2 { font-size: 16px; text-align: center; border-bottom: 1px solid #333; padding-bottom: 15px; letter-spacing: 2px; }
+        h2 { font-size: 16px; text-align: center; border-bottom: 1px solid #333; padding-bottom: 15px; margin-top: 0; }
         .form-group { margin-bottom: 15px; }
-        label { display: block; font-size: 9px; margin-bottom: 5px; color: #888; text-transform: uppercase; }
-        select, input {
+        label { display: block; font-size: 10px; margin-bottom: 5px; color: #888; }
+        select, textarea {
             width: 100%; background: #000; border: 1px solid #333; color: #fff;
             padding: 12px; font-family: inherit; outline: none; box-sizing: border-box;
         }
-        select:focus, input:focus { border-color: var(--neon); }
+        textarea { height: 200px; resize: none; border-color: #444; }
         .btn-execute {
             width: 100%; background: var(--neon); color: #000; border: none;
             padding: 15px; font-weight: 800; cursor: pointer; margin-top: 10px;
         }
-        .btn-execute:hover { background: #fff; }
         #status { font-size: 10px; margin-top: 15px; text-align: center; color: #888; }
     </style>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -36,14 +34,14 @@
 <body>
 
     <div class="panel">
-        <h2>MISSION_PROFILING</h2>
+        <h2>BULK_MISSION_RESERVER</h2>
         
         <div class="form-group">
-            <label>ACTIVE AGENT</label>
+            <label>SELECT AGENT</label>
             <select id="agentId" onchange="updateWeapons()">
-                <option value="">-- SELECT AGENT --</option>
-                <option value="LZ">AGENT LZ</option>
-                <option value="JFSN">AGENT JFSN</option>
+                <option value="">-- SELECT --</option>
+                <option value="LZ">LZ</option>
+                <option value="JFSN">JFSN</option>
             </select>
         </div>
 
@@ -55,21 +53,15 @@
         </div>
 
         <div class="form-group">
-            <label>V.AGENT SUB-FOLDER NUMBER (#)</label>
-            <input type="number" id="vAgentNum" placeholder="Example: 1">
+            <label>PASTE MISSION ORDER# LIST (ONE PER LINE)</label>
+            <textarea id="orderList" placeholder="50501&#10;50502&#10;50503..."></textarea>
         </div>
 
-        <div class="form-group">
-            <label>NEW MISSION ORDER #</label>
-            <input type="text" id="moNum" placeholder="Enter Order Number">
-        </div>
-
-        <button class="btn-execute" onclick="saveProfile()">ARCHIVE MISSION</button>
+        <button class="btn-execute" onclick="executeBulkArchive()">EXECUTE ARCHIVE</button>
         <div id="status">SYSTEM_READY</div>
     </div>
 
     <script>
-        // FIREBASE CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
             authDomain: "my-admin-portal-12691.firebaseapp.com",
@@ -81,18 +73,15 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // WEAPON REGISTRY LOGIC
         const weaponMap = {
-            "LZ": ["R8P", "RMN14"],
+            "LZ": ["R8P", "RMN", "RMN14"],
             "JFSN": ["RMN9", "TechnoCP"]
         };
 
         function updateWeapons() {
             const agent = document.getElementById('agentId').value;
             const weaponSelect = document.getElementById('weaponId');
-            
-            weaponSelect.innerHTML = ""; // Clear existing
-
+            weaponSelect.innerHTML = "";
             if (weaponMap[agent]) {
                 weaponMap[agent].forEach(wpn => {
                     let opt = document.createElement('option');
@@ -101,40 +90,44 @@
                     weaponSelect.appendChild(opt);
                 });
             } else {
-                weaponSelect.innerHTML = "<option value=''>-- SELECT AGENT FIRST --</option>";
+                weaponSelect.innerHTML = "<option value=''>-- SELECT AGENT --</option>";
             }
         }
 
-        async function saveProfile() {
+        async function executeBulkArchive() {
             const agent = document.getElementById('agentId').value;
             const weapon = document.getElementById('weaponId').value;
-            const vid = document.getElementById('vAgentNum').value;
-            const mo = document.getElementById('moNum').value;
+            const rawInput = document.getElementById('orderList').value.trim();
             const status = document.getElementById('status');
 
-            if (!agent || !weapon || !vid || !mo) {
-                alert("COMPLETE_ALL_FIELDS: Data missing.");
+            if (!agent || !weapon || !rawInput) {
+                alert("ERROR: Missing Agent, Weapon, or Order List.");
                 return;
             }
 
-            status.innerText = "ARCHIVING_TO_SECURE_SERVER...";
+            const orders = rawInput.split('\n').map(n => n.trim()).filter(n => n !== "");
+            status.innerText = "ARCHIVING_" + orders.length + "_ORDERS...";
+            
+            const batch = db.batch();
 
-            try {
-                // Ginagamit natin ang Collection 'blacklist' pero as Profile Data na ito
-                await db.collection("blacklist").add({
+            orders.forEach((num, index) => {
+                // Gagamitin ang Mission Order# bilang Document ID para BAN na siya (No Duplicates)
+                const docRef = db.collection("blacklist").doc(num); 
+                batch.set(docRef, {
                     agent: agent,
                     weapon: weapon,
-                    vid: parseInt(vid),
-                    missionOrder: mo,
-                    amount: 0, // Default for new profile
+                    missionOrder: num,
+                    vid: index + 1, // Awtomatikong sequence para sa profiling folders
+                    status: "ARCHIVED",
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
+            });
 
+            try {
+                await batch.commit();
                 status.style.color = "#00ff00";
-                status.innerText = "SUCCESS: MISSION_ARCHIVED_IN_FOLDER_V" + vid;
-                
-                // Clear input only for the next order
-                document.getElementById('moNum').value = "";
+                status.innerText = "SUCCESS: MISSION_ORDERS_RESERVED";
+                document.getElementById('orderList').value = "";
             } catch (error) {
                 status.style.color = "red";
                 status.innerText = "ERROR: " + error.message;

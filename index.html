@@ -3,104 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CIA - Code Elimination Registry</title>
+    <title>CIA - OPERATIONAL TERMINAL</title>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        mono: ['"Fira Code"', 'monospace'],
-                    },
-                    colors: {
-                        'cia-black': '#050505',
-                        'cia-dark': '#101010',
-                        'cia-gray': '#1a1a1a',
-                        'cia-blue': '#0070f3',
-                        'cia-amber': '#ffb000',
-                        'cia-red': '#ff0000',
-                    }
-                }
-            }
-        }
-    </script>
     <style>
-        body { background-color: #050505; color: #e0e0e0; }
-        .floating-window { 
-            display: none; 
-            position: fixed; 
-            top: 15%; 
-            right: 2%; 
-            z-index: 50; 
-            box-shadow: 0 0 20px rgba(255, 0, 0, 0.2);
+        body { background-color: #050505; color: #e0e0e0; font-family: 'Fira Code', monospace; }
+        .scanline {
+            width: 100%; height: 2px; background: rgba(0, 112, 243, 0.1);
+            position: fixed; animation: scan 4s linear infinite; z-index: 100; pointer-events: none;
         }
-        /* Subteng scanline effect */
-        body::after {
-            content: "";
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
-            background-size: 100% 4px;
-            z-index: 100;
-            pointer-events: none;
-            opacity: 0.3;
-        }
+        @keyframes scan { from { top: 0; } to { top: 100%; } }
+        .floating-window { display: none; position: fixed; top: 15%; right: 2%; z-index: 50; }
     </style>
 </head>
-<body class="font-mono text-sm border-t-4 border-cia-blue">
+<body class="text-xs border-t-2 border-blue-600">
+    <div class="scanline"></div>
 
-    <nav class="bg-cia-dark p-4 shadow-lg border-b border-gray-800 flex justify-between items-center relative z-20">
-        <div class="flex items-center gap-3">
-            <div class="border-2 border-cia-blue text-cia-blue font-bold p-1 text-xs">C.I.A.</div>
-            <h1 class="font-bold text-lg tracking-widest text-white uppercase">Code Elimination Registry</h1>
+    <nav class="bg-black/80 p-4 border-b border-white/10 flex justify-between items-center sticky top-0 z-50 backdrop-blur-md">
+        <div class="flex items-center gap-4">
+            <div class="px-2 py-1 border border-blue-500 text-blue-500 font-bold text-[10px]">L5 CLEARANCE</div>
+            <h1 class="tracking-[0.3em] uppercase font-bold text-white">Central Intelligence Registry</h1>
         </div>
-        <div class="flex items-center gap-3">
-            <span id="userEmail" class="text-xs text-gray-500">Access Level: Classified</span>
-            <button onclick="toggleEliminatedList()" class="bg-cia-red/10 hover:bg-cia-red/20 text-cia-red px-4 py-1.5 rounded border border-cia-red/50 text-xs font-bold transition">
-                View Eliminated Codes ⚠
-            </button>
-            <button onclick="logout()" class="text-gray-600 hover:text-white text-xs">[ Logout ]</button>
-        </div>
+        <button onclick="toggleEliminated()" class="text-red-500 border border-red-500/30 px-3 py-1 hover:bg-red-500/10 transition">
+            [ VIEW ELIMINATED ]
+        </button>
     </nav>
 
-    <div class="max-w-5xl mx-auto mt-12 p-6 relative z-10">
-        <div class="bg-cia-dark p-8 rounded border border-gray-800 shadow-2xl">
-            <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-800">
-                <h2 class="text-2xl font-bold text-white tracking-tight">Code Query & Threat Assessment</h2>
-                <span class="text-cia-amber text-xs animate-pulse">SYSTEM STATUS: NOMINAL</span>
+    <div class="max-w-4xl mx-auto p-6 space-y-6">
+        
+        <section class="bg-zinc-900/50 border border-white/5 p-6 rounded-sm shadow-2xl">
+            <h2 class="text-blue-400 mb-4 tracking-tighter uppercase font-bold text-sm">Target Code Query</h2>
+            <div class="flex gap-2">
+                <input type="number" id="codeInput" placeholder="INPUT CODE..." 
+                       class="flex-1 bg-black border border-white/10 p-3 outline-none focus:border-blue-500 text-blue-400 font-bold tracking-widest">
+                <button onclick="scanCode()" class="bg-blue-600 px-6 font-bold text-white hover:bg-blue-700 transition uppercase">Scan</button>
             </div>
-            
-            <div class="flex gap-3">
-                <input type="number" id="searchInput" placeholder="INPUT TARGET CODE (e.g., 5-digits or 4 if starts with 0)" 
-                       class="flex-1 p-4 bg-cia-black border border-gray-700 rounded focus:ring-1 focus:ring-cia-blue focus:border-cia-blue outline-none text-lg text-cia-blue placeholder:text-gray-700 font-bold tracking-widest">
-                <button onclick="searchCode()" class="bg-cia-blue text-white px-8 py-4 rounded font-bold hover:bg-cia-blue/80 transition uppercase tracking-widest text-xs">
-                    Scan Database
-                </button>
+            <div id="statusReport" class="mt-4 min-h-[40px] flex items-center justify-center border border-dashed border-white/5 rounded italic text-gray-600">
+                Awaiting input...
             </div>
-            
-            <div id="searchStatus" class="mt-6 min-h-[60px]">
-                <p class="text-gray-700 italic text-center pt-4">Awaiting target input...</p>
+        </section>
+
+        <section class="bg-zinc-900/50 border border-white/5 rounded-sm overflow-hidden flex flex-col h-[400px]">
+            <div class="bg-white/5 p-2 text-[10px] flex justify-between border-b border-white/5">
+                <span class="text-amber-500 font-bold tracking-widest uppercase">Secure Comms Channel-Alpha</span>
+                <span class="animate-pulse text-green-500">● LIVE</span>
             </div>
-        </div>
+            <div id="chatFeed" class="flex-1 p-4 overflow-y-auto space-y-2 bg-black/20">
+                </div>
+            <div class="p-3 border-t border-white/5 flex gap-2">
+                <input type="text" id="chatMsg" placeholder="TYPE TRANSMISSION..." 
+                       class="flex-1 bg-black border border-white/10 p-2 outline-none text-amber-500 uppercase text-[11px]">
+                <button onclick="sendMsg()" class="bg-amber-600 px-4 py-1 font-bold text-black text-[10px] hover:bg-amber-500 transition uppercase">Transmit</button>
+            </div>
+        </section>
     </div>
 
-    <div id="eliminatedWindow" class="floating-window bg-cia-dark w-80 rounded border border-cia-red overflow-hidden shadow-2xl">
-        <div class="bg-cia-red text-white p-3 flex justify-between items-center font-bold text-xs tracking-widest uppercase">
-            <span>Eliminated Targets</span>
-            <button onclick="toggleEliminatedList()" class="text-white/70 hover:text-white font-black text-lg">✕</button>
+    <div id="eliminatedWindow" class="floating-window w-64 bg-black border border-red-500 shadow-[0_0_15px_rgba(255,0,0,0.3)]">
+        <div class="bg-red-900/20 p-2 border-b border-red-500 flex justify-between text-[10px] font-bold text-red-500 uppercase">
+            <span>Neutralized Targets</span>
+            <button onclick="toggleEliminated()">[X]</button>
         </div>
-        <div id="eliminatedContent" class="p-4 max-h-80 overflow-y-auto space-y-2.5 text-cia-red font-bold tracking-widest">
-            <p class="text-gray-600 text-xs text-center">Loading registry...</p>
-        </div>
+        <div id="eliminatedList" class="p-3 max-h-60 overflow-y-auto space-y-2 text-red-400 font-bold tracking-widest text-center">
+            </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        // Gagamitin pa rin natin ang Firestore
         import { getFirestore, collection, addDoc, query, where, getDocs, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // GUMAMIT NG PAREHONG CONFIG MO (Huwag palitan ito)
         const firebaseConfig = {
             apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
             authDomain: "my-admin-portal-12691.firebaseapp.com",
@@ -112,104 +83,76 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
         const db = getFirestore(app);
+        const rdb = getDatabase(app);
 
-        // --- 1. Security Check (Dapat naka-login) ---
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                document.getElementById('userEmail').innerText = `ACCESS: ${user.email}`;
-            } else {
-                // Kung hindi naka-login, balik sa login page
-                window.location.href = "login.html";
-            }
-        });
+        // --- CODE SCANNER ---
+        window.scanCode = async () => {
+            const code = document.getElementById('codeInput').value;
+            const report = document.getElementById('statusReport');
 
-        window.logout = () => {
-            signOut(auth);
-        };
-
-        // --- 2. Validation Logic ---
-        function isValidCode(code) {
-            const len = code.toString().length;
-            if (code.startsWith('0')) {
-                return len === 4; // Pag start sa 0, dapat 4 numbers
-            }
-            return len === 5; // Standard is 5 numbers
-        }
-
-        // --- 3. Search & Eliminate Logic ---
-        window.searchCode = async () => {
-            const code = document.getElementById('searchInput').value;
-            const status = document.getElementById('searchStatus');
-
-            if (!isValidCode(code)) {
-                status.innerHTML = `<p class="text-cia-red font-bold text-center pt-4">❌ ERROR: Invalid Code Format. Use 5 digits (or 4 if starts with 0).</p>`;
+            // Validation: Starts with 0 (4 digits) or non-zero (5 digits). Bawal 1,2,3.
+            const isValid = code.startsWith('0') ? code.length === 4 : code.length === 5;
+            
+            if (!isValid) {
+                report.innerHTML = `<span class="text-red-500 font-bold uppercase">Invalid Protocol: 4-5 digit code only</span>`;
                 return;
             }
 
-            status.innerHTML = `<p class="text-cia-blue animate-pulse text-center pt-4">Scanning Classified Database...</p>`;
-            
-            // Nagbago tayo ng collection name para sa tema: 'eliminated_codes'
+            report.innerText = "Scanning Satellite Database...";
             const q = query(collection(db, "eliminated_codes"), where("code", "==", code));
-            const querySnapshot = await getDocs(q);
+            const snapshot = await getDocs(q);
 
-            if (querySnapshot.empty) {
-                status.innerHTML = `
-                    <div class="flex flex-col items-center p-5 bg-cia-gray rounded border border-cia-amber/30 text-center">
-                        <span class="text-cia-amber mb-3 font-bold">⚠️ CODE NOT FOUND IN REGISTRY</span>
-                        <span class="text-gray-400 text-xs mb-4">No elimination protocol exists for this target.</span>
-                        <button onclick="initiateElimination('${code}')" class="bg-cia-red text-white px-6 py-2 rounded font-bold hover:bg-cia-red/80 transition uppercase text-xs tracking-widest">
-                            Initiate Elimination Protocol
-                        </button>
+            if (snapshot.empty) {
+                report.innerHTML = `
+                    <div class="text-center py-2">
+                        <p class="text-amber-500 font-bold mb-2">TARGET UNKNOWN</p>
+                        <button onclick="eliminate('${code}')" class="bg-red-600 px-3 py-1 text-white text-[10px] font-bold uppercase">Initiate Elimination</button>
                     </div>`;
             } else {
-                status.innerHTML = `
-                    <div class="p-5 bg-cia-red/10 rounded border border-cia-red text-center">
-                        <p class="text-cia-red text-xl font-black tracking-widest uppercase">🚨 ALERT: ELIMINATED TARGET 🚨</p>
-                        <p class="text-white mt-2 font-bold text-base">Code ${code} Status: INACTIVE (ELIMINATED)</p>
-                        <p class="text-gray-500 text-xs mt-1">Do not engage.</p>
-                    </div>`;
+                report.innerHTML = `<span class="text-red-600 font-black animate-pulse uppercase">🚨 ELIMINATED TARGET: ${code} 🚨</span>`;
             }
         };
 
-        // --- 4. Save to Database (Elimination Protocol) ---
-        window.initiateElimination = async (code) => {
-            try {
-                if(!confirm(`Confirm Elimination Protocol for Code: ${code}?`)) return;
+        window.eliminate = async (code) => {
+            await addDoc(collection(db, "eliminated_codes"), { code: code, date: serverTimestamp() });
+            document.getElementById('codeInput').value = "";
+            scanCode(); 
+        };
 
-                await addDoc(collection(db, "eliminated_codes"), {
-                    code: code,
-                    eliminated_at: serverTimestamp(),
-                    authorized_by: auth.currentUser.email
-                });
-                alert("Elimination protocol successful. Target status updated.");
-                document.getElementById('searchStatus').innerHTML = `<p class="text-gray-700 italic text-center pt-4">Awaiting target input...</p>`;
-                document.getElementById('searchInput').value = "";
-            } catch (e) {
-                console.error("Error initiating elimination: ", e);
-                status.innerHTML = `<p class="text-cia-red font-bold text-center pt-4">❌ ERROR: Could not update registry.</p>`;
+        // --- LIVE CHAT ---
+        window.sendMsg = () => {
+            const input = document.getElementById('chatMsg');
+            if (input.value) {
+                push(ref(rdb, 'comms'), { text: input.value.toUpperCase(), time: Date.now() });
+                input.value = "";
             }
         };
 
-        // --- 5. Live Floating Registry (Eliminated Codes) ---
-        window.toggleEliminatedList = () => {
+        onChildAdded(ref(rdb, 'comms'), (snap) => {
+            const data = snap.val();
+            const div = document.createElement('div');
+            div.className = "bg-white/5 border-l border-amber-500 p-2 mb-2";
+            div.innerHTML = `<span class="text-[9px] text-gray-500 block">${new Date(data.time).toLocaleTimeString()}</span><span class="text-amber-500 font-bold">${data.text}</span>`;
+            document.getElementById('chatFeed').appendChild(div);
+            document.getElementById('chatFeed').scrollTop = document.getElementById('chatFeed').scrollHeight;
+        });
+
+        // --- UI CONTROLS ---
+        window.toggleEliminated = () => {
             const win = document.getElementById('eliminatedWindow');
-            win.style.display = (win.style.display === 'block') ? 'none' : 'block';
+            win.style.display = win.style.display === 'block' ? 'none' : 'block';
         };
 
-        // Makikinig tayo sa live updates mula sa 'eliminated_codes' collection
-        onSnapshot(collection(db, "eliminated_codes"), (snapshot) => {
-            const listDiv = document.getElementById('eliminatedContent');
-            listDiv.innerHTML = "";
-            snapshot.forEach((doc) => {
+        onSnapshot(collection(db, "eliminated_codes"), (snap) => {
+            const list = document.getElementById('eliminatedList');
+            list.innerHTML = "";
+            snap.forEach(doc => {
                 const item = document.createElement('div');
-                item.className = "bg-cia-black p-2.5 rounded border-l-4 border-cia-red text-base font-bold tracking-widest flex items-center gap-2";
-                // Nagdagdag ako ng maliit na 'target' icon
-                item.innerHTML = `<span class="text-cia-red text-xs">🎯</span> ${doc.data().code}`;
-                listDiv.appendChild(item);
+                item.className = "border-b border-red-900/30 py-1";
+                item.innerText = `🎯 ${doc.data().code}`;
+                list.appendChild(item);
             });
-            if (snapshot.empty) listDiv.innerHTML = "<p class='text-gray-600 text-xs text-center'>No targets eliminated yet.</p>";
         });
     </script>
 </body>

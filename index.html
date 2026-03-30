@@ -3,90 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CIA - CLASSIFIED TERMINAL</title>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap" rel="stylesheet">
+    <title>CIA - STEALTH REGISTRY v5</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #050505; color: #e0e0e0; font-family: 'Fira Code', monospace; overflow: hidden; }
-        .scanline { width: 100%; height: 2px; background: rgba(0, 112, 243, 0.05); position: fixed; animation: scan 4s linear infinite; z-index: 100; pointer-events: none; }
-        @keyframes scan { from { top: 0; } to { top: 100%; } }
-        
-        /* Subtle Success Flash */
-        .success-flash { animation: flash-green 0.5s ease-out; }
-        @keyframes flash-green { 0% { background-color: rgba(34, 197, 94, 0.2); } 100% { background-color: transparent; } }
-
-        /* Pop-up Semi Page / Modal */
-        #archiveModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 200; backdrop-filter: blur(10px); }
+        body { background-color: #050505; color: #e0e0e0; font-family: monospace; overflow: hidden; }
+        #dbModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 100; backdrop-filter: blur(15px); }
+        .flash { animation: flash-effect 0.4s ease-out; }
+        @keyframes flash-effect { 0% { background: rgba(59, 130, 246, 0.3); } 100% { background: transparent; } }
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
 </head>
-<body class="text-xs border-t-2 border-blue-600">
-    <div class="scanline"></div>
+<body class="border-t-2 border-blue-600">
 
-    <nav class="bg-black/95 p-3 border-b border-white/10 flex justify-between items-center sticky top-0 z-50">
-        <div class="flex items-center gap-4">
-            <div class="px-2 py-0.5 border border-blue-500 text-blue-500 font-bold text-[8px]">CIA_SECURE_v4</div>
-            <h1 class="tracking-[0.2em] uppercase font-bold text-white text-[10px]">Rapid Elimination Unit</h1>
+    <nav class="p-4 flex justify-between items-center bg-black/80 border-b border-white/5">
+        <div class="flex items-center gap-2">
+            <span class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+            <h1 class="text-[10px] font-bold tracking-[0.4em] uppercase text-gray-500">Encrypted Terminal</h1>
         </div>
-        <button onclick="openModal()" class="text-red-500 border border-red-500/30 px-3 py-1 hover:bg-red-500/10 font-bold uppercase text-[9px]">
-            [ ACCESS REGISTRY ]
+        <button onclick="toggleModal(true)" class="text-[9px] text-blue-500 border border-blue-500/20 px-3 py-1 hover:bg-blue-500/10 font-bold uppercase tracking-widest transition">
+            [ Access Registry ]
         </button>
     </nav>
 
-    <div class="max-w-4xl mx-auto p-4 space-y-4 h-[calc(100vh-60px)] flex flex-col justify-center">
-        
-        <section id="inputUnit" class="bg-zinc-900/40 border border-white/5 p-8 rounded shadow-2xl transition-all">
-            <div class="flex justify-between items-center mb-2">
-                <h2 class="text-blue-500 tracking-widest uppercase font-bold text-[9px]">Input Target Code</h2>
-                <span id="targetStatus" class="text-[8px] text-gray-600 font-bold">AWAITING INPUT...</span>
-            </div>
-            
-            <input type="number" id="codeInput" oninput="autoScan()" autofocus
-                   placeholder="0000" 
-                   class="w-full bg-black border border-white/10 p-5 outline-none focus:border-blue-500 text-blue-400 font-bold tracking-[1em] text-4xl text-center">
-            
-            <div id="statusReport" class="mt-4 min-h-[80px] flex items-center justify-center border border-dashed border-white/10 rounded bg-black/20 p-4">
-                <p class="text-gray-700 italic uppercase tracking-widest text-[9px]">Awaiting signal from field operatives...</p>
-            </div>
-        </section>
+    <main id="mainFrame" class="max-w-xl mx-auto mt-24 p-6 transition-all">
+        <div class="text-center mb-6">
+            <p id="statusMsg" class="text-gray-700 text-[9px] font-bold tracking-[0.6em] uppercase">Ready for Input</p>
+        </div>
 
-        <section class="bg-zinc-900/20 border border-white/5 rounded flex flex-col h-[150px]">
-            <div class="bg-white/5 p-1.5 text-[8px] font-bold text-amber-500 uppercase tracking-widest border-b border-white/5 px-4">Live Comms</div>
-            <div id="chatFeed" class="flex-1 p-3 overflow-y-auto space-y-1 bg-black/10 text-[9px] text-amber-500/80"></div>
-            <div class="p-2 border-t border-white/5 flex gap-1">
-                <input type="text" id="chatMsg" placeholder="..." class="flex-1 bg-black border border-white/10 p-1.5 outline-none text-amber-500 uppercase text-[9px]">
-                <button onclick="sendMsg()" class="bg-amber-600 px-3 py-1 font-bold text-black text-[9px] uppercase hover:bg-amber-500">SEND</button>
-            </div>
-        </section>
-    </div>
+        <input type="number" id="codeIn" oninput="scanNow()" autofocus
+               placeholder="00000" 
+               class="w-full bg-black border border-white/10 p-5 text-center text-5xl font-bold tracking-[0.5em] text-blue-500 outline-none focus:border-blue-500 shadow-[0_0_30px_rgba(0,0,0,0.5)]">
 
-    <div id="archiveModal" class="flex flex-col p-6">
-        <div class="max-w-4xl mx-auto w-full flex flex-col h-full">
-            <div class="flex justify-between items-center border-b border-red-500/30 pb-4">
-                <div>
-                    <h1 class="text-red-500 font-black text-xl tracking-[0.2em] uppercase">Classified Registry</h1>
-                    <p class="text-gray-600 text-[9px] uppercase tracking-widest mt-1">Authorized personnel only // Data is permanent</p>
-                </div>
-                <button onclick="closeModal()" class="text-white border border-white/20 px-4 py-2 hover:bg-white/10 font-bold text-[10px] uppercase">
-                    [ CLOSE TERMINAL ]
-                </button>
+        <div id="resultBox" class="mt-8 min-h-[140px] flex items-center justify-center border border-dashed border-white/5 rounded-lg bg-zinc-900/10">
+            <p class="text-gray-800 italic uppercase tracking-widest text-[9px]">Listening for signal...</p>
+        </div>
+    </main>
+
+    <div id="dbModal" class="flex items-center justify-center p-4">
+        <div class="bg-zinc-900 border border-blue-900/50 w-full max-w-2xl h-[85vh] flex flex-col shadow-2xl">
+            <div class="p-4 border-b border-blue-900/50 flex justify-between items-center bg-blue-900/5">
+                <span class="text-blue-400 font-bold text-[10px] tracking-widest uppercase">Classified Intel Archive</span>
+                <button onclick="toggleModal(false)" class="text-white hover:text-red-500 font-bold text-[10px]">[ X ]</button>
             </div>
             
-            <div class="flex-1 mt-6 overflow-y-auto">
-                <div id="eliminatedList" class="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
-                    </div>
-                <div id="emptyMsg" class="text-center text-gray-700 italic uppercase tracking-widest text-[10px] mt-20">
-                    Registry database is currently empty.
+            <div id="recordsGrid" class="flex-1 overflow-y-auto p-6 grid grid-cols-2 md:grid-cols-3 gap-3">
                 </div>
+            
+            <div class="p-4 bg-black/50 border-t border-blue-900/30 text-center">
+                <p class="text-blue-700 text-[8px] font-bold uppercase tracking-widest">Global Sync Active | Total Entries: <span id="count">0</span></p>
             </div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, query, where, getDocs, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getFirestore, collection, addDoc, query, where, getDocs, onSnapshot, serverTimestamp, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+        // FIREBASE CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
             authDomain: "my-admin-portal-12691.firebaseapp.com",
@@ -99,141 +72,85 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const rdb = getDatabase(app);
+        const codeIn = document.getElementById('codeIn');
+        const resBox = document.getElementById('resultBox');
+        const statusMsg = document.getElementById('statusMsg');
 
-        const codeInput = document.getElementById('codeInput');
-        const report = document.getElementById('statusReport');
-        const targetStatus = document.getElementById('targetStatus');
-
-        // LOCAL CACHE PARA SA UNIQUE CHECKING
-        let existingCodes = new Set();
-
-        // --- RAPID SCANNER ---
-        window.autoScan = async () => {
-            const code = codeInput.value;
-
-            if (code.length < 4) {
-                report.innerHTML = '<p class="text-gray-700 italic uppercase text-[9px]">Scanning signal strength...</p>';
-                targetStatus.innerText = "WAITING FOR INPUT";
+        // --- REAL-TIME SCANNER ---
+        window.scanNow = async () => {
+            const val = codeIn.value;
+            if (val.length < 4) {
+                resBox.innerHTML = '<p class="text-gray-800 italic uppercase text-[9px]">Input insufficient...</p>';
+                statusMsg.innerText = "READY FOR INPUT";
                 return;
             }
 
-            targetStatus.innerText = "INQUIRING DATABASE...";
+            statusMsg.innerText = "QUERYING DATABASE...";
+            const q = query(collection(db, "banned_numbers"), where("code", "==", val));
+            const snap = await getDocs(q);
 
-            // Tingnan muna sa local memory kung andun na para mabilis
-            if (existingCodes.has(code)) {
-                targetStatus.innerText = "TARGET IDENTIFIED: ELIMINATED";
-                report.innerHTML = `
-                    <div class="text-center p-3 border border-red-600 bg-red-600/5 w-full">
-                        <p class="text-red-600 font-black tracking-widest text-lg uppercase">ALREADY ELIMINATED</p>
-                        <p class="text-gray-500 text-[8px] uppercase tracking-tighter italic">This code is already stored permanently in the database.</p>
-                    </div>`;
-                return;
-            }
-
-            // Kung wala sa memory, double check sa Firestore (Just to be safe)
-            const q = query(collection(db, "eliminated_codes"), where("code", "==", code));
-            const snapshot = await getDocs(q);
-
-            if (snapshot.empty) {
-                targetStatus.innerText = "TARGET IDENTIFIED: UNKNOWN";
-                report.innerHTML = `
-                    <div class="text-center w-full">
-                        <button onclick="initiateElimination('${code}')" class="bg-red-600 w-full py-4 text-white font-black uppercase tracking-widest hover:bg-red-700 transition-all border-b-4 border-red-900 active:border-b-0 active:translate-y-1">
-                            ELIMINATE TARGET CODE: ${code}
-                        </button>
-                    </div>`;
+            if (snap.empty) {
+                statusMsg.innerText = "RESULT: NOT FOUND";
+                resBox.innerHTML = `
+                    <button onclick="banCode('${val}')" class="w-full h-24 bg-red-600 text-white font-black text-xs uppercase tracking-widest hover:bg-red-700 active:scale-95 transition-all rounded shadow-lg">
+                        Eliminate Target: ${val}
+                    </button>`;
             } else {
-                existingCodes.add(code); // Isama na sa memory
-                targetStatus.innerText = "TARGET IDENTIFIED: ELIMINATED";
-                report.innerHTML = `
-                    <div class="text-center p-3 border border-red-600 bg-red-600/5 w-full">
-                        <p class="text-red-600 font-black tracking-widest text-lg uppercase">ALREADY ELIMINATED</p>
+                statusMsg.innerText = "RESULT: BLOCKED";
+                resBox.innerHTML = `
+                    <div class="w-full text-center p-6 border-2 border-red-600 bg-red-600/10">
+                        <p class="text-red-600 font-black text-2xl tracking-tighter uppercase">ELIMINATED</p>
+                        <p class="text-gray-500 text-[8px] uppercase mt-1 italic">Number is permanently blocked in satellite.</p>
                     </div>`;
             }
         };
 
-        // --- ELIMINATION ACTION ---
-        window.initiateElimination = async (code) => {
-            const inputUnit = document.getElementById('inputUnit');
-            
+        // --- PERMANENT SAVE ---
+        window.banCode = async (code) => {
             try {
-                // Isave sa Firestore
-                await addDoc(collection(db, "eliminated_codes"), {
-                    code: code,
-                    timestamp: serverTimestamp()
-                });
+                statusMsg.innerText = "SAVING TO CLOUD...";
+                await addDoc(collection(db, "banned_numbers"), { code: code, time: serverTimestamp() });
+                
+                document.getElementById('mainFrame').classList.add('flash');
+                setTimeout(() => document.getElementById('mainFrame').classList.remove('flash'), 400);
 
-                // Dagdag sa local set para hindi na ma-duplicate
-                existingCodes.add(code);
-
-                // Quick Visual Feedback
-                inputUnit.classList.add('success-flash');
-                setTimeout(() => inputUnit.classList.remove('success-flash'), 500);
-
-                // Auto reset
-                codeInput.value = "";
-                codeInput.focus();
-                autoScan();
-
-            } catch (err) {
-                alert("Comm-Link Failed. Check your internet or Firebase rules.");
-            }
+                codeIn.value = "";
+                codeIn.focus();
+                scanNow();
+            } catch (e) { alert("ERROR: Check Firestore Rules!"); }
         };
 
-        // --- MODAL CONTROLS ---
-        window.openModal = () => document.getElementById('archiveModal').style.display = 'flex';
-        window.closeModal = () => document.getElementById('archiveModal').style.display = 'none';
-
-        // --- LIVE DATABASE LISTENER (ARCHIVE) ---
-        onSnapshot(collection(db, "eliminated_codes"), (snap) => {
-            const list = document.getElementById('eliminatedList');
-            const emptyMsg = document.getElementById('emptyMsg');
+        // --- REAL-TIME LISTENER (HINDI NAWAWALA PAG REFRESH) ---
+        onSnapshot(collection(db, "banned_numbers"), (snap) => {
+            const grid = document.getElementById('recordsGrid');
+            const count = document.getElementById('count');
+            grid.innerHTML = "";
+            let i = 0;
             
-            list.innerHTML = "";
-            existingCodes.clear(); // Refresh local memory
-
-            let hasData = false;
-            
-            // Inaayos natin ang listahan para bago sa taas (Client-side sorting)
-            const docs = [];
-            snap.forEach(doc => docs.push(doc.data()));
-            docs.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
-
-            docs.forEach(data => {
-                hasData = true;
-                existingCodes.add(data.code); // I-cache ang mga codes
-
-                const item = document.createElement('div');
-                item.className = "bg-red-500/5 border border-red-500/20 p-3 font-bold text-red-500 tracking-[0.2em] text-sm hover:bg-red-500/10 transition-colors";
-                item.innerText = data.code;
-                list.appendChild(item);
+            snap.forEach(documentObj => {
+                i++;
+                const data = documentObj.data();
+                const div = document.createElement('div');
+                div.className = "bg-black border border-blue-900/20 p-4 flex flex-col items-center gap-2 group hover:border-red-500 transition-all";
+                div.innerHTML = `
+                    <span class="text-blue-500 font-bold text-lg tracking-widest">${data.code}</span>
+                    <button onclick="removeCode('${documentObj.id}')" class="text-[8px] text-gray-700 hover:text-red-500 uppercase font-bold transition">
+                        [ Delete ]
+                    </button>`;
+                grid.appendChild(div);
             });
-
-            if (hasData) {
-                emptyMsg.style.display = 'none';
-            } else {
-                emptyMsg.style.display = 'block';
-            }
+            count.innerText = i;
+            if(i === 0) grid.innerHTML = "<p class='col-span-full py-20 text-gray-800 text-center uppercase italic'>Archive Empty</p>";
         });
 
-        // --- COMMS ---
-        window.sendMsg = () => {
-            const input = document.getElementById('chatMsg');
-            if (input.value.trim()) {
-                push(ref(rdb, 'secure_comms'), { text: input.value.toUpperCase(), time: Date.now() });
-                input.value = "";
+        // --- DELETE FUNCTION ---
+        window.removeCode = async (id) => {
+            if (confirm("Permanently delete this record?")) {
+                await deleteDoc(doc(db, "banned_numbers", id));
             }
         };
 
-        onChildAdded(ref(rdb, 'secure_comms'), (snap) => {
-            const data = snap.val();
-            const div = document.createElement('div');
-            div.className = "mb-1 border-l border-amber-800 pl-2";
-            div.innerHTML = `<span class="opacity-50 text-[6px] block">${new Date(data.time).toLocaleTimeString()}</span><span class="tracking-widest uppercase">${data.text}</span>`;
-            document.getElementById('chatFeed').appendChild(div);
-            document.getElementById('chatFeed').scrollTop = document.getElementById('chatFeed').scrollHeight;
-        });
+        window.toggleModal = (s) => document.getElementById('dbModal').style.display = s ? 'flex' : 'none';
     </script>
 </body>
 </html>

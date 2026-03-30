@@ -28,12 +28,10 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            /* Subtle Scanline Effect */
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
             background-size: 100% 2px, 3px 100%;
         }
 
-        /* Top Navigation / Status Bar */
         .status-header {
             display: flex;
             justify-content: space-between;
@@ -46,10 +44,6 @@
             color: var(--accent-cyan);
         }
 
-        .blink { animation: blinker 1.5s linear infinite; }
-        @keyframes blinker { 50% { opacity: 0; } }
-
-        /* Dashboard Layout */
         .dashboard {
             display: grid;
             grid-template-columns: 300px 1fr 350px;
@@ -63,7 +57,6 @@
             border: 1px solid var(--border);
             display: flex;
             flex-direction: column;
-            position: relative;
             border-radius: 4px;
         }
 
@@ -75,43 +68,33 @@
             border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
+            cursor: default;
         }
 
-        /* Panel 1: Bounty System */
-        .bounty-placeholder {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            color: var(--text-dim);
-            text-align: center;
-            padding: 20px;
+        /* BAN SYSTEM STYLES */
+        .ban-container { padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+        
+        /* Hidden Toggle Label */
+        .secret-trigger {
+            font-size: 10px;
+            color: var(--accent-cyan);
+            cursor: help;
+            transition: 0.3s;
         }
+        .secret-trigger:hover { text-shadow: 0 0 5px var(--accent-cyan); }
 
-        .bounty-placeholder .icon { font-size: 40px; margin-bottom: 10px; opacity: 0.2; }
-
-        /* Panel 2: Ban System (Middle) */
-        .ban-container {
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        label { font-size: 10px; color: var(--accent-cyan); margin-bottom: 5px; display: block; }
-
-        input[type="text"] {
+        input[type="text"], textarea {
             background: #000;
             border: 1px solid #333;
             color: var(--accent-cyan);
-            padding: 15px;
+            padding: 12px;
             font-family: inherit;
             width: 100%;
             outline: none;
-            font-size: 14px;
             border-radius: 4px;
         }
+
+        textarea { height: 120px; resize: none; display: none; font-size: 12px; }
 
         .execute-btn {
             background: var(--danger-red);
@@ -121,170 +104,153 @@
             font-family: inherit;
             font-weight: 800;
             cursor: pointer;
-            transition: 0.2s;
             border-radius: 4px;
-            letter-spacing: 1px;
+            margin-top: 5px;
         }
-
-        .execute-btn:hover { background: #ff5c5c; box-shadow: 0 0 15px var(--danger-red); }
 
         .terminal-log {
             flex-grow: 1;
             background: rgba(0,0,0,0.4);
             margin-top: 10px;
             padding: 15px;
-            font-size: 12px;
+            font-size: 11px;
             overflow-y: auto;
-            border: 1px solid rgba(255,255,255,0.02);
             color: #88ff88;
+            border: 1px solid rgba(255,255,255,0.02);
         }
 
-        /* Panel 3: Classified Chat */
-        .chat-area { flex-grow: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-        
-        .msg { font-size: 12px; line-height: 1.4; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.02); }
-        .msg-sys { color: var(--accent-cyan); font-weight: bold; }
-        .msg-user { color: var(--text-main); }
-        .msg-img img { max-width: 100%; border-radius: 4px; margin-top: 5px; border: 1px solid #333; }
+        /* CHAT STYLES */
+        .chat-area { flex-grow: 1; overflow-y: auto; padding: 15px; font-size: 12px; }
+        .chat-input-row { padding: 10px; background: #000; display: flex; gap: 8px; }
+        #chatInput { flex-grow: 1; background: transparent; border: none; color: #fff; outline: none; font-family: inherit; }
 
-        .chat-input-row {
-            padding: 10px;
-            background: #000;
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .upload-icon { cursor: pointer; color: var(--text-dim); font-size: 20px; transition: 0.2s; }
-        .upload-icon:hover { color: var(--accent-cyan); }
-
-        #chatInput {
-            flex-grow: 1;
-            background: transparent;
-            border: none;
-            color: #fff;
-            outline: none;
-            font-family: inherit;
-        }
-
-        #sendChatBtn {
-            background: var(--accent-cyan);
-            border: none;
-            padding: 5px 12px;
-            font-weight: 800;
-            cursor: pointer;
-            border-radius: 2px;
-            font-size: 10px;
-        }
-
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: var(--accent-cyan); }
+        .hidden { display: none !important; }
+        .blink { animation: blinker 1.5s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
 
     <nav class="status-header">
-        <div>AGENT_ID: <span style="color:white">098-GHOST</span></div>
-        <div class="blink">● SYSTEM LIVE</div>
-        <div>MOSSAD_ENC_V.2.6</div>
+        <div>AGENT: <span style="color:white">098-GHOST</span></div>
+        <div class="blink">● ENCRYPTED CONNECTION</div>
+        <div>v.4.0.1-STABLE</div>
     </nav>
 
     <div class="dashboard">
         <div class="panel">
-            <div class="panel-header"><span>BOUNTY_SYSTEM</span> <span>STATUS: IDLE</span></div>
-            <div class="bounty-placeholder">
-                <div class="icon">☢</div>
-                <p>ACCESSING DATABASE...<br><span style="font-size: 10px;">LOCKED BY HIGH COMMAND</span></p>
+            <div class="panel-header">BOUNTY_REPORTS</div>
+            <div style="padding:20px; color:var(--text-dim); font-size:10px;">
+                [!] NO ACTIVE TARGETS FOUND IN SECTOR.
             </div>
         </div>
 
         <div class="panel">
-            <div class="panel-header"><span>TERMINATION_PROTOCOL</span> <span>AUTHORIZED</span></div>
-            <div class="ban-container">
-                <label>CORE IDENTIFICATION / SECRET CODES</label>
-                <input type="text" id="secretCode" placeholder="Enter single code..." autocomplete="off">
-                <button class="execute-btn" onclick="executeSingleBan()">EXECUTE TERMINATION</button>
-                
-                <div class="terminal-log" id="banLog">
-                    <div style="color: var(--text-dim)">> System ready. Waiting for input...</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="panel">
-            <div class="panel-header"><span>CLASSIFIED_COMMS</span> <span>SECURE</span></div>
-            <div class="chat-area" id="chatFeed">
-                <div class="msg msg-sys">[SYSTEM]: Encrypted link established. Greetings, Agent.</div>
+            <div class="panel-header">
+                <span onclick="toggleBulkMode()" class="secret-trigger" title="Click to switch Mode">TERMINATION_PROTOCOL</span>
+                <span id="modeStatus" style="font-size: 9px; color: var(--text-dim);">MODE: SINGLE</span>
             </div>
             
+            <div class="ban-container">
+                <label style="font-size: 10px; color: var(--accent-cyan);">IDENTIFICATION / SECRET CODES</label>
+                
+                <input type="text" id="singleCode" placeholder="Enter target ID...">
+                
+                <textarea id="bulkCodes" placeholder="Paste multiple codes here (one per line)..."></textarea>
+                
+                <button class="execute-btn" onclick="processBan()">EXECUTE BLACKLIST</button>
+                
+                <div class="terminal-log" id="banLog">> System Standby...</div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">SECURE_COMMS</div>
+            <div class="chat-area" id="chatFeed">
+                <div style="color:var(--accent-cyan)">[SYSTEM]: LINK ESTABLISHED.</div>
+            </div>
             <div class="chat-input-row">
-                <label for="imgInput" class="upload-icon">⊕</label>
-                <input type="file" id="imgInput" accept="image/*" hidden>
-                <input type="text" id="chatInput" placeholder="Enter message...">
-                <button id="sendChatBtn" onclick="sendMsg()">SEND</button>
+                <input type="text" id="chatInput" placeholder="Message..." onkeypress="if(event.key==='Enter') sendMsg()">
+                <button onclick="sendMsg()" style="background:var(--accent-cyan); border:none; padding:5px 10px; font-weight:800; cursor:pointer;">SEND</button>
             </div>
         </div>
     </div>
 
     <script>
-        // --- BAN LOGIC ---
-        function executeSingleBan() {
-            const input = document.getElementById('secretCode');
-            const log = document.getElementById('banLog');
-            const code = input.value.trim();
+        let isBulkMode = false;
 
-            if (!code) {
-                log.innerHTML += `<div style="color: #ff3c3c">> ERROR: MISSING TARGET_ID</div>`;
+        // Hidden Switch Logic
+        function toggleBulkMode() {
+            isBulkMode = !isBulkMode;
+            const singleInput = document.getElementById('singleCode');
+            const bulkInput = document.getElementById('bulkCodes');
+            const status = document.getElementById('modeStatus');
+
+            if (isBulkMode) {
+                singleInput.classList.add('hidden');
+                bulkInput.style.display = 'block';
+                status.innerText = "MODE: BULK_ENROLLMENT";
+                status.style.color = "#ffb000";
+            } else {
+                singleInput.classList.remove('hidden');
+                bulkInput.style.display = 'none';
+                status.innerText = "MODE: SINGLE";
+                status.style.color = "var(--text-dim)";
+            }
+        }
+
+        // Main Execution Logic
+        function processBan() {
+            const log = document.getElementById('banLog');
+            let codesArray = [];
+
+            if (isBulkMode) {
+                const rawData = document.getElementById('bulkCodes').value;
+                // Split by lines or commas, then trim and remove empty
+                codesArray = rawData.split(/[\n,]+/).map(s => s.trim()).filter(s => s !== "");
+            } else {
+                const val = document.getElementById('singleCode').value.trim();
+                if (val) codesArray.push(val);
+            }
+
+            if (codesArray.length === 0) {
+                log.innerHTML += `<div style="color:var(--danger-red)">> ERROR: NO DATA DETECTED.</div>`;
                 return;
             }
 
-            // Visual Processing
-            log.innerHTML += `<div>> TARGETING: ${code}...</div>`;
-            log.innerHTML += `<div class="blink" style="color: #ffb000">> UPLOADING TO BLACKLIST...</div>`;
+            // --- AUTO DELETE DUPLICATES ---
+            const originalCount = codesArray.length;
+            const uniqueCodes = [...new Set(codesArray)]; // Eto yung magic ng unique data
+            const duplicateCount = originalCount - uniqueCodes.length;
 
+            log.innerHTML += `<div>> SCANNING: ${originalCount} entries found.</div>`;
+            
+            if (duplicateCount > 0) {
+                log.innerHTML += `<div style="color:#ffb000">> PURGING: ${duplicateCount} duplicates removed.</div>`;
+            }
+
+            log.innerHTML += `<div class="blink">> UPLOADING ${uniqueCodes.length} UNIQUE CODES TO DATABASE...</div>`;
+
+            // Dito mo ilalagay ang Firebase logic mo para sa uniqueCodes
             setTimeout(() => {
-                log.innerHTML += `<div style="color: #00ff00">> SUCCESS: ID [${code}] TERMINATED.</div>`;
+                log.innerHTML += `<div style="color:#00ff00">> TRANSACTION COMPLETE. DATABASE SYNCHRONIZED.</div>`;
                 log.scrollTop = log.scrollHeight;
-                input.value = "";
-            }, 1200);
+                
+                // Clear inputs
+                document.getElementById('singleCode').value = "";
+                document.getElementById('bulkCodes').value = "";
+            }, 1500);
         }
 
-        // --- CHAT LOGIC ---
         function sendMsg() {
             const input = document.getElementById('chatInput');
-            const feed = document.getElementById('chatFeed');
-            
-            if (input.value.trim() !== "") {
-                const div = document.createElement('div');
-                div.className = 'msg msg-user';
-                div.innerHTML = `<strong>[YOU]:</strong> ${input.value}`;
-                feed.appendChild(div);
+            if (input.value.trim()) {
+                document.getElementById('chatFeed').innerHTML += `<div><strong>[YOU]:</strong> ${input.value}</div>`;
                 input.value = "";
+                const feed = document.getElementById('chatFeed');
                 feed.scrollTop = feed.scrollHeight;
             }
         }
-
-        // Handle Image Upload
-        document.getElementById('imgInput').addEventListener('change', function(e) {
-            const feed = document.getElementById('chatFeed');
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    const div = document.createElement('div');
-                    div.className = 'msg msg-img';
-                    div.innerHTML = `<strong>[ATTACHMENT]:</strong><br><img src="${event.target.result}">`;
-                    feed.appendChild(div);
-                    feed.scrollTop = feed.scrollHeight;
-                }
-                reader.readAsDataURL(file);
-            }
-        });
-
-        // Enter key for Chat
-        document.getElementById('chatInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendMsg();
-        });
     </script>
 </body>
 </html>

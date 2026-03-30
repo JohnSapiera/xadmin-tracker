@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CIA INTELLIGENCE UNIT - ENCRYPTED</title>
+    <title>MOSSAD - ENCRYPTED TERMINAL</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;500;800&display=swap" rel="stylesheet">
     
     <style>
@@ -14,7 +14,7 @@
             --danger-red: #ff3c3c;
             --text-main: #e0e6ed;
             --text-dim: #626a77;
-            --border: rgba(255, 255, 255, 0.05);
+            --border: rgba(0, 242, 255, 0.1);
         }
 
         * { box-sizing: border-box; }
@@ -24,67 +24,82 @@
             color: var(--text-main);
             font-family: 'JetBrains Mono', monospace;
             margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
             background-size: 100% 2px, 3px 100%;
         }
 
         .status-header {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 10px 20px; background: rgba(0, 0, 0, 0.8);
-            border-bottom: 1px solid var(--accent-cyan); font-size: 11px;
-            letter-spacing: 2px; color: var(--accent-cyan);
+            padding: 8px 20px; background: rgba(0, 0, 0, 0.9);
+            border-bottom: 1px solid var(--accent-cyan); font-size: 10px;
+            letter-spacing: 1px; color: var(--accent-cyan);
         }
 
         .dashboard {
             display: grid;
-            grid-template-columns: 280px 1fr 320px; /* Left: 280, Center: 1fr, Right: 320 */
-            gap: 15px; padding: 15px; flex-grow: 1;
+            grid-template-columns: 300px 1fr 320px;
+            gap: 12px; padding: 12px; flex-grow: 1; overflow: hidden;
         }
 
         .panel {
             background: var(--panel-bg); border: 1px solid var(--border);
-            display: flex; flex-direction: column; border-radius: 4px; overflow: hidden;
+            display: flex; flex-direction: column; border-radius: 2px; overflow: hidden;
         }
 
         .panel-header {
-            padding: 8px 12px; font-size: 10px; font-weight: 800;
-            background: rgba(255, 255, 255, 0.03); border-bottom: 1px solid var(--border);
+            padding: 10px; font-size: 10px; font-weight: 800;
+            background: rgba(0, 242, 255, 0.05); border-bottom: 1px solid var(--border);
             display: flex; justify-content: space-between; align-items: center;
+            letter-spacing: 2px;
         }
 
         /* PORTAL 1: BOUNTY */
-        .bounty-list { flex-grow: 1; padding: 15px; font-size: 11px; overflow-y: auto; }
-        .bounty-card { border-left: 2px solid var(--accent-cyan); padding: 8px; margin-bottom: 10px; background: rgba(255,255,255,0.02); }
-        .add-bounty-btn { background: transparent; border: 1px solid var(--accent-cyan); color: var(--accent-cyan); padding: 10px; margin: 10px; cursor: pointer; font-family: inherit; font-weight: 800; }
-        
-        /* PORTAL 2: CHATS */
-        .chat-area { flex-grow: 1; overflow-y: auto; padding: 15px; font-size: 12px; display: flex; flex-direction: column; gap: 10px; }
-        .chat-msg { background: rgba(255,255,255,0.05); padding: 8px 10px; border-radius: 4px; word-wrap: break-word; }
-        .chat-img { max-width: 100%; border-radius: 4px; margin-top: 5px; border: 1px solid #333; max-height: 200px; object-fit: cover; }
-        .chat-input-row { padding: 10px; background: #000; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--border); }
-        .input-controls { display: flex; gap: 8px; }
-        .upload-btn { background: #222; border: 1px solid #444; color: white; padding: 8px 12px; cursor: pointer; border-radius: 4px; }
-        
-        /* PORTAL 3: BAN PROTOCOL */
-        .ban-container { padding: 20px; display: flex; flex-direction: column; gap: 10px; flex-grow:1;}
-        .secret-trigger { font-size: 10px; color: var(--accent-cyan); cursor: pointer; }
-        input[type="text"], input[type="number"], textarea {
-            background: #000; border: 1px solid #333; color: var(--accent-cyan);
-            padding: 12px; font-family: inherit; width: 100%; outline: none; border-radius: 4px;
+        .bounty-list { flex-grow: 1; padding: 10px; font-size: 10px; overflow-y: auto; }
+        .bounty-card { 
+            border-left: 2px solid var(--accent-cyan); 
+            padding: 10px; margin-bottom: 8px; 
+            background: rgba(255,255,255,0.02);
+            transition: 0.3s;
         }
-        textarea { height: 100px; resize: none; }
-        .execute-btn { background: var(--danger-red); color: white; border: none; padding: 15px; font-family: inherit; font-weight: 800; cursor: pointer; border-radius: 4px; }
-        .terminal-log { flex-grow: 1; background: rgba(0,0,0,0.6); padding: 15px; font-size: 11px; overflow-y: auto; color: #88ff88; border: 1px solid rgba(255,255,255,0.05); height: 200px; }
+        .bounty-card:hover { background: rgba(0, 242, 255, 0.05); }
 
-        /* MODALS & UTILS */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 100; }
-        .modal-box { background: #0f1117; border: 2px solid var(--accent-cyan); width: 320px; padding: 20px; }
+        .add-bounty-btn { 
+            background: transparent; border: 1px solid var(--accent-cyan); 
+            color: var(--accent-cyan); padding: 12px; margin: 10px; 
+            cursor: pointer; font-family: inherit; font-weight: 800;
+            transition: 0.3s;
+        }
+        .add-bounty-btn:hover { background: var(--accent-cyan); color: #000; }
+
+        /* PORTAL 2: CHATS */
+        .chat-area { flex-grow: 1; overflow-y: auto; padding: 15px; font-size: 11px; display: flex; flex-direction: column; gap: 10px; }
+        .chat-msg { background: rgba(255,255,255,0.03); padding: 10px; border-radius: 2px; border: 1px solid rgba(255,255,255,0.05); }
+        .chat-img { max-width: 100%; border-radius: 2px; margin-top: 8px; border: 1px solid #333; max-height: 250px; }
+        
+        .chat-input-row { padding: 12px; background: #000; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--border); }
+        .input-controls { display: flex; gap: 5px; }
+
+        /* PORTAL 3: TERMINATION */
+        .ban-container { padding: 15px; display: flex; flex-direction: column; gap: 10px; flex-grow: 1; }
+        input[type="text"], input[type="number"], textarea {
+            background: #08080a; border: 1px solid #222; color: var(--accent-cyan);
+            padding: 12px; font-family: inherit; width: 100%; outline: none; font-size: 11px;
+        }
+        .execute-btn { background: var(--danger-red); color: white; border: none; padding: 12px; font-weight: 800; cursor: pointer; }
+        .terminal-log { height: 180px; background: #000; padding: 10px; font-size: 10px; overflow-y: auto; color: #00ff00; border: 1px solid #111; }
+
+        /* MODAL */
+        .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); display:none; justify-content:center; align-items:center; z-index:999; }
+        .modal-box { background: #0a0a0c; border: 1px solid var(--accent-cyan); width: 300px; padding: 20px; text-align: center; }
         .modal-step { display: none; flex-direction: column; gap: 10px; }
         .active-step { display: flex; }
-        .option-btn { background: #1a1d26; border: 1px solid #333; color: #fff; padding: 10px; cursor: pointer; text-align: left; font-family: inherit; }
+        .option-btn { background: #111; border: 1px solid #333; color: #fff; padding: 12px; cursor: pointer; font-family: inherit; }
+        .option-btn:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+        
+        .blink { animation: blinker 1.5s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0.2; } }
         .hidden { display: none !important; }
-        .blink { animation: blinker 1.2s linear infinite; }
-        @keyframes blinker { 50% { opacity: 0; } }
     </style>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -94,327 +109,209 @@
 <body>
 
     <nav class="status-header">
-        <div>OP_ID: <span style="color:white">GHOST</span></div>
-        <button onclick="window.location.href='profile.html'" style="background:none; border:1px solid var(--accent-cyan); color:var(--accent-cyan); font-family:inherit; cursor:pointer; font-size:10px; margin-left: 10px;">VIEW_PROFILE</button>
-        <div class="blink" id="dbStatus">● CONNECTING TO FIREBASE...</div>
+        <div style="display:flex; align-items:center; gap:15px;">
+            <div id="agentBadge" style="background:var(--accent-cyan); color:#000; padding:2px 8px; font-weight:800; border-radius:2px;">AGENT: GHOST</div>
+            <div onclick="window.location.href='profile.html'" style="cursor:pointer; text-decoration:underline;">[MY_PROFILE]</div>
+        </div>
+        <div class="blink" id="dbStatus">● MOSSAD SECRET SERVICE ONLINE</div>
         <div id="clock">00:00:00</div>
     </nav>
 
     <div class="dashboard">
-        
         <div class="panel">
             <div class="panel-header">BOUNTY_REPORTS</div>
             <div class="bounty-list" id="bountyDisplay"></div>
-            <button class="add-bounty-btn" onclick="openBountyModal()">+ ADD TARGET</button>
+            <button class="add-bounty-btn" onclick="openBountyModal()">+ INITIALIZE TARGET</button>
         </div>
 
         <div class="panel">
-            <div class="panel-header">CLASSIFIED_COMMS (LIVE)</div>
+            <div class="panel-header">COMMS_CHANNEL_SECURE</div>
             <div class="chat-area" id="chatFeed"></div>
-            
             <div class="chat-input-row">
-                <div id="photoStatus" style="font-size: 9px; color: var(--accent-cyan); display: none;">[IMAGE ATTACHED]</div>
+                <div id="photoStatus" style="font-size: 9px; color: var(--accent-cyan); display: none; margin-bottom:5px;">[SECURE_FILE_ATTACHED]</div>
                 <div class="input-controls">
                     <input type="file" id="photoInput" accept="image/*" class="hidden" onchange="attachPhoto(this)">
-                    <button class="upload-btn" onclick="document.getElementById('photoInput').click()">📷</button>
-                    <input type="text" id="chatInput" placeholder="Enter message..." onkeypress="if(event.key==='Enter') sendMsg()">
-                    <button onclick="sendMsg()" style="background:var(--accent-cyan); border:none; padding:8px 15px; font-weight:800; cursor:pointer;">SEND</button>
+                    <button style="background:#111; color:white; border:1px solid #333; padding:0 15px; cursor:pointer;" onclick="document.getElementById('photoInput').click()">📁</button>
+                    <input type="text" id="chatInput" placeholder="Send encrypted message..." onkeypress="if(event.key==='Enter') sendMsg()">
+                    <button onclick="sendMsg()" style="background:var(--accent-cyan); color:#000; border:none; padding:0 20px; font-weight:800; cursor:pointer;">SEND</button>
                 </div>
             </div>
         </div>
 
         <div class="panel">
             <div class="panel-header">
-                <span onclick="toggleBulkMode()" class="secret-trigger">TERMINATION_PROTOCOL (SWAP)</span>
-                <span id="modeStatus" style="font-size: 9px; color: var(--text-dim);">MODE: SINGLE</span>
+                <span onclick="toggleBulkMode()" style="cursor:pointer;">TERMINATION_PROTOCOL</span>
+                <span id="modeStatus" style="font-size: 8px; color: var(--text-dim);">SINGLE</span>
             </div>
-            
             <div class="ban-container">
-                <label style="font-size: 10px; color: var(--accent-cyan); letter-spacing: 1px;">SECRET CODES IDENTIFICATION</label>
-                <input type="text" id="singleCode" placeholder="Type to search database..." oninput="autoSearch(this.value)">
-                <textarea id="bulkCodes" class="hidden" placeholder="Paste multiple codes here..."></textarea>
+                <input type="text" id="singleCode" placeholder="Search target code..." oninput="autoSearch(this.value)">
+                <textarea id="bulkCodes" class="hidden" placeholder="Paste bulk codes..."></textarea>
                 <button class="execute-btn" onclick="processBan()">EXECUTE BLACKLIST</button>
-                <div class="terminal-log" id="banLog">> System Standby. Awaiting input...</div>
+                <div class="terminal-log" id="banLog">> Terminal online. Awaiting target data...</div>
             </div>
         </div>
     </div>
 
     <div class="modal-overlay" id="bountyModal">
         <div class="modal-box">
-            <div id="step1" class="modal-step active-step">
-                <p style="font-size:11px; color:var(--accent-cyan)">SELECT AGENT:</p>
-                <button class="option-btn" onclick="selectAgent('LZ')">Agent LZ</button>
-                <button class="option-btn" onclick="selectAgent('JFSN')">Agent JFSN</button>
-                <button onclick="closeModal()" style="background:none; border:none; color:grey; cursor:pointer; margin-top:10px;">CANCEL</button>
+            <div id="modalStep1" class="modal-step active-step">
+                <p style="font-size:10px; color:var(--accent-cyan); margin-bottom:15px;">SELECT WEAPON SYSTEM:</p>
+                <div id="weaponOptions" style="display:flex; flex-direction:column; gap:8px;"></div>
+                <button onclick="closeModal()" style="margin-top:15px; background:none; border:none; color:#555; cursor:pointer; font-size:10px;">ABORT</button>
             </div>
-            <div id="step2" class="modal-step">
-                <p style="font-size:11px; color:var(--accent-cyan)">SELECT WEAPON:</p>
-                <div id="weaponOptions" style="display:flex; flex-direction:column; gap:5px;"></div>
-            </div>
-            <div id="step3" class="modal-step">
-                <p style="font-size:11px; color:var(--accent-cyan)">TARGET DATA:</p>
-                <input type="number" id="vID" placeholder="V-Agent Number">
-                <input type="number" id="bAmount" placeholder="Bounty Amount">
-                <button class="execute-btn" style="background:var(--accent-cyan); color:#000;" onclick="saveBounty()">DEPLOY</button>
+            <div id="modalStep2" class="modal-step">
+                <p style="font-size:10px; color:var(--accent-cyan); margin-bottom:15px;">TARGET_INTEL:</p>
+                <input type="number" id="vID" placeholder="V-Agent Number (e.g. 5566)">
+                <div style="margin-bottom:10px;"></div>
+                <input type="number" id="bAmount" placeholder="Bounty Amount (₱)">
+                <div style="margin-bottom:15px;"></div>
+                <button class="execute-btn" style="background:var(--accent-cyan); color:#000; width:100%;" onclick="saveBounty()">DEPLOY DATA</button>
             </div>
         </div>
     </div>
 
     <script>
-        // --- 1. FIREBASE INITIALIZATION ---
+        // --- 1. CONFIG & AUTH ---
+        const activeAgent = localStorage.getItem("cia_agent");
+        if (!activeAgent) window.location.href = "index.html";
+        document.getElementById('agentBadge').innerText = `AGENT: ${activeAgent}`;
+
         const firebaseConfig = {
             apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
             authDomain: "my-admin-portal-12691.firebaseapp.com",
             projectId: "my-admin-portal-12691",
             storageBucket: "my-admin-portal-12691.firebasestorage.app",
             messagingSenderId: "317015091563",
-            appId: "1:317015091563:web:baab5171d8e0a58acd442e",
-            measurementId: "G-150YYLS5FP"
+            appId: "1:317015091563:web:baab5171d8e0a58acd442e"
         };
-
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const storage = firebase.storage();
+        const TG_URL = "https://api.telegram.org/bot8639737111:AAGvCqiHzkiJvVqH6YPocRIVMoiXZlK4ZWg/sendMessage?chat_id=7298607329";
 
-        document.getElementById('dbStatus').innerText = "● FIREBASE LINKED";
-        document.getElementById('dbStatus').style.color = "#00ff00";
-
-        // --- 2. LIVE CHATS & PHOTO UPLOAD (PORTAL 2) ---
+        // --- 2. CHAT LOGIC ---
         let pendingPhotoData = null;
-
         function attachPhoto(input) {
             const file = input.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    pendingPhotoData = e.target.result;
-                    document.getElementById('photoStatus').style.display = 'block';
-                };
+                reader.onload = e => { pendingPhotoData = e.target.result; document.getElementById('photoStatus').style.display='block'; };
                 reader.readAsDataURL(file);
             }
         }
 
         async function sendMsg() {
-            const textInput = document.getElementById('chatInput');
-            const text = textInput.value.trim();
-            if (text === "" && !pendingPhotoData) return;
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if(!text && !pendingPhotoData) return;
 
             let imageUrl = null;
-            if (pendingPhotoData) {
-                const storageRef = storage.ref().child(`chats/${Date.now()}.jpg`);
-                await storageRef.putString(pendingPhotoData, 'data_url');
-                imageUrl = await storageRef.getDownloadURL();
+            if(pendingPhotoData) {
+                const ref = storage.ref().child(`chats/${Date.now()}.jpg`);
+                await ref.putString(pendingPhotoData, 'data_url');
+                imageUrl = await ref.getDownloadURL();
             }
 
-            db.collection("chats").add({
-                text: text,
-                imageUrl: imageUrl,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            await db.collection("chats").add({
+                agent: activeAgent, text, imageUrl, timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
 
-            textInput.value = "";
-            pendingPhotoData = null;
-            document.getElementById('photoInput').value = "";
+            input.value = ""; pendingPhotoData = null;
             document.getElementById('photoStatus').style.display = 'none';
         }
 
-        // Real-time Chat Listener
-        db.collection("chats").orderBy("timestamp", "asc").onSnapshot((snapshot) => {
-            const feed = document.getElementById('chatFeed');
-            feed.innerHTML = "";
-            snapshot.forEach((doc) => {
-                const data = doc.data();
-                const time = data.timestamp ? data.timestamp.toDate().toLocaleTimeString() : "Sending...";
+        db.collection("chats").orderBy("timestamp", "asc").onSnapshot(snap => {
+            const feed = document.getElementById('chatFeed'); feed.innerHTML = "";
+            snap.forEach(doc => {
+                const d = doc.data();
                 feed.innerHTML += `
                     <div class="chat-msg">
-                        <span style="color:var(--accent-cyan); font-weight:bold;">[OP]:</span> ${data.text}
-                        ${data.imageUrl ? `<br><img src="${data.imageUrl}" class="chat-img">` : ''}
-                        <div style="font-size:8px; color:#555; text-align:right; margin-top:3px;">${time}</div>
-                    </div>
-                `;
+                        <span style="color:var(--accent-cyan)">[${d.agent}]:</span> ${d.text}
+                        ${d.imageUrl ? `<br><img src="${d.imageUrl}" class="chat-img">` : ''}
+                    </div>`;
             });
             feed.scrollTop = feed.scrollHeight;
         });
 
-        // --- 3. BOUNTY PROTOCOL (PORTAL 1) ---
-        let tAgent = "", tWeapon = "";
-        function openBountyModal() { document.getElementById('bountyModal').style.display = 'flex'; resetModal(); }
-        function closeModal() { document.getElementById('bountyModal').style.display = 'none'; }
-        function resetModal() { document.getElementById('step1').className='modal-step active-step'; document.getElementById('step2').className='modal-step'; document.getElementById('step3').className='modal-step'; }
-
-        function selectAgent(agent) {
-            tAgent = agent;
-            document.getElementById('step1').classList.remove('active-step'); document.getElementById('step2').classList.add('active-step');
-            const opts = document.getElementById('weaponOptions');
-            opts.innerHTML = "";
-            let weapons = agent === 'LZ' ? ['R8', 'RM14'] : ['R9', 'TechCP'];
-            weapons.forEach(w => opts.innerHTML += `<button class="option-btn" onclick="selectWeapon('${w}')">${w}</button>`);
+        // --- 3. BOUNTY LOGIC (IMPROVED) ---
+        let selectedWeapon = "";
+        function openBountyModal() {
+            document.getElementById('bountyModal').style.display = 'flex';
+            document.getElementById('modalStep1').classList.add('active-step');
+            document.getElementById('modalStep2').classList.remove('active-step');
+            
+            const weaponsDiv = document.getElementById('weaponOptions');
+            weaponsDiv.innerHTML = "";
+            const list = activeAgent === 'LZ' ? ['R8', 'RM14'] : ['R9', 'TechCP'];
+            list.forEach(w => weaponsDiv.innerHTML += `<button class="option-btn" onclick="selectWeapon('${w}')">${w}</button>`);
         }
 
-        function selectWeapon(weapon) {
-            tWeapon = weapon;
-            document.getElementById('step2').classList.remove('active-step'); document.getElementById('step3').classList.add('active-step');
+        function selectWeapon(w) {
+            selectedWeapon = w;
+            document.getElementById('modalStep1').classList.remove('active-step');
+            document.getElementById('modalStep2').classList.add('active-step');
         }
 
-        function saveBounty() {
+        async function saveBounty() {
             const vid = document.getElementById('vID').value;
             const amt = document.getElementById('bAmount').value;
-            if (!vid || !amt) return;
+            if(!vid || !amt) return;
 
-            db.collection("bounties").add({
-                agent: tAgent, weapon: tWeapon, vid: vid, amount: amt, timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            await db.collection("bounties").add({
+                agent: activeAgent, weapon: selectedWeapon, vid, amt,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
-            
+
+            fetch(`${TG_URL}&text=${encodeURIComponent(`📡 AGENT [${activeAgent}]: Deployed Bounty V-ID:${vid} (₱${amt})`)}`);
             closeModal();
             document.getElementById('vID').value = ""; document.getElementById('bAmount').value = "";
         }
 
-        // Real-time Bounty Listener
-        db.collection("bounties").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
-            document.getElementById('bountyDisplay').innerHTML = "";
-            snapshot.forEach((doc) => {
+        function closeModal() { document.getElementById('bountyModal').style.display = 'none'; }
+
+        db.collection("bounties").orderBy("timestamp", "desc").onSnapshot(snap => {
+            const list = document.getElementById('bountyDisplay'); list.innerHTML = "";
+            snap.forEach(doc => {
                 const b = doc.data();
-                document.getElementById('bountyDisplay').innerHTML += `
+                list.innerHTML += `
                     <div class="bounty-card">
-                        <div style="color:var(--accent-cyan)">AGENT: ${b.agent} | WPN: ${b.weapon}</div>
-                        <div>V-ID: ${b.vid} | BOUNTY: ₱${b.amount}</div>
-                    </div>
-                `;
+                        <div style="color:var(--accent-cyan); font-weight:800;">${b.agent} >> ${b.weapon}</div>
+                        <div style="margin-top:4px;">V-ID: #${b.vid} | BOUNTY: ₱${b.amt}</div>
+                    </div>`;
             });
         });
 
-        // --- 4. BAN PROTOCOL & AUTO SEARCH (PORTAL 3) ---
-        let isBulkMode = false;
+        // --- 4. TERMINATION PROTOCOL ---
+        let isBulk = false;
         function toggleBulkMode() {
-            isBulkMode = !isBulkMode;
+            isBulk = !isBulk;
             document.getElementById('singleCode').classList.toggle('hidden');
             document.getElementById('bulkCodes').classList.toggle('hidden');
-            document.getElementById('modeStatus').innerText = isBulkMode ? "MODE: BULK" : "MODE: SINGLE";
+            document.getElementById('modeStatus').innerText = isBulk ? "BULK" : "SINGLE";
         }
 
-        // AUTO SEARCH - FIREBASE INTEGRATED
         async function autoSearch(val) {
+            if(!val) return;
             const log = document.getElementById('banLog');
-            const query = val.trim().toUpperCase();
-            
-            if (query === "") {
-                log.innerHTML = `> System Standby. Awaiting input...`;
-                return;
-            }
-
-            log.innerHTML = `<div>> SEARCHING DATABASE FOR: <span style="color:white">${query}</span>...</div>`;
-
-            // Query Firestore Blacklist
-            const snapshot = await db.collection("blacklist").where("code", "==", query).get();
-
-            if (!snapshot.empty) {
-                log.innerHTML += `<div style="color:var(--danger-red); font-weight:bold;">> WARNING: TARGET [${query}] ALREADY BANNED.</div>`;
-            } else {
-                log.innerHTML += `<div style="color:#00ff00">> STATUS: [${query}] IS CLEAR. READY FOR TERMINATION.</div>`;
-            }
+            const snap = await db.collection("blacklist").where("code", "==", val.toUpperCase()).get();
+            log.innerHTML = snap.empty ? `<div>> ID ${val} IS CLEAR.</div>` : `<div style="color:red">> WARNING: ID ${val} ALREADY BANNED.</div>`;
         }
 
-        // EXECUTE BAN
         async function processBan() {
             const log = document.getElementById('banLog');
-            let codes = [];
-
-            if (isBulkMode) {
-                const raw = document.getElementById('bulkCodes').value;
-                codes = raw.split(/[\n,]+/).map(s => s.trim().toUpperCase()).filter(s => s !== "");
-            } else {
-                const val = document.getElementById('singleCode').value.trim().toUpperCase();
-                if (val) codes.push(val);
-            }
-
-            if (codes.length === 0) return;
-
-            log.innerHTML += `<div>> EXECUTING PROTOCOL...</div>`;
+            let codes = isBulk ? document.getElementById('bulkCodes').value.split("\n") : [document.getElementById('singleCode').value];
             
-            // Loop and add to Firebase Blacklist
-            for(let code of codes) {
-                await db.collection("blacklist").add({ code: code, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
+            for(let c of codes) {
+                let code = c.trim().toUpperCase();
+                if(!code) continue;
+                await db.collection("blacklist").add({ code, bannedBy: activeAgent, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
+                fetch(`${TG_URL}&text=${encodeURIComponent(`🚫 AGENT [${activeAgent}]: Terminated ID ${code}`)}`);
             }
-
-            log.innerHTML += `<div style="color:#00ff00">> SUCCESS: ${codes.length} ID(s) BLACKLISTED IN FIREBASE.</div>`;
-            document.getElementById('singleCode').value = "";
-            document.getElementById('bulkCodes').value = "";
-            log.scrollTop = log.scrollHeight;
+            log.innerHTML += `<div style="color:#00ff00">> EXECUTION SUCCESSFUL.</div>`;
+            document.getElementById('singleCode').value = ""; document.getElementById('bulkCodes').value = "";
         }
 
-        // 1. TOP-LEVEL PROTECTION: Hindi makakapasok sa page kung walang login
-const activeAgent = localStorage.getItem("cia_agent");
-if (!activeAgent) {
-    window.location.href = "index.html";
-}
-
-const TG_URL = "https://api.telegram.org/bot8639737111:AAGvCqiHzkiJvVqH6YPocRIVMoiXZlK4ZWg/sendMessage?chat_id=7298607329";
-
-// 2. HELPER PARA SA TELEGRAM ACTIVITY
-async function reportToTelegram(action) {
-    await fetch(`${TG_URL}&text=${encodeURIComponent("📡 AGENT [" + activeAgent + "]: " + action)}`);
-}
-
-// 3. SECURE BOUNTY UPDATE
-window.saveBounty = async () => {
-    // Check again before writing
-    if (!activeAgent) return alert("Unauthorized");
-
-    const vid = document.getElementById('vID').value;
-    const amt = document.getElementById('bAmount').value;
-    
-    if (!vid || !amt) return;
-
-    await db.collection("bounties").add({
-        agent: activeAgent, // Automatic gamit ang login
-        weapon: window.tW,
-        vid: vid,
-        amt: amt,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
-
-    reportToTelegram(`Updated Bounty Report (V-ID: ${vid}, Amount: ₱${amt})`);
-    window.closeModal();
-};
-
-// 4. SECURE TERMINATION (BAN)
-window.processBan = async () => {
-    if (!activeAgent) return alert("Unauthorized");
-
-    const codeInput = document.getElementById('singleCode');
-    const code = codeInput.value.trim().toUpperCase();
-
-    if (code) {
-        await db.collection("blacklist").add({
-            code: code,
-            bannedBy: activeAgent,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-
-        reportToTelegram(`Executed Termination Protocol for ID: ${code}`);
-        document.getElementById('banLog').innerHTML += `<div>> SUCCESS: ${code} BLACKLISTED.</div>`;
-        codeInput.value = "";
-    }
-};
-
-// 5. SECURE CHAT
-window.sendMsg = async () => {
-    const text = document.getElementById('chatInput').value.trim();
-    if (!text && !pendingPhotoData) return;
-
-    // ... upload photo logic ... (same as before)
-
-    await db.collection("chats").add({
-        agent: activeAgent,
-        text: text,
-        imageUrl: imageUrl,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
-
-    reportToTelegram(`Sent a classified communication.`);
-};
-
-        // Clock Script
+        function closeModal() { document.getElementById('bountyModal').style.display = 'none'; }
         setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString(), 1000);
     </script>
 </body>

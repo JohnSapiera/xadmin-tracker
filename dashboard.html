@@ -157,88 +157,164 @@
             </div>
         </div>
 
-        <div class="panel" id="panel-scanner">
-            <div class="panel-header">🔒 TERMINATION_SCANNER</div>
-            <div class="scroll-area">
-                <label style="font-size: 9px; color: var(--accent-cyan);">INPUT MISSION ORDER:</label>
-                <input type="text" id="scanInput" placeholder="4-5 DIGIT CODE" oninput="autoScanMission(this.value)" style="margin-top:5px;">
-                
-                <div id="scanResult"></div>
-                <div class="terminal-log" id="banLog">> Scanner Standby...</div>
+       <div class="panel" id="panel-scanner">
+    <div class="panel-header">🔒 TERMINATION_SCANNER</div>
+    <div class="scroll-area">
+        <label style="font-size: 9px; color: var(--accent-cyan);">INPUT MISSION ORDER:</label>
+        <input type="text" id="scanInput" placeholder="SCAN 4-5 DIGIT MO#" oninput="runTacticalScan(this.value)" maxlength="5">
+        
+        <div class="terminal-log" id="scanLog">> System Standby...</div>
 
-                <div id="confirmFinal" class="hidden scan-overlay">
-                    <div id="finalIntel" style="font-size: 11px; margin-bottom: 15px; line-height:1.6;"></div>
-                    <div style="display:flex; gap:10px;">
-                        <button onclick="executeFinalLog()" style="flex:1; background:#00ff00; color:#000; border:none; padding:12px; font-weight:800;">CONFIRM</button>
-                        <button onclick="cancelScan()" style="flex:1; background:#222; color:#fff; border:none; padding:12px;">ABORT</button>
-                    </div>
-                </div>
+        <div id="saveStage" class="hidden" style="margin-top:15px;">
+            <button class="save-btn-anim" onclick="openWeaponFolder()">📂 INITIALIZE SAVE PROTOCOL</button>
+        </div>
+
+        <div id="weaponFolder" class="hidden scan-overlay" style="margin-top:10px;">
+            <div style="font-size: 10px; color: var(--accent-cyan); margin-bottom:10px;">[SELECT_WEAPON_SYSTEM]</div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <button class="folder-item" onclick="selectWeapon('R8P')">>> R8P</button>
+                <button class="folder-item" onclick="selectWeapon('RMN14')">>> RMN14</button>
             </div>
         </div>
 
-    </div>
-
-    <div class="mobile-nav">
-        <div class="nav-item active" onclick="switchPanel('bounty', this)">
-            <span>🎯</span><span>BOUNTY</span>
-        </div>
-        <div class="nav-item" onclick="switchPanel('comms', this)">
-            <span>📡</span><span>COMMS</span>
-        </div>
-        <div class="nav-item" onclick="switchPanel('scanner', this)">
-            <span>🔒</span><span>SCANNER</span>
+        <div id="finalStage" class="hidden scan-overlay" style="margin-top:10px;">
+            <div style="font-size: 10px; color: var(--accent-cyan); margin-bottom:5px;">WEAPON: <span id="selWpn" style="color:#fff"></span></div>
+            <input type="number" id="vAgentInput" placeholder="ENTER V.AGENTS #">
+            <button class="accept-btn-anim" onclick="finalizeMission()">ACCEPT MISSION ORDER</button>
+            <button onclick="resetScanner()" style="background:none; border:none; color:#555; width:100%; font-size:9px; margin-top:10px;">ABORT MISSION</button>
         </div>
     </div>
+</div>
 
-    <div class="modal-overlay" id="bountyModal">
-        <div style="background:#0a0a0c; border:1px solid var(--accent-cyan); width:90%; max-width:320px; padding:25px;">
-            <div id="modalStep1" class="modal-step active-step">
-                <p style="font-size:10px; color:var(--accent-cyan); margin-bottom:15px;">SELECT WEAPON:</p>
-                <div id="weaponOptions" style="display:flex; flex-direction:column; gap:10px;"></div>
-                <button onclick="closeModal()" style="margin-top:20px; background:none; border:none; color:#555; width:100%;">[ CLOSE ]</button>
-            </div>
-            <div id="modalStep2" class="modal-step" style="display:none;">
-                <p style="font-size:10px; color:var(--accent-cyan); margin-bottom:15px;">TARGET INTEL:</p>
-                <input type="text" id="mOrder" placeholder="MISSION ORDER #" style="margin-bottom:10px;">
-                <input type="number" id="vID" placeholder="V-AGENT ID" style="margin-bottom:10px;">
-                <input type="number" id="bAmount" placeholder="AMOUNT (₱)" style="margin-bottom:20px;">
-                <button class="execute-btn" onclick="saveBounty()">DEPLOY DATA</button>
-                <button onclick="openBountyModal()" style="margin-top:10px; background:none; border:none; color:#555; width:100%;">BACK</button>
-            </div>
-        </div>
-    </div>
+<style>
+    /* Animations & Folder Styling */
+    .save-btn-anim {
+        width: 100%; background: #00ff00; color: #000; border: none; padding: 15px;
+        font-weight: 800; cursor: pointer; border-radius: 4px;
+        animation: pulseGreen 2s infinite;
+    }
 
-    <script>
-        // --- MOBILE NAV LOGIC ---
-        function switchPanel(panelId, el) {
-            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById('panel-' + panelId).classList.add('active');
-            el.classList.add('active');
+    @keyframes pulseGreen {
+        0% { box-shadow: 0 0 0 0 rgba(0, 255, 0, 0.7); }
+        70% { box-shadow: 0 0 0 15px rgba(0, 255, 0, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(0, 255, 0, 0); }
+    }
+
+    .folder-item {
+        background: #111; border: 1px solid var(--accent-cyan); color: #fff;
+        padding: 12px; font-size: 11px; font-family: inherit; cursor: pointer;
+    }
+
+    .accept-btn-anim {
+        width: 100%; background: var(--accent-cyan); color: #000; border: none;
+        padding: 15px; font-weight: 800; margin-top: 10px; cursor: pointer;
+        animation: slideIn 0.5s ease-out;
+    }
+
+    @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    
+    .hidden { display: none !important; }
+</style>
+
+<script>
+let currentMO = "";
+let currentWpn = "";
+
+async function runTacticalScan(val) {
+    const log = document.getElementById('scanLog');
+    const saveBtn = document.getElementById('saveStage');
+    resetScannerUI();
+
+    if(val.length < 4) {
+        log.innerHTML = "> Scanning signals...";
+        return;
+    }
+
+    log.innerHTML = `> SEARCHING MO# ${val} IN DATABASE...`;
+    
+    // Check if MO exists in 'blacklist' and is AVAILABLE
+    const snap = await db.collection("blacklist")
+                   .where("code", "==", val.toUpperCase())
+                   .get();
+
+    if(!snap.empty) {
+        const doc = snap.docs[0].data();
+        if(doc.status === "USED") {
+            log.innerHTML = `<div style="color:red">> ACCESS DENIED: MO# ${val} ALREADY TERMINATED.</div>`;
+        } else {
+            log.innerHTML = `<div style="color:#00ff00">> MO# ${val} VERIFIED. SYSTEM READY.</div>`;
+            currentMO = val.toUpperCase();
+            saveBtn.classList.remove('hidden');
+        }
+    } else {
+        log.innerHTML = `<div style="color:#555">> MO# ${val} NOT FOUND IN SECURE LIST.</div>`;
+    }
+}
+
+function openWeaponFolder() {
+    document.getElementById('saveStage').classList.add('hidden');
+    document.getElementById('weaponFolder').classList.remove('hidden');
+    document.getElementById('scanLog').innerHTML = "> SELECT WEAPON SYSTEM TO CONTINUE...";
+}
+
+function selectWeapon(wpn) {
+    currentWpn = wpn;
+    document.getElementById('weaponFolder').classList.add('hidden');
+    document.getElementById('finalStage').classList.remove('hidden');
+    document.getElementById('selWpn').innerText = wpn;
+}
+
+async function finalizeMission() {
+    const vID = document.getElementById('vAgentInput').value;
+    if(!vID) { alert("ERROR: V.AGENT ID REQUIRED"); return; }
+
+    const log = document.getElementById('scanLog');
+    log.innerHTML = "> UPLOADING DATA TO ENCRYPTED SERVER...";
+
+    try {
+        // 1. I-save sa 'bounties' collection (Para sa Deployment History)
+        await db.collection("bounties").add({
+            agent: activeAgent, // Galing sa localStorage (LZ/JFSN)
+            weapon: currentWpn,
+            vid: vID,
+            missionOrder: currentMO,
+            amt: 0, // Default 0 muna
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // 2. I-update ang 'blacklist' para maging USED na ang code na ito
+        const snap = await db.collection("blacklist").where("code", "==", currentMO).get();
+        if(!snap.empty) {
+            await db.collection("blacklist").doc(snap.docs[0].id).update({
+                status: "USED",
+                terminatedBy: activeAgent
+            });
         }
 
-        // --- FIREBASE CONFIG (SAME AS BEFORE) ---
-        const activeAgent = localStorage.getItem("cia_agent");
-        if (!activeAgent) window.location.href = "index.html";
-        document.getElementById('agentBadge').innerText = `AGENT: ${activeAgent}`;
+        // 3. Telegram Alert
+        fetch(`${TG_URL}&text=${encodeURIComponent(`🚀 MISSION ACCEPTED\nAgent: ${activeAgent}\nMO#: ${currentMO}\nWeapon: ${currentWpn}\nV-Agent: ${vID}`)}`);
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
-            authDomain: "my-admin-portal-12691.firebaseapp.com",
-            projectId: "my-admin-portal-12691",
-            storageBucket: "my-admin-portal-12691.firebasestorage.app",
-            messagingSenderId: "317015091563",
-            appId: "1:317015091563:web:baab5171d8e0a58acd442e"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const storage = firebase.storage();
-        const TG_URL = "https://api.telegram.org/bot8639737111:AAGvCqiHzkiJvVqH6YPocRIVMoiXZlK4ZWg/sendMessage?chat_id=7298607329";
+        log.innerHTML = `<div style="color:#00ff00">> MISSION DEPLOYED SUCCESSFULLY.</div>`;
+        setTimeout(() => resetScanner(), 2000);
 
-        // (Insert previous JavaScript functions here: sendMsg, saveBounty, autoScanMission, etc.)
-        // Siguraduhin lang na i-update ang IDs sa JS para mag-match sa bagong HTML.
-        
-        setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString(), 1000);
-    </script>
+    } catch (e) {
+        log.innerHTML = `<div style="color:red">> ERROR: UPLOAD FAILED.</div>`;
+    }
+}
+
+function resetScannerUI() {
+    document.getElementById('saveStage').classList.add('hidden');
+    document.getElementById('weaponFolder').classList.add('hidden');
+    document.getElementById('finalStage').classList.remove('hidden');
+    document.getElementById('finalStage').classList.add('hidden');
+}
+
+function resetScanner() {
+    document.getElementById('scanInput').value = "";
+    document.getElementById('vAgentInput').value = "";
+    resetScannerUI();
+    document.getElementById('scanLog').innerHTML = "> Scanner Standby...";
+}
+</script>
 </body>
 </html>

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>MISSION_DATA_RESERVER</title>
+    <title>SYSTEM_REGISTRY_SETTER</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;800&display=swap" rel="stylesheet">
     <style>
         :root { --neon: #00f2ff; --bg: #0a0a0a; }
@@ -12,21 +12,21 @@
         }
         .panel {
             background: #111; border: 2px solid var(--neon); padding: 30px;
-            box-shadow: 0 0 20px rgba(0, 242, 255, 0.2); width: 100%; max-width: 450px;
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.2); width: 100%; max-width: 400px;
         }
         h2 { font-size: 16px; text-align: center; border-bottom: 1px solid #333; padding-bottom: 15px; margin-top: 0; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; font-size: 10px; margin-bottom: 5px; color: #888; }
-        select, textarea {
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-size: 10px; margin-bottom: 8px; color: #888; }
+        select {
             width: 100%; background: #000; border: 1px solid #333; color: #fff;
-            padding: 12px; font-family: inherit; outline: none; box-sizing: border-box;
+            padding: 12px; font-family: inherit; outline: none; cursor: pointer;
         }
-        textarea { height: 200px; resize: none; border-color: #444; }
-        .btn-execute {
+        .btn-register {
             width: 100%; background: var(--neon); color: #000; border: none;
-            padding: 15px; font-weight: 800; cursor: pointer; margin-top: 10px;
+            padding: 15px; font-weight: 800; cursor: pointer; transition: 0.3s;
         }
-        #status { font-size: 10px; margin-top: 15px; text-align: center; color: #888; }
+        .btn-register:hover { background: #fff; }
+        #status { font-size: 10px; margin-top: 20px; text-align: center; color: #888; }
     </style>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
@@ -34,31 +34,28 @@
 <body>
 
     <div class="panel">
-        <h2>BULK_MISSION_RESERVER</h2>
+        <h2>SYSTEM_REGISTRY</h2>
         
         <div class="form-group">
             <label>SELECT AGENT</label>
-            <select id="agentId" onchange="updateWeapons()">
-                <option value="">-- SELECT --</option>
-                <option value="LZ">LZ</option>
-                <option value="JFSN">JFSN</option>
+            <select id="agentId">
+                <option value="LZ">AGENT LZ</option>
+                <option value="JFSN">AGENT JFSN</option>
             </select>
         </div>
 
         <div class="form-group">
-            <label>WEAPON SYSTEM</label>
+            <label>REGISTER WEAPON SYSTEM</label>
             <select id="weaponId">
-                <option value="">-- SELECT AGENT FIRST --</option>
+                <option value="R8P">R8P SYSTEM</option>
+                <option value="RMN14">RMN14 SYSTEM</option>
+                <option value="RMN9">RMN9 SYSTEM</option>
+                <option value="TechnoCP">TechnoCP SYSTEM</option>
             </select>
         </div>
 
-        <div class="form-group">
-            <label>PASTE MISSION ORDER# LIST (ONE PER LINE)</label>
-            <textarea id="orderList" placeholder="50501&#10;50502&#10;50503..."></textarea>
-        </div>
-
-        <button class="btn-execute" onclick="executeBulkArchive()">EXECUTE ARCHIVE</button>
-        <div id="status">SYSTEM_READY</div>
+        <button class="btn-register" onclick="registerSystem()">REGISTER TO DATABASE</button>
+        <div id="status">READY_FOR_REGISTRATION</div>
     </div>
 
     <script>
@@ -73,61 +70,28 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        const weaponMap = {
-            "LZ": ["R8P", "RMN", "RMN14"],
-            "JFSN": ["RMN9", "TechnoCP"]
-        };
-
-        function updateWeapons() {
-            const agent = document.getElementById('agentId').value;
-            const weaponSelect = document.getElementById('weaponId');
-            weaponSelect.innerHTML = "";
-            if (weaponMap[agent]) {
-                weaponMap[agent].forEach(wpn => {
-                    let opt = document.createElement('option');
-                    opt.value = wpn;
-                    opt.innerHTML = wpn + " SYSTEM";
-                    weaponSelect.appendChild(opt);
-                });
-            } else {
-                weaponSelect.innerHTML = "<option value=''>-- SELECT AGENT --</option>";
-            }
-        }
-
-        async function executeBulkArchive() {
+        async function registerSystem() {
             const agent = document.getElementById('agentId').value;
             const weapon = document.getElementById('weaponId').value;
-            const rawInput = document.getElementById('orderList').value.trim();
             const status = document.getElementById('status');
 
-            if (!agent || !weapon || !rawInput) {
-                alert("ERROR: Missing Agent, Weapon, or Order List.");
-                return;
-            }
-
-            const orders = rawInput.split('\n').map(n => n.trim()).filter(n => n !== "");
-            status.innerText = "ARCHIVING_" + orders.length + "_ORDERS...";
-            
-            const batch = db.batch();
-
-            orders.forEach((num, index) => {
-                // Gagamitin ang Mission Order# bilang Document ID para BAN na siya (No Duplicates)
-                const docRef = db.collection("blacklist").doc(num); 
-                batch.set(docRef, {
-                    agent: agent,
-                    weapon: weapon,
-                    missionOrder: num,
-                    vid: index + 1, // Awtomatikong sequence para sa profiling folders
-                    status: "ARCHIVED",
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-            });
+            status.innerText = "LINKING_SYSTEMS...";
 
             try {
-                await batch.commit();
+                // Gagawa tayo ng collection na 'registry' para sa folders
+                // Gagamitin ang ID format na 'AGENT_WEAPON' para walang duplicate
+                const registryID = `${agent}_${weapon}`;
+                
+                await db.collection("system_registry").doc(registryID).set({
+                    agentName: agent,
+                    weaponSystem: weapon,
+                    status: "ACTIVE",
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
                 status.style.color = "#00ff00";
-                status.innerText = "SUCCESS: MISSION_ORDERS_RESERVED";
-                document.getElementById('orderList').value = "";
+                status.innerText = `SUCCESS: ${weapon} LINKED TO ${agent}`;
+                
             } catch (error) {
                 status.style.color = "red";
                 status.innerText = "ERROR: " + error.message;

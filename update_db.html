@@ -2,59 +2,40 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>AGENT_PROFILE</title>
+    <title>PORTAL_01: AGENT_REGISTRY</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;800&display=swap" rel="stylesheet">
     <style>
         :root { --cyan: #00f2ff; --bg: #050506; }
-        body { background: var(--bg); color: #fff; font-family: 'JetBrains Mono', monospace; padding: 20px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .folder { background: #111; border: 1px solid #333; padding: 15px; text-align: center; cursor: pointer; }
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; }
-        .paper { background: #fdfdfd; color: #000; width: 90%; max-width: 400px; padding: 30px; border: 1px solid #ccc; font-size: 12px; }
-        .line { border-bottom: 1px solid #000; margin: 10px 0; }
-        .split { display: grid; grid-template-columns: 1fr 1fr; }
+        body { background: var(--bg); color: #fff; font-family: 'JetBrains Mono', monospace; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .card { background: #0a0a0c; border: 2px solid rgba(0, 242, 255, 0.2); padding: 30px; width: 350px; text-align: center; }
+        input { width: 100%; background: #000; border: 1px solid #333; color: var(--cyan); padding: 15px; margin: 20px 0; font-family: inherit; box-sizing: border-box; text-transform: uppercase; }
+        button { width: 100%; background: var(--cyan); color: #000; border: none; padding: 15px; font-weight: 800; cursor: pointer; }
+        #status { font-size: 10px; margin-top: 15px; color: #666; }
     </style>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 </head>
 <body>
-    <h2 id="header">ARCHIVE</h2>
-    <div class="grid" id="folderGrid"></div>
-
-    <div class="overlay" id="overlay" onclick="this.style.display='none'">
-        <div class="paper" id="paper"></div>
+    <div class="card">
+        <h2 style="font-size:14px; color:var(--cyan);">AGENT_REGISTRATION</h2>
+        <input type="text" id="agentName" placeholder="ENTER CODENAME">
+        <button onclick="register()">EXECUTE_REGISTRATION</button>
+        <div id="status">> STANDBY...</div>
     </div>
-
     <script>
         const firebaseConfig = { apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", authDomain: "my-admin-portal-12691.firebaseapp.com", projectId: "my-admin-portal-12691", storageBucket: "my-admin-portal-12691.firebasestorage.app", messagingSenderId: "317015091563", appId: "1:317015091563:web:baab5171d8e0a58acd442e" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        const activeAgent = localStorage.getItem("cia_agent") || "LZ";
 
-        db.collection("system_registry").where("agent", "==", activeAgent).where("status","==","OFFICIAL_DOCUMENT").onSnapshot(snap => {
-            const grid = document.getElementById('folderGrid');
-            grid.innerHTML = "";
-            snap.forEach(doc => {
-                const d = doc.data();
-                grid.innerHTML += `<div class="folder" onclick='view(${JSON.stringify(d)})'>📁 V-AGENT #${d.vid}</div>`;
-            });
-        });
-
-        function view(d) {
-            const date = d.timestamp.toDate();
-            const exp = new Date(date); exp.setDate(exp.getDate() + 30);
-            document.getElementById('paper').innerHTML = `
-                <center><b>OFFICIAL DOCUMENT</b><br>MISSION: ${d.missionOrder}</center>
-                <div class="line"></div>
-                AGENT: ${d.agent}<br>WEAPON: ${d.weapon}<br>VID: #${d.vid}
-                <div class="line"></div>
-                <b>EXPENSES</b>
-                <div class="split"><div>AMOUNT: ₱0.00</div><div>DATE: ${date.toLocaleDateString()}</div></div>
-                <div class="line"></div>
-                DEPLOYED: ${date.toLocaleString()}<br>
-                <span style="color:red">EXPIRES: ${exp.toLocaleString()}</span>
-            `;
-            document.getElementById('overlay').style.display = "flex";
+        async function register() {
+            const name = document.getElementById('agentName').value.trim().toUpperCase();
+            if(!name) return;
+            document.getElementById('status').innerText = ">> COMMUNICATING...";
+            try {
+                await db.collection("agents").doc(name).set({ agentName: name, status: "ACTIVE", timestamp: firebase.firestore.FieldValue.serverTimestamp() });
+                document.getElementById('status').innerText = ">> SUCCESS: REGISTERED";
+                document.getElementById('agentName').value = "";
+            } catch(e) { document.getElementById('status').innerText = ">> ERROR: " + e.code; }
         }
     </script>
 </body>

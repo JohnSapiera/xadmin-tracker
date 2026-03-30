@@ -2,138 +2,89 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DATABASE_COMMAND_CENTER_v2</title>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;800&display=swap" rel="stylesheet">
+    <title>MISSION_ORDER_REGISTRY</title>
     <style>
-        :root { --neon: #00f2ff; --bg: #0a0a0a; --red: #ff3c3c; }
-        body { 
-            background: var(--bg); color: var(--neon); font-family: 'JetBrains Mono', monospace; 
-            display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px;
+        body { background: #050505; color: #ff3c3c; font-family: 'Courier New', monospace; padding: 20px; text-align: center; }
+        .container { max-width: 450px; margin: auto; border: 2px solid #ff3c3c; padding: 25px; box-shadow: 0 0 15px rgba(255, 60, 60, 0.2); }
+        h2 { letter-spacing: 3px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        textarea { 
+            width: 100%; height: 250px; background: #111; color: #fff; 
+            border: 1px solid #444; margin-top: 15px; padding: 10px; 
+            box-sizing: border-box; font-size: 16px; outline: none;
         }
-        .panel {
-            background: #111; border: 2px solid var(--neon); padding: 30px;
-            box-shadow: 0 0 20px rgba(0, 242, 255, 0.2); width: 100%; max-width: 500px;
+        textarea:focus { border-color: #ff3c3c; }
+        button { 
+            width: 100%; padding: 15px; margin-top: 20px; cursor: pointer; 
+            background: #ff3c3c; color: #000; font-weight: bold; border: none; 
+            font-size: 14px; transition: 0.3s;
         }
-        h2 { font-size: 18px; text-align: center; border-bottom: 1px solid #333; padding-bottom: 15px; margin-top: 0; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; font-size: 10px; margin-bottom: 5px; color: #888; text-transform: uppercase; }
-        select, input, textarea {
-            width: 100%; background: #000; border: 1px solid #333; color: #fff;
-            padding: 12px; font-family: inherit; outline: none; box-sizing: border-box;
-        }
-        textarea { height: 150px; resize: none; font-size: 12px; border-color: var(--neon); }
-        .warning-box { font-size: 9px; color: var(--red); margin-bottom: 15px; border: 1px solid var(--red); padding: 8px; }
-        button {
-            width: 100%; background: var(--neon); color: #000; border: none;
-            padding: 15px; font-weight: 800; cursor: pointer; transition: 0.2s;
-        }
-        button:hover { background: #fff; box-shadow: 0 0 15px var(--neon); }
-        #status { font-size: 10px; margin-top: 20px; color: #fff; white-space: pre-wrap; background: #000; padding: 10px; border: 1px solid #222; }
+        button:hover { background: #fff; }
+        #status { font-size: 11px; margin-top: 15px; color: #888; text-transform: uppercase; }
     </style>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
-    <div class="panel">
-        <h2>DATABASE_BULK_IMPORTER</h2>
-        
-        <div class="warning-box">
-            CRITICAL: Make sure Firebase collection 'blacklist' is EMPTY before proceeding.
-        </div>
+<div class="container">
+    <h2>BLACKLIST_REGISTRY</h2>
+    <p style="font-size: 10px; color: #666;">PASTE ALREADY EXISTED MISSION ORDER# TO BAN THEM</p>
 
-        <div class="form-group">
-            <label>ASSIGN TO AGENT</label>
-            <select id="agentId">
-                <option value="LZ">LZ</option>
-                <option value="JFSN">JFSN</option>
-            </select>
-        </div>
+    <textarea id="orderList" placeholder="Enter Order Numbers...&#10;50501&#10;50502&#10;50503"></textarea>
 
-        <div class="form-group">
-            <label>TARGET WEAPON SYSTEM</label>
-            <select id="weaponId">
-                <option value="R8P">R8P (LZ)</option>
-                <option value="RMN">RMN (LZ)</option>
-                <option value="RMN14">RMN14 (LZ)</option>
-                <option value="RMN9">RMN9 (JFSN)</option>
-                <option value="TechnoCP">TechnoCP (JFSN)</option>
-            </select>
-        </div>
+    <button onclick="registerBlacklist()">EXECUTE_BAN_SEQUENCE</button>
+    <div id="status">STATUS: STANDBY</div>
+</div>
 
-        <div class="form-group">
-            <label>MISSION ORDER LIST (Paste numbers here, one per line)</label>
-            <textarea id="bulkList" placeholder="10001&#10;10002&#10;10003..."></textarea>
-        </div>
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
+        authDomain: "my-admin-portal-12691.firebaseapp.com",
+        projectId: "my-admin-portal-12691",
+        storageBucket: "my-admin-portal-12691.firebasestorage.app",
+        messagingSenderId: "317015091563",
+        appId: "1:317015091563:web:baab5171d8e0a58acd442e"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-        <button onclick="startBulkImport()">EXECUTE BULK UPLOAD</button>
-        <div id="status">SYSTEM_READY_FOR_DATA_INPUT...</div>
-    </div>
+    async function registerBlacklist() {
+        const rawInput = document.getElementById('orderList').value.trim();
+        const status = document.getElementById('status');
 
-    <script>
-        // FIREBASE CONFIG
-        const firebaseConfig = {
-            apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
-            authDomain: "my-admin-portal-12691.firebaseapp.com",
-            projectId: "my-admin-portal-12691",
-            storageBucket: "my-admin-portal-12691.firebasestorage.app",
-            messagingSenderId: "317015091563",
-            appId: "1:317015091563:web:baab5171d8e0a58acd442e"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-
-        async function startBulkImport() {
-            const status = document.getElementById('status');
-            const agent = document.getElementById('agentId').value;
-            const weapon = document.getElementById('weaponId').value;
-            const rawData = document.getElementById('bulkList').value.trim();
-
-            if (!rawData) {
-                alert("Please paste the Mission Order numbers first.");
-                return;
-            }
-
-            // Split lines and remove empty ones
-            const numbers = rawData.split('\n').map(n => n.trim()).filter(n => n !== "");
-
-            if (!confirm(`You are about to upload ${numbers.length} Mission Orders to Agent ${agent} [${weapon}]. Continue?`)) return;
-
-            status.innerText = "UPLOADING_DATA... PLEASE WAIT.";
-            status.style.color = "yellow";
-
-            const batch = db.batch();
-            let count = 0;
-
-            try {
-                // Firebase batch limit is 500 documents per commit
-                // Loop through numbers and add to batch
-                numbers.forEach((num, index) => {
-                    const docRef = db.collection("blacklist").doc(); // Auto-generate ID
-                    batch.set(docRef, {
-                        agent: agent,
-                        weapon: weapon,
-                        vid: index + 1, // Automatic sequence (V.Agent #)
-                        missionOrder: num,
-                        amount: 0, // Default 0 for fresh records
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                    count++;
-                });
-
-                await batch.commit();
-                
-                status.style.color = "#00f2ff";
-                status.innerText = `UPLOAD_COMPLETE!\nRECORDS_ARCHIVED: ${count}\nAGENT: ${agent}\nWEAPON: ${weapon}\n\nAll numbers are now registered and sorted.`;
-                document.getElementById('bulkList').value = ""; // Clear textarea
-
-            } catch (error) {
-                console.error(error);
-                status.style.color = "var(--red)";
-                status.innerText = `CRITICAL_ERROR: ${error.message}\n\nCheck if you exceed 500 records. If yes, upload in smaller chunks.`;
-            }
+        if(!rawInput) {
+            alert("INPUT_REQUIRED: No numbers detected.");
+            return;
         }
-    </script>
+
+        const orders = rawInput.split('\n').map(n => n.trim()).filter(n => n !== "");
+        status.innerText = "PROCESSING_BAN_LIST...";
+        status.style.color = "yellow";
+
+        const batch = db.batch();
+
+        orders.forEach((num) => {
+            // Gagamitin natin ang mismong Number bilang Document ID 
+            // para maiwasan ang duplicate at mabilis ma-check later
+            const docRef = db.collection("blacklist").doc(num); 
+            batch.set(docRef, {
+                missionOrder: num,
+                status: "BANNED",
+                registeredAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        });
+
+        try {
+            await batch.commit();
+            status.style.color = "#00ff00";
+            status.innerText = "SUCCESS: " + orders.length + " ORDERS HAVE BEEN BLACKLISTED.";
+            document.getElementById('orderList').value = "";
+        } catch (e) {
+            status.style.color = "red";
+            status.innerText = "ERROR: " + e.message;
+        }
+    }
+</script>
+
 </body>
 </html>

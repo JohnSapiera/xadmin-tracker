@@ -3,126 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AGENT_DOSSIER | ARCHIVE_SYSTEM</title>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;500;800&display=swap" rel="stylesheet">
+    <title>AGENT_PROFILE | DOSSIER_SYSTEM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@800&display=swap" rel="stylesheet">
     <style>
         :root { 
-            --bg: #0c0c0e; 
+            --bg: #111; 
             --cyan: #00f2ff; 
-            --folder: #ffd700; 
-            --paper: #f0f0f0; 
-            --red: #ff3c3c;
+            --folder: #d4af37; 
+            --paper: #f4f1ea; /* Kulay ng lumang papel */
+            --ink: #2b2b2b;
+            --red: #cc0000;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body { 
-            background: var(--bg); 
-            color: #fff; 
-            font-family: 'JetBrains Mono', monospace; 
-            margin: 0; 
-            padding: 15px; 
-            background-image: radial-gradient(#1a1a1a 1px, transparent 1px); 
-            background-size: 25px 25px;
-            min-height: 100vh;
+            background: var(--bg); color: #fff; font-family: 'JetBrains Mono', monospace; 
+            margin: 0; padding: 15px; background-image: radial-gradient(#222 1px, transparent 1px); 
+            background-size: 20px 20px; min-height: 100vh;
         }
 
-        /* Top Navigation Bar */
+        /* Nav Header */
         .nav-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #222;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 25px;
         }
-
-        .breadcrumb { font-size: 9px; color: var(--cyan); letter-spacing: 1px; }
-
-        .back-home {
+        .breadcrumb { font-size: 11px; color: var(--cyan); letter-spacing: 1px; }
+        .back-btn {
             background: none; border: 1px solid var(--cyan); color: var(--cyan);
-            padding: 5px 12px; font-size: 10px; cursor: pointer; font-family: inherit;
+            padding: 5px 12px; font-size: 10px; cursor: pointer; font-family: inherit; font-weight: bold;
         }
 
-        /* Folder Grid View */
-        .explorer-grid { 
-            display: grid; 
-            grid-template-columns: repeat(2, 1fr); 
-            gap: 20px; 
-            padding: 10px;
-        }
-
-        .folder-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            cursor: pointer;
-            padding: 15px;
-            transition: 0.2s;
-        }
-
-        .folder-item:active { background: rgba(0, 242, 255, 0.1); border-radius: 8px; }
-
+        /* Folder Desktop View */
+        .desktop-view { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; padding: 20px 10px; }
+        .folder-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: transform 0.2s; }
+        .folder-item:active { transform: scale(0.95); }
+        
         .folder-icon {
-            width: 70px; height: 50px;
-            background: var(--folder);
-            position: relative;
-            border-radius: 0 4px 4px 4px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+            width: 80px; height: 55px; background: var(--folder); position: relative;
+            border-radius: 0 5px 5px 5px; box-shadow: inset 0 0 10px rgba(0,0,0,0.2), 0 5px 15px rgba(0,0,0,0.5);
         }
         .folder-icon::before {
-            content: ''; position: absolute; top: -8px; left: 0;
-            width: 30px; height: 10px; background: var(--folder);
-            border-radius: 4px 4px 0 0;
+            content: ''; position: absolute; top: -10px; left: 0; width: 35px; height: 12px; 
+            background: var(--folder); border-radius: 5px 5px 0 0;
+        }
+        /* Folder label tag */
+        .folder-icon::after {
+            content: ''; position: absolute; top: 15px; left: 10px; width: 40px; height: 20px;
+            background: rgba(255,255,255,0.8); border-radius: 2px;
+        }
+        .folder-name { font-size: 13px; font-weight: 800; margin-top: 15px; text-align: center; letter-spacing: 1px; }
+
+        /* Document View (Papers) */
+        .document-view { display: none; }
+        .paper-container { display: flex; flex-direction: column; gap: 25px; margin-top: 20px; }
+
+        /* The Official Document Animation & Style */
+        .official-paper {
+            background: var(--paper); color: var(--ink); 
+            font-family: 'Courier Prime', monospace; /* Typewriter font */
+            padding: 30px 20px; position: relative;
+            box-shadow: 2px 5px 15px rgba(0,0,0,0.6); 
+            border: 1px solid #ccc;
+            /* Animation para parang binubunot na papel */
+            animation: pullPaper 0.5s cubic-bezier(0.25, 1, 0.5, 1) backwards;
+        }
+        
+        @keyframes pullPaper { 
+            0% { transform: translateY(50px) scale(0.95); opacity: 0; } 
+            100% { transform: translateY(0) scale(1); opacity: 1; } 
         }
 
-        .folder-name { font-size: 11px; font-weight: 800; margin-top: 12px; text-align: center; color: #fff; }
+        /* Staggered animation para sa bawat papel */
+        .official-paper:nth-child(1) { animation-delay: 0.1s; }
+        .official-paper:nth-child(2) { animation-delay: 0.2s; }
+        .official-paper:nth-child(3) { animation-delay: 0.3s; }
+        .official-paper:nth-child(4) { animation-delay: 0.4s; }
+        .official-paper:nth-child(5) { animation-delay: 0.5s; }
 
-        /* File View (Papers) */
-        .file-view-container { display: none; animation: slideUp 0.3s ease-out; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        /* Paper Content Formatting */
+        .doc-header { text-align: center; border-bottom: 2px solid var(--ink); padding-bottom: 10px; margin-bottom: 20px; }
+        .doc-title { font-size: 18px; font-weight: bold; letter-spacing: -0.5px; }
+        .doc-subtitle { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #555; }
 
-        .paper-stack { display: flex; flex-direction: column; gap: 20px; margin-top: 15px; }
-
-        .mission-paper {
-            background: var(--paper);
-            color: #1a1a1a;
-            padding: 25px 20px;
-            position: relative;
-            box-shadow: 8px 8px 0px rgba(0,0,0,0.5);
-            border-left: 12px solid #bbb;
+        .v-agent-tag {
+            display: inline-block; background: var(--ink); color: var(--paper);
+            padding: 4px 10px; font-size: 14px; font-weight: bold; margin-bottom: 20px;
         }
 
-        .stamp {
-            position: absolute; top: 15px; right: 15px;
-            border: 3px solid var(--red); color: var(--red);
-            padding: 4px 8px; font-size: 10px; font-weight: 900;
-            transform: rotate(12deg); opacity: 0.8;
-            letter-spacing: 1px;
-        }
+        /* Expenses Column Layout */
+        .expenses-section { border: 1px dashed #888; padding: 10px; margin-bottom: 20px; background: rgba(0,0,0,0.03); }
+        .expenses-header { font-weight: bold; font-size: 12px; margin-bottom: 10px; border-bottom: 1px solid #888; padding-bottom: 5px; }
+        
+        .expenses-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .expenses-table th { text-align: left; border-bottom: 1px solid #aaa; padding-bottom: 5px; color: #555; }
+        .expenses-table td { padding: 8px 0; font-weight: bold; }
+        .expenses-table .amount { color: var(--red); }
 
-        .paper-header { 
-            border-bottom: 2px solid #1a1a1a; 
-            margin-bottom: 15px; 
-            font-size: 14px; 
-            font-weight: 800;
-            padding-bottom: 5px;
-        }
-
-        .data-row {
+        .deployment-date { 
+            margin-top: 30px; font-size: 11px; font-weight: bold; 
+            border-top: 2px solid var(--ink); padding-top: 10px;
             display: flex; justify-content: space-between;
-            font-size: 11px; margin-bottom: 8px;
-            border-bottom: 1px dashed #aaa;
-            padding-bottom: 2px;
         }
 
-        .label { font-weight: 800; text-transform: uppercase; color: #555; }
-        .value { font-weight: 500; }
+        .stamp-classified {
+            position: absolute; top: 20px; right: 10px;
+            border: 3px solid var(--red); color: var(--red);
+            padding: 5px 10px; font-size: 14px; font-weight: 900; font-family: 'JetBrains Mono', sans-serif;
+            transform: rotate(15deg); opacity: 0.6; pointer-events: none;
+        }
 
-        .footer-note { font-size: 8px; color: #888; text-align: right; margin-top: 15px; font-style: italic; }
-
+        .empty-msg { text-align: center; color: #666; font-size: 12px; margin-top: 50px; font-family: 'JetBrains Mono', monospace; }
         .hidden { display: none !important; }
-        .empty-msg { text-align: center; color: #666; font-size: 11px; margin-top: 50px; }
     </style>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -131,37 +123,35 @@
 <body>
 
     <div class="nav-header">
-        <div class="breadcrumb">DATABASE://BLACKLIST/<span id="agentDisplay">...</span></div>
-        <button class="back-home" onclick="window.location.href='dashboard.html'">DASHBOARD</button>
+        <div class="breadcrumb">AGENT_PROFILE :: <span id="agentNameDisplay" style="color:#fff; font-size:14px;">...</span></div>
+        <button class="back-btn" onclick="window.location.href='dashboard.html'">LOGOUT</button>
     </div>
 
-    <div id="explorerRoot">
-        <div class="explorer-grid">
-            <div class="folder-item" onclick="openFolder('R8P')">
-                <div class="folder-icon"></div>
-                <div class="folder-name">R8P_FILES</div>
-            </div>
-            <div class="folder-item" onclick="openFolder('RMN14')">
-                <div class="folder-icon"></div>
-                <div class="folder-name">RMN14_FILES</div>
-            </div>
+    <div id="desktopView" class="desktop-view">
+        <div class="folder-item" onclick="openWeaponFolder('R8P')">
+            <div class="folder-icon"></div>
+            <div class="folder-name">WEAPON: R8P</div>
+        </div>
+        <div class="folder-item" onclick="openWeaponFolder('RMN')">
+            <div class="folder-icon"></div>
+            <div class="folder-name">WEAPON: RMN</div>
         </div>
     </div>
 
-    <div id="fileView" class="file-view-container">
-        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-            <button class="back-home" onclick="closeFolder()"><< BACK</button>
-            <div style="font-size: 10px; color: var(--cyan);">DIR: <span id="currentFolder">...</span></div>
+    <div id="documentView" class="document-view">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <button class="back-btn" onclick="closeWeaponFolder()"><< CLOSE FOLDER</button>
+            <div style="font-size: 11px; color: var(--folder); font-weight:bold;">DIR: /<span id="currentFolder">...</span></div>
         </div>
 
-        <div id="paperStack" class="paper-stack">
+        <div id="paperContainer" class="paper-container">
             </div>
     </div>
 
     <script>
-        // 1. Firebase Setup
-        const activeAgent = localStorage.getItem("cia_agent") || "GHOST";
-        document.getElementById('agentDisplay').innerText = activeAgent;
+        // INIT FIREBASE
+        const activeAgent = localStorage.getItem("cia_agent") || "UNKNOWN_AGENT";
+        document.getElementById('agentNameDisplay').innerText = activeAgent;
 
         const firebaseConfig = {
             apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
@@ -174,92 +164,91 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // 2. Navigation
-        function openFolder(weapon) {
-            document.getElementById('explorerRoot').classList.add('hidden');
-            document.getElementById('fileView').classList.remove('hidden');
-            document.getElementById('currentFolder').innerText = weapon;
-            loadBlacklistData(weapon);
+        // UI LOGIC
+        function openWeaponFolder(weaponType) {
+            document.getElementById('desktopView').classList.add('hidden');
+            document.getElementById('documentView').style.display = 'block';
+            document.getElementById('currentFolder').innerText = weaponType;
+            fetchAgentDossier(weaponType);
         }
 
-        function closeFolder() {
-            document.getElementById('fileView').classList.add('hidden');
-            document.getElementById('explorerRoot').classList.remove('hidden');
+        function closeWeaponFolder() {
+            document.getElementById('documentView').style.display = 'none';
+            document.getElementById('desktopView').classList.remove('hidden');
+            document.getElementById('paperContainer').innerHTML = ""; // Clear papers
         }
 
-        // 3. Load Data from 'blacklist' collection
-        function loadBlacklistData(weaponType) {
-            const stack = document.getElementById('paperStack');
-            stack.innerHTML = "<div style='color:var(--cyan); font-size:10px;'>DECRYPTING_BLACKLIST...</div>";
+        // FETCH & SORT LOGIC
+        function fetchAgentDossier(weaponType) {
+            const container = document.getElementById('paperContainer');
+            container.innerHTML = "<div style='color:var(--cyan); text-align:center; font-size:10px;'>PULLING DOCUMENTS...</div>";
 
-            // Direct fetch from 'blacklist' collection
             db.collection("blacklist").onSnapshot(snapshot => {
-                stack.innerHTML = "";
+                container.innerHTML = "";
                 
-                // CLIENT-SIDE FILTERING (No Index Required)
-                const filtered = snapshot.docs.filter(doc => {
+                // 1. FILTER: Agent Name at Weapon System lang
+                const myFiles = snapshot.docs.filter(doc => {
                     const data = doc.data();
-                    const aMatch = data.agent && data.agent.toUpperCase() === activeAgent.toUpperCase();
-                    const wMatch = data.weapon && data.weapon.toUpperCase() === weaponType.toUpperCase();
-                    return aMatch && wMatch;
+                    const isMyAgent = data.agent && data.agent.toUpperCase() === activeAgent.toUpperCase();
+                    // Checking for RMN or RMN14 compatability just in case
+                    const wpn = data.weapon ? data.weapon.toUpperCase() : "";
+                    const isMyWeapon = wpn.includes(weaponType.toUpperCase()); 
+                    
+                    return isMyAgent && isMyWeapon;
                 });
 
-                // Manual Sort: Newest First
-                filtered.sort((a, b) => {
-                    const tA = a.data().timestamp?.seconds || 0;
-                    const tB = b.data().timestamp?.seconds || 0;
-                    return tB - tA;
-                });
-
-                if(filtered.length === 0) {
-                    stack.innerHTML = `<div class="empty-msg">EMPTY_DIRECTORY: NO RECORDS FOUND FOR ${weaponType}</div>`;
+                if(myFiles.length === 0) {
+                    container.innerHTML = `<div class="empty-msg">FOLDER EMPTY.<br>NO RECORDS FOR ${weaponType}.</div>`;
                     return;
                 }
 
-                filtered.forEach(doc => {
+                // 2. SEQUENCE IN ORDER: I-sort gamit ang V-Agent # (vid)
+                myFiles.sort((a, b) => {
+                    const vidA = parseInt(a.data().vid) || 0;
+                    const vidB = parseInt(b.data().vid) || 0;
+                    return vidA - vidB; // Ascending Order (V-1, V-2, V-3...)
+                });
+
+                // 3. RENDER PAPERS
+                myFiles.forEach(doc => {
                     const data = doc.data();
-                    
-                    // Date Calculations
                     const dDate = data.timestamp ? data.timestamp.toDate() : new Date();
-                    const tDate = new Date(dDate);
-                    tDate.setDate(tDate.getDate() + 30); // Auto 30-Day Limit
+                    
+                    // Format Date to Official Style (e.g., 25-OCT-2023)
+                    const dateString = dDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, '-').toUpperCase();
 
-                    const isExpired = new Date() > tDate;
-
-                    stack.innerHTML += `
-                        <div class="mission-paper">
-                            <div class="stamp">BLACKLISTED</div>
-                            <div class="paper-header">MISSION ORDER: #${data.missionOrder || 'N/A'}</div>
+                    container.innerHTML += `
+                        <div class="official-paper">
+                            <div class="stamp-classified">CONFIDENTIAL</div>
                             
-                            <div class="data-row">
-                                <span class="label">V-ID:</span>
-                                <span class="value">V-${data.vid || '0000'}</span>
+                            <div class="doc-header">
+                                <div class="doc-subtitle">Department of Records</div>
+                                <div class="doc-title">MISSION ORDER: #${data.missionOrder || '0000'}</div>
                             </div>
+
+                            <div class="v-agent-tag">V-AGENT ID: ${data.vid || 'N/A'}</div>
                             
-                            <div class="data-row">
-                                <span class="label">EXPENSES:</span>
-                                <span class="value">PHP 0.00</span>
+                            <div class="expenses-section">
+                                <div class="expenses-header">AUTHORIZED EXPENSES LOG</div>
+                                <table class="expenses-table">
+                                    <tr>
+                                        <th>AMOUNT</th>
+                                        <th>DATE FILED</th>
+                                    </tr>
+                                    <tr>
+                                        <td class="amount">PHP 0.00</td>
+                                        <td>--/--/----</td>
+                                    </tr>
+                                    </table>
                             </div>
 
-                            <div class="data-row">
-                                <span class="label">DEPLOYMENT_DATE:</span>
-                                <span class="value">${dDate.toLocaleDateString()}</span>
-                            </div>
-
-                            <div class="data-row" style="${isExpired ? 'color:var(--red); font-weight:800;' : ''}">
-                                <span class="label">TERMINATION_DATE:</span>
-                                <span class="value">${tDate.toLocaleDateString()} ${isExpired ? '[EXPIRED]' : ''}</span>
-                            </div>
-
-                            <div class="footer-note">
-                                ARCHIVE_REF: ${doc.id.substring(0,8).toUpperCase()}
+                            <div class="deployment-date">
+                                <span>DEPLOYED ON:</span>
+                                <span>${dateString}</span>
                             </div>
                         </div>
                     `;
                 });
-            }, error => {
-                console.error(error);
-                stack.innerHTML = "<div style='color:red; font-size:10px;'>ACCESS_DENIED: CHECK CONNECTION.</div>";
             });
         }
     </script>

@@ -2,140 +2,56 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AGENT_PROFILE | MOSSAD DOSSIER</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AGENT_DOSSIER | ARCHIVE</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;500;800&display=swap" rel="stylesheet">
     <style>
-        :root { 
-            --bg: #050506; 
-            --cyan: #00f2ff; 
-            --danger: #ff3c3c;
-            --border: rgba(0, 242, 255, 0.15); 
-            --panel: rgba(15, 15, 20, 0.95);
-        }
-
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
+        :root { --bg: #0c0c0e; --cyan: #00f2ff; --folder: #ffd700; --paper: #e0e0e0; }
         body { 
-            background: var(--bg); 
-            color: #fff; 
-            font-family: 'JetBrains Mono', monospace; 
-            margin: 0; 
-            padding: 15px;
-            /* Tactical Grid Background */
-            background-image: radial-gradient(rgba(0, 242, 255, 0.05) 1px, transparent 1px);
-            background-size: 20px 20px;
+            background: var(--bg); color: #fff; font-family: 'JetBrains Mono'; 
+            margin: 0; padding: 20px; background-image: radial-gradient(#1a1a1a 1px, transparent 1px); background-size: 20px 20px;
         }
 
-        /* Top Navigation */
-        .header-nav { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center;
-            border-bottom: 2px solid var(--cyan); 
-            padding-bottom: 12px; 
-            margin-bottom: 20px; 
-        }
+        .breadcrumb { font-size: 10px; color: var(--cyan); margin-bottom: 20px; border-bottom: 1px solid #222; padding-bottom: 5px; }
 
-        .agent-id-card {
-            display: flex;
-            flex-direction: column;
-        }
+        /* Folder Grid */
+        .explorer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 20px; }
 
-        .agent-name { font-size: 18px; font-weight: 800; color: var(--cyan); letter-spacing: 1px; }
-        .clearance-tag { font-size: 9px; color: #555; font-weight: 800; }
-
-        .back-btn {
-            background: var(--cyan);
-            color: #000;
-            border: none;
-            padding: 8px 15px;
-            font-family: inherit;
-            font-size: 10px;
-            font-weight: 800;
-            cursor: pointer;
-            text-transform: uppercase;
+        .folder-icon {
+            display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: 0.2s;
         }
-
-        /* Profile Layout */
-        .profile-container {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
+        .folder-icon:hover { transform: scale(1.05); }
+        .folder-shape {
+            width: 60px; height: 45px; background: var(--folder); position: relative;
+            border-radius: 0 5px 5px 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
-
-        @media (min-width: 900px) {
-            .profile-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .folder-shape::before {
+            content: ''; position: absolute; top: -10px; left: 0;
+            width: 25px; height: 10px; background: var(--folder); border-radius: 5px 5px 0 0;
         }
+        .folder-label { font-size: 10px; margin-top: 8px; text-align: center; font-weight: 800; color: #fff; }
 
-        .section { 
-            border: 1px solid var(--border); 
-            background: var(--panel); 
-            padding: 20px; 
-            min-height: 400px;
-            position: relative;
-        }
-
-        .section-title { 
-            font-size: 11px; 
-            color: var(--cyan); 
-            border-bottom: 1px solid var(--border); 
-            padding-bottom: 8px; 
-            margin-bottom: 20px; 
-            letter-spacing: 2px; 
-            display: flex;
-            justify-content: space-between;
-        }
-
-        /* Memoirs / Bounty Cards */
-        .weapon-group { margin-bottom: 25px; }
-        .weapon-header { 
-            font-weight: 800; 
-            font-size: 10px;
-            color: #000; 
-            background: var(--cyan); 
-            padding: 3px 10px; 
-            display: inline-block; 
-            margin-bottom: 10px; 
-        }
+        /* File / Paper Styling */
+        .file-list { display: none; grid-template-columns: 1fr; gap: 15px; margin-top: 20px; animation: fadeIn 0.5s; }
         
-        .vagent-card { 
-            background: rgba(0,0,0,0.4); 
-            border: 1px solid #222; 
-            padding: 12px; 
-            margin-bottom: 10px; 
-            font-size: 11px;
-            position: relative;
-            overflow: hidden;
+        .mission-paper {
+            background: var(--paper); color: #111; padding: 20px; position: relative;
+            box-shadow: 5px 5px 0px rgba(0,242,255,0.2); border-left: 10px solid #ccc;
+        }
+        .mission-paper::after {
+            content: 'CONFIDENTIAL'; position: absolute; top: 10px; right: 10px;
+            border: 2px solid #ff3c3c; color: #ff3c3c; padding: 2px 5px;
+            font-size: 8px; transform: rotate(15deg); font-weight: 800;
         }
 
-        .info-row { display: flex; justify-content: space-between; margin-top: 6px; color: #666; font-size: 10px; }
-        .info-val { color: #ccc; }
+        .paper-header { border-bottom: 2px solid #111; margin-bottom: 10px; font-weight: 800; font-size: 14px; }
+        .data-row { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 5px; border-bottom: 1px dashed #999; }
+        .label { font-weight: 800; text-transform: uppercase; }
+
+        .back-btn { background: none; border: 1px solid var(--cyan); color: var(--cyan); padding: 5px 10px; cursor: pointer; font-size: 10px; margin-bottom: 15px; }
         
-        .status-badge {
-            font-size: 9px;
-            padding: 2px 6px;
-            border-radius: 2px;
-            font-weight: 800;
-        }
-        .expired-bg { color: var(--danger); border: 1px solid var(--danger); }
-        .active-bg { color: #00ff00; border: 1px solid #00ff00; }
-
-        /* Dossier Archive Style */
-        .archive-entry {
-            border-bottom: 1px solid #1a1a1f;
-            padding: 10px 0;
-            font-size: 11px;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        .archive-meta { color: #555; font-size: 9px; }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: #000; }
-        ::-webkit-scrollbar-thumb { background: var(--cyan); }
+        .hidden { display: none; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -143,42 +59,31 @@
 </head>
 <body>
 
-    <div class="header-nav">
-        <div class="agent-id-card">
-            <div class="agent-name">AGENT: <span id="codenameDisplay">---</span></div>
-            <div class="clearance-tag">SECURE_LEVEL_5 // MOSSAD_CENTRAL</div>
+    <div class="breadcrumb">C:\MOSSAD\AGENTS\<span id="agentDisplay">...</span>\DEPLOYMENTS</div>
+
+    <div id="rootView">
+        <div class="explorer-grid">
+            <div class="folder-icon" onclick="openFolder('R8P')">
+                <div class="folder-shape"></div>
+                <div class="folder-label">WEAPON_R8P</div>
+            </div>
+            <div class="folder-icon" onclick="openFolder('RMN14')">
+                <div class="folder-shape"></div>
+                <div class="folder-label">WEAPON_RMN14</div>
+            </div>
         </div>
-        <button class="back-btn" onclick="window.location.href='dashboard.html'">RETURN</button>
     </div>
 
-    <div class="profile-container">
-        
-        <div class="section">
-            <div class="section-title">
-                <span>DEPLOYMENT_HISTORY</span>
-                <span style="color:#333">JSON_FEED</span>
+    <div id="folderView" class="hidden">
+        <button class="back-btn" onclick="closeFolder()"><< BACK TO ROOT</button>
+        <div class="breadcrumb">PATH: DEPLOYMENTS / <span id="currentFolderName">...</span></div>
+        <div id="fileContainer" class="file-list" style="display: grid;">
             </div>
-            <div id="memoirsList">
-                <div style="color:#333; font-size:10px;">> DECRYPTING FILES...</div>
-            </div>
-        </div>
-
-        <div class="section">
-            <div class="section-title">
-                <span>CONFIDENTIAL_ARCHIVE</span>
-                <span style="color:#333">TERM_LOGS</span>
-            </div>
-            <div id="confidentialInfo">
-                <div style="color:#333; font-size:10px;">> WAITING FOR SCANNER DATA...</div>
-            </div>
-        </div>
-
     </div>
 
     <script>
-        const activeAgent = localStorage.getItem("cia_agent");
-        if (!activeAgent) { window.location.href = "index.html"; }
-        document.getElementById('codenameDisplay').innerText = activeAgent;
+        const activeAgent = localStorage.getItem("cia_agent") || "GHOST";
+        document.getElementById('agentDisplay').innerText = activeAgent;
 
         const firebaseConfig = {
             apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
@@ -191,82 +96,70 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // 1. MEMOIRS FETCH (Bounties)
-        db.collection("bounties")
-          .where("agent", "==", activeAgent)
-          .orderBy("timestamp", "desc")
-          .onSnapshot((snapshot) => {
-            const memoirsDiv = document.getElementById('memoirsList');
-            if (snapshot.empty) {
-                memoirsDiv.innerHTML = "<div style='color:#555; font-size:10px;'>[ NO_DATA_RECORDED ]</div>";
-                return;
-            }
+        function openFolder(weaponName) {
+            document.getElementById('rootView').classList.add('hidden');
+            document.getElementById('folderView').classList.remove('hidden');
+            document.getElementById('currentFolderName').innerText = weaponName;
+            fetchFiles(weaponName);
+        }
 
-            let weaponsData = {};
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                if (!weaponsData[data.weapon]) weaponsData[data.weapon] = [];
-                weaponsData[data.weapon].push(data);
-            });
+        function closeFolder() {
+            document.getElementById('folderView').classList.add('hidden');
+            document.getElementById('rootView').classList.remove('hidden');
+        }
 
-            let html = "";
-            for (let wpn in weaponsData) {
-                html += `<div class="weapon-group">
-                            <div class="weapon-header">${wpn} SYSTEM</div>`;
-                
-                weaponsData[wpn].forEach(item => {
-                    const termDate = item.timestamp ? item.timestamp.toDate() : new Date();
-                    const expDate = new Date(termDate);
-                    expDate.setMonth(expDate.getMonth() + 1);
-                    const isExpired = new Date() > expDate;
+        function fetchFiles(weaponName) {
+            const container = document.getElementById('fileContainer');
+            container.innerHTML = "<div style='color:var(--cyan)'>ACCESSING ENCRYPTED FILES...</div>";
 
-                    html += `
-                        <div class="vagent-card">
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <span style="color:var(--cyan); font-weight:800;">ID: #${item.vid}</span>
-                                <span class="status-badge ${isExpired ? 'expired-bg' : 'active-bg'}">
-                                    ${isExpired ? 'EXPIRED' : 'ACTIVE'}
-                                </span>
+            db.collection("bounties")
+              .where("agent", "==", activeAgent)
+              .where("weapon", "==", weaponName)
+              .orderBy("timestamp", "desc")
+              .onSnapshot(snap => {
+                  container.innerHTML = "";
+                  if (snap.empty) {
+                      container.innerHTML = "<div style='color:#555'>FOLDER_EMPTY: NO_RECORDS_FOUND</div>";
+                      return;
+                  }
+
+                  snap.forEach(doc => {
+                      const data = doc.data();
+                      const deployDate = data.timestamp ? data.timestamp.toDate() : new Date();
+                      
+                      // Termination Date (30 Days After)
+                      const termDate = new Date(deployDate);
+                      termDate.setDate(termDate.getDate() + 30);
+
+                      const isExpired = new Date() > termDate;
+
+                      container.innerHTML += `
+                        <div class="mission-paper">
+                            <div class="paper-header">MISSION ORDER: #${data.missionOrder}</div>
+                            <div class="data-row">
+                                <span class="label">V-AGENT ID:</span>
+                                <span>V-${data.vid}</span>
                             </div>
-                            <div class="info-row">
-                                <span>DATE_DEPLOYED:</span>
-                                <span class="info-val">${termDate.toLocaleDateString()}</span>
+                            <div class="data-row">
+                                <span class="label">EXPENSES:</span>
+                                <span>PHP 0.00</span>
                             </div>
-                            <div class="info-row">
-                                <span>EXPIRATION:</span>
-                                <span class="info-val" style="${isExpired ? 'color:var(--danger)' : ''}">${expDate.toLocaleDateString()}</span>
+                            <div class="data-row">
+                                <span class="label">DEPLOYMENT_DATE:</span>
+                                <span>${deployDate.toLocaleDateString()}</span>
                             </div>
-                        </div>`;
-                });
-                html += `</div>`;
-            }
-            memoirsDiv.innerHTML = html;
-        });
-
-        // 2. ARCHIVE FETCH (Dossier from Scanner)
-        db.collection("dossier")
-          .where("agent", "==", activeAgent)
-          .orderBy("timestamp", "desc")
-          .onSnapshot(snapshot => {
-              const confDiv = document.getElementById('confidentialInfo');
-              if(snapshot.empty) {
-                  confDiv.innerHTML = "<div style='color:#555; font-size:10px;'>[ ARCHIVE_EMPTY ]</div>";
-                  return;
-              }
-
-              let html = "";
-              snapshot.forEach(doc => {
-                  const d = doc.data();
-                  const dateArchived = d.timestamp ? d.timestamp.toDate().toLocaleString() : 'N/A';
-                  html += `
-                    <div class="archive-entry">
-                        <div style="color:#fff; font-weight:800;">MISSION: ${d.missionOrder}</div>
-                        <div style="color:#aaa;">WEAPON: ${d.weapon} // TARGET: V-${d.vid}</div>
-                        <div class="archive-meta">ARCHIVED_AT: ${dateArchived}</div>
-                    </div>`;
+                            <div class="data-row" style="${isExpired ? 'color:red; font-weight:800;' : ''}">
+                                <span class="label">TERMINATION_DATE:</span>
+                                <span>${termDate.toLocaleDateString()} ${isExpired ? '[EXPIRED]' : ''}</span>
+                            </div>
+                            <div style="font-size:8px; margin-top:10px; color:#777; text-align:right;">
+                                REF_ID: ${doc.id.substring(0,8).toUpperCase()}
+                            </div>
+                        </div>
+                      `;
+                  });
               });
-              confDiv.innerHTML = html;
-          });
+        }
     </script>
 </body>
 </html>

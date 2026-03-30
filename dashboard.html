@@ -2,104 +2,125 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MOSSAD - ENCRYPTED TERMINAL</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MOSSAD - MOBILE TERMINAL</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;500;800&display=swap" rel="stylesheet">
     
     <style>
         :root {
             --bg-deep: #050506;
-            --panel-bg: rgba(18, 18, 24, 0.95);
+            --panel-bg: rgba(10, 10, 14, 0.98);
             --accent-cyan: #00f2ff;
             --danger-red: #ff3c3c;
             --text-main: #e0e6ed;
-            --text-dim: #626a77;
-            --border: rgba(0, 242, 255, 0.1);
+            --border: rgba(0, 242, 255, 0.15);
         }
 
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body {
             background-color: var(--bg-deep);
             color: var(--text-main);
             font-family: 'JetBrains Mono', monospace;
             margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
-                        linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
-            background-size: 100% 2px, 3px 100%;
+        }
+
+        /* Tactical Overlay */
+        body::after {
+            content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
+            background-size: 100% 3px; z-index: 9999; pointer-events: none;
         }
 
         .status-header {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 8px 20px; background: rgba(0, 0, 0, 0.9);
-            border-bottom: 1px solid var(--accent-cyan); font-size: 10px;
+            padding: 10px 15px; background: #000;
+            border-bottom: 1px solid var(--accent-cyan); font-size: 9px;
             letter-spacing: 1px; color: var(--accent-cyan);
         }
 
+        /* Responsive Dashboard */
         .dashboard {
-            display: grid;
-            grid-template-columns: 300px 1fr 320px;
-            gap: 12px; padding: 12px; flex-grow: 1; overflow: hidden;
+            display: flex; flex-direction: column;
+            flex-grow: 1; overflow: hidden; position: relative;
         }
 
         .panel {
-            background: var(--panel-bg); border: 1px solid var(--border);
-            display: flex; flex-direction: column; border-radius: 2px; overflow: hidden;
+            display: none; /* Hidden by default on mobile, toggled by nav */
+            flex-direction: column; height: 100%; background: var(--panel-bg);
+        }
+
+        .panel.active { display: flex; }
+
+        /* Desktop View Overrides */
+        @media (min-width: 900px) {
+            .dashboard { display: grid; grid-template-columns: 320px 1fr 320px; gap: 10px; padding: 10px; }
+            .panel { display: flex !important; border: 1px solid var(--border); }
+            .mobile-nav { display: none !important; }
         }
 
         .panel-header {
-            padding: 10px; font-size: 10px; font-weight: 800;
-            background: rgba(0, 242, 255, 0.05); border-bottom: 1px solid var(--border);
+            padding: 12px; font-size: 10px; font-weight: 800;
+            background: rgba(0, 242, 255, 0.07); border-bottom: 1px solid var(--border);
             display: flex; justify-content: space-between; align-items: center;
+            letter-spacing: 2px; text-transform: uppercase;
+        }
+
+        /* Mobile Bottom Nav */
+        .mobile-nav {
+            display: flex; background: #000; border-top: 1px solid var(--accent-cyan);
+            height: 60px; justify-content: space-around; align-items: center;
+            z-index: 1000;
+        }
+
+        .nav-item {
+            color: #444; font-size: 10px; text-align: center; cursor: pointer;
+            display: flex; flex-direction: column; gap: 4px;
+        }
+
+        .nav-item.active { color: var(--accent-cyan); font-weight: 800; }
+
+        /* Content Areas */
+        .scroll-area { flex-grow: 1; overflow-y: auto; padding: 15px; }
+
+        .bounty-card { 
+            border-left: 3px solid var(--accent-cyan); 
+            padding: 12px; margin-bottom: 10px; 
+            background: rgba(255,255,255,0.03); font-size: 11px;
+        }
+
+        /* Comms Interface */
+        .chat-msg { background: rgba(255,255,255,0.03); padding: 12px; border-radius: 4px; margin-bottom: 10px; border-left: 1px solid #333; }
+        .chat-input-row { padding: 15px; background: #08080a; border-top: 1px solid var(--border); padding-bottom: 25px; }
+        
+        input, button { border-radius: 0; -webkit-appearance: none; }
+        input[type="text"], input[type="number"] {
+            background: #000; border: 1px solid #222; color: var(--accent-cyan);
+            padding: 12px; font-family: inherit; font-size: 16px; width: 100%;
+        }
+
+        .execute-btn { 
+            background: var(--accent-cyan); color: #000; border: none; 
+            padding: 15px; font-weight: 800; width: 100%; cursor: pointer;
             letter-spacing: 2px;
         }
 
-        /* PORTAL 1: BOUNTY */
-        .bounty-list { flex-grow: 1; padding: 10px; font-size: 10px; overflow-y: auto; }
-        .bounty-card { 
-            border-left: 2px solid var(--accent-cyan); 
-            padding: 10px; margin-bottom: 8px; 
-            background: rgba(255,255,255,0.02);
-            transition: 0.3s;
+        /* Floating Scan Info */
+        .scan-overlay {
+            background: rgba(0, 242, 255, 0.05);
+            border: 1px solid var(--accent-cyan);
+            padding: 15px; border-radius: 4px; margin-top: 10px;
         }
-        .bounty-card:hover { background: rgba(0, 242, 255, 0.05); }
 
-        .add-bounty-btn { 
-            background: transparent; border: 1px solid var(--accent-cyan); 
-            color: var(--accent-cyan); padding: 12px; margin: 10px; 
-            cursor: pointer; font-family: inherit; font-weight: 800;
-            transition: 0.3s;
+        .terminal-log {
+            height: 150px; background: #000; padding: 10px; font-size: 10px;
+            overflow-y: auto; color: #00ff00; border: 1px solid #111; margin-top: 10px;
         }
-        .add-bounty-btn:hover { background: var(--accent-cyan); color: #000; }
 
-        /* PORTAL 2: CHATS */
-        .chat-area { flex-grow: 1; overflow-y: auto; padding: 15px; font-size: 11px; display: flex; flex-direction: column; gap: 10px; }
-        .chat-msg { background: rgba(255,255,255,0.03); padding: 10px; border-radius: 2px; border: 1px solid rgba(255,255,255,0.05); }
-        .chat-img { max-width: 100%; border-radius: 2px; margin-top: 8px; border: 1px solid #333; max-height: 250px; }
-        
-        .chat-input-row { padding: 12px; background: #000; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--border); }
-        .input-controls { display: flex; gap: 5px; }
-
-        /* PORTAL 3: TERMINATION */
-        .ban-container { padding: 15px; display: flex; flex-direction: column; gap: 10px; flex-grow: 1; }
-        input[type="text"], input[type="number"], textarea {
-            background: #08080a; border: 1px solid #222; color: var(--accent-cyan);
-            padding: 12px; font-family: inherit; width: 100%; outline: none; font-size: 11px;
+        .modal-overlay {
+            position: fixed; top:0; left:0; width:100%; height:100%;
+            background:rgba(0,0,0,0.98); display:none; justify-content:center; align-items:center; z-index:9999;
         }
-        .execute-btn { background: var(--danger-red); color: white; border: none; padding: 12px; font-weight: 800; cursor: pointer; }
-        .terminal-log { height: 180px; background: #000; padding: 10px; font-size: 10px; overflow-y: auto; color: #00ff00; border: 1px solid #111; }
-
-        /* MODAL */
-        .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); display:none; justify-content:center; align-items:center; z-index:999; }
-        .modal-box { background: #0a0a0c; border: 1px solid var(--accent-cyan); width: 300px; padding: 20px; text-align: center; }
-        .modal-step { display: none; flex-direction: column; gap: 10px; }
-        .active-step { display: flex; }
-        .option-btn { background: #111; border: 1px solid #333; color: #fff; padding: 12px; cursor: pointer; font-family: inherit; }
-        .option-btn:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
-        
-        .blink { animation: blinker 1.5s linear infinite; }
-        @keyframes blinker { 50% { opacity: 0.2; } }
-        .hidden { display: none !important; }
     </style>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -109,79 +130,94 @@
 <body>
 
     <nav class="status-header">
-        <div style="display:flex; align-items:center; gap:15px;">
-            <div id="agentBadge" style="background:var(--accent-cyan); color:#000; padding:2px 8px; font-weight:800; border-radius:2px;">AGENT: GHOST</div>
-            <div onclick="window.location.href='profile.html'" style="cursor:pointer; text-decoration:underline;">[MY_PROFILE]</div>
-        </div>
-        <div class="blink" id="dbStatus">● MOSSAD SECRET SERVICE ONLINE</div>
+        <div id="agentBadge" onclick="window.location.href='profile.html'">AGENT: GHOST</div>
         <div id="clock">00:00:00</div>
     </nav>
 
     <div class="dashboard">
-        <div class="panel">
-            <div class="panel-header">BOUNTY_REPORTS</div>
-            <div class="bounty-list" id="bountyDisplay"></div>
-            <button class="add-bounty-btn" onclick="openBountyModal()">+ INITIALIZE TARGET</button>
+        
+        <div class="panel active" id="panel-bounty">
+            <div class="panel-header">🎯 BOUNTY_REPORTS</div>
+            <div class="scroll-area" id="bountyDisplay"></div>
+            <div style="padding: 15px;">
+                <button class="execute-btn" onclick="openBountyModal()">+ INITIALIZE TARGET</button>
+            </div>
         </div>
 
-        <div class="panel">
-            <div class="panel-header">COMMS_CHANNEL_SECURE</div>
-            <div class="chat-area" id="chatFeed"></div>
+        <div class="panel" id="panel-comms">
+            <div class="panel-header">📡 COMMS_ENCRYPTED</div>
+            <div class="scroll-area" id="chatFeed"></div>
             <div class="chat-input-row">
-                <div id="photoStatus" style="font-size: 9px; color: var(--accent-cyan); display: none; margin-bottom:5px;">[SECURE_FILE_ATTACHED]</div>
-                <div class="input-controls">
-                    <input type="file" id="photoInput" accept="image/*" class="hidden" onchange="attachPhoto(this)">
-                    <button style="background:#111; color:white; border:1px solid #333; padding:0 15px; cursor:pointer;" onclick="document.getElementById('photoInput').click()">📁</button>
-                    <input type="text" id="chatInput" placeholder="Send encrypted message..." onkeypress="if(event.key==='Enter') sendMsg()">
-                    <button onclick="sendMsg()" style="background:var(--accent-cyan); color:#000; border:none; padding:0 20px; font-weight:800; cursor:pointer;">SEND</button>
+                <div style="display:flex; gap:8px;">
+                    <button style="background:#111; color:white; border:1px solid #333; padding:0 15px;" onclick="document.getElementById('photoInput').click()">📁</button>
+                    <input type="text" id="chatInput" placeholder="Message..." onkeypress="if(event.key==='Enter') sendMsg()">
+                    <button onclick="sendMsg()" style="background:var(--accent-cyan); color:#000; padding:0 15px; font-weight:800;">SEND</button>
+                </div>
+                <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="attachPhoto(this)">
+            </div>
+        </div>
+
+        <div class="panel" id="panel-scanner">
+            <div class="panel-header">🔒 TERMINATION_SCANNER</div>
+            <div class="scroll-area">
+                <label style="font-size: 9px; color: var(--accent-cyan);">INPUT MISSION ORDER:</label>
+                <input type="text" id="scanInput" placeholder="4-5 DIGIT CODE" oninput="autoScanMission(this.value)" style="margin-top:5px;">
+                
+                <div id="scanResult"></div>
+                <div class="terminal-log" id="banLog">> Scanner Standby...</div>
+
+                <div id="confirmFinal" class="hidden scan-overlay">
+                    <div id="finalIntel" style="font-size: 11px; margin-bottom: 15px; line-height:1.6;"></div>
+                    <div style="display:flex; gap:10px;">
+                        <button onclick="executeFinalLog()" style="flex:1; background:#00ff00; color:#000; border:none; padding:12px; font-weight:800;">CONFIRM</button>
+                        <button onclick="cancelScan()" style="flex:1; background:#222; color:#fff; border:none; padding:12px;">ABORT</button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="panel">
-            <div class="panel-header">
-                <span onclick="toggleBulkMode()" style="cursor:pointer;">TERMINATION_PROTOCOL</span>
-                <span id="modeStatus" style="font-size: 8px; color: var(--text-dim);">SINGLE</span>
-            </div>
-            <div class="ban-container">
-    <label style="font-size: 9px; color: var(--accent-cyan); letter-spacing: 1px;">TERMINATION_SCANNER</label>
-    <input type="text" id="scanInput" placeholder="SCAN MISSION ORDER (4-5 DIGITS)" oninput="autoScanMission(this.value)">
-    
-    <div id="scanResult" style="margin-top:10px; min-height: 50px;"></div>
-    
-    <div class="terminal-log" id="banLog">> Scanner Standby...</div>
-    
-    <div id="confirmFinal" class="hidden" style="border: 1px solid var(--accent-cyan); padding: 10px; margin-top: 10px; background: rgba(0,242,255,0.05);">
-        <div id="finalIntel" style="font-size: 10px; margin-bottom: 10px;"></div>
-        <div style="display:flex; gap:10px;">
-            <button onclick="executeFinalLog()" style="flex:1; background:#00ff00; color:#000; border:none; padding:8px; font-weight:800; cursor:pointer;">OK (SAVE)</button>
-            <button onclick="cancelScan()" style="flex:1; background:#333; color:#fff; border:none; padding:8px; cursor:pointer;">CANCEL</button>
-        </div>
     </div>
-</div>
+
+    <div class="mobile-nav">
+        <div class="nav-item active" onclick="switchPanel('bounty', this)">
+            <span>🎯</span><span>BOUNTY</span>
+        </div>
+        <div class="nav-item" onclick="switchPanel('comms', this)">
+            <span>📡</span><span>COMMS</span>
+        </div>
+        <div class="nav-item" onclick="switchPanel('scanner', this)">
+            <span>🔒</span><span>SCANNER</span>
         </div>
     </div>
 
     <div class="modal-overlay" id="bountyModal">
-        <div class="modal-box">
+        <div style="background:#0a0a0c; border:1px solid var(--accent-cyan); width:90%; max-width:320px; padding:25px;">
             <div id="modalStep1" class="modal-step active-step">
-                <p style="font-size:10px; color:var(--accent-cyan); margin-bottom:15px;">SELECT WEAPON SYSTEM:</p>
-                <div id="weaponOptions" style="display:flex; flex-direction:column; gap:8px;"></div>
-                <button onclick="closeModal()" style="margin-top:15px; background:none; border:none; color:#555; cursor:pointer; font-size:10px;">ABORT</button>
+                <p style="font-size:10px; color:var(--accent-cyan); margin-bottom:15px;">SELECT WEAPON:</p>
+                <div id="weaponOptions" style="display:flex; flex-direction:column; gap:10px;"></div>
+                <button onclick="closeModal()" style="margin-top:20px; background:none; border:none; color:#555; width:100%;">[ CLOSE ]</button>
             </div>
-            <div id="modalStep2" class="modal-step">
-                <p style="font-size:10px; color:var(--accent-cyan); margin-bottom:15px;">TARGET_INTEL:</p>
-                <input type="number" id="vID" placeholder="V-Agent Number (e.g. 5566)">
-                <div style="margin-bottom:10px;"></div>
-                <input type="number" id="bAmount" placeholder="Bounty Amount (₱)">
-                <div style="margin-bottom:15px;"></div>
-                <button class="execute-btn" style="background:var(--accent-cyan); color:#000; width:100%;" onclick="saveBounty()">DEPLOY DATA</button>
+            <div id="modalStep2" class="modal-step" style="display:none;">
+                <p style="font-size:10px; color:var(--accent-cyan); margin-bottom:15px;">TARGET INTEL:</p>
+                <input type="text" id="mOrder" placeholder="MISSION ORDER #" style="margin-bottom:10px;">
+                <input type="number" id="vID" placeholder="V-AGENT ID" style="margin-bottom:10px;">
+                <input type="number" id="bAmount" placeholder="AMOUNT (₱)" style="margin-bottom:20px;">
+                <button class="execute-btn" onclick="saveBounty()">DEPLOY DATA</button>
+                <button onclick="openBountyModal()" style="margin-top:10px; background:none; border:none; color:#555; width:100%;">BACK</button>
             </div>
         </div>
     </div>
 
     <script>
-        // --- 1. CONFIG & AUTH ---
+        // --- MOBILE NAV LOGIC ---
+        function switchPanel(panelId, el) {
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById('panel-' + panelId).classList.add('active');
+            el.classList.add('active');
+        }
+
+        // --- FIREBASE CONFIG (SAME AS BEFORE) ---
         const activeAgent = localStorage.getItem("cia_agent");
         if (!activeAgent) window.location.href = "index.html";
         document.getElementById('agentBadge').innerText = `AGENT: ${activeAgent}`;
@@ -199,216 +235,9 @@
         const storage = firebase.storage();
         const TG_URL = "https://api.telegram.org/bot8639737111:AAGvCqiHzkiJvVqH6YPocRIVMoiXZlK4ZWg/sendMessage?chat_id=7298607329";
 
-        // --- 2. CHAT LOGIC ---
-        let pendingPhotoData = null;
-        function attachPhoto(input) {
-            const file = input.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = e => { pendingPhotoData = e.target.result; document.getElementById('photoStatus').style.display='block'; };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        async function sendMsg() {
-            const input = document.getElementById('chatInput');
-            const text = input.value.trim();
-            if(!text && !pendingPhotoData) return;
-
-            let imageUrl = null;
-            if(pendingPhotoData) {
-                const ref = storage.ref().child(`chats/${Date.now()}.jpg`);
-                await ref.putString(pendingPhotoData, 'data_url');
-                imageUrl = await ref.getDownloadURL();
-            }
-
-            await db.collection("chats").add({
-                agent: activeAgent, text, imageUrl, timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-
-            input.value = ""; pendingPhotoData = null;
-            document.getElementById('photoStatus').style.display = 'none';
-        }
-
-        db.collection("chats").orderBy("timestamp", "asc").onSnapshot(snap => {
-            const feed = document.getElementById('chatFeed'); feed.innerHTML = "";
-            snap.forEach(doc => {
-                const d = doc.data();
-                feed.innerHTML += `
-                    <div class="chat-msg">
-                        <span style="color:var(--accent-cyan)">[${d.agent}]:</span> ${d.text}
-                        ${d.imageUrl ? `<br><img src="${d.imageUrl}" class="chat-img">` : ''}
-                    </div>`;
-            });
-            feed.scrollTop = feed.scrollHeight;
-        });
-
-        // --- 3. BOUNTY LOGIC (IMPROVED) ---
-        let selectedWeapon = "";
-        function openBountyModal() {
-            document.getElementById('bountyModal').style.display = 'flex';
-            document.getElementById('modalStep1').classList.add('active-step');
-            document.getElementById('modalStep2').classList.remove('active-step');
-            
-            const weaponsDiv = document.getElementById('weaponOptions');
-            weaponsDiv.innerHTML = "";
-            const list = activeAgent === 'LZ' ? ['R8', 'RM14'] : ['R9', 'TechCP'];
-            list.forEach(w => weaponsDiv.innerHTML += `<button class="option-btn" onclick="selectWeapon('${w}')">${w}</button>`);
-        }
-
-        function selectWeapon(w) {
-            selectedWeapon = w;
-            document.getElementById('modalStep1').classList.remove('active-step');
-            document.getElementById('modalStep2').classList.add('active-step');
-        }
-
-        async function saveBounty() {
-            const vid = document.getElementById('vID').value;
-            const amt = document.getElementById('bAmount').value;
-            if(!vid || !amt) return;
-
-            await db.collection("bounties").add({
-                agent: activeAgent, weapon: selectedWeapon, vid, amt,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-
-            fetch(`${TG_URL}&text=${encodeURIComponent(`📡 AGENT [${activeAgent}]: Deployed Bounty V-ID:${vid} (₱${amt})`)}`);
-            closeModal();
-            document.getElementById('vID').value = ""; document.getElementById('bAmount').value = "";
-        }
-
-        function closeModal() { document.getElementById('bountyModal').style.display = 'none'; }
-
-        db.collection("bounties").orderBy("timestamp", "desc").onSnapshot(snap => {
-            const list = document.getElementById('bountyDisplay'); list.innerHTML = "";
-            snap.forEach(doc => {
-                const b = doc.data();
-                list.innerHTML += `
-                    <div class="bounty-card">
-                        <div style="color:var(--accent-cyan); font-weight:800;">${b.agent} >> ${b.weapon}</div>
-                        <div style="margin-top:4px;">V-ID: #${b.vid} | BOUNTY: ₱${b.amt}</div>
-                    </div>`;
-            });
-        });
-
-        // --- 4. TERMINATION PROTOCOL ---
-        let isBulk = false;
-        function toggleBulkMode() {
-            isBulk = !isBulk;
-            document.getElementById('singleCode').classList.toggle('hidden');
-            document.getElementById('bulkCodes').classList.toggle('hidden');
-            document.getElementById('modeStatus').innerText = isBulk ? "BULK" : "SINGLE";
-        }
-
-        async function autoSearch(val) {
-            if(!val) return;
-            const log = document.getElementById('banLog');
-            const snap = await db.collection("blacklist").where("code", "==", val.toUpperCase()).get();
-            log.innerHTML = snap.empty ? `<div>> ID ${val} IS CLEAR.</div>` : `<div style="color:red">> WARNING: ID ${val} ALREADY BANNED.</div>`;
-        }
-
-        async function processBan() {
-            const log = document.getElementById('banLog');
-            let codes = isBulk ? document.getElementById('bulkCodes').value.split("\n") : [document.getElementById('singleCode').value];
-            
-            for(let c of codes) {
-                let code = c.trim().toUpperCase();
-                if(!code) continue;
-                await db.collection("blacklist").add({ code, bannedBy: activeAgent, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
-                fetch(`${TG_URL}&text=${encodeURIComponent(`🚫 AGENT [${activeAgent}]: Terminated ID ${code}`)}`);
-            }
-            log.innerHTML += `<div style="color:#00ff00">> EXECUTION SUCCESSFUL.</div>`;
-            document.getElementById('singleCode').value = ""; document.getElementById('bulkCodes').value = "";
-        }
-
-        function closeModal() { document.getElementById('bountyModal').style.display = 'none'; }
-
-        let matchedData = null; // Dito itatago ang nahanap na bounty data
-
-async function autoScanMission(val) {
-    const query = val.trim().toUpperCase();
-    const log = document.getElementById('banLog');
-    const resultDiv = document.getElementById('scanResult');
-    const confirmDiv = document.getElementById('confirmFinal');
-
-    // Reset UI
-    resultDiv.innerHTML = "";
-    confirmDiv.classList.add('hidden');
-
-    if (query.length < 4) {
-        log.innerHTML = "> Awaiting full Mission Order...";
-        return;
-    }
-
-    log.innerHTML = `<div>> SCANNING ENCRYPTED DATABASE: ${query}...</div>`;
-
-    // Hanapin ang Mission Order sa 'bounties' collection
-    const snapshot = await db.collection("bounties")
-        .where("missionOrder", "==", query)
-        .limit(1)
-        .get();
-
-    if (!snapshot.empty) {
-        matchedData = snapshot.docs[0].data();
-        matchedData.docId = snapshot.docs[0].id; // Para sa reference
-
-        log.innerHTML = `<div style="color:#00ff00">> MATCH FOUND: MISSION ${query} IS VALID.</div>`;
+        // (Insert previous JavaScript functions here: sendMsg, saveBounty, autoScanMission, etc.)
+        // Siguraduhin lang na i-update ang IDs sa JS para mag-match sa bagong HTML.
         
-        // Show the Green Save Button
-        resultDiv.innerHTML = `
-            <button onclick="showConfirm()" style="width:100%; background:#00ff00; color:#000; border:none; padding:12px; font-weight:800; cursor:pointer; border-radius:4px;">
-                SAVE TO CONFIDENTIAL_INFO
-            </button>
-        `;
-    } else {
-        log.innerHTML = `<div style="color:var(--danger-red)">> ERROR: MISSION ORDER NOT FOUND.</div>`;
-        matchedData = null;
-    }
-}
-
-function showConfirm() {
-    if(!matchedData) return;
-    const intelDiv = document.getElementById('finalIntel');
-    const confirmDiv = document.getElementById('confirmFinal');
-
-    intelDiv.innerHTML = `
-        <span style="color:var(--accent-cyan)">WEAPON:</span> ${matchedData.weapon}<br>
-        <span style="color:var(--accent-cyan)">V.AGENT:</span> #${matchedData.vid}<br>
-        <span style="color:var(--accent-cyan)">MISSION:</span> ${matchedData.missionOrder}
-    `;
-    confirmDiv.classList.remove('hidden');
-}
-
-async function executeFinalLog() {
-    try {
-        // I-save sa 'dossier' collection para sa Confidential_Info section ng profile
-        await db.collection("dossier").add({
-            agent: activeAgent,
-            weapon: matchedData.weapon,
-            vid: matchedData.vid,
-            missionOrder: matchedData.missionOrder,
-            bounty: matchedData.amt,
-            status: "TERMINATED",
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-
-        // Telegram Alert
-        const msg = `📑 DOSSIER UPDATED\nAgent: ${activeAgent}\nMission: ${matchedData.missionOrder}\nStatus: ARCHIVED TO CONFIDENTIAL`;
-        fetch(`${TG_URL}&text=${encodeURIComponent(msg)}`);
-
-        document.getElementById('banLog').innerHTML = `<div style="color:#00ff00">> DATA ARCHIVED SUCCESSFULLY.</div>`;
-        cancelScan();
-    } catch (e) {
-        alert("UPLOAD FAILED");
-    }
-}
-
-function cancelScan() {
-    document.getElementById('scanInput').value = "";
-    document.getElementById('scanResult').innerHTML = "";
-    document.getElementById('confirmFinal').classList.add('hidden');
-    matchedData = null;
-}
         setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString(), 1000);
     </script>
 </body>

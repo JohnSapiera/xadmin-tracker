@@ -1,35 +1,121 @@
-async function migrateBlacklistToMissionOrders() {
-    console.log("STARTING_DATABASE_MIGRATION...");
-    
-    // 1. Kunin lahat ng documents sa 'blacklist' collection
-    const snapshot = await db.collection("blacklist").get();
-    
-    if (snapshot.empty) {
-        console.log("NO_RECORDS_FOUND");
-        return;
-    }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DATABASE_MIGRATOR_v1</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;800&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            background: #0a0a0a; color: #00f2ff; font-family: 'JetBrains Mono', monospace; 
+            display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0;
+        }
+        .panel {
+            background: #111; border: 2px solid #00f2ff; padding: 30px;
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.2); width: 90%; max-width: 400px;
+        }
+        h2 { font-size: 18px; text-align: center; border-bottom: 1px solid #333; padding-bottom: 15px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-size: 10px; margin-bottom: 5px; color: #888; }
+        select, input {
+            width: 100%; background: #000; border: 1px solid #333; color: #fff;
+            padding: 10px; font-family: inherit; outline: none;
+        }
+        button {
+            width: 100%; background: #00f2ff; color: #000; border: none;
+            padding: 15px; font-weight: 800; cursor: pointer; margin-top: 10px;
+        }
+        #status { font-size: 10px; margin-top: 20px; color: #ff3c3c; white-space: pre-wrap; }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+</head>
+<body>
 
-    const batch = db.batch(); // Gumamit ng batch para mabilis at tipid sa quota
+    <div class="panel">
+        <h2>DATABASE_MIGRATOR</h2>
+        
+        <div class="form-group">
+            <label>TARGET AGENT (Legacy Owner)</label>
+            <select id="agentId">
+                <option value="LZ">LZ</option>
+                <option value="JFSN">JFSN</option>
+            </select>
+        </div>
 
-    snapshot.docs.forEach(doc => {
-        const data = doc.data();
-        const docRef = db.collection("blacklist").doc(doc.id);
+        <div class="form-group">
+            <label>DEFAULT WEAPON SYSTEM</label>
+            <select id="weaponId">
+                <option value="R8P">R8P (For LZ)</option>
+                <option value="RMN">RMN (For LZ)</option>
+                <option value="RMN9">RMN9 (For JFSN)</option>
+                <option value="TechnoCP">TechnoCP (For JFSN)</option>
+            </select>
+        </div>
 
-        // 2. I-set ang bagong query fields
-        // Kung ang 'missionOrder' field ay wala pa, kukunin natin ang dating value (kung ano man ang tawag mo dun dati)
-        const updatedData = {
-            agent: data.agent || "LZ",           // Default Agent kung wala pa
-            weapon: data.weapon || "R8P",        // Default Weapon kung wala pa
-            vid: parseInt(data.vid) || 1,        // Siguraduhing Number ang V-Agent ID
-            missionOrder: data.missionOrder || data.number || "0000", // "blacklist" becomes "missionOrder"
-            amount: parseFloat(data.amount) || 0,
-            timestamp: data.timestamp || firebase.firestore.FieldValue.serverTimestamp()
+        <button onclick="startMigration()">START MIGRATION</button>
+        <div id="status">READY_FOR_COMMAND...</div>
+    </div>
+
+    <script>
+        // FIREBASE CONFIG
+        const firebaseConfig = {
+            apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
+            authDomain: "my-admin-portal-12691.firebaseapp.com",
+            projectId: "my-admin-portal-12691",
+            storageBucket: "my-admin-portal-12691.firebasestorage.app",
+            messagingSenderId: "317015091563",
+            appId: "1:317015091563:web:baab5171d8e0a58acd442e"
         };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
-        batch.update(docRef, updatedData);
-    });
+        async function startMigration() {
+            const status = document.getElementById('status');
+            const targetAgent = document.getElementById('agentId').value;
+            const targetWeapon = document.getElementById('weaponId').value;
 
-    await batch.commit();
-    console.log("MIGRATION_SUCCESSFUL: ALL_RECORDS_UPDATED");
-    alert("Database Synced! Ready for Profiling.");
-}
+            if(!confirm(`Warning: This will tag ALL records in 'blacklist' as ${targetAgent} [${targetWeapon}]. Proceed?`)) return;
+
+            status.innerText = "INITIALIZING_BATCH_PROCESS...";
+            
+            try {
+                const snapshot = await db.collection("blacklist").get();
+                if (snapshot.empty) {
+                    status.innerText = "ERROR: NO_RECORDS_FOUND_IN_BLACKLIST";
+                    return;
+                }
+
+                const batch = db.batch();
+                let count = 0;
+
+                snapshot.docs.forEach((doc, index) => {
+                    const data = doc.data();
+                    const docRef = db.collection("blacklist").doc(doc.id);
+
+                    // MIGRATION LOGIC:
+                    // 1. missionOrder = dating 'number' o kung ano mang field yung mission order number mo.
+                    // 2. vid = sequencing (V.Agents)
+                    // 3. agent & weapon = folders
+                    batch.update(docRef, {
+                        agent: targetAgent,
+                        weapon: targetWeapon,
+                        vid: data.vid || (index + 1), // Kung walang vid, automatic 1, 2, 3...
+                        missionOrder: data.missionOrder || data.number || "MO-UNKNOWN",
+                        amount: data.amount || 0,
+                        timestamp: data.timestamp || firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    count++;
+                });
+
+                await batch.commit();
+                status.style.color = "#00f2ff";
+                status.innerText = `SUCCESS!\nRECORDS_UPDATED: ${count}\n\nAll data is now mapped to Agent ${targetAgent} under ${targetWeapon} folder.`;
+                
+            } catch (error) {
+                status.innerText = `CRITICAL_ERROR: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

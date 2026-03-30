@@ -1,0 +1,35 @@
+async function migrateBlacklistToMissionOrders() {
+    console.log("STARTING_DATABASE_MIGRATION...");
+    
+    // 1. Kunin lahat ng documents sa 'blacklist' collection
+    const snapshot = await db.collection("blacklist").get();
+    
+    if (snapshot.empty) {
+        console.log("NO_RECORDS_FOUND");
+        return;
+    }
+
+    const batch = db.batch(); // Gumamit ng batch para mabilis at tipid sa quota
+
+    snapshot.docs.forEach(doc => {
+        const data = doc.data();
+        const docRef = db.collection("blacklist").doc(doc.id);
+
+        // 2. I-set ang bagong query fields
+        // Kung ang 'missionOrder' field ay wala pa, kukunin natin ang dating value (kung ano man ang tawag mo dun dati)
+        const updatedData = {
+            agent: data.agent || "LZ",           // Default Agent kung wala pa
+            weapon: data.weapon || "R8P",        // Default Weapon kung wala pa
+            vid: parseInt(data.vid) || 1,        // Siguraduhing Number ang V-Agent ID
+            missionOrder: data.missionOrder || data.number || "0000", // "blacklist" becomes "missionOrder"
+            amount: parseFloat(data.amount) || 0,
+            timestamp: data.timestamp || firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        batch.update(docRef, updatedData);
+    });
+
+    await batch.commit();
+    console.log("MIGRATION_SUCCESSFUL: ALL_RECORDS_UPDATED");
+    alert("Database Synced! Ready for Profiling.");
+}

@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CIA INTELLIGENCE UNIT - LIVE CLOUD</title>
+    <title>CIA INTELLIGENCE UNIT - ENCRYPTED</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;500;800&display=swap" rel="stylesheet">
+    
     <style>
         :root {
             --bg-deep: #050506;
@@ -17,6 +18,7 @@
         }
 
         * { box-sizing: border-box; }
+
         body {
             background-color: var(--bg-deep);
             color: var(--text-main);
@@ -29,56 +31,76 @@
         .status-header {
             display: flex; justify-content: space-between; align-items: center;
             padding: 10px 20px; background: rgba(0, 0, 0, 0.8);
-            border-bottom: 1px solid var(--accent-cyan); font-size: 11px; color: var(--accent-cyan);
+            border-bottom: 1px solid var(--accent-cyan); font-size: 11px;
+            letter-spacing: 2px; color: var(--accent-cyan);
         }
 
         .dashboard {
-            display: grid; grid-template-columns: 280px 1fr 320px;
+            display: grid;
+            grid-template-columns: 280px 1fr 320px; /* Left: 280, Center: 1fr, Right: 320 */
             gap: 15px; padding: 15px; flex-grow: 1;
         }
 
-        .panel { background: var(--panel-bg); border: 1px solid var(--border); display: flex; flex-direction: column; border-radius: 4px; overflow: hidden; }
-        .panel-header { padding: 8px 12px; font-size: 10px; font-weight: 800; background: rgba(255, 255, 255, 0.03); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .panel {
+            background: var(--panel-bg); border: 1px solid var(--border);
+            display: flex; flex-direction: column; border-radius: 4px; overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 8px 12px; font-size: 10px; font-weight: 800;
+            background: rgba(255, 255, 255, 0.03); border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+        }
 
         /* PORTAL 1: BOUNTY */
         .bounty-list { flex-grow: 1; padding: 15px; font-size: 11px; overflow-y: auto; }
         .bounty-card { border-left: 2px solid var(--accent-cyan); padding: 8px; margin-bottom: 10px; background: rgba(255,255,255,0.02); }
         .add-bounty-btn { background: transparent; border: 1px solid var(--accent-cyan); color: var(--accent-cyan); padding: 10px; margin: 10px; cursor: pointer; font-family: inherit; font-weight: 800; }
-
-        /* PORTAL 2: CHAT */
+        
+        /* PORTAL 2: CHATS */
         .chat-area { flex-grow: 1; overflow-y: auto; padding: 15px; font-size: 12px; display: flex; flex-direction: column; gap: 10px; }
-        .chat-msg { background: rgba(255,255,255,0.05); padding: 8px 10px; border-radius: 4px; }
-        .chat-img { max-width: 100%; border-radius: 4px; margin-top: 5px; border: 1px solid #333; cursor: pointer; }
+        .chat-msg { background: rgba(255,255,255,0.05); padding: 8px 10px; border-radius: 4px; word-wrap: break-word; }
+        .chat-img { max-width: 100%; border-radius: 4px; margin-top: 5px; border: 1px solid #333; max-height: 200px; object-fit: cover; }
         .chat-input-row { padding: 10px; background: #000; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--border); }
-
-        /* PORTAL 3: BAN */
-        .ban-container { padding: 20px; display: flex; flex-direction: column; gap: 10px; flex-grow: 1; }
-        input, textarea { background: #000; border: 1px solid #333; color: var(--accent-cyan); padding: 12px; font-family: inherit; width: 100%; outline: none; border-radius: 4px; }
+        .input-controls { display: flex; gap: 8px; }
+        .upload-btn { background: #222; border: 1px solid #444; color: white; padding: 8px 12px; cursor: pointer; border-radius: 4px; }
+        
+        /* PORTAL 3: BAN PROTOCOL */
+        .ban-container { padding: 20px; display: flex; flex-direction: column; gap: 10px; flex-grow:1;}
+        .secret-trigger { font-size: 10px; color: var(--accent-cyan); cursor: pointer; }
+        input[type="text"], input[type="number"], textarea {
+            background: #000; border: 1px solid #333; color: var(--accent-cyan);
+            padding: 12px; font-family: inherit; width: 100%; outline: none; border-radius: 4px;
+        }
         textarea { height: 100px; resize: none; }
-        .execute-btn { background: var(--danger-red); color: white; border: none; padding: 15px; font-weight: 800; cursor: pointer; border-radius: 4px; }
-        .terminal-log { flex-grow: 1; background: rgba(0,0,0,0.6); padding: 15px; font-size: 11px; overflow-y: auto; color: #88ff88; border: 1px solid var(--border); }
+        .execute-btn { background: var(--danger-red); color: white; border: none; padding: 15px; font-family: inherit; font-weight: 800; cursor: pointer; border-radius: 4px; }
+        .terminal-log { flex-grow: 1; background: rgba(0,0,0,0.6); padding: 15px; font-size: 11px; overflow-y: auto; color: #88ff88; border: 1px solid rgba(255,255,255,0.05); height: 200px; }
 
-        /* MODAL */
+        /* MODALS & UTILS */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 100; }
         .modal-box { background: #0f1117; border: 2px solid var(--accent-cyan); width: 320px; padding: 20px; }
         .modal-step { display: none; flex-direction: column; gap: 10px; }
         .active-step { display: flex; }
         .option-btn { background: #1a1d26; border: 1px solid #333; color: #fff; padding: 10px; cursor: pointer; text-align: left; font-family: inherit; }
-
         .hidden { display: none !important; }
         .blink { animation: blinker 1.2s linear infinite; }
         @keyframes blinker { 50% { opacity: 0; } }
     </style>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
 </head>
 <body>
 
     <nav class="status-header">
         <div>OP_ID: <span style="color:white">098-GHOST</span></div>
-        <div class="blink">● CLOUD_DATABASE_CONNECTED</div>
+        <div class="blink" id="dbStatus">● CONNECTING TO FIREBASE...</div>
         <div id="clock">00:00:00</div>
     </nav>
 
     <div class="dashboard">
+        
         <div class="panel">
             <div class="panel-header">BOUNTY_REPORTS</div>
             <div class="bounty-list" id="bountyDisplay"></div>
@@ -88,12 +110,13 @@
         <div class="panel">
             <div class="panel-header">CLASSIFIED_COMMS (LIVE)</div>
             <div class="chat-area" id="chatFeed"></div>
+            
             <div class="chat-input-row">
-                <div id="photoStatus" style="font-size: 9px; color: var(--accent-cyan); display: none;">PHOTO_QUEUED</div>
-                <div style="display: flex; gap: 8px;">
-                    <input type="file" id="photoInput" accept="image/*" class="hidden" onchange="previewPhoto(this)">
-                    <button onclick="document.getElementById('photoInput').click()" style="background:#222; border:1px solid #444; color:white; padding:8px 12px; cursor:pointer;">📷</button>
-                    <input type="text" id="chatInput" placeholder="Secure message..." onkeypress="if(event.key==='Enter') sendMsg()">
+                <div id="photoStatus" style="font-size: 9px; color: var(--accent-cyan); display: none;">[IMAGE ATTACHED]</div>
+                <div class="input-controls">
+                    <input type="file" id="photoInput" accept="image/*" class="hidden" onchange="attachPhoto(this)">
+                    <button class="upload-btn" onclick="document.getElementById('photoInput').click()">📷</button>
+                    <input type="text" id="chatInput" placeholder="Enter message..." onkeypress="if(event.key==='Enter') sendMsg()">
                     <button onclick="sendMsg()" style="background:var(--accent-cyan); border:none; padding:8px 15px; font-weight:800; cursor:pointer;">SEND</button>
                 </div>
             </div>
@@ -101,14 +124,16 @@
 
         <div class="panel">
             <div class="panel-header">
-                <span onclick="toggleBulkMode()" style="cursor:pointer; color:var(--accent-cyan)">TERMINATION_PROTOCOL</span>
+                <span onclick="toggleBulkMode()" class="secret-trigger">TERMINATION_PROTOCOL (SWAP)</span>
                 <span id="modeStatus" style="font-size: 9px; color: var(--text-dim);">MODE: SINGLE</span>
             </div>
+            
             <div class="ban-container">
-                <input type="text" id="singleCode" placeholder="Search blacklist..." oninput="autoSearch(this.value)">
-                <textarea id="bulkCodes" class="hidden" placeholder="Bulk IDs (Deduplication)"></textarea>
+                <label style="font-size: 10px; color: var(--accent-cyan); letter-spacing: 1px;">SECRET CODES IDENTIFICATION</label>
+                <input type="text" id="singleCode" placeholder="Type to search database..." oninput="autoSearch(this.value)">
+                <textarea id="bulkCodes" class="hidden" placeholder="Paste multiple codes here..."></textarea>
                 <button class="execute-btn" onclick="processBan()">EXECUTE BLACKLIST</button>
-                <div class="terminal-log" id="banLog">> System Standby...</div>
+                <div class="terminal-log" id="banLog">> System Standby. Awaiting input...</div>
             </div>
         </div>
     </div>
@@ -123,22 +148,19 @@
             </div>
             <div id="step2" class="modal-step">
                 <p style="font-size:11px; color:var(--accent-cyan)">SELECT WEAPON:</p>
-                <div id="weaponOptions"></div>
+                <div id="weaponOptions" style="display:flex; flex-direction:column; gap:5px;"></div>
             </div>
             <div id="step3" class="modal-step">
                 <p style="font-size:11px; color:var(--accent-cyan)">TARGET DATA:</p>
-                <input type="number" id="vID" placeholder="V-Agent #">
-                <input type="number" id="bAmount" placeholder="Bounty ₱">
+                <input type="number" id="vID" placeholder="V-Agent Number">
+                <input type="number" id="bAmount" placeholder="Bounty Amount">
                 <button class="execute-btn" style="background:var(--accent-cyan); color:#000;" onclick="saveBounty()">DEPLOY</button>
             </div>
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, limit, where, getDocs } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
-        import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-storage.js";
-
+    <script>
+        // --- 1. FIREBASE INITIALIZATION ---
         const firebaseConfig = {
             apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
             authDomain: "my-admin-portal-12691.firebaseapp.com",
@@ -149,97 +171,177 @@
             measurementId: "G-150YYLS5FP"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const storage = getStorage(app);
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const storage = firebase.storage();
 
-        // --- 1. LIVE CHATS ---
-        let pendingPhoto = null;
-        window.previewPhoto = (input) => {
-            const reader = new FileReader();
-            reader.onload = (e) => { pendingPhoto = e.target.result; document.getElementById('photoStatus').style.display='block'; };
-            reader.readAsDataURL(input.files[0]);
-        };
+        document.getElementById('dbStatus').innerText = "● FIREBASE LINKED";
+        document.getElementById('dbStatus').style.color = "#00ff00";
 
-        window.sendMsg = async () => {
-            const text = document.getElementById('chatInput').value.trim();
-            if (!text && !pendingPhoto) return;
+        // --- 2. LIVE CHATS & PHOTO UPLOAD (PORTAL 2) ---
+        let pendingPhotoData = null;
+
+        function attachPhoto(input) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    pendingPhotoData = e.target.result;
+                    document.getElementById('photoStatus').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function sendMsg() {
+            const textInput = document.getElementById('chatInput');
+            const text = textInput.value.trim();
+            if (text === "" && !pendingPhotoData) return;
 
             let imageUrl = null;
-            if (pendingPhoto) {
-                const storageRef = ref(storage, `chats/${Date.now()}.png`);
-                await uploadString(storageRef, pendingPhoto, 'data_url');
-                imageUrl = await getDownloadURL(storageRef);
+            if (pendingPhotoData) {
+                const storageRef = storage.ref().child(`chats/${Date.now()}.jpg`);
+                await storageRef.putString(pendingPhotoData, 'data_url');
+                imageUrl = await storageRef.getDownloadURL();
             }
 
-            await addDoc(collection(db, "chats"), { text, imageUrl, timestamp: new Date() });
-            document.getElementById('chatInput').value = "";
-            pendingPhoto = null;
-            document.getElementById('photoStatus').style.display='none';
-        };
+            db.collection("chats").add({
+                text: text,
+                imageUrl: imageUrl,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
 
-        onSnapshot(query(collection(db, "chats"), orderBy("timestamp", "asc")), (snap) => {
+            textInput.value = "";
+            pendingPhotoData = null;
+            document.getElementById('photoInput').value = "";
+            document.getElementById('photoStatus').style.display = 'none';
+        }
+
+        // Real-time Chat Listener
+        db.collection("chats").orderBy("timestamp", "asc").onSnapshot((snapshot) => {
             const feed = document.getElementById('chatFeed');
-            feed.innerHTML = snap.docs.map(doc => {
+            feed.innerHTML = "";
+            snapshot.forEach((doc) => {
                 const data = doc.data();
-                return `<div class="chat-msg"><span style="color:var(--accent-cyan)">[OP]:</span> ${data.text} ${data.imageUrl ? `<br><img src="${data.imageUrl}" class="chat-img" onclick="window.open('${data.imageUrl}')">` : ''}</div>`;
-            }).join('');
+                const time = data.timestamp ? data.timestamp.toDate().toLocaleTimeString() : "Sending...";
+                feed.innerHTML += `
+                    <div class="chat-msg">
+                        <span style="color:var(--accent-cyan); font-weight:bold;">[OP]:</span> ${data.text}
+                        ${data.imageUrl ? `<br><img src="${data.imageUrl}" class="chat-img">` : ''}
+                        <div style="font-size:8px; color:#555; text-align:right; margin-top:3px;">${time}</div>
+                    </div>
+                `;
+            });
             feed.scrollTop = feed.scrollHeight;
         });
 
-        // --- 2. BOUNTY REPORTS ---
-        window.saveBounty = async () => {
+        // --- 3. BOUNTY PROTOCOL (PORTAL 1) ---
+        let tAgent = "", tWeapon = "";
+        function openBountyModal() { document.getElementById('bountyModal').style.display = 'flex'; resetModal(); }
+        function closeModal() { document.getElementById('bountyModal').style.display = 'none'; }
+        function resetModal() { document.getElementById('step1').className='modal-step active-step'; document.getElementById('step2').className='modal-step'; document.getElementById('step3').className='modal-step'; }
+
+        function selectAgent(agent) {
+            tAgent = agent;
+            document.getElementById('step1').classList.remove('active-step'); document.getElementById('step2').classList.add('active-step');
+            const opts = document.getElementById('weaponOptions');
+            opts.innerHTML = "";
+            let weapons = agent === 'LZ' ? ['R8', 'RM14'] : ['R9', 'TechCP'];
+            weapons.forEach(w => opts.innerHTML += `<button class="option-btn" onclick="selectWeapon('${w}')">${w}</button>`);
+        }
+
+        function selectWeapon(weapon) {
+            tWeapon = weapon;
+            document.getElementById('step2').classList.remove('active-step'); document.getElementById('step3').classList.add('active-step');
+        }
+
+        function saveBounty() {
             const vid = document.getElementById('vID').value;
             const amt = document.getElementById('bAmount').value;
-            await addDoc(collection(db, "bounties"), { agent: window.tA, weapon: window.tW, vid, amt, timestamp: new Date() });
-            window.closeModal();
-        };
+            if (!vid || !amt) return;
 
-        onSnapshot(query(collection(db, "bounties"), orderBy("timestamp", "desc")), (snap) => {
-            document.getElementById('bountyDisplay').innerHTML = snap.docs.map(doc => {
+            db.collection("bounties").add({
+                agent: tAgent, weapon: tWeapon, vid: vid, amount: amt, timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            closeModal();
+            document.getElementById('vID').value = ""; document.getElementById('bAmount').value = "";
+        }
+
+        // Real-time Bounty Listener
+        db.collection("bounties").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
+            document.getElementById('bountyDisplay').innerHTML = "";
+            snapshot.forEach((doc) => {
                 const b = doc.data();
-                return `<div class="bounty-card"><div style="color:var(--accent-cyan)">${b.agent} | ${b.weapon}</div>V-ID: ${b.vid} | ₱${b.amt}</div>`;
-            }).join('');
+                document.getElementById('bountyDisplay').innerHTML += `
+                    <div class="bounty-card">
+                        <div style="color:var(--accent-cyan)">AGENT: ${b.agent} | WPN: ${b.weapon}</div>
+                        <div>V-ID: ${b.vid} | BOUNTY: ₱${b.amount}</div>
+                    </div>
+                `;
+            });
         });
 
-        // --- 3. BAN PROTOCOL (LIVE SEARCH) ---
-        window.autoSearch = async (val) => {
-            const log = document.getElementById('banLog');
-            const code = val.trim().toUpperCase();
-            if (!code) return log.innerHTML = `> System Standby...`;
-            
-            const q = query(collection(db, "blacklist"), where("code", "==", code));
-            const snap = await getDocs(q);
-            log.innerHTML = `<div>> QUERYING: ${code}...</div>`;
-            if (!snap.empty) log.innerHTML += `<div style="color:var(--danger-red)">> WARNING: ALREADY BANNED.</div>`;
-            else log.innerHTML += `<div style="color:#00ff00">> STATUS: CLEAR.</div>`;
-        };
-
-        window.processBan = async () => {
-            const code = document.getElementById('singleCode').value.trim().toUpperCase();
-            if (code) {
-                await addDoc(collection(db, "blacklist"), { code, bannedAt: new Date() });
-                document.getElementById('banLog').innerHTML += `<div>> SUCCESS: ${code} BLACKLISTED.</div>`;
-                document.getElementById('singleCode').value = "";
-            }
-        };
-    </script>
-
-    <script>
-        // UI HELPERS
-        window.tA = ""; window.tW = "";
-        function openBountyModal() { document.getElementById('bountyModal').style.display='flex'; }
-        function closeModal() { document.getElementById('bountyModal').style.display='none'; }
-        function selectAgent(a) { 
-            window.tA = a; document.getElementById('step1').classList.remove('active-step'); document.getElementById('step2').classList.add('active-step');
-            const ws = a === 'LZ' ? ['R8', 'RM14'] : ['R9', 'TechCP'];
-            document.getElementById('weaponOptions').innerHTML = ws.map(w => `<button class="option-btn" onclick="selectWeapon('${w}')">${w}</button>`).join('');
-        }
-        function selectWeapon(w) { window.tW = w; document.getElementById('step2').classList.remove('active-step'); document.getElementById('step3').classList.add('active-step'); }
+        // --- 4. BAN PROTOCOL & AUTO SEARCH (PORTAL 3) ---
+        let isBulkMode = false;
         function toggleBulkMode() {
+            isBulkMode = !isBulkMode;
             document.getElementById('singleCode').classList.toggle('hidden');
             document.getElementById('bulkCodes').classList.toggle('hidden');
+            document.getElementById('modeStatus').innerText = isBulkMode ? "MODE: BULK" : "MODE: SINGLE";
         }
+
+        // AUTO SEARCH - FIREBASE INTEGRATED
+        async function autoSearch(val) {
+            const log = document.getElementById('banLog');
+            const query = val.trim().toUpperCase();
+            
+            if (query === "") {
+                log.innerHTML = `> System Standby. Awaiting input...`;
+                return;
+            }
+
+            log.innerHTML = `<div>> SEARCHING DATABASE FOR: <span style="color:white">${query}</span>...</div>`;
+
+            // Query Firestore Blacklist
+            const snapshot = await db.collection("blacklist").where("code", "==", query).get();
+
+            if (!snapshot.empty) {
+                log.innerHTML += `<div style="color:var(--danger-red); font-weight:bold;">> WARNING: TARGET [${query}] ALREADY BANNED.</div>`;
+            } else {
+                log.innerHTML += `<div style="color:#00ff00">> STATUS: [${query}] IS CLEAR. READY FOR TERMINATION.</div>`;
+            }
+        }
+
+        // EXECUTE BAN
+        async function processBan() {
+            const log = document.getElementById('banLog');
+            let codes = [];
+
+            if (isBulkMode) {
+                const raw = document.getElementById('bulkCodes').value;
+                codes = raw.split(/[\n,]+/).map(s => s.trim().toUpperCase()).filter(s => s !== "");
+            } else {
+                const val = document.getElementById('singleCode').value.trim().toUpperCase();
+                if (val) codes.push(val);
+            }
+
+            if (codes.length === 0) return;
+
+            log.innerHTML += `<div>> EXECUTING PROTOCOL...</div>`;
+            
+            // Loop and add to Firebase Blacklist
+            for(let code of codes) {
+                await db.collection("blacklist").add({ code: code, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
+            }
+
+            log.innerHTML += `<div style="color:#00ff00">> SUCCESS: ${codes.length} ID(s) BLACKLISTED IN FIREBASE.</div>`;
+            document.getElementById('singleCode').value = "";
+            document.getElementById('bulkCodes').value = "";
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // Clock Script
         setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString(), 1000);
     </script>
 </body>

@@ -3,53 +3,288 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OPERATIONS CENTER - SECURE ACCESS</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body class="cia-dark-ops">
-    <div class="crt-overlay"></div>
+    <title>CIA INTELLIGENCE UNIT - ENCRYPTED</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;500;800&display=swap" rel="stylesheet">
     
-    <nav class="status-bar">
-        <div class="system-id">ID: 098-INTEL</div>
-        <div class="location">LOC: [REDACTED]</div>
-        <div class="connection-status">CONNECTION: <span class="secure-pulse">ENCRYPTED</span></div>
+    <style>
+        :root {
+            --bg-deep: #050506;
+            --panel-bg: rgba(18, 18, 24, 0.95);
+            --accent-cyan: #00f2ff;
+            --danger-red: #ff3c3c;
+            --text-main: #e0e6ed;
+            --text-dim: #626a77;
+            --border: rgba(255, 255, 255, 0.05);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: 'JetBrains Mono', monospace;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            /* Subtle Scanline Effect */
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+        }
+
+        /* Top Navigation / Status Bar */
+        .status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border-bottom: 1px solid var(--accent-cyan);
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: var(--accent-cyan);
+        }
+
+        .blink { animation: blinker 1.5s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0; } }
+
+        /* Dashboard Layout */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 300px 1fr 350px;
+            gap: 15px;
+            padding: 15px;
+            flex-grow: 1;
+        }
+
+        .panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            border-radius: 4px;
+        }
+
+        .panel-header {
+            padding: 8px 12px;
+            font-size: 11px;
+            font-weight: 800;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Panel 1: Bounty System */
+        .bounty-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-dim);
+            text-align: center;
+            padding: 20px;
+        }
+
+        .bounty-placeholder .icon { font-size: 40px; margin-bottom: 10px; opacity: 0.2; }
+
+        /* Panel 2: Ban System (Middle) */
+        .ban-container {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        label { font-size: 10px; color: var(--accent-cyan); margin-bottom: 5px; display: block; }
+
+        input[type="text"] {
+            background: #000;
+            border: 1px solid #333;
+            color: var(--accent-cyan);
+            padding: 15px;
+            font-family: inherit;
+            width: 100%;
+            outline: none;
+            font-size: 14px;
+            border-radius: 4px;
+        }
+
+        .execute-btn {
+            background: var(--danger-red);
+            color: white;
+            border: none;
+            padding: 15px;
+            font-family: inherit;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.2s;
+            border-radius: 4px;
+            letter-spacing: 1px;
+        }
+
+        .execute-btn:hover { background: #ff5c5c; box-shadow: 0 0 15px var(--danger-red); }
+
+        .terminal-log {
+            flex-grow: 1;
+            background: rgba(0,0,0,0.4);
+            margin-top: 10px;
+            padding: 15px;
+            font-size: 12px;
+            overflow-y: auto;
+            border: 1px solid rgba(255,255,255,0.02);
+            color: #88ff88;
+        }
+
+        /* Panel 3: Classified Chat */
+        .chat-area { flex-grow: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        
+        .msg { font-size: 12px; line-height: 1.4; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.02); }
+        .msg-sys { color: var(--accent-cyan); font-weight: bold; }
+        .msg-user { color: var(--text-main); }
+        .msg-img img { max-width: 100%; border-radius: 4px; margin-top: 5px; border: 1px solid #333; }
+
+        .chat-input-row {
+            padding: 10px;
+            background: #000;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .upload-icon { cursor: pointer; color: var(--text-dim); font-size: 20px; transition: 0.2s; }
+        .upload-icon:hover { color: var(--accent-cyan); }
+
+        #chatInput {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
+            color: #fff;
+            outline: none;
+            font-family: inherit;
+        }
+
+        #sendChatBtn {
+            background: var(--accent-cyan);
+            border: none;
+            padding: 5px 12px;
+            font-weight: 800;
+            cursor: pointer;
+            border-radius: 2px;
+            font-size: 10px;
+        }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--accent-cyan); }
+    </style>
+</head>
+<body>
+
+    <nav class="status-header">
+        <div>AGENT_ID: <span style="color:white">098-GHOST</span></div>
+        <div class="blink">● SYSTEM LIVE</div>
+        <div>MOSSAD_ENC_V.2.6</div>
     </nav>
 
-    <div class="dashboard-container">
-        <div class="panel side-panel" id="bounty-panel">
-            <h3 class="panel-tag">// BOUNTY_OPS</h3>
-            <div class="redacted-content">
-                <p class="blink">SYSTEM STANDBY...</p>
-                <div class="redacted-box">REDACTED BY COMMAND</div>
+    <div class="dashboard">
+        <div class="panel">
+            <div class="panel-header"><span>BOUNTY_SYSTEM</span> <span>STATUS: IDLE</span></div>
+            <div class="bounty-placeholder">
+                <div class="icon">☢</div>
+                <p>ACCESSING DATABASE...<br><span style="font-size: 10px;">LOCKED BY HIGH COMMAND</span></p>
             </div>
         </div>
 
-        <div class="panel main-panel" id="ban-protocol">
-            <h3 class="panel-tag">// BAN_PROTOCOL_v4</h3>
-            <div class="input-container">
-                <label for="secretCode">IDENTIFICATION / SECRET CODE:</label>
-                <input type="text" id="secretCode" placeholder="Enter target code..." autocomplete="off">
-                <button id="executeBanBtn" onclick="executeSingleBan()">EXECUTE TERMINATION</button>
-            </div>
-            <div class="terminal-output" id="banOutput">
-                <p>>_ WAITING FOR INPUT...</p>
+        <div class="panel">
+            <div class="panel-header"><span>TERMINATION_PROTOCOL</span> <span>AUTHORIZED</span></div>
+            <div class="ban-container">
+                <label>CORE IDENTIFICATION / SECRET CODES</label>
+                <input type="text" id="secretCode" placeholder="Enter single code..." autocomplete="off">
+                <button class="execute-btn" onclick="executeSingleBan()">EXECUTE TERMINATION</button>
+                
+                <div class="terminal-log" id="banLog">
+                    <div style="color: var(--text-dim)">> System ready. Waiting for input...</div>
+                </div>
             </div>
         </div>
 
-        <div class="panel side-panel" id="chat-panel">
-            <h3 class="panel-tag">// SECURE_COMM_LINK</h3>
-            <div class="chat-feed" id="chatFeed">
-                <div class="chat-msg system">SECURE LINE ESTABLISHED.</div>
+        <div class="panel">
+            <div class="panel-header"><span>CLASSIFIED_COMMS</span> <span>SECURE</span></div>
+            <div class="chat-area" id="chatFeed">
+                <div class="msg msg-sys">[SYSTEM]: Encrypted link established. Greetings, Agent.</div>
             </div>
-            <div class="chat-controls">
-                <label for="imgUpload" class="custom-upload">📎</label>
-                <input type="file" id="imgUpload" accept="image/*" style="display:none">
-                <input type="text" id="chatInput" placeholder="Classified message...">
-                <button id="sendChat">SEND</button>
+            
+            <div class="chat-input-row">
+                <label for="imgInput" class="upload-icon">⊕</label>
+                <input type="file" id="imgInput" accept="image/*" hidden>
+                <input type="text" id="chatInput" placeholder="Enter message...">
+                <button id="sendChatBtn" onclick="sendMsg()">SEND</button>
             </div>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        // --- BAN LOGIC ---
+        function executeSingleBan() {
+            const input = document.getElementById('secretCode');
+            const log = document.getElementById('banLog');
+            const code = input.value.trim();
+
+            if (!code) {
+                log.innerHTML += `<div style="color: #ff3c3c">> ERROR: MISSING TARGET_ID</div>`;
+                return;
+            }
+
+            // Visual Processing
+            log.innerHTML += `<div>> TARGETING: ${code}...</div>`;
+            log.innerHTML += `<div class="blink" style="color: #ffb000">> UPLOADING TO BLACKLIST...</div>`;
+
+            setTimeout(() => {
+                log.innerHTML += `<div style="color: #00ff00">> SUCCESS: ID [${code}] TERMINATED.</div>`;
+                log.scrollTop = log.scrollHeight;
+                input.value = "";
+            }, 1200);
+        }
+
+        // --- CHAT LOGIC ---
+        function sendMsg() {
+            const input = document.getElementById('chatInput');
+            const feed = document.getElementById('chatFeed');
+            
+            if (input.value.trim() !== "") {
+                const div = document.createElement('div');
+                div.className = 'msg msg-user';
+                div.innerHTML = `<strong>[YOU]:</strong> ${input.value}`;
+                feed.appendChild(div);
+                input.value = "";
+                feed.scrollTop = feed.scrollHeight;
+            }
+        }
+
+        // Handle Image Upload
+        document.getElementById('imgInput').addEventListener('change', function(e) {
+            const feed = document.getElementById('chatFeed');
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const div = document.createElement('div');
+                    div.className = 'msg msg-img';
+                    div.innerHTML = `<strong>[ATTACHMENT]:</strong><br><img src="${event.target.result}">`;
+                    feed.appendChild(div);
+                    feed.scrollTop = feed.scrollHeight;
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Enter key for Chat
+        document.getElementById('chatInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMsg();
+        });
+    </script>
 </body>
 </html>

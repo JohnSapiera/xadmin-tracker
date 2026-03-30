@@ -2,40 +2,50 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>PORTAL_01: AGENT_REGISTRY</title>
+    <title>SYSTEM_INITIALIZER</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;800&display=swap" rel="stylesheet">
     <style>
-        :root { --cyan: #00f2ff; --bg: #050506; }
-        body { background: var(--bg); color: #fff; font-family: 'JetBrains Mono', monospace; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .card { background: #0a0a0c; border: 2px solid rgba(0, 242, 255, 0.2); padding: 30px; width: 350px; text-align: center; }
-        input { width: 100%; background: #000; border: 1px solid #333; color: var(--cyan); padding: 15px; margin: 20px 0; font-family: inherit; box-sizing: border-box; text-transform: uppercase; }
-        button { width: 100%; background: var(--cyan); color: #000; border: none; padding: 15px; font-weight: 800; cursor: pointer; }
-        #status { font-size: 10px; margin-top: 15px; color: #666; }
+        :root { --cyan: #00f2ff; --bg: #050506; --red: #ff3c3c; }
+        body { background: var(--bg); color: #fff; font-family: 'JetBrains Mono', monospace; padding: 20px; }
+        .wrapper { max-width: 450px; margin: auto; background: #0a0a0c; padding: 25px; border: 1px solid #222; }
+        select, input { width: 100%; background: #000; border: 1px solid #333; color: var(--cyan); padding: 12px; margin: 10px 0; font-family: inherit; }
+        .btn-deploy { width: 100%; padding: 15px; background: var(--red); color: #fff; border: none; font-weight: 800; cursor: pointer; }
+        #log { font-size: 10px; color: #0f0; margin-top: 15px; height: 100px; overflow: auto; background: #000; padding: 5px; }
     </style>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 </head>
 <body>
-    <div class="card">
-        <h2 style="font-size:14px; color:var(--cyan);">AGENT_REGISTRATION</h2>
-        <input type="text" id="agentName" placeholder="ENTER CODENAME">
-        <button onclick="register()">EXECUTE_REGISTRATION</button>
-        <div id="status">> STANDBY...</div>
+    <div class="wrapper">
+        <h2 style="font-size:14px; color:var(--cyan);">SYSTEM_DEPLOYMENT</h2>
+        <label style="font-size:10px;">SELECT AGENT:</label>
+        <select id="agentDrop"></select>
+        <input type="text" id="wpnName" placeholder="CREATE WEAPON NAME">
+        <button class="btn-deploy" onclick="deploy()">INITIALIZE 100 V-AGENTS</button>
+        <div id="log">> STANDBY_</div>
     </div>
     <script>
         const firebaseConfig = { apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", authDomain: "my-admin-portal-12691.firebaseapp.com", projectId: "my-admin-portal-12691", storageBucket: "my-admin-portal-12691.firebasestorage.app", messagingSenderId: "317015091563", appId: "1:317015091563:web:baab5171d8e0a58acd442e" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        async function register() {
-            const name = document.getElementById('agentName').value.trim().toUpperCase();
-            if(!name) return;
-            document.getElementById('status').innerText = ">> COMMUNICATING...";
-            try {
-                await db.collection("agents").doc(name).set({ agentName: name, status: "ACTIVE", timestamp: firebase.firestore.FieldValue.serverTimestamp() });
-                document.getElementById('status').innerText = ">> SUCCESS: REGISTERED";
-                document.getElementById('agentName').value = "";
-            } catch(e) { document.getElementById('status').innerText = ">> ERROR: " + e.code; }
+        db.collection("agents").onSnapshot(snap => {
+            const drop = document.getElementById('agentDrop');
+            drop.innerHTML = "";
+            snap.forEach(doc => drop.innerHTML += `<option value="${doc.id}">${doc.id}</option>`);
+        });
+
+        async function deploy() {
+            const agent = document.getElementById('agentDrop').value;
+            const wpn = document.getElementById('wpnName').value.toUpperCase();
+            if(!wpn) return alert("WPN NAME REQ");
+            const batch = db.batch();
+            for(let i=1; i<=100; i++) {
+                const ref = db.collection("system_registry").doc(`${agent}_${wpn}_V${i}`);
+                batch.set(ref, { agent: agent, weapon: wpn, vid: i, missionOrder: "PENDING", status: "READY", timestamp: firebase.firestore.FieldValue.serverTimestamp() });
+            }
+            await batch.commit();
+            document.getElementById('log').innerText = ">> 100 V-AGENTS DEPLOYED FOR " + wpn;
         }
     </script>
 </body>

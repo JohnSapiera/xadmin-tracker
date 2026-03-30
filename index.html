@@ -3,154 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CIA - STEALTH REGISTRY v5</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { background-color: #050505; color: #e0e0e0; font-family: monospace; overflow: hidden; }
-        #dbModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 100; backdrop-filter: blur(15px); }
-        .flash { animation: flash-effect 0.4s ease-out; }
-        @keyframes flash-effect { 0% { background: rgba(59, 130, 246, 0.3); } 100% { background: transparent; } }
-        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-    </style>
+    <title>TERMINAL - CLASSIFIED ACCESS</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body class="border-t-2 border-blue-600">
+<body class="agency-theme">
+    <div class="scanline"></div>
+    <header class="top-bar">
+        <div class="system-status">SYSTEM: <span class="blink">ENCRYPTED</span></div>
+        <div class="agency-title">INTEL-HUB // OPERATIONS</div>
+        <div class="timestamp" id="clock">00:00:00</div>
+    </header>
 
-    <nav class="p-4 flex justify-between items-center bg-black/80 border-b border-white/5">
-        <div class="flex items-center gap-2">
-            <span class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
-            <h1 class="text-[10px] font-bold tracking-[0.4em] uppercase text-gray-500">Encrypted Terminal</h1>
-        </div>
-        <button onclick="toggleModal(true)" class="text-[9px] text-blue-500 border border-blue-500/20 px-3 py-1 hover:bg-blue-500/10 font-bold uppercase tracking-widest transition">
-            [ Access Registry ]
-        </button>
-    </nav>
+    <main class="dashboard-grid">
+        <section class="panel locked">
+            <h2 class="panel-header">BOUNTY_SYSTEM</h2>
+            <div class="panel-content">
+                <div class="restricted-overlay">
+                    <p>ACCESS RESTRICTED: PENDING OPS</p>
+                </div>
+            </div>
+        </section>
 
-    <main id="mainFrame" class="max-w-xl mx-auto mt-24 p-6 transition-all">
-        <div class="text-center mb-6">
-            <p id="statusMsg" class="text-gray-700 text-[9px] font-bold tracking-[0.6em] uppercase">Ready for Input</p>
-        </div>
+        <section class="panel">
+            <h2 class="panel-header">BAN_PROTOCOL</h2>
+            <div class="panel-content">
+                <div class="input-group">
+                    <label>BULK ADD: SECRET CODES</label>
+                    <textarea id="secretCodes" placeholder="Input codes separated by lines..."></textarea>
+                    <button class="btn-action">EXECUTE BAN</button>
+                </div>
+                <div class="data-feed">
+                    <div class="feed-item">[REDACTED] - 192.168.x.x - BANNED</div>
+                </div>
+            </div>
+        </section>
 
-        <input type="number" id="codeIn" oninput="scanNow()" autofocus
-               placeholder="00000" 
-               class="w-full bg-black border border-white/10 p-5 text-center text-5xl font-bold tracking-[0.5em] text-blue-500 outline-none focus:border-blue-500 shadow-[0_0_30px_rgba(0,0,0,0.5)]">
-
-        <div id="resultBox" class="mt-8 min-h-[140px] flex items-center justify-center border border-dashed border-white/5 rounded-lg bg-zinc-900/10">
-            <p class="text-gray-800 italic uppercase tracking-widest text-[9px]">Listening for signal...</p>
-        </div>
+        <section class="panel chat-panel">
+            <h2 class="panel-header">SECURE_COMM_LINK</h2>
+            <div class="chat-display" id="chatDisplay">
+                <div class="msg system">--- CONNECTION ESTABLISHED ---</div>
+            </div>
+            <div class="chat-input-area">
+                <label for="file-upload" class="upload-btn">
+                    <span>+</span>
+                    <input type="file" id="file-upload" accept="image/*" hidden>
+                </label>
+                <input type="text" placeholder="Type classified message..." id="chatInput">
+                <button id="sendBtn">SEND</button>
+            </div>
+        </section>
     </main>
 
-    <div id="dbModal" class="flex items-center justify-center p-4">
-        <div class="bg-zinc-900 border border-blue-900/50 w-full max-w-2xl h-[85vh] flex flex-col shadow-2xl">
-            <div class="p-4 border-b border-blue-900/50 flex justify-between items-center bg-blue-900/5">
-                <span class="text-blue-400 font-bold text-[10px] tracking-widest uppercase">Classified Intel Archive</span>
-                <button onclick="toggleModal(false)" class="text-white hover:text-red-500 font-bold text-[10px]">[ X ]</button>
-            </div>
-            
-            <div id="recordsGrid" class="flex-1 overflow-y-auto p-6 grid grid-cols-2 md:grid-cols-3 gap-3">
-                </div>
-            
-            <div class="p-4 bg-black/50 border-t border-blue-900/30 text-center">
-                <p class="text-blue-700 text-[8px] font-bold uppercase tracking-widest">Global Sync Active | Total Entries: <span id="count">0</span></p>
-            </div>
-        </div>
-    </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, query, where, getDocs, onSnapshot, serverTimestamp, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-        // FIREBASE CONFIG
-        const firebaseConfig = {
-            apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
-            authDomain: "my-admin-portal-12691.firebaseapp.com",
-            projectId: "my-admin-portal-12691",
-            storageBucket: "my-admin-portal-12691.firebasestorage.app",
-            messagingSenderId: "317015091563",
-            appId: "1:317015091563:web:baab5171d8e0a58acd442e",
-            measurementId: "G-150YYLS5FP"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const codeIn = document.getElementById('codeIn');
-        const resBox = document.getElementById('resultBox');
-        const statusMsg = document.getElementById('statusMsg');
-
-        // --- REAL-TIME SCANNER ---
-        window.scanNow = async () => {
-            const val = codeIn.value;
-            if (val.length < 4) {
-                resBox.innerHTML = '<p class="text-gray-800 italic uppercase text-[9px]">Input insufficient...</p>';
-                statusMsg.innerText = "READY FOR INPUT";
-                return;
-            }
-
-            statusMsg.innerText = "QUERYING DATABASE...";
-            const q = query(collection(db, "banned_numbers"), where("code", "==", val));
-            const snap = await getDocs(q);
-
-            if (snap.empty) {
-                statusMsg.innerText = "RESULT: NOT FOUND";
-                resBox.innerHTML = `
-                    <button onclick="banCode('${val}')" class="w-full h-24 bg-red-600 text-white font-black text-xs uppercase tracking-widest hover:bg-red-700 active:scale-95 transition-all rounded shadow-lg">
-                        Eliminate Target: ${val}
-                    </button>`;
-            } else {
-                statusMsg.innerText = "RESULT: BLOCKED";
-                resBox.innerHTML = `
-                    <div class="w-full text-center p-6 border-2 border-red-600 bg-red-600/10">
-                        <p class="text-red-600 font-black text-2xl tracking-tighter uppercase">ELIMINATED</p>
-                        <p class="text-gray-500 text-[8px] uppercase mt-1 italic">Number is permanently blocked in satellite.</p>
-                    </div>`;
-            }
-        };
-
-        // --- PERMANENT SAVE ---
-        window.banCode = async (code) => {
-            try {
-                statusMsg.innerText = "SAVING TO CLOUD...";
-                await addDoc(collection(db, "banned_numbers"), { code: code, time: serverTimestamp() });
-                
-                document.getElementById('mainFrame').classList.add('flash');
-                setTimeout(() => document.getElementById('mainFrame').classList.remove('flash'), 400);
-
-                codeIn.value = "";
-                codeIn.focus();
-                scanNow();
-            } catch (e) { alert("ERROR: Check Firestore Rules!"); }
-        };
-
-        // --- REAL-TIME LISTENER (HINDI NAWAWALA PAG REFRESH) ---
-        onSnapshot(collection(db, "banned_numbers"), (snap) => {
-            const grid = document.getElementById('recordsGrid');
-            const count = document.getElementById('count');
-            grid.innerHTML = "";
-            let i = 0;
-            
-            snap.forEach(documentObj => {
-                i++;
-                const data = documentObj.data();
-                const div = document.createElement('div');
-                div.className = "bg-black border border-blue-900/20 p-4 flex flex-col items-center gap-2 group hover:border-red-500 transition-all";
-                div.innerHTML = `
-                    <span class="text-blue-500 font-bold text-lg tracking-widest">${data.code}</span>
-                    <button onclick="removeCode('${documentObj.id}')" class="text-[8px] text-gray-700 hover:text-red-500 uppercase font-bold transition">
-                        [ Delete ]
-                    </button>`;
-                grid.appendChild(div);
-            });
-            count.innerText = i;
-            if(i === 0) grid.innerHTML = "<p class='col-span-full py-20 text-gray-800 text-center uppercase italic'>Archive Empty</p>";
-        });
-
-        // --- DELETE FUNCTION ---
-        window.removeCode = async (id) => {
-            if (confirm("Permanently delete this record?")) {
-                await deleteDoc(doc(db, "banned_numbers", id));
-            }
-        };
-
-        window.toggleModal = (s) => document.getElementById('dbModal').style.display = s ? 'flex' : 'none';
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>

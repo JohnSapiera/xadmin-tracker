@@ -344,7 +344,7 @@
         // 1. TOP-LEVEL PROTECTION: Hindi makakapasok sa page kung walang login
 const activeAgent = localStorage.getItem("cia_agent");
 if (!activeAgent) {
-    window.location.href = "login.html";
+    window.location.href = "index.html";
 }
 
 const TG_URL = "https://api.telegram.org/bot8639737111:AAGvCqiHzkiJvVqH6YPocRIVMoiXZlK4ZWg/sendMessage?chat_id=7298607329";

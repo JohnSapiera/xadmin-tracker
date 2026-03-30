@@ -223,82 +223,76 @@ let currentWpn = "";
 async function runTacticalScan(val) {
     const log = document.getElementById('scanLog');
     const saveBtn = document.getElementById('saveStage');
+    
+    // Reset stages every time user types
     resetScannerUI();
 
     if(val.length < 4) {
-        log.innerHTML = "> Scanning signals...";
+        log.innerHTML = "> Awaiting Mission Order (4-5 Digits)...";
         return;
     }
 
-    log.innerHTML = `> SEARCHING MO# ${val} IN DATABASE...`;
+    log.innerHTML = `> SCANNING DATABASE FOR MO# ${val}...`;
     
-    // Check if MO exists in 'blacklist' and is AVAILABLE
-    const snap = await db.collection("blacklist")
-                   .where("code", "==", val.toUpperCase())
-                   .get();
+    try {
+        // Tinitignan natin kung EXISTED na ang MO# na ito sa blacklist
+        const snap = await db.collection("blacklist")
+                       .where("code", "==", val.trim())
+                       .get();
 
-    if(!snap.empty) {
-        const doc = snap.docs[0].data();
-        if(doc.status === "USED") {
-            log.innerHTML = `<div style="color:red">> ACCESS DENIED: MO# ${val} ALREADY TERMINATED.</div>`;
+        if(!snap.empty) {
+            // IF EXISTED: Hindi na pwedeng gamitin (Duplicate Prevention)
+            log.innerHTML = `<div style="color:var(--danger-red)">> ACCESS DENIED: MO# ${val} IS ALREADY REGISTERED/USED.</div>`;
+            saveBtn.classList.add('hidden');
         } else {
-            log.innerHTML = `<div style="color:#00ff00">> MO# ${val} VERIFIED. SYSTEM READY.</div>`;
-            currentMO = val.toUpperCase();
-            saveBtn.classList.remove('hidden');
+            // IF NOT EXISTED: Ibig sabihin bago ito, kaya pwedeng i-SAVE
+            log.innerHTML = `<div style="color:#00ff00">> MO# ${val} IS AVAILABLE FOR DEPLOYMENT.</div>`;
+            currentMO = val.trim();
+            saveBtn.classList.remove('hidden'); // Lilitaw na ang Green "Initialize Save" Button
         }
-    } else {
-        log.innerHTML = `<div style="color:#555">> MO# ${val} NOT FOUND IN SECURE LIST.</div>`;
+    } catch (error) {
+        log.innerHTML = `<div style="color:red">> ERROR: DATABASE CONNECTION INTERRUPTED.</div>`;
+        console.error(error);
     }
 }
 
-function openWeaponFolder() {
-    document.getElementById('saveStage').classList.add('hidden');
-    document.getElementById('weaponFolder').classList.remove('hidden');
-    document.getElementById('scanLog').innerHTML = "> SELECT WEAPON SYSTEM TO CONTINUE...";
-}
-
-function selectWeapon(wpn) {
-    currentWpn = wpn;
-    document.getElementById('weaponFolder').classList.add('hidden');
-    document.getElementById('finalStage').classList.remove('hidden');
-    document.getElementById('selWpn').innerText = wpn;
-}
-
+// Ito ang function kapag pinindot ang 'ACCEPT MISSION ORDER'
 async function finalizeMission() {
     const vID = document.getElementById('vAgentInput').value;
-    if(!vID) { alert("ERROR: V.AGENT ID REQUIRED"); return; }
+    if(!vID) { alert("V-AGENT ID REQUIRED"); return; }
 
     const log = document.getElementById('scanLog');
-    log.innerHTML = "> UPLOADING DATA TO ENCRYPTED SERVER...";
+    log.innerHTML = "> REGISTERING NEW MISSION ORDER...";
 
     try {
-        // 1. I-save sa 'bounties' collection (Para sa Deployment History)
+        // 1. I-save sa 'bounties' (Para mag-reflect sa profile.html Deployment History)
         await db.collection("bounties").add({
-            agent: activeAgent, // Galing sa localStorage (LZ/JFSN)
+            agent: activeAgent,
             weapon: currentWpn,
             vid: vID,
-            missionOrder: currentMO,
-            amt: 0, // Default 0 muna
+            missionOrder: currentMO, // Ang bagong scanned number
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        // 2. I-update ang 'blacklist' para maging USED na ang code na ito
-        const snap = await db.collection("blacklist").where("code", "==", currentMO).get();
-        if(!snap.empty) {
-            await db.collection("blacklist").doc(snap.docs[0].id).update({
-                status: "USED",
-                terminatedBy: activeAgent
-            });
-        }
+        // 2. I-save din sa 'blacklist' para sa susunod na i-scan ito, "EXISTED" na siya
+        await db.collection("blacklist").add({
+            code: currentMO,
+            status: "USED",
+            agent: activeAgent,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
 
         // 3. Telegram Alert
-        fetch(`${TG_URL}&text=${encodeURIComponent(`🚀 MISSION ACCEPTED\nAgent: ${activeAgent}\nMO#: ${currentMO}\nWeapon: ${currentWpn}\nV-Agent: ${vID}`)}`);
+        const msg = `🆕 NEW MISSION REGISTERED\nAgent: ${activeAgent}\nMO#: ${currentMO}\nWeapon: ${currentWpn}\nV-Agent: ${vID}`;
+        fetch(`${TG_URL}&text=${encodeURIComponent(msg)}`);
 
-        log.innerHTML = `<div style="color:#00ff00">> MISSION DEPLOYED SUCCESSFULLY.</div>`;
-        setTimeout(() => resetScanner(), 2000);
+        log.innerHTML = `<div style="color:#00ff00">> MISSION ARCHIVED & REFLECTED IN PROFILE.</div>`;
+        
+        // Reset after 3 seconds
+        setTimeout(() => resetScanner(), 3000);
 
     } catch (e) {
-        log.innerHTML = `<div style="color:red">> ERROR: UPLOAD FAILED.</div>`;
+        log.innerHTML = `<div style="color:red">> UPLOAD FAILED: RECHECK PERMISSIONS.</div>`;
     }
 }
 

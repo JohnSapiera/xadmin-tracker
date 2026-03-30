@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CIA - PERMANENT REGISTRY</title>
+    <title>CIA - RAPID ELIMINATION TERMINAL</title>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -11,75 +11,69 @@
         .scanline { width: 100%; height: 2px; background: rgba(0, 112, 243, 0.05); position: fixed; animation: scan 4s linear infinite; z-index: 100; pointer-events: none; }
         @keyframes scan { from { top: 0; } to { top: 100%; } }
         
-        #elim-overlay {
-            display: none; position: fixed; inset: 0; background: rgba(255,0,0,0.3);
-            z-index: 200; align-items: center; justify-content: center;
-            border: 15px solid red; backdrop-blur: sm;
-        }
-        
+        /* Subtle Success Flash */
+        .success-flash { animation: flash-green 0.5s ease-out; }
+        @keyframes flash-green { 0% { background-color: rgba(34, 197, 94, 0.2); } 100% { background-color: transparent; } }
+
         .floating-window { display: none; position: fixed; top: 15%; right: 2%; z-index: 50; }
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        
-        .glow-text { text-shadow: 0 0 10px rgba(0, 112, 243, 0.5); }
     </style>
 </head>
 <body class="text-xs border-t-2 border-blue-600">
     <div class="scanline"></div>
 
-    <div id="elim-overlay" class="flex flex-col">
-        <h1 class="text-white text-5xl font-black italic tracking-tighter animate-bounce">TARGET ELIMINATED</h1>
-        <p class="text-white mt-2 font-bold tracking-[0.5em] opacity-80 uppercase">Database Entry Secured</p>
-    </div>
-
-    <nav class="bg-black/90 p-4 border-b border-white/10 flex justify-between items-center sticky top-0 z-50">
+    <nav class="bg-black/95 p-3 border-b border-white/10 flex justify-between items-center sticky top-0 z-50">
         <div class="flex items-center gap-4">
-            <div class="px-2 py-1 border border-blue-500 text-blue-500 font-bold text-[9px] tracking-tighter">CIA_INTEL_v2.0</div>
-            <h1 class="tracking-[0.2em] uppercase font-bold text-white glow-text">Permanent Code Registry</h1>
+            <div class="px-2 py-0.5 border border-blue-500 text-blue-500 font-bold text-[8px] tracking-tighter">CIA_RAPID_v3</div>
+            <h1 class="tracking-[0.2em] uppercase font-bold text-white text-[10px]">High-Speed Elimination Terminal</h1>
         </div>
-        <div class="flex gap-4">
-            <button onclick="toggleEliminated()" class="text-red-500 border border-red-500/30 px-3 py-1 hover:bg-red-500/20 font-bold uppercase text-[9px] transition">
-                [ ARCHIVE ]
-            </button>
-        </div>
+        <button onclick="toggleEliminated()" class="text-red-500 border border-red-500/30 px-3 py-1 hover:bg-red-500/10 font-bold uppercase text-[9px]">
+            [ REGISTRY ]
+        </button>
     </nav>
 
-    <div class="max-w-4xl mx-auto p-6 space-y-4 h-[calc(100vh-70px)] flex flex-col">
+    <div class="max-w-5xl mx-auto p-4 space-y-4 h-[calc(100vh-60px)] flex flex-col">
         
-        <section class="bg-zinc-900/40 border border-white/5 p-6 rounded shadow-2xl relative">
-            <h2 class="text-blue-400 mb-4 tracking-widest uppercase font-bold text-[10px]">Active Terminal: Satellite Uplink</h2>
-            <input type="number" id="codeInput" oninput="autoScan()" placeholder="ENTER CODE..." 
-                   class="w-full bg-black border border-white/10 p-5 outline-none focus:border-blue-500 text-blue-400 font-bold tracking-[0.5em] text-4xl text-center shadow-inner">
+        <section id="inputUnit" class="bg-zinc-900/40 border border-white/5 p-6 rounded transition-all">
+            <div class="flex justify-between items-center mb-2">
+                <h2 class="text-blue-500 tracking-widest uppercase font-bold text-[9px]">Input Target Code</h2>
+                <span id="targetStatus" class="text-[8px] text-gray-600 font-bold">READY FOR TRANSMISSION</span>
+            </div>
             
-            <div id="statusReport" class="mt-4 min-h-[120px] flex flex-col items-center justify-center border border-dashed border-white/10 rounded bg-black/40 p-4 transition-all">
-                <p class="text-gray-700 italic uppercase tracking-[0.3em] text-[9px]">Awaiting Signal...</p>
+            <input type="number" id="codeInput" oninput="autoScan()" autofocus
+                   placeholder="0000" 
+                   class="w-full bg-black border border-white/10 p-4 outline-none focus:border-blue-500 text-blue-400 font-bold tracking-[1em] text-4xl text-center">
+            
+            <div id="statusReport" class="mt-4 min-h-[100px] flex items-center justify-center border border-dashed border-white/10 rounded bg-black/20 p-2">
+                <p class="text-gray-700 italic uppercase tracking-widest text-[9px]">Awaiting signal...</p>
             </div>
         </section>
 
         <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 overflow-hidden">
-            <section class="bg-zinc-900/40 border border-white/5 rounded overflow-hidden flex flex-col">
-                <div class="bg-white/5 p-2 text-[9px] font-bold text-amber-500 uppercase tracking-widest border-b border-white/5 px-4">Secure Channel</div>
-                <div id="chatFeed" class="flex-1 p-4 overflow-y-auto space-y-2 bg-black/20 text-[9px]"></div>
-                <div class="p-2 border-t border-white/5 flex gap-2">
-                    <input type="text" id="chatMsg" placeholder="MSG..." class="flex-1 bg-black border border-white/10 p-2 outline-none text-amber-500 uppercase text-[9px]">
-                    <button onclick="sendMsg()" class="bg-amber-600 px-3 py-1 font-bold text-black text-[9px] uppercase">Send</button>
+            <section class="bg-zinc-900/20 border border-white/5 rounded flex flex-col">
+                <div class="bg-white/5 p-2 text-[9px] font-bold text-red-500 uppercase tracking-widest border-b border-white/5 px-4">Recent Eliminations</div>
+                <div id="recentLogs" class="flex-1 p-4 overflow-y-auto space-y-1 text-red-400 font-mono text-[9px]">
+                    <p class="opacity-30 italic">No activity logs found.</p>
                 </div>
             </section>
 
-            <section class="bg-zinc-900/40 border border-white/5 rounded overflow-hidden flex flex-col">
-                <div class="bg-white/5 p-2 text-[9px] font-bold text-red-500 uppercase tracking-widest border-b border-white/5 px-4">Recent Intel Logs</div>
-                <div id="recentLogs" class="flex-1 p-4 overflow-y-auto space-y-2 bg-black/20 text-[9px] text-red-400">
-                    <p class="italic text-gray-700">No recent activity detected.</p>
+            <section class="bg-zinc-900/20 border border-white/5 rounded flex flex-col">
+                <div class="bg-white/5 p-2 text-[9px] font-bold text-amber-500 uppercase tracking-widest border-b border-white/5 px-4">Secure Comms</div>
+                <div id="chatFeed" class="flex-1 p-4 overflow-y-auto space-y-1 bg-black/10 text-[9px] text-amber-500/80"></div>
+                <div class="p-2 border-t border-white/5 flex gap-1">
+                    <input type="text" id="chatMsg" placeholder="..." class="flex-1 bg-black border border-white/10 p-1.5 outline-none text-amber-500 uppercase text-[9px]">
+                    <button onclick="sendMsg()" class="bg-amber-600 px-3 py-1 font-bold text-black text-[9px] uppercase hover:bg-amber-500">SEND</button>
                 </div>
             </section>
         </div>
     </div>
 
-    <div id="eliminatedWindow" class="floating-window w-72 bg-black border border-red-500 shadow-[0_0_50px_rgba(255,0,0,0.1)]">
-        <div class="bg-red-900/40 p-3 border-b border-red-500 flex justify-between text-[10px] font-black text-red-500 uppercase tracking-widest">
-            <span>Classified Database</span>
-            <button onclick="toggleEliminated()" class="hover:text-white">[CLOSE]</button>
+    <div id="eliminatedWindow" class="floating-window w-72 bg-black border border-red-500 shadow-2xl">
+        <div class="bg-red-900/40 p-2 border-b border-red-500 flex justify-between text-[10px] font-bold text-red-500 uppercase">
+            <span>Eliminated Database</span>
+            <button onclick="toggleEliminated()">[X]</button>
         </div>
-        <div id="eliminatedList" class="p-4 max-h-80 overflow-y-auto space-y-2 text-red-500 font-bold tracking-widest text-center"></div>
+        <div id="eliminatedList" class="p-4 max-h-80 overflow-y-auto space-y-1 text-red-500 text-center font-bold tracking-widest"></div>
     </div>
 
     <script type="module">
@@ -101,65 +95,100 @@
         const db = getFirestore(app);
         const rdb = getDatabase(app);
 
-        // --- DYNAMIC SCANNER ---
+        const codeInput = document.getElementById('codeInput');
+        const report = document.getElementById('statusReport');
+        const targetStatus = document.getElementById('targetStatus');
+
+        // --- RAPID SCANNER ---
         window.autoScan = async () => {
-            const code = document.getElementById('codeInput').value;
-            const report = document.getElementById('statusReport');
+            const code = codeInput.value;
 
             if (code.length < 4) {
-                report.innerHTML = '<p class="text-gray-700 italic uppercase text-[9px] tracking-widest">Signal strength low: Input more data...</p>';
+                report.innerHTML = '<p class="text-gray-700 italic uppercase text-[9px]">Scanning signal strength...</p>';
+                targetStatus.innerText = "WAITING FOR INPUT";
                 return;
             }
 
-            report.innerHTML = `<span class="text-blue-500 animate-pulse font-bold uppercase tracking-[0.2em] text-[10px]">Deep Scan in Progress...</span>`;
-
+            targetStatus.innerText = "INQUIRING DATABASE...";
             const q = query(collection(db, "eliminated_codes"), where("code", "==", code));
             const snapshot = await getDocs(q);
 
             if (snapshot.empty) {
+                targetStatus.innerText = "TARGET IDENTIFIED: UNKNOWN";
                 report.innerHTML = `
-                    <div class="text-center animate-fadeIn">
-                        <p class="text-amber-500 font-bold mb-3 tracking-widest">STATUS: UNKNOWN TARGET</p>
-                        <button onclick="initiateElimination('${code}')" class="bg-red-600 px-8 py-3 text-white text-[10px] font-black uppercase border-b-4 border-red-800 hover:bg-red-700 active:border-b-0 active:translate-y-1 transition-all">
-                            ELIMINATE FROM NETWORK
+                    <div class="text-center w-full">
+                        <button onclick="initiateElimination('${code}')" class="bg-red-600 w-full py-4 text-white font-black uppercase tracking-widest hover:bg-red-700 transition-all border-b-4 border-red-900 active:border-b-0 active:translate-y-1">
+                            ELIMINATE TARGET CODE: ${code}
                         </button>
                     </div>`;
             } else {
-                const data = snapshot.docs[0].data();
+                targetStatus.innerText = "TARGET IDENTIFIED: ELIMINATED";
                 report.innerHTML = `
-                    <div class="text-center border-2 border-red-600 p-4 bg-red-600/10 w-full animate-pulse">
-                        <p class="text-red-600 font-black tracking-[0.3em] uppercase text-xl">ELIMINATED</p>
-                        <p class="text-white text-[9px] mt-2 tracking-widest uppercase">Target ${code} is already inactive in the database.</p>
+                    <div class="text-center p-3 border border-red-600 bg-red-600/5 w-full">
+                        <p class="text-red-600 font-black tracking-widest text-lg uppercase">ALREADY ELIMINATED</p>
+                        <p class="text-gray-500 text-[8px] uppercase tracking-tighter italic">Cannot eliminate a neutralized target.</p>
                     </div>`;
             }
         };
 
-        // --- PERMANENT ELIMINATION ---
+        // --- RAPID ELIMINATION (No Blocking) ---
         window.initiateElimination = async (code) => {
-            const overlay = document.getElementById('elim-overlay');
-            overlay.style.display = 'flex';
+            const inputUnit = document.getElementById('inputUnit');
             
             try {
-                // Permanently save to Firestore
+                // Save to Firestore
                 await addDoc(collection(db, "eliminated_codes"), {
                     code: code,
                     timestamp: serverTimestamp()
                 });
 
-                setTimeout(() => {
-                    overlay.style.display = 'none';
-                    document.getElementById('codeInput').value = "";
-                    autoScan(); // Reset to listening state
-                }, 1800);
+                // Subtle Visual Feedback
+                inputUnit.classList.add('success-flash');
+                setTimeout(() => inputUnit.classList.remove('success-flash'), 500);
+
+                // Quick reset for next number
+                codeInput.value = "";
+                codeInput.focus();
+                autoScan();
 
             } catch (err) {
-                overlay.style.display = 'none';
-                console.error("Database error:", err);
-                alert("Protocol Interrupted: Satellite Sync Failed.");
+                alert("Comm-Link Failed.");
             }
         };
 
-        // --- REALTIME CHAT ---
+        // --- UI & LOGS ---
+        window.toggleEliminated = () => {
+            const win = document.getElementById('eliminatedWindow');
+            win.style.display = win.style.display === 'block' ? 'none' : 'block';
+        };
+
+        // Live Archive
+        onSnapshot(collection(db, "eliminated_codes"), (snap) => {
+            const list = document.getElementById('eliminatedList');
+            list.innerHTML = "";
+            snap.forEach(doc => {
+                const item = document.createElement('div');
+                item.className = "border-b border-red-900/10 py-1 uppercase tracking-widest text-[10px]";
+                item.innerText = `ID: ${doc.data().code}`;
+                list.appendChild(item);
+            });
+        });
+
+        // Live Activity Logs (Huling 10)
+        const qRecent = query(collection(db, "eliminated_codes"), orderBy("timestamp", "desc"), limit(10));
+        onSnapshot(qRecent, (snap) => {
+            const logDiv = document.getElementById('recentLogs');
+            logDiv.innerHTML = "";
+            snap.forEach(doc => {
+                const p = document.createElement('p');
+                p.className = "mb-1 border-b border-white/5 pb-1 flex justify-between";
+                const time = doc.data().timestamp?.toDate().toLocaleTimeString() || "SYNCING";
+                p.innerHTML = `<span>[${time}] TARGET: ${doc.data().code}</span> <span class="text-white">NEUTRALIZED</span>`;
+                logDiv.appendChild(p);
+            });
+        });
+
+        // --- COMMS ---
         window.sendMsg = () => {
             const input = document.getElementById('chatMsg');
             if (input.value.trim()) {
@@ -171,42 +200,12 @@
         onChildAdded(ref(rdb, 'secure_comms'), (snap) => {
             const data = snap.val();
             const div = document.createElement('div');
-            div.className = "bg-white/5 border-l-2 border-amber-500 p-2 mb-1 animate-fadeIn";
-            div.innerHTML = `<span class="text-amber-500 font-bold tracking-widest uppercase">${data.text}</span>`;
+            div.className = "mb-1 border-l border-amber-800 pl-2";
+            div.innerHTML = `<span class="opacity-50 text-[7px] block">${new Date(data.time).toLocaleTimeString()}</span><span class="tracking-widest uppercase">${data.text}</span>`;
             document.getElementById('chatFeed').appendChild(div);
             document.getElementById('chatFeed').scrollTop = document.getElementById('chatFeed').scrollHeight;
         });
 
-        // --- LIVE DATABASE LISTENERS ---
-        window.toggleEliminated = () => {
-            const win = document.getElementById('eliminatedWindow');
-            win.style.display = win.style.display === 'block' ? 'none' : 'block';
-        };
-
-        // ARCHIVE LIST (Full list)
-        onSnapshot(collection(db, "eliminated_codes"), (snap) => {
-            const list = document.getElementById('eliminatedList');
-            list.innerHTML = "";
-            snap.forEach(doc => {
-                const item = document.createElement('div');
-                item.className = "border-b border-red-900/20 py-1 tracking-[0.2em]";
-                item.innerText = `[ ${doc.data().code} ]`;
-                list.appendChild(item);
-            });
-        });
-
-        // RECENT LOGS (Huling 5 data)
-        const qRecent = query(collection(db, "eliminated_codes"), orderBy("timestamp", "desc"), limit(5));
-        onSnapshot(qRecent, (snap) => {
-            const logDiv = document.getElementById('recentLogs');
-            logDiv.innerHTML = "";
-            snap.forEach(doc => {
-                const p = document.createElement('p');
-                p.className = "mb-2 pb-1 border-b border-white/5 animate-pulse";
-                p.innerHTML = `><span class="text-white">${doc.data().code}</span> NEUTRALIZED AT ${doc.data().timestamp?.toDate().toLocaleTimeString() || 'SYNCING...'}`;
-                logDiv.appendChild(p);
-            });
-        });
     </script>
 </body>
 </html>

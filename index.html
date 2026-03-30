@@ -3,56 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TERMINAL - CLASSIFIED ACCESS</title>
+    <title>OPERATIONS CENTER - SECURE ACCESS</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="agency-theme">
-    <div class="scanline"></div>
-    <header class="top-bar">
-        <div class="system-status">SYSTEM: <span class="blink">ENCRYPTED</span></div>
-        <div class="agency-title">INTEL-HUB // OPERATIONS</div>
-        <div class="timestamp" id="clock">00:00:00</div>
-    </header>
+<body class="cia-dark-ops">
+    <div class="crt-overlay"></div>
+    
+    <nav class="status-bar">
+        <div class="system-id">ID: 098-INTEL</div>
+        <div class="location">LOC: [REDACTED]</div>
+        <div class="connection-status">CONNECTION: <span class="secure-pulse">ENCRYPTED</span></div>
+    </nav>
 
-    <main class="dashboard-grid">
-        <section class="panel locked">
-            <h2 class="panel-header">BOUNTY_SYSTEM</h2>
-            <div class="panel-content">
-                <div class="restricted-overlay">
-                    <p>ACCESS RESTRICTED: PENDING OPS</p>
-                </div>
+    <div class="dashboard-container">
+        <div class="panel side-panel" id="bounty-panel">
+            <h3 class="panel-tag">// BOUNTY_OPS</h3>
+            <div class="redacted-content">
+                <p class="blink">SYSTEM STANDBY...</p>
+                <div class="redacted-box">REDACTED BY COMMAND</div>
             </div>
-        </section>
+        </div>
 
-        <section class="panel">
-            <h2 class="panel-header">BAN_PROTOCOL</h2>
-            <div class="panel-content">
-                <div class="input-group">
-                    <label>BULK ADD: SECRET CODES</label>
-                    <textarea id="secretCodes" placeholder="Input codes separated by lines..."></textarea>
-                    <button class="btn-action">EXECUTE BAN</button>
-                </div>
-                <div class="data-feed">
-                    <div class="feed-item">[REDACTED] - 192.168.x.x - BANNED</div>
-                </div>
+        <div class="panel main-panel" id="ban-protocol">
+            <h3 class="panel-tag">// BAN_PROTOCOL_v4</h3>
+            <div class="input-container">
+                <label for="secretCode">IDENTIFICATION / SECRET CODE:</label>
+                <input type="text" id="secretCode" placeholder="Enter target code..." autocomplete="off">
+                <button id="executeBanBtn" onclick="executeSingleBan()">EXECUTE TERMINATION</button>
             </div>
-        </section>
+            <div class="terminal-output" id="banOutput">
+                <p>>_ WAITING FOR INPUT...</p>
+            </div>
+        </div>
 
-        <section class="panel chat-panel">
-            <h2 class="panel-header">SECURE_COMM_LINK</h2>
-            <div class="chat-display" id="chatDisplay">
-                <div class="msg system">--- CONNECTION ESTABLISHED ---</div>
+        <div class="panel side-panel" id="chat-panel">
+            <h3 class="panel-tag">// SECURE_COMM_LINK</h3>
+            <div class="chat-feed" id="chatFeed">
+                <div class="chat-msg system">SECURE LINE ESTABLISHED.</div>
             </div>
-            <div class="chat-input-area">
-                <label for="file-upload" class="upload-btn">
-                    <span>+</span>
-                    <input type="file" id="file-upload" accept="image/*" hidden>
-                </label>
-                <input type="text" placeholder="Type classified message..." id="chatInput">
-                <button id="sendBtn">SEND</button>
+            <div class="chat-controls">
+                <label for="imgUpload" class="custom-upload">📎</label>
+                <input type="file" id="imgUpload" accept="image/*" style="display:none">
+                <input type="text" id="chatInput" placeholder="Classified message...">
+                <button id="sendChat">SEND</button>
             </div>
-        </section>
-    </main>
+        </div>
+    </div>
 
     <script src="script.js"></script>
 </body>

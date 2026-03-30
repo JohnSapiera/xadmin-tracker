@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - FreeShoppingPH</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 flex items-center justify-center h-screen">
+
+    <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md border-t-4 border-blue-600">
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-extrabold text-gray-800">Admin Portal</h2>
+            <p class="text-gray-500 mt-2 text-sm text-balance">Secure access for authorized administrators only.</p>
+        </div>
+
+        <div class="space-y-5">
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Email Address</label>
+                <input type="email" id="email" placeholder="admin@example.com" 
+                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Password</label>
+                <input type="password" id="password" placeholder="••••••••" 
+                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+            </div>
+            
+            <button id="loginBtn" class="w-full bg-blue-600 text-white p-3 rounded-lg font-bold hover:bg-blue-700 active:scale-95 transition-all shadow-lg shadow-blue-500/30">
+                Login to Dashboard
+            </button>
+        </div>
+
+        <p id="message" class="mt-6 text-red-500 text-sm text-center font-medium min-h-[1.25rem]"></p>
+    </div>
+
+    <script type="module">
+        // 1. Import Firebase SDKs mula sa Google CDN
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        // 2. Ang iyong Config (Galing sa prompt mo)
+        const firebaseConfig = {
+            apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
+            authDomain: "my-admin-portal-12691.firebaseapp.com",
+            projectId: "my-admin-portal-12691",
+            storageBucket: "my-admin-portal-12691.firebasestorage.app",
+            messagingSenderId: "317015091563",
+            appId: "1:317015091563:web:baab5171d8e0a58acd442e",
+            measurementId: "G-150YYLS5FP"
+        };
+
+        // 3. Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // 4. Login Function
+        const loginBtn = document.getElementById('loginBtn');
+        const message = document.getElementById('message');
+
+        loginBtn.addEventListener('click', async () => {
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('password').value;
+
+            message.innerText = "Checking credentials...";
+            message.className = "mt-6 text-blue-500 text-sm text-center font-medium";
+
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+                // Kapag success, itatapon ka sa Dashboard
+                window.location.href = "index.html"; 
+            } catch (error) {
+                console.error(error);
+                message.innerText = "Invalid email or password. Please try again.";
+                message.className = "mt-6 text-red-500 text-sm text-center font-medium";
+            }
+        });
+    </script>
+</body>
+</html>

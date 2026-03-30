@@ -3,44 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DEPLOYMENT_CENTER_v4</title>
+    <title>MOSSAD - AGENT_REGISTRATION</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;800&display=swap" rel="stylesheet">
     <style>
-        :root { --cyan: #00f2ff; --bg: #050506; --panel: #0a0a0c; --red: #ff3c3c; }
-        body { background: var(--bg); color: #fff; font-family: 'JetBrains Mono', monospace; padding: 20px; }
-        .wrapper { max-width: 500px; margin: auto; }
-        
-        .card { 
-            background: var(--panel); border: 1px solid rgba(0, 242, 255, 0.1); 
-            padding: 25px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        :root { --cyan: #00f2ff; --bg: #050506; --panel: #0a0a0c; }
+        body { 
+            background: var(--bg); color: #fff; font-family: 'JetBrains Mono', monospace; 
+            display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0;
         }
-        h2 { font-size: 14px; color: var(--cyan); border-bottom: 1px solid #222; padding-bottom: 15px; margin-top: 0; }
+        .portal-card {
+            background: var(--panel); border: 2px solid rgba(0, 242, 255, 0.2);
+            padding: 30px; width: 100%; max-width: 350px; text-align: center;
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.1);
+        }
+        h2 { font-size: 14px; color: var(--cyan); margin-bottom: 20px; letter-spacing: 2px; }
         
-        label { font-size: 10px; color: #666; display: block; margin-bottom: 5px; }
-        input, select {
+        label { display: block; font-size: 10px; color: #666; text-align: left; margin-bottom: 5px; }
+        input {
             width: 100%; background: #000; border: 1px solid #333; color: var(--cyan);
-            padding: 12px; margin-bottom: 15px; font-family: inherit; outline: none; box-sizing: border-box;
+            padding: 15px; margin-bottom: 20px; font-family: inherit; outline: none;
+            box-sizing: border-box; text-transform: uppercase;
         }
+        
+        .btn-execute {
+            width: 100%; background: var(--cyan); color: #000; border: none;
+            padding: 15px; font-weight: 800; cursor: pointer; transition: 0.3s;
+            text-transform: uppercase;
+        }
+        .btn-execute:hover { background: #fff; transform: scale(1.02); }
 
-        .btn {
-            width: 100%; padding: 15px; border: none; font-weight: 800; cursor: pointer;
-            text-transform: uppercase; transition: 0.3s;
-        }
-        .btn-reg { background: #fff; color: #000; margin-bottom: 10px; }
-        .btn-deploy { background: var(--red); color: #fff; }
-        .btn:hover { filter: brightness(1.2); transform: translateY(-2px); }
-
-        #console { 
-            background: #000; height: 120px; overflow-y: auto; padding: 10px;
-            font-size: 10px; color: #00ff00; border: 1px solid #222; margin-top: 10px;
-        }
-
-        /* Modal styling */
-        .modal-overlay {
-            position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.95);
-            display: none; justify-content: center; align-items: center; z-index: 999;
-        }
-        .modal { background: #111; border: 2px solid var(--red); padding: 30px; width: 320px; text-align: center; }
+        #status { font-size: 10px; margin-top: 15px; color: #888; }
     </style>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -48,121 +40,64 @@
 </head>
 <body>
 
-<div class="wrapper">
-    <div class="card">
-        <h2>PORTAL_01: AGENT_REGISTRY</h2>
-        <label>NEW AGENT IDENTITY:</label>
-        <input type="text" id="agentInput" placeholder="e.g. LZ">
-        <button class="btn btn-reg" onclick="registerAgent()">REGISTER AGENT</button>
+    <div class="portal-card">
+        <h2>PORTAL_01: REGISTRY</h2>
+        
+        <div style="text-align: left;">
+            <label>ENTER AGENT IDENTITY (e.g. LZ, JFSN)</label>
+            <input type="text" id="agentName" placeholder="CODENAME_REQUIRED">
+        </div>
+
+        <button class="btn-execute" onclick="registerToDatabase()">EXECUTE_REGISTRATION</button>
+        
+        <div id="status">>> STANDBY_FOR_INPUT...</div>
     </div>
 
-    <div class="card">
-        <h2>PORTAL_02: SYSTEM_DEPLOYMENT</h2>
-        
-        <label>SELECT REGISTERED AGENT:</label>
-        <select id="agentDropdown"><option>FETCHING AGENTS...</option></select>
+    <script>
+        // FIREBASE CONFIGURATION
+        const firebaseConfig = {
+            apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
+            authDomain: "my-admin-portal-12691.firebaseapp.com",
+            projectId: "my-admin-portal-12691",
+            storageBucket: "my-admin-portal-12691.firebasestorage.app",
+            messagingSenderId: "317015091563",
+            appId: "1:317015091563:web:baab5171d8e0a58acd442e"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
-        <label>ASSIGN WEAPON SYSTEM:</label>
-        <input type="text" id="weaponInput" placeholder="e.g. RMN14">
+        async function registerToDatabase() {
+            const name = document.getElementById('agentName').value.trim().toUpperCase();
+            const status = document.getElementById('status');
 
-        <button class="btn btn-deploy" onclick="openConfirm()">INITIALIZE 100 V-AGENTS</button>
-        
-        <div id="console">> SYSTEM_READY_...</div>
-    </div>
-</div>
+            if (!name) {
+                status.style.color = "red";
+                status.innerText = ">> ERROR: NAME_EMPTY";
+                return;
+            }
 
-<div class="modal-overlay" id="modal">
-    <div class="modal">
-        <h3 style="color:var(--red); margin-top:0;">CRITICAL_WARNING</h3>
-        <p style="font-size:11px; color:#888;">Deploy 100 V-Agent files for this weapon system? This will create 100 new entries in the registry.</p>
-        <button class="btn btn-deploy" onclick="startDeployment()">EXECUTE DEPLOYMENT</button>
-        <button onclick="closeConfirm()" style="background:none; border:none; color:#555; margin-top:15px; cursor:pointer;">[ CANCEL ]</button>
-    </div>
-</div>
+            status.style.color = var(--cyan);
+            status.innerText = ">> COMMUNICATING_WITH_DATABASE...";
 
-<script>
-    // 1. FIREBASE CONFIG
-    const firebaseConfig = {
-        apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
-        authDomain: "my-admin-portal-12691.firebaseapp.com",
-        projectId: "my-admin-portal-12691",
-        storageBucket: "my-admin-portal-12691.firebasestorage.app",
-        messagingSenderId: "317015091563",
-        appId: "1:317015091563:web:baab5171d8e0a58acd442e"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+            try {
+                // Gagawa tayo ng entry sa 'agents' collection
+                // Gagamitin ang mismong 'Name' bilang Document ID para unique
+                await db.collection("agents").doc(name).set({
+                    agentName: name,
+                    status: "ACTIVE",
+                    clearanceLevel: "TOP_SECRET",
+                    registeredOn: firebase.firestore.FieldValue.serverTimestamp()
+                });
 
-    // 2. AGENT REGISTRATION
-    async function registerAgent() {
-        const name = document.getElementById('agentInput').value.trim().toUpperCase();
-        if(!name) return;
-        try {
-            await db.collection("agents").doc(name).set({ name: name, created: new Date() });
-            printLog(`AGENT ${name} REGISTERED.`);
-            document.getElementById('agentInput').value = "";
-        } catch (e) { alert(e.message); }
-    }
+                status.style.color = "#00ff00";
+                status.innerText = `>> SUCCESS: AGENT_${name}_REGISTERED`;
+                document.getElementById('agentName').value = ""; // Clear input
 
-    // 3. AUTO-LOAD AGENTS
-    db.collection("agents").onSnapshot(snap => {
-        const drop = document.getElementById('agentDropdown');
-        drop.innerHTML = "";
-        snap.forEach(doc => {
-            drop.innerHTML += `<option value="${doc.id}">${doc.id}</option>`;
-        });
-    });
-
-    // 4. MODAL CONTROLS
-    function openConfirm() {
-        const wpn = document.getElementById('weaponInput').value;
-        if(!wpn) return alert("WEAPON NAME REQUIRED");
-        document.getElementById('modal').style.display = "flex";
-    }
-    function closeConfirm() { document.getElementById('modal').style.display = "none"; }
-
-    // 5. THE 100-VAGENT DEPLOYMENT LOGIC
-    async function startDeployment() {
-        const agent = document.getElementById('agentDropdown').value;
-        const weapon = document.getElementById('weaponInput').value.trim().toUpperCase();
-        closeConfirm();
-
-        printLog(`STARTING MASS DEPLOYMENT: ${agent} >> ${weapon}...`);
-        
-        // Gagamit tayo ng Firestore Batch (Limited to 500 per batch, so 100 is OK)
-        const batch = db.batch();
-
-        for(let i = 1; i <= 100; i++) {
-            // Document ID format: AGENT_WEAPON_V1
-            const docId = `${agent}_${weapon}_V${i}`;
-            const docRef = db.collection("system_registry").doc(docId);
-            
-            batch.set(docRef, {
-                agent: agent,
-                weapon: weapon,
-                vid: i,
-                missionOrder: "PENDING", // Magsisilbing placeholder
-                amount: 0,
-                status: "READY",
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
+            } catch (error) {
+                status.style.color = "red";
+                status.innerText = ">> DATABASE_FAILURE: " + error.message;
+            }
         }
-
-        try {
-            await batch.commit();
-            printLog(`SUCCESS: 100 V-AGENTS DEPLOYED FOR ${weapon}.`);
-            document.getElementById('weaponInput').value = "";
-            alert("DEPLOYMENT SEQUENCE COMPLETE.");
-        } catch (e) {
-            printLog(`ERROR: ${e.message}`);
-        }
-    }
-
-    function printLog(msg) {
-        const con = document.getElementById('console');
-        con.innerHTML = `> ${msg}<br>` + con.innerHTML;
-    }
-</script>
-
+    </script>
 </body>
 </html>

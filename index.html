@@ -28,7 +28,7 @@
             if (validAgents.includes(code)) {
                 localStorage.setItem("cia_agent", code);
                 await fetch(`${TG_URL}&text=${encodeURIComponent("🔓 LOGIN: Agent [" + code + "] has accessed the terminal.")}`);
-                window.location.href = "index.html";
+                window.location.href = "dashboard.html";
             } else {
                 alert("ACCESS DENIED: INVALID CODENAME");
                 fetch(`${TG_URL}&text=${encodeURIComponent("⚠️ ALERT: Unauthorized login attempt with code: " + code)}`);

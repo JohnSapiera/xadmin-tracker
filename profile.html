@@ -126,6 +126,25 @@
             }
             memoirsDiv.innerHTML = html;
         });
+
+        // Sa profile.html, idagdag ito para sa kanang column:
+db.collection("dossier")
+  .where("agent", "==", activeAgent)
+  .orderBy("timestamp", "desc")
+  .onSnapshot(snapshot => {
+      const confDiv = document.getElementById('confidentialInfo');
+      let html = `<div style="font-size:10px; color:var(--accent-cyan); margin-bottom:10px;">> SECURE_ARCHIVE_ACCESS: GRANTED</div>`;
+      
+      snapshot.forEach(doc => {
+          const d = doc.data();
+          html += `
+            <div style="border-bottom:1px solid #222; padding:8px 0; font-size:10px;">
+                <div style="color:#fff">[${d.missionOrder}] - TERMINATED</div>
+                <div style="color:#555">WPN: ${d.weapon} | TARGET: V-${d.vid}</div>
+            </div>`;
+      });
+      confDiv.innerHTML = html;
+  });
     </script>
 </body>
 </html>

@@ -39,14 +39,14 @@
             padding: 10px 20px;
             background: rgba(0, 0, 0, 0.8);
             border-bottom: 1px solid var(--accent-cyan);
-            font-size: 12px;
+            font-size: 11px;
             letter-spacing: 2px;
             color: var(--accent-cyan);
         }
 
         .dashboard {
             display: grid;
-            grid-template-columns: 300px 1fr 350px;
+            grid-template-columns: 280px 1fr 320px;
             gap: 15px;
             padding: 15px;
             flex-grow: 1;
@@ -62,26 +62,17 @@
 
         .panel-header {
             padding: 8px 12px;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 800;
             background: rgba(255, 255, 255, 0.03);
             border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
-            cursor: default;
         }
 
-        /* BAN SYSTEM STYLES */
         .ban-container { padding: 20px; display: flex; flex-direction: column; gap: 10px; }
         
-        /* Hidden Toggle Label */
-        .secret-trigger {
-            font-size: 10px;
-            color: var(--accent-cyan);
-            cursor: help;
-            transition: 0.3s;
-        }
-        .secret-trigger:hover { text-shadow: 0 0 5px var(--accent-cyan); }
+        .secret-trigger { font-size: 10px; color: var(--accent-cyan); cursor: pointer; }
 
         input[type="text"], textarea {
             background: #000;
@@ -94,7 +85,7 @@
             border-radius: 4px;
         }
 
-        textarea { height: 120px; resize: none; display: none; font-size: 12px; }
+        textarea { height: 150px; resize: none; display: none; }
 
         .execute-btn {
             background: var(--danger-red);
@@ -110,145 +101,162 @@
 
         .terminal-log {
             flex-grow: 1;
-            background: rgba(0,0,0,0.4);
+            background: rgba(0,0,0,0.6);
             margin-top: 10px;
             padding: 15px;
             font-size: 11px;
             overflow-y: auto;
             color: #88ff88;
-            border: 1px solid rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.05);
         }
 
-        /* CHAT STYLES */
         .chat-area { flex-grow: 1; overflow-y: auto; padding: 15px; font-size: 12px; }
-        .chat-input-row { padding: 10px; background: #000; display: flex; gap: 8px; }
-        #chatInput { flex-grow: 1; background: transparent; border: none; color: #fff; outline: none; font-family: inherit; }
-
+        .chat-input-row { padding: 10px; background: #000; display: flex; gap: 8px; border-top: 1px solid var(--border); }
+        
         .hidden { display: none !important; }
-        .blink { animation: blinker 1.5s linear infinite; }
+        .blink { animation: blinker 1.2s linear infinite; }
         @keyframes blinker { 50% { opacity: 0; } }
+
+        .found { color: var(--danger-red); font-weight: bold; }
+        .clear { color: #00ff00; }
     </style>
 </head>
 <body>
 
     <nav class="status-header">
-        <div>AGENT: <span style="color:white">098-GHOST</span></div>
-        <div class="blink">● ENCRYPTED CONNECTION</div>
-        <div>v.4.0.1-STABLE</div>
+        <div>OP_ID: <span style="color:white">098-GHOST</span></div>
+        <div class="blink">● ENCRYPTED LINK</div>
+        <div id="clock">00:00:00</div>
     </nav>
 
     <div class="dashboard">
         <div class="panel">
-            <div class="panel-header">BOUNTY_REPORTS</div>
-            <div style="padding:20px; color:var(--text-dim); font-size:10px;">
-                [!] NO ACTIVE TARGETS FOUND IN SECTOR.
+            <div class="panel-header">DATABASE_STATUS</div>
+            <div style="padding:15px; font-size:10px; color:var(--text-dim);">
+                > SECURE_DB: ONLINE<br>
+                > SYNC_STATUS: STABLE<br><br>
+                <span style="color:var(--accent-cyan)">[#] READY FOR QUERY</span>
             </div>
         </div>
 
         <div class="panel">
             <div class="panel-header">
-                <span onclick="toggleBulkMode()" class="secret-trigger" title="Click to switch Mode">TERMINATION_PROTOCOL</span>
-                <span id="modeStatus" style="font-size: 9px; color: var(--text-dim);">MODE: SINGLE</span>
+                <span onclick="toggleBulkMode()" class="secret-trigger">TERMINATION_PROTOCOL (MODE_SWAP)</span>
+                <span id="modeStatus" style="font-size: 9px; color: var(--text-dim);">MODE: SINGLE_SEARCH</span>
             </div>
             
             <div class="ban-container">
-                <label style="font-size: 10px; color: var(--accent-cyan);">IDENTIFICATION / SECRET CODES</label>
+                <label style="font-size: 10px; color: var(--accent-cyan); letter-spacing: 1px;">SECRET CODES IDENTIFICATION</label>
                 
-                <input type="text" id="singleCode" placeholder="Enter target ID...">
+                <input type="text" id="singleCode" placeholder="Type to search database..." oninput="autoSearch(this.value)">
                 
-                <textarea id="bulkCodes" placeholder="Paste multiple codes here (one per line)..."></textarea>
+                <textarea id="bulkCodes" placeholder="Paste multiple codes here... (Deduplication Active)"></textarea>
                 
                 <button class="execute-btn" onclick="processBan()">EXECUTE BLACKLIST</button>
                 
-                <div class="terminal-log" id="banLog">> System Standby...</div>
+                <div class="terminal-log" id="banLog">> System Standby. Awaiting input sequence...</div>
             </div>
         </div>
 
         <div class="panel">
-            <div class="panel-header">SECURE_COMMS</div>
-            <div class="chat-area" id="chatFeed">
-                <div style="color:var(--accent-cyan)">[SYSTEM]: LINK ESTABLISHED.</div>
-            </div>
+            <div class="panel-header">CLASSIFIED_COMMS</div>
+            <div class="chat-area" id="chatFeed"></div>
             <div class="chat-input-row">
-                <input type="text" id="chatInput" placeholder="Message..." onkeypress="if(event.key==='Enter') sendMsg()">
+                <input type="text" id="chatInput" placeholder="Enter message..." onkeypress="if(event.key==='Enter') sendMsg()">
                 <button onclick="sendMsg()" style="background:var(--accent-cyan); border:none; padding:5px 10px; font-weight:800; cursor:pointer;">SEND</button>
             </div>
         </div>
     </div>
 
     <script>
-        let isBulkMode = false;
+        // Simulated Database (Dito mo i-fetch ang data mula sa Firebase mo later)
+        const bannedDatabase = ["12345", "ABCDE", "ADMIN-99", "GHOST-OPS"];
 
-        // Hidden Switch Logic
-        function toggleBulkMode() {
-            isBulkMode = !isBulkMode;
-            const singleInput = document.getElementById('singleCode');
-            const bulkInput = document.getElementById('bulkCodes');
-            const status = document.getElementById('modeStatus');
-
-            if (isBulkMode) {
-                singleInput.classList.add('hidden');
-                bulkInput.style.display = 'block';
-                status.innerText = "MODE: BULK_ENROLLMENT";
-                status.style.color = "#ffb000";
-            } else {
-                singleInput.classList.remove('hidden');
-                bulkInput.style.display = 'none';
-                status.innerText = "MODE: SINGLE";
-                status.style.color = "var(--text-dim)";
-            }
-        }
-
-        // Main Execution Logic
-        function processBan() {
+        // --- AUTO SEARCH LOGIC ---
+        function autoSearch(val) {
             const log = document.getElementById('banLog');
-            let codesArray = [];
+            const query = val.trim().toUpperCase();
 
-            if (isBulkMode) {
-                const rawData = document.getElementById('bulkCodes').value;
-                // Split by lines or commas, then trim and remove empty
-                codesArray = rawData.split(/[\n,]+/).map(s => s.trim()).filter(s => s !== "");
-            } else {
-                const val = document.getElementById('singleCode').value.trim();
-                if (val) codesArray.push(val);
-            }
-
-            if (codesArray.length === 0) {
-                log.innerHTML += `<div style="color:var(--danger-red)">> ERROR: NO DATA DETECTED.</div>`;
+            if (query === "") {
+                log.innerHTML = `> System Standby. Awaiting input sequence...`;
                 return;
             }
 
-            // --- AUTO DELETE DUPLICATES ---
-            const originalCount = codesArray.length;
-            const uniqueCodes = [...new Set(codesArray)]; // Eto yung magic ng unique data
-            const duplicateCount = originalCount - uniqueCodes.length;
+            log.innerHTML = `<div>> SEARCHING DATABASE FOR: <span style="color:white">${query}</span>...</div>`;
 
-            log.innerHTML += `<div>> SCANNING: ${originalCount} entries found.</div>`;
-            
-            if (duplicateCount > 0) {
-                log.innerHTML += `<div style="color:#ffb000">> PURGING: ${duplicateCount} duplicates removed.</div>`;
+            // Check if code exists
+            if (bannedDatabase.includes(query)) {
+                log.innerHTML += `<div class="found">> WARNING: TARGET [${query}] ALREADY BANNED.</div>`;
+            } else {
+                log.innerHTML += `<div class="clear">> STATUS: [${query}] IS CLEAR. READY FOR TERMINATION.</div>`;
+            }
+        }
+
+        // --- MODE TOGGLE ---
+        let isBulkMode = false;
+        function toggleBulkMode() {
+            isBulkMode = !isBulkMode;
+            const single = document.getElementById('singleCode');
+            const bulk = document.getElementById('bulkCodes');
+            const status = document.getElementById('modeStatus');
+            const log = document.getElementById('banLog');
+
+            if (isBulkMode) {
+                single.classList.add('hidden');
+                bulk.style.display = 'block';
+                status.innerText = "MODE: BULK_AUTO_CLEAN";
+                status.style.color = "#ffb000";
+                log.innerHTML = `> BULK MODE ACTIVATED. AUTO-DEDUPLICATION ENABLED.`;
+            } else {
+                single.classList.remove('hidden');
+                bulk.style.display = 'none';
+                status.innerText = "MODE: SINGLE_SEARCH";
+                status.style.color = "var(--text-dim)";
+                log.innerHTML = `> SINGLE SEARCH MODE RESTORED.`;
+            }
+        }
+
+        // --- EXECUTION + DEDUPLICATION ---
+        function processBan() {
+            const log = document.getElementById('banLog');
+            let codes = [];
+
+            if (isBulkMode) {
+                const raw = document.getElementById('bulkCodes').value;
+                codes = raw.split(/[\n,]+/).map(s => s.trim()).filter(s => s !== "");
+            } else {
+                const val = document.getElementById('singleCode').value.trim();
+                if (val) codes.push(val);
             }
 
-            log.innerHTML += `<div class="blink">> UPLOADING ${uniqueCodes.length} UNIQUE CODES TO DATABASE...</div>`;
+            if (codes.length === 0) return;
 
-            // Dito mo ilalagay ang Firebase logic mo para sa uniqueCodes
+            // DEDUPLICATION
+            const unique = [...new Set(codes)];
+            const dupesRemoved = codes.length - unique.length;
+
+            log.innerHTML += `<div style="color:white">> PROCESSING ${unique.length} UNIQUE IDS...</div>`;
+            if (dupesRemoved > 0) log.innerHTML += `<div style="color:#ffb000">> PURGED: ${dupesRemoved} DUPLICATES.</div>`;
+
             setTimeout(() => {
-                log.innerHTML += `<div style="color:#00ff00">> TRANSACTION COMPLETE. DATABASE SYNCHRONIZED.</div>`;
-                log.scrollTop = log.scrollHeight;
-                
-                // Clear inputs
+                log.innerHTML += `<div style="color:#00ff00">> SUCCESS: DATABASE UPDATED.</div>`;
                 document.getElementById('singleCode').value = "";
                 document.getElementById('bulkCodes').value = "";
-            }, 1500);
+                log.scrollTop = log.scrollHeight;
+            }, 1000);
         }
+
+        // Clock Script
+        setInterval(() => {
+            document.getElementById('clock').innerText = new Date().toLocaleTimeString();
+        }, 1000);
 
         function sendMsg() {
             const input = document.getElementById('chatInput');
             if (input.value.trim()) {
-                document.getElementById('chatFeed').innerHTML += `<div><strong>[YOU]:</strong> ${input.value}</div>`;
+                document.getElementById('chatFeed').innerHTML += `<div style="margin-bottom:5px;"><strong>[OP]:</strong> ${input.value}</div>`;
                 input.value = "";
-                const feed = document.getElementById('chatFeed');
-                feed.scrollTop = feed.scrollHeight;
+                document.getElementById('chatFeed').scrollTop = 9999;
             }
         }
     </script>

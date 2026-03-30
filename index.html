@@ -7,13 +7,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #050505; color: #e0e0e0; font-family: 'Fira Code', monospace; }
-        .scanline {
-            width: 100%; height: 2px; background: rgba(0, 112, 243, 0.1);
-            position: fixed; animation: scan 4s linear infinite; z-index: 100; pointer-events: none;
-        }
+        body { background-color: #050505; color: #e0e0e0; font-family: 'Fira Code', monospace; overflow-x: hidden; }
+        /* Scanline Effect */
+        .scanline { width: 100%; height: 2px; background: rgba(0, 112, 243, 0.1); position: fixed; animation: scan 4s linear infinite; z-index: 100; pointer-events: none; }
         @keyframes scan { from { top: 0; } to { top: 100%; } }
         .floating-window { display: none; position: fixed; top: 15%; right: 2%; z-index: 50; }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
 </head>
 <body class="text-xs border-t-2 border-blue-600">
@@ -21,49 +20,52 @@
 
     <nav class="bg-black/80 p-4 border-b border-white/10 flex justify-between items-center sticky top-0 z-50 backdrop-blur-md">
         <div class="flex items-center gap-4">
-            <div class="px-2 py-1 border border-blue-500 text-blue-500 font-bold text-[10px]">L5 CLEARANCE</div>
-            <h1 class="tracking-[0.3em] uppercase font-bold text-white">Central Intelligence Registry</h1>
+            <div class="px-2 py-1 border border-blue-500 text-blue-500 font-bold text-[10px] animate-pulse">LEVEL 5 CLEARANCE</div>
+            <h1 class="tracking-[0.3em] uppercase font-bold text-white hidden md:block">Code Elimination Registry</h1>
         </div>
-        <button onclick="toggleEliminated()" class="text-red-500 border border-red-500/30 px-3 py-1 hover:bg-red-500/10 transition">
-            [ VIEW ELIMINATED ]
+        <button onclick="toggleEliminated()" class="text-red-500 border border-red-500/30 px-3 py-1 hover:bg-red-500/10 transition font-bold uppercase">
+            [ ELIMINATED REGISTRY ]
         </button>
     </nav>
 
     <div class="max-w-4xl mx-auto p-6 space-y-6">
         
-        <section class="bg-zinc-900/50 border border-white/5 p-6 rounded-sm shadow-2xl">
-            <h2 class="text-blue-400 mb-4 tracking-tighter uppercase font-bold text-sm">Target Code Query</h2>
-            <div class="flex gap-2">
-                <input type="number" id="codeInput" placeholder="INPUT CODE..." 
-                       class="flex-1 bg-black border border-white/10 p-3 outline-none focus:border-blue-500 text-blue-400 font-bold tracking-widest">
-                <button onclick="scanCode()" class="bg-blue-600 px-6 font-bold text-white hover:bg-blue-700 transition uppercase">Scan</button>
+        <section class="bg-zinc-900/40 border border-white/5 p-6 rounded shadow-2xl relative">
+            <div class="absolute top-2 right-4 text-[9px] text-gray-700">COORD: 14.5995° N, 120.9842° E</div>
+            <h2 class="text-blue-400 mb-4 tracking-tighter uppercase font-bold text-sm underline decoration-blue-500/30 underline-offset-4">Target Code Query</h2>
+            
+            <div class="flex flex-col md:flex-row gap-3">
+                <input type="number" id="codeInput" placeholder="INPUT TARGET CODE..." 
+                       class="flex-1 bg-black border border-white/10 p-4 outline-none focus:border-blue-500 text-blue-400 font-bold tracking-[0.5em] text-xl text-center">
+                <button onclick="scanCode()" class="bg-blue-600 px-10 font-bold text-white hover:bg-blue-700 transition uppercase tracking-widest active:scale-95">Scan</button>
             </div>
-            <div id="statusReport" class="mt-4 min-h-[40px] flex items-center justify-center border border-dashed border-white/5 rounded italic text-gray-600">
-                Awaiting input...
+            
+            <div id="statusReport" class="mt-6 min-h-[80px] flex flex-col items-center justify-center border border-dashed border-white/5 rounded-lg bg-black/20 p-4">
+                <p class="text-gray-600 italic uppercase tracking-widest text-[10px]">Awaiting target designation...</p>
             </div>
         </section>
 
-        <section class="bg-zinc-900/50 border border-white/5 rounded-sm overflow-hidden flex flex-col h-[400px]">
-            <div class="bg-white/5 p-2 text-[10px] flex justify-between border-b border-white/5">
-                <span class="text-amber-500 font-bold tracking-widest uppercase">Secure Comms Channel-Alpha</span>
-                <span class="animate-pulse text-green-500">● LIVE</span>
+        <section class="bg-zinc-900/40 border border-white/5 rounded overflow-hidden flex flex-col h-[350px]">
+            <div class="bg-white/5 p-2 text-[10px] flex justify-between border-b border-white/10 px-4">
+                <span class="text-amber-500 font-bold tracking-widest uppercase">📡 Secure Comms: Alpha-Station</span>
+                <span id="ping" class="text-green-500 font-bold">LATENCY: 24MS</span>
             </div>
-            <div id="chatFeed" class="flex-1 p-4 overflow-y-auto space-y-2 bg-black/20">
+            <div id="chatFeed" class="flex-1 p-4 overflow-y-auto space-y-3 bg-black/30 scroll-smooth">
                 </div>
-            <div class="p-3 border-t border-white/5 flex gap-2">
-                <input type="text" id="chatMsg" placeholder="TYPE TRANSMISSION..." 
-                       class="flex-1 bg-black border border-white/10 p-2 outline-none text-amber-500 uppercase text-[11px]">
-                <button onclick="sendMsg()" class="bg-amber-600 px-4 py-1 font-bold text-black text-[10px] hover:bg-amber-500 transition uppercase">Transmit</button>
+            <div class="p-4 bg-black/40 border-t border-white/5 flex gap-2">
+                <input type="text" id="chatMsg" placeholder="ENTER TRANSMISSION..." 
+                       class="flex-1 bg-black border border-white/10 p-3 outline-none text-amber-500 uppercase text-xs font-bold tracking-wider focus:border-amber-600">
+                <button onclick="sendMsg()" class="bg-amber-600 px-6 py-2 font-black text-black text-xs hover:bg-amber-500 transition uppercase tracking-tighter">Transmit</button>
             </div>
         </section>
     </div>
 
-    <div id="eliminatedWindow" class="floating-window w-64 bg-black border border-red-500 shadow-[0_0_15px_rgba(255,0,0,0.3)]">
-        <div class="bg-red-900/20 p-2 border-b border-red-500 flex justify-between text-[10px] font-bold text-red-500 uppercase">
-            <span>Neutralized Targets</span>
-            <button onclick="toggleEliminated()">[X]</button>
+    <div id="eliminatedWindow" class="floating-window w-72 bg-black border border-red-500 shadow-[0_0_30px_rgba(255,0,0,0.2)]">
+        <div class="bg-red-900/30 p-3 border-b border-red-500 flex justify-between text-[11px] font-black text-red-500 uppercase tracking-widest">
+            <span>Eliminated List</span>
+            <button onclick="toggleEliminated()" class="hover:text-white">[X]</button>
         </div>
-        <div id="eliminatedList" class="p-3 max-h-60 overflow-y-auto space-y-2 text-red-400 font-bold tracking-widest text-center">
+        <div id="eliminatedList" class="p-4 max-h-72 overflow-y-auto space-y-2 text-red-500/80 font-bold tracking-widest">
             </div>
     </div>
 
@@ -72,6 +74,7 @@
         import { getFirestore, collection, addDoc, query, where, getDocs, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
+        // CONFIG MO (WAG PALITAN)
         const firebaseConfig = {
             apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
             authDomain: "my-admin-portal-12691.firebaseapp.com",
@@ -86,59 +89,86 @@
         const db = getFirestore(app);
         const rdb = getDatabase(app);
 
-        // --- CODE SCANNER ---
+        // --- 1. FILTER & SCANNER LOGIC ---
         window.scanCode = async () => {
             const code = document.getElementById('codeInput').value;
             const report = document.getElementById('statusReport');
 
-            // Validation: Starts with 0 (4 digits) or non-zero (5 digits). Bawal 1,2,3.
+            // LOGIC: 5-digits standard. 4-digits kung nagsisimula sa 0. Bawal ang 1, 2, 3 digits.
             const isValid = code.startsWith('0') ? code.length === 4 : code.length === 5;
             
             if (!isValid) {
-                report.innerHTML = `<span class="text-red-500 font-bold uppercase">Invalid Protocol: 4-5 digit code only</span>`;
+                report.innerHTML = `<span class="text-red-500 font-black animate-pulse uppercase tracking-widest text-center">Protocol Error: Access Denied.<br><span class="text-[9px] font-normal">System requires 5 digits (or 4 if starts with 0).</span></span>`;
                 return;
             }
 
-            report.innerText = "Scanning Satellite Database...";
+            report.innerHTML = `<span class="text-blue-500 tracking-widest animate-pulse font-bold">SCANNING CLASSIFIED DATABASE...</span>`;
+            
             const q = query(collection(db, "eliminated_codes"), where("code", "==", code));
             const snapshot = await getDocs(q);
 
             if (snapshot.empty) {
                 report.innerHTML = `
-                    <div class="text-center py-2">
-                        <p class="text-amber-500 font-bold mb-2">TARGET UNKNOWN</p>
-                        <button onclick="eliminate('${code}')" class="bg-red-600 px-3 py-1 text-white text-[10px] font-bold uppercase">Initiate Elimination</button>
+                    <div class="text-center">
+                        <p class="text-amber-500 font-bold mb-3 tracking-widest">⚠️ TARGET UNIDENTIFIED</p>
+                        <button onclick="initiateElimination('${code}')" class="bg-red-600 px-6 py-2 text-white text-[10px] font-bold uppercase border border-red-400 hover:bg-red-700 transition">
+                            Initiate Elimination Protocol
+                        </button>
                     </div>`;
             } else {
-                report.innerHTML = `<span class="text-red-600 font-black animate-pulse uppercase">🚨 ELIMINATED TARGET: ${code} 🚨</span>`;
+                report.innerHTML = `
+                    <div class="text-center p-3 border border-red-600 bg-red-600/10 w-full">
+                        <p class="text-red-600 text-lg font-black tracking-[0.2em] animate-pulse uppercase">🚨 ELIMINATED TARGET 🚨</p>
+                        <p class="text-white font-bold tracking-widest mt-1">CODE: ${code} // STATUS: NEUTRALIZED</p>
+                    </div>`;
             }
         };
 
-        window.eliminate = async (code) => {
-            await addDoc(collection(db, "eliminated_codes"), { code: code, date: serverTimestamp() });
-            document.getElementById('codeInput').value = "";
-            scanCode(); 
+        // --- 2. ELIMINATION ACTION ---
+        window.initiateElimination = async (code) => {
+            try {
+                await addDoc(collection(db, "eliminated_codes"), {
+                    code: code,
+                    timestamp: serverTimestamp(),
+                    status: 'neutralized'
+                });
+                document.getElementById('codeInput').value = "";
+                scanCode(); // Refresh UI
+            } catch (err) {
+                console.error(err);
+                alert("Protocol Failed. Database connection error.");
+            }
         };
 
-        // --- LIVE CHAT ---
+        // --- 3. LIVE COMMS LOGIC ---
         window.sendMsg = () => {
             const input = document.getElementById('chatMsg');
-            if (input.value) {
-                push(ref(rdb, 'comms'), { text: input.value.toUpperCase(), time: Date.now() });
+            if (input.value.trim()) {
+                push(ref(rdb, 'secure_comms'), { 
+                    text: input.value.toUpperCase(), 
+                    time: Date.now() 
+                });
                 input.value = "";
             }
         };
 
-        onChildAdded(ref(rdb, 'comms'), (snap) => {
+        onChildAdded(ref(rdb, 'secure_comms'), (snap) => {
             const data = snap.val();
+            const feed = document.getElementById('chatFeed');
             const div = document.createElement('div');
-            div.className = "bg-white/5 border-l border-amber-500 p-2 mb-2";
-            div.innerHTML = `<span class="text-[9px] text-gray-500 block">${new Date(data.time).toLocaleTimeString()}</span><span class="text-amber-500 font-bold">${data.text}</span>`;
-            document.getElementById('chatFeed').appendChild(div);
-            document.getElementById('chatFeed').scrollTop = document.getElementById('chatFeed').scrollHeight;
+            div.className = "bg-white/5 border-l-2 border-amber-500 p-3 mb-2 animate-fadeIn";
+            div.innerHTML = `
+                <div class="flex justify-between text-[8px] text-gray-500 mb-1 uppercase tracking-tighter">
+                    <span>Source: External Operative</span>
+                    <span>${new Date(data.time).toLocaleTimeString()}</span>
+                </div>
+                <span class="text-amber-500 font-bold tracking-widest">${data.text}</span>
+            `;
+            feed.appendChild(div);
+            feed.scrollTop = feed.scrollHeight;
         });
 
-        // --- UI CONTROLS ---
+        // --- 4. FLOATING REGISTRY SYNC ---
         window.toggleEliminated = () => {
             const win = document.getElementById('eliminatedWindow');
             win.style.display = win.style.display === 'block' ? 'none' : 'block';
@@ -149,11 +179,16 @@
             list.innerHTML = "";
             snap.forEach(doc => {
                 const item = document.createElement('div');
-                item.className = "border-b border-red-900/30 py-1";
-                item.innerText = `🎯 ${doc.data().code}`;
+                item.className = "bg-red-500/5 p-2 border-b border-red-900/20 flex items-center gap-3";
+                item.innerHTML = `<span class="text-[9px]">🎯</span><span>${doc.data().code}</span>`;
                 list.appendChild(item);
             });
+            if (snap.empty) list.innerHTML = "<p class='text-gray-700 text-center uppercase tracking-tighter'>Registry Empty</p>";
         });
+
+        // Trigger on Enter
+        document.getElementById('codeInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') scanCode(); });
+        document.getElementById('chatMsg').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMsg(); });
     </script>
 </body>
 </html>

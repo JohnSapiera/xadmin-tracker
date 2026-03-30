@@ -341,6 +341,78 @@
             log.scrollTop = log.scrollHeight;
         }
 
+        // 1. TOP-LEVEL PROTECTION: Hindi makakapasok sa page kung walang login
+const activeAgent = localStorage.getItem("cia_agent");
+if (!activeAgent) {
+    window.location.href = "login.html";
+}
+
+const TG_URL = "https://api.telegram.org/bot8639737111:AAGvCqiHzkiJvVqH6YPocRIVMoiXZlK4ZWg/sendMessage?chat_id=7298607329";
+
+// 2. HELPER PARA SA TELEGRAM ACTIVITY
+async function reportToTelegram(action) {
+    await fetch(`${TG_URL}&text=${encodeURIComponent("📡 AGENT [" + activeAgent + "]: " + action)}`);
+}
+
+// 3. SECURE BOUNTY UPDATE
+window.saveBounty = async () => {
+    // Check again before writing
+    if (!activeAgent) return alert("Unauthorized");
+
+    const vid = document.getElementById('vID').value;
+    const amt = document.getElementById('bAmount').value;
+    
+    if (!vid || !amt) return;
+
+    await db.collection("bounties").add({
+        agent: activeAgent, // Automatic gamit ang login
+        weapon: window.tW,
+        vid: vid,
+        amt: amt,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    reportToTelegram(`Updated Bounty Report (V-ID: ${vid}, Amount: ₱${amt})`);
+    window.closeModal();
+};
+
+// 4. SECURE TERMINATION (BAN)
+window.processBan = async () => {
+    if (!activeAgent) return alert("Unauthorized");
+
+    const codeInput = document.getElementById('singleCode');
+    const code = codeInput.value.trim().toUpperCase();
+
+    if (code) {
+        await db.collection("blacklist").add({
+            code: code,
+            bannedBy: activeAgent,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        reportToTelegram(`Executed Termination Protocol for ID: ${code}`);
+        document.getElementById('banLog').innerHTML += `<div>> SUCCESS: ${code} BLACKLISTED.</div>`;
+        codeInput.value = "";
+    }
+};
+
+// 5. SECURE CHAT
+window.sendMsg = async () => {
+    const text = document.getElementById('chatInput').value.trim();
+    if (!text && !pendingPhotoData) return;
+
+    // ... upload photo logic ... (same as before)
+
+    await db.collection("chats").add({
+        agent: activeAgent,
+        text: text,
+        imageUrl: imageUrl,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    reportToTelegram(`Sent a classified communication.`);
+};
+
         // Clock Script
         setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString(), 1000);
     </script>

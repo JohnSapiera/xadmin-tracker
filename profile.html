@@ -3,65 +3,191 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TERMINATION_SCANNER</title>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;800&display=swap" rel="stylesheet">
+    <title>AGENT_ARCHIVE_SYSTEM</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --cyan: #00f2ff; --bg: #050506; --green: #00ff00; }
-        body { background: var(--bg); color: #fff; font-family: 'JetBrains Mono', monospace; padding: 15px; margin: 0; }
-        .panel { background: #0a0a0c; border: 1px solid #222; padding: 20px; }
-        input { width: 100%; background: #000; border: 1px solid #333; color: var(--cyan); padding: 15px; font-size: 18px; outline: none; margin-bottom: 10px; box-sizing: border-box; }
-        .log { background: #000; padding: 10px; font-size: 10px; color: #888; height: 60px; overflow: auto; border-left: 2px solid #333; margin-bottom: 10px; }
-        .btn-green { background: var(--green); color: #000; border: none; padding: 15px; width: 100%; font-weight: 800; cursor: pointer; }
-        .hidden { display: none; }
+        :root { --neon: #00f2ff; --bg: #050506; --locked: #1a1a1a; --paper: #ffffff; }
+        body { 
+            background: var(--bg); color: #fff; font-family: 'JetBrains Mono', monospace; 
+            margin: 0; padding: 20px; overflow-x: hidden;
+        }
+
+        /* Header Section */
+        .agent-id-card { border-left: 3px solid var(--neon); padding-left: 15px; margin-bottom: 30px; }
+        .agent-name { font-size: 24px; font-weight: 800; letter-spacing: 2px; color: var(--neon); }
+        .system-status { font-size: 10px; opacity: 0.6; }
+
+        /* Weapon System Container */
+        .weapon-sector { margin-bottom: 40px; border-top: 1px solid #222; padding-top: 20px; }
+        .weapon-title { font-size: 14px; margin-bottom: 20px; color: #888; text-transform: uppercase; }
+
+        /* Folder Grid */
+        .folder-grid { 
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 20px; 
+        }
+
+        /* Folder Logic & Animation */
+        .folder {
+            position: relative; padding: 20px; text-align: center; border: 1px solid #333;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background: var(--locked); filter: grayscale(1) brightness(0.5);
+            cursor: not-allowed; opacity: 0.4;
+        }
+
+        /* Kapag may laman ang folder (Active Class) */
+        .folder.active {
+            background: #111; border-color: var(--neon); filter: none;
+            opacity: 1; cursor: pointer; box-shadow: 0 0 15px rgba(0, 242, 255, 0.1);
+        }
+        .folder.active:hover {
+            transform: translateY(-5px); box-shadow: 0 0 25px rgba(0, 242, 255, 0.3);
+            background: #161618;
+        }
+        .folder.active::before { content: "📂"; font-size: 40px; display: block; margin-bottom: 10px; }
+        .folder::before { content: "📁"; font-size: 40px; display: block; margin-bottom: 10px; }
+
+        .folder-label { font-size: 11px; font-weight: bold; }
+
+        /* OFFICIAL DOCUMENT MODAL */
+        .overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); display: none; justify-content: center;
+            align-items: center; z-index: 9999; backdrop-filter: blur(5px);
+        }
+        .paper {
+            background: var(--paper); color: #000; width: 85%; max-width: 450px;
+            padding: 40px; border: 1px solid #ccc; position: relative;
+            box-shadow: 20px 20px 0px rgba(255,255,255,0.1);
+            animation: slideUp 0.5s ease-out;
+        }
+        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .doc-header { border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; text-align: center; }
+        .doc-title { font-size: 18px; font-weight: 900; letter-spacing: 1px; }
+        .doc-body { font-size: 13px; line-height: 1.8; }
+        .doc-footer { margin-top: 30px; font-size: 10px; border-top: 1px dashed #999; padding-top: 10px; }
+
+        .close-btn { position: absolute; top: 10px; right: 10px; cursor: pointer; font-weight: bold; color: #ff0000; }
+        
+        .split-row { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid #000; margin-top: 10px; }
+        .split-col { padding: 10px 0; }
     </style>
+
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 </head>
 <body>
-    <div class="panel">
-        <h2 style="font-size:12px; color:var(--cyan);">🔒 TERMINATION_SCANNER</h2>
-        <input type="text" id="moInput" placeholder="SCAN MISSION ORDER" maxlength="5" oninput="scan(this.value)">
-        <div class="log" id="log">> STANDBY_</div>
-        
-        <div id="actionStage" class="hidden">
-            <input type="text" id="wpnIn" placeholder="WEAPON NAME (e.g. RMN14)">
-            <input type="number" id="vidIn" placeholder="V-AGENT # (1-100)">
-            <button class="btn-green" onclick="finalize()">ACCEPT MISSION</button>
-        </div>
+
+    <div class="agent-id-card">
+        <div class="system-status">AUTHENTICATED_SESSION // MOSSAD_CORE</div>
+        <div class="agent-name" id="displayAgentName">AGENT_PENDING</div>
     </div>
+
+    <div id="mainContainer">
+        </div>
+
+    <div class="overlay" id="docOverlay">
+        <div class="paper" id="paperContent"></div>
+    </div>
+
     <script>
-        const firebaseConfig = { apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", authDomain: "my-admin-portal-12691.firebaseapp.com", projectId: "my-admin-portal-12691", storageBucket: "my-admin-portal-12691.firebasestorage.app", messagingSenderId: "317015091563", appId: "1:317015091563:web:baab5171d8e0a58acd442e" };
+        const firebaseConfig = { 
+            apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
+            authDomain: "my-admin-portal-12691.firebaseapp.com", 
+            projectId: "my-admin-portal-12691", 
+            storageBucket: "my-admin-portal-12691.firebasestorage.app", 
+            messagingSenderId: "317015091563", 
+            appId: "1:317015091563:web:baab5171d8e0a58acd442e" 
+        };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        const activeAgent = localStorage.getItem("cia_agent") || "GHOST";
 
-        async function scan(val) {
-            if(val.length < 4) return;
-            const snap = await db.collection("blacklist").where("code", "==", val).get();
-            if(!snap.empty) {
-                document.getElementById('log').innerText = ">> ACCESS DENIED: USED";
-                document.getElementById('actionStage').classList.add('hidden');
-            } else {
-                document.getElementById('log').innerText = ">> CLEAR. ENTER DETAILS.";
-                document.getElementById('actionStage').classList.remove('hidden');
+        // Kunin ang Agent identity mula sa login
+        const loggedInAgent = localStorage.getItem("cia_agent") || "UNKNOWN";
+        document.getElementById('displayAgentName').innerText = "AGENT_" + loggedInAgent;
+
+        // I-define ang Weapon Systems base sa Agent
+        const weaponSystems = (loggedInAgent === "LZ") ? ["R8P", "RMN14"] : ["RMN9", "TechnoCP"];
+
+        async function initProfile() {
+            const container = document.getElementById('mainContainer');
+            container.innerHTML = "";
+
+            for (const wpn of weaponSystems) {
+                // Create Sector
+                const sector = document.createElement('div');
+                sector.className = 'weapon-sector';
+                sector.innerHTML = `<div class="weapon-title">SYSTEM: ${wpn}</div>`;
+                
+                const grid = document.createElement('div');
+                grid.className = 'folder-grid';
+                
+                // Fetch V-Agents para sa weapon na ito
+                const snap = await db.collection("system_registry")
+                    .where("agent", "==", loggedInAgent)
+                    .where("weapon", "==", wpn)
+                    .orderBy("vid", "asc")
+                    .get();
+
+                // Generate 100 slots (pero i-check kung "Active" ang data)
+                // Note: Kung gusto mo lang ipakita ang meron, i-loop lang ang 'snap'
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    const folder = document.createElement('div');
+                    
+                    // Logic: Kung ang status ay OFFICIAL_DOCUMENT, magiging clickable/puti
+                    if (data.status === "OFFICIAL_DOCUMENT") {
+                        folder.className = 'folder active';
+                        folder.onclick = () => openDoc(data);
+                    } else {
+                        folder.className = 'folder'; // Black/Shadow effect
+                    }
+
+                    folder.innerHTML = `<span class="folder-label">V.AGENT #${data.vid}</span>`;
+                    grid.appendChild(folder);
+                });
+
+                sector.appendChild(grid);
+                container.appendChild(sector);
             }
         }
 
-        async function finalize() {
-            const mo = document.getElementById('moInput').value;
-            const wpn = document.getElementById('wpnIn').value.toUpperCase();
-            const vid = document.getElementById('vidIn').value;
-            const docId = `${activeAgent}_${wpn}_V${vid}`;
-            
-            await db.collection("system_registry").doc(docId).update({
-                missionOrder: mo,
-                status: "OFFICIAL_DOCUMENT",
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            await db.collection("blacklist").add({ code: mo, timestamp: new Date() });
-            alert("MISSION ARCHIVED");
-            location.reload();
+        function openDoc(data) {
+            const overlay = document.getElementById('docOverlay');
+            const paper = document.getElementById('paperContent');
+            const dDate = data.timestamp ? data.timestamp.toDate() : new Date();
+            const eDate = new Date(dDate); eDate.setDate(eDate.getDate() + 30);
+
+            paper.innerHTML = `
+                <div class="close-btn" onclick="closeDoc()">[CLOSE_X]</div>
+                <div class="doc-header">
+                    <div style="font-size: 8px;">TOP SECRET // CLASSIFIED DOCUMENT</div>
+                    <div class="doc-title">MISSION ORDER: ${data.missionOrder}</div>
+                </div>
+                <div class="doc-body">
+                    <strong>SUBJECT:</strong> V-AGENT UNIT DEPLOYMENT<br>
+                    <strong>ID_NUMBER:</strong> VA-${data.vid}<br>
+                    <strong>WEAPON_SYS:</strong> ${data.weapon}<br>
+                    <strong>ASSIGNED_TO:</strong> AGENT ${data.agent}
+                    
+                    <div class="split-row">
+                        <div class="split-col"><strong>AMOUNT</strong><br>₱ ${data.amount || "0.00"}</div>
+                        <div class="split-col"><strong>STATUS</strong><br>VERIFIED</div>
+                    </div>
+                </div>
+                <div class="doc-footer">
+                    <strong>DEPLOYMENT DATE:</strong> ${dDate.toLocaleString()}<br>
+                    <strong>EXPIRATION DATE:</strong> <span style="color:red;">${eDate.toLocaleString()}</span>
+                    <p style="text-align:center; margin-top:20px; opacity:0.5;">- DIGITAL SIGNATURE ENCRYPTED -</p>
+                </div>
+            `;
+            overlay.style.display = "flex";
         }
+
+        function closeDoc() { document.getElementById('docOverlay').style.display = "none"; }
+
+        // Start system
+        initProfile();
     </script>
 </body>
 </html>

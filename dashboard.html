@@ -27,17 +27,13 @@
             min-height: 100vh;
         }
 
-        /* Header */
         .status-header {
             display: flex; justify-content: space-between; align-items: center;
             padding: 10px; border: 1px solid var(--cyan);
             font-size: 10px; margin-bottom: 10px; background: rgba(0,0,0,0.8);
         }
 
-        /* Main Container - Single Column for Mobile */
-        .main-container {
-            display: flex; flex-direction: column; gap: 15px;
-        }
+        .main-container { display: flex; flex-direction: column; gap: 15px; }
 
         .panel {
             background: var(--panel);
@@ -53,8 +49,7 @@
             letter-spacing: 2px;
         }
 
-        /* Scanner Styling */
-        input[type="text"], input[type="number"] {
+        input {
             background: #000; border: 1px solid #333; color: var(--cyan);
             padding: 15px; width: 100%; font-family: inherit;
             font-size: 16px; outline: none; margin-bottom: 10px;
@@ -66,12 +61,11 @@
             border-left: 2px solid #333; margin-bottom: 10px;
         }
 
-        /* Animated Buttons */
         .btn-green-pulse {
             background: var(--green); color: #000; border: none;
             padding: 15px; font-weight: 800; width: 100%;
             cursor: pointer; animation: pulse 1.5s infinite;
-            text-transform: uppercase; margin-top: 5px;
+            text-transform: uppercase;
         }
 
         @keyframes pulse {
@@ -80,11 +74,7 @@
             100% { box-shadow: 0 0 0 0 rgba(0, 255, 0, 0); }
         }
 
-        .folder-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-            margin-top: 10px;
-        }
-
+        .folder-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
         .folder-btn {
             background: #111; border: 1px solid var(--cyan);
             color: #fff; padding: 12px; font-size: 11px; cursor: pointer;
@@ -96,15 +86,12 @@
             margin-top: 15px; cursor: pointer;
         }
 
-        /* Bounty List Styling */
         .bounty-item {
             border-left: 2px solid var(--cyan); background: rgba(255,255,255,0.02);
             padding: 10px; margin-bottom: 8px; font-size: 11px;
         }
 
         .hidden { display: none !important; }
-        
-        /* Navigation */
         .nav-link { color: var(--cyan); text-decoration: underline; cursor: pointer; }
     </style>
 
@@ -120,12 +107,9 @@
     </div>
 
     <div class="main-container">
-        
         <div class="panel">
             <div class="panel-header">🔒 TERMINATION_SCANNER</div>
-            
             <input type="text" id="scanInput" placeholder="ENTER MISSION ORDER" oninput="runTacticalScan(this.value)" maxlength="5">
-            
             <div class="terminal-log" id="scanLog">> SYSTEM READY. STANDBY FOR INPUT...</div>
 
             <div id="saveStage" class="hidden">
@@ -134,10 +118,8 @@
 
             <div id="folderStage" class="hidden">
                 <div style="font-size: 9px; color: var(--cyan); margin-bottom: 5px;">SELECT WEAPON SYSTEM:</div>
-                <div class="folder-grid">
-                    <button class="folder-btn" onclick="selectWeapon('R8P')">>> R8P</button>
-                    <button class="folder-btn" onclick="selectWeapon('RMN14')">>> RMN14</button>
-                </div>
+                <div class="folder-grid" id="weaponGrid">
+                    </div>
             </div>
 
             <div id="finalStage" class="hidden">
@@ -149,14 +131,12 @@
 
         <div class="panel">
             <div class="panel-header">🛰️ RECENT_DEPLOYMENTS</div>
-            <div id="deploymentList" style="max-height: 300px; overflow-y: auto;">
-                </div>
+            <div id="deploymentList" style="max-height: 300px; overflow-y: auto;"></div>
         </div>
-
     </div>
 
     <script>
-        // 1. CONFIG
+        // 1. CONFIG & AGENT DETECTION
         const activeAgent = localStorage.getItem("cia_agent") || "GHOST";
         document.getElementById('agentID').innerText = activeAgent;
 
@@ -175,12 +155,31 @@
         let currentMO = "";
         let currentWpn = "";
 
-        // 2. SCANNER LOGIC
+        // 2. DYNAMIC WEAPON SYSTEM SELECTION
+        const weaponMap = {
+            "LZ": ["R8P", "RMN14"],
+            "JFSN": ["RMN9", "TechnoCP"],
+            "GHOST": ["R8P", "RMN14", "RMN9", "TechnoCP"] // Fallback
+        };
+
+        function showFolders() {
+            const grid = document.getElementById('weaponGrid');
+            grid.innerHTML = ""; 
+            
+            const weapons = weaponMap[activeAgent] || weaponMap["GHOST"];
+            weapons.forEach(wpn => {
+                grid.innerHTML += `<button class="folder-btn" onclick="selectWeapon('${wpn}')">>> ${wpn}</button>`;
+            });
+
+            document.getElementById('saveStage').classList.add('hidden');
+            document.getElementById('folderStage').classList.remove('hidden');
+            document.getElementById('scanLog').innerHTML = "> SELECT WEAPON SYSTEM...";
+        }
+
+        // 3. SCANNER LOGIC
         async function runTacticalScan(val) {
             const log = document.getElementById('scanLog');
             const saveStage = document.getElementById('saveStage');
-            
-            // Hide all stages if typing
             resetStages();
 
             if(val.length < 4) {
@@ -188,28 +187,22 @@
                 return;
             }
 
-            log.innerHTML = `> QUERYING DATABASE FOR MO# ${val}...`;
+            log.innerHTML = `> QUERYING BLACKLIST FOR MO# ${val}...`;
 
             try {
-                // Tinitignan kung EXISTED na sa blacklist
-                const snap = await db.collection("blacklist").where("code", "==", val.trim()).get();
+                // Mahalaga: "missionOrder" ang field name na ginamit natin sa bulk upload
+                const snap = await db.collection("blacklist").where("missionOrder", "==", val.trim()).get();
 
                 if(!snap.empty) {
-                    log.innerHTML = `<span style="color:var(--red)">> ACCESS DENIED: MO# ${val} ALREADY REGISTERED.</span>`;
+                    log.innerHTML = `<span style="color:var(--red)">> ACCESS DENIED: MO# ${val} IS BLACKLISTED.</span>`;
                 } else {
-                    log.innerHTML = `<span style="color:var(--green)">> MO# ${val} IS CLEAR. READY FOR REGISTRATION.</span>`;
+                    log.innerHTML = `<span style="color:var(--green)">> MO# ${val} IS CLEAR. PROCEED?</span>`;
                     currentMO = val.trim();
-                    saveStage.classList.remove('hidden'); // Papakita ang Green Button
+                    saveStage.classList.remove('hidden');
                 }
             } catch (e) {
-                log.innerHTML = "> DATABASE ERROR. CHECK CONNECTION.";
+                log.innerHTML = "> DATABASE ERROR.";
             }
-        }
-
-        function showFolders() {
-            document.getElementById('saveStage').classList.add('hidden');
-            document.getElementById('folderStage').classList.remove('hidden');
-            document.getElementById('scanLog').innerHTML = "> SELECT WEAPON SYSTEM...";
         }
 
         function selectWeapon(wpn) {
@@ -219,42 +212,44 @@
             document.getElementById('finalStage').classList.remove('hidden');
         }
 
+        // 4. THE CORE UPDATE (Database Initiation)
         async function finalizeMission() {
             const vID = document.getElementById('vAgentInput').value;
             if(!vID) return alert("V-AGENT ID REQUIRED");
 
             const log = document.getElementById('scanLog');
-            log.innerHTML = "> REGISTERING TO CLOUD SERVER...";
+            log.innerHTML = "> INITIALIZING SECURE ARCHIVE...";
 
             try {
-                // I-save sa 'system_registry' (Para sa Profile)
+                // STEP A: I-save sa System Registry (Dito kukuha ang Profile.html)
+                // Nag-create tayo ng fields: agent, weapon, vid, at missionOrder
                 await db.collection("system_registry").add({
                     agent: activeAgent,
                     weapon: currentWpn,
-                    vid: vID,
+                    vid: parseInt(vID),
                     missionOrder: currentMO,
+                    status: "OFFICIAL_DOCUMENT",
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                // I-save sa 'blacklist' (Para hindi na ma-scan ulit)
+                // STEP B: I-save sa Blacklist (Para hindi na ma-scan ulit kahit kanino)
                 await db.collection("blacklist").add({
-                    code: currentMO,
+                    missionOrder: currentMO,
                     agent: activeAgent,
-                    status: "USED",
+                    status: "BANNED",
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                // Telegram Alert
-                fetch(`${TG_URL}&text=${encodeURIComponent(`🛡️ NEW REGISTRATION\nAgent: ${activeAgent}\nMO#: ${currentMO}\nWpn: ${currentWpn}\nV-ID: ${vID}`)}`);
+                // STEP C: Telegram Notification
+                const msg = `🛡️ NEW MISSION REGISTERED\nAgent: ${activeAgent}\nSystem: ${currentWpn}\nVAgent: #${vID}\nMO#: ${currentMO}`;
+                fetch(`${TG_URL}&text=${encodeURIComponent(msg)}`);
 
                 log.innerHTML = "<span style='color:var(--green)'>> MISSION ARCHIVED SUCCESSFULLY.</span>";
                 
-                setTimeout(() => {
-                    location.reload(); // Refresh para malinis ang UI
-                }, 2000);
+                setTimeout(() => location.reload(), 2000);
 
             } catch (e) {
-                log.innerHTML = "<span style='color:var(--red)'>> UPLOAD FAILED.</span>";
+                log.innerHTML = "<span style='color:var(--red)'>> UPLOAD FAILED: SERVER TIMEOUT.</span>";
             }
         }
 
@@ -264,7 +259,7 @@
             document.getElementById('finalStage').classList.add('hidden');
         }
 
-        // 3. FETCH RECENT DEPLOYMENTS
+        // 5. FETCH RECENT DEPLOYMENTS
         db.collection("system_registry").orderBy("timestamp", "desc").limit(5).onSnapshot(snap => {
             const list = document.getElementById('deploymentList');
             list.innerHTML = "";
@@ -273,7 +268,7 @@
                 list.innerHTML += `
                     <div class="bounty-item">
                         <div style="color:var(--cyan)">[${d.missionOrder}] - ${d.weapon}</div>
-                        <div style="color:#666; font-size:9px;">TARGET: V-${d.vid} | AGENT: ${d.agent}</div>
+                        <div style="color:#666; font-size:9px;">AGENT: ${d.agent} | V-ID: ${d.vid}</div>
                     </div>`;
             });
         });

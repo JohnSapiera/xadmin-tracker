@@ -144,11 +144,21 @@
                 <span id="modeStatus" style="font-size: 8px; color: var(--text-dim);">SINGLE</span>
             </div>
             <div class="ban-container">
-                <input type="text" id="singleCode" placeholder="Search target code..." oninput="autoSearch(this.value)">
-                <textarea id="bulkCodes" class="hidden" placeholder="Paste bulk codes..."></textarea>
-                <button class="execute-btn" onclick="processBan()">EXECUTE BLACKLIST</button>
-                <div class="terminal-log" id="banLog">> Terminal online. Awaiting target data...</div>
-            </div>
+    <label style="font-size: 9px; color: var(--accent-cyan); letter-spacing: 1px;">TERMINATION_SCANNER</label>
+    <input type="text" id="scanInput" placeholder="SCAN MISSION ORDER (4-5 DIGITS)" oninput="autoScanMission(this.value)">
+    
+    <div id="scanResult" style="margin-top:10px; min-height: 50px;"></div>
+    
+    <div class="terminal-log" id="banLog">> Scanner Standby...</div>
+    
+    <div id="confirmFinal" class="hidden" style="border: 1px solid var(--accent-cyan); padding: 10px; margin-top: 10px; background: rgba(0,242,255,0.05);">
+        <div id="finalIntel" style="font-size: 10px; margin-bottom: 10px;"></div>
+        <div style="display:flex; gap:10px;">
+            <button onclick="executeFinalLog()" style="flex:1; background:#00ff00; color:#000; border:none; padding:8px; font-weight:800; cursor:pointer;">OK (SAVE)</button>
+            <button onclick="cancelScan()" style="flex:1; background:#333; color:#fff; border:none; padding:8px; cursor:pointer;">CANCEL</button>
+        </div>
+    </div>
+</div>
         </div>
     </div>
 
@@ -312,6 +322,93 @@
         }
 
         function closeModal() { document.getElementById('bountyModal').style.display = 'none'; }
+
+        let matchedData = null; // Dito itatago ang nahanap na bounty data
+
+async function autoScanMission(val) {
+    const query = val.trim().toUpperCase();
+    const log = document.getElementById('banLog');
+    const resultDiv = document.getElementById('scanResult');
+    const confirmDiv = document.getElementById('confirmFinal');
+
+    // Reset UI
+    resultDiv.innerHTML = "";
+    confirmDiv.classList.add('hidden');
+
+    if (query.length < 4) {
+        log.innerHTML = "> Awaiting full Mission Order...";
+        return;
+    }
+
+    log.innerHTML = `<div>> SCANNING ENCRYPTED DATABASE: ${query}...</div>`;
+
+    // Hanapin ang Mission Order sa 'bounties' collection
+    const snapshot = await db.collection("bounties")
+        .where("missionOrder", "==", query)
+        .limit(1)
+        .get();
+
+    if (!snapshot.empty) {
+        matchedData = snapshot.docs[0].data();
+        matchedData.docId = snapshot.docs[0].id; // Para sa reference
+
+        log.innerHTML = `<div style="color:#00ff00">> MATCH FOUND: MISSION ${query} IS VALID.</div>`;
+        
+        // Show the Green Save Button
+        resultDiv.innerHTML = `
+            <button onclick="showConfirm()" style="width:100%; background:#00ff00; color:#000; border:none; padding:12px; font-weight:800; cursor:pointer; border-radius:4px;">
+                SAVE TO CONFIDENTIAL_INFO
+            </button>
+        `;
+    } else {
+        log.innerHTML = `<div style="color:var(--danger-red)">> ERROR: MISSION ORDER NOT FOUND.</div>`;
+        matchedData = null;
+    }
+}
+
+function showConfirm() {
+    if(!matchedData) return;
+    const intelDiv = document.getElementById('finalIntel');
+    const confirmDiv = document.getElementById('confirmFinal');
+
+    intelDiv.innerHTML = `
+        <span style="color:var(--accent-cyan)">WEAPON:</span> ${matchedData.weapon}<br>
+        <span style="color:var(--accent-cyan)">V.AGENT:</span> #${matchedData.vid}<br>
+        <span style="color:var(--accent-cyan)">MISSION:</span> ${matchedData.missionOrder}
+    `;
+    confirmDiv.classList.remove('hidden');
+}
+
+async function executeFinalLog() {
+    try {
+        // I-save sa 'dossier' collection para sa Confidential_Info section ng profile
+        await db.collection("dossier").add({
+            agent: activeAgent,
+            weapon: matchedData.weapon,
+            vid: matchedData.vid,
+            missionOrder: matchedData.missionOrder,
+            bounty: matchedData.amt,
+            status: "TERMINATED",
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Telegram Alert
+        const msg = `📑 DOSSIER UPDATED\nAgent: ${activeAgent}\nMission: ${matchedData.missionOrder}\nStatus: ARCHIVED TO CONFIDENTIAL`;
+        fetch(`${TG_URL}&text=${encodeURIComponent(msg)}`);
+
+        document.getElementById('banLog').innerHTML = `<div style="color:#00ff00">> DATA ARCHIVED SUCCESSFULLY.</div>`;
+        cancelScan();
+    } catch (e) {
+        alert("UPLOAD FAILED");
+    }
+}
+
+function cancelScan() {
+    document.getElementById('scanInput').value = "";
+    document.getElementById('scanResult').innerHTML = "";
+    document.getElementById('confirmFinal').classList.add('hidden');
+    matchedData = null;
+}
         setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString(), 1000);
     </script>
 </body>

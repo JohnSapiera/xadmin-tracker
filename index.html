@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CIA INTELLIGENCE UNIT - ENCRYPTED</title>
+    <title>CIA INTELLIGENCE UNIT - BOUNTY OPS</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;500;800&display=swap" rel="stylesheet">
     
     <style>
@@ -14,11 +14,10 @@
             --danger-red: #ff3c3c;
             --text-main: #e0e6ed;
             --text-dim: #626a77;
-            --border: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.1);
         }
 
         * { box-sizing: border-box; }
-
         body {
             background-color: var(--bg-deep);
             color: var(--text-main);
@@ -32,233 +31,236 @@
             background-size: 100% 2px, 3px 100%;
         }
 
+        /* Status Header */
         .status-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 20px;
-            background: rgba(0, 0, 0, 0.8);
-            border-bottom: 1px solid var(--accent-cyan);
-            font-size: 11px;
-            letter-spacing: 2px;
-            color: var(--accent-cyan);
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 20px; background: rgba(0, 0, 0, 0.8);
+            border-bottom: 1px solid var(--accent-cyan); font-size: 11px; color: var(--accent-cyan);
         }
 
+        /* Dashboard Layout */
         .dashboard {
-            display: grid;
-            grid-template-columns: 280px 1fr 320px;
-            gap: 15px;
-            padding: 15px;
-            flex-grow: 1;
+            display: grid; grid-template-columns: 320px 1fr 320px;
+            gap: 15px; padding: 15px; flex-grow: 1;
         }
 
         .panel {
-            background: var(--panel-bg);
-            border: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            border-radius: 4px;
+            background: var(--panel-bg); border: 1px solid var(--border);
+            display: flex; flex-direction: column; border-radius: 4px;
         }
 
         .panel-header {
-            padding: 8px 12px;
-            font-size: 10px;
-            font-weight: 800;
-            background: rgba(255, 255, 255, 0.03);
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
+            padding: 8px 12px; font-size: 10px; font-weight: 800;
+            background: rgba(255, 255, 255, 0.03); border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between;
         }
 
-        .ban-container { padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+        /* Bounty Panel Styles */
+        .bounty-list { flex-grow: 1; padding: 15px; font-size: 11px; overflow-y: auto; }
+        .add-bounty-btn {
+            background: transparent; border: 1px solid var(--accent-cyan);
+            color: var(--accent-cyan); padding: 10px; margin: 10px;
+            cursor: pointer; font-family: inherit; font-weight: 800; transition: 0.3s;
+        }
+        .add-bounty-btn:hover { background: var(--accent-cyan); color: #000; }
+
+        /* MODAL / POP-UP STYLES */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 100;
+        }
+
+        .modal-box {
+            background: #0f1117; border: 2px solid var(--accent-cyan);
+            width: 400px; padding: 20px; box-shadow: 0 0 30px rgba(0, 242, 255, 0.2);
+        }
+
+        .modal-title { color: var(--accent-cyan); font-size: 14px; margin-bottom: 20px; text-align: center; border-bottom: 1px solid #222; padding-bottom: 10px; }
         
-        .secret-trigger { font-size: 10px; color: var(--accent-cyan); cursor: pointer; }
+        .modal-step { display: none; flex-direction: column; gap: 10px; }
+        .active-step { display: flex; }
 
-        input[type="text"], textarea {
-            background: #000;
-            border: 1px solid #333;
-            color: var(--accent-cyan);
-            padding: 12px;
-            font-family: inherit;
-            width: 100%;
-            outline: none;
-            border-radius: 4px;
+        .option-btn {
+            background: #1a1d26; border: 1px solid #333; color: #fff;
+            padding: 12px; cursor: pointer; text-align: left; font-family: inherit;
+        }
+        .option-btn:hover { border-color: var(--accent-cyan); background: #222; }
+
+        .input-group { display: flex; flex-direction: column; gap: 5px; margin-top: 10px; }
+        .input-group label { font-size: 10px; color: var(--accent-cyan); }
+        .modal-input {
+            background: #000; border: 1px solid #444; color: #00ff00;
+            padding: 10px; font-family: inherit; outline: none;
         }
 
-        textarea { height: 150px; resize: none; display: none; }
-
-        .execute-btn {
-            background: var(--danger-red);
-            color: white;
-            border: none;
-            padding: 15px;
-            font-family: inherit;
-            font-weight: 800;
-            cursor: pointer;
-            border-radius: 4px;
-            margin-top: 5px;
-        }
-
-        .terminal-log {
-            flex-grow: 1;
-            background: rgba(0,0,0,0.6);
-            margin-top: 10px;
-            padding: 15px;
-            font-size: 11px;
-            overflow-y: auto;
-            color: #88ff88;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .chat-area { flex-grow: 1; overflow-y: auto; padding: 15px; font-size: 12px; }
-        .chat-input-row { padding: 10px; background: #000; display: flex; gap: 8px; border-top: 1px solid var(--border); }
-        
-        .hidden { display: none !important; }
-        .blink { animation: blinker 1.2s linear infinite; }
+        /* Generic Helper Classes */
+        .blink { animation: blinker 1.5s linear infinite; }
         @keyframes blinker { 50% { opacity: 0; } }
-
-        .found { color: var(--danger-red); font-weight: bold; }
-        .clear { color: #00ff00; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
     <nav class="status-header">
-        <div>OP_ID: <span style="color:white">098-GHOST</span></div>
+        <div>AGENT: <span style="color:white">098-GHOST</span></div>
         <div class="blink">● ENCRYPTED LINK</div>
         <div id="clock">00:00:00</div>
     </nav>
 
     <div class="dashboard">
+        <div class="panel" id="bounty-panel">
+            <div class="panel-header">BOUNTY_REPORTS</div>
+            <div class="bounty-list" id="bountyDisplay">
+                <div style="color: var(--text-dim)">> NO ACTIVE MISSIONS...</div>
+            </div>
+            <button class="add-bounty-btn" onclick="openBountyModal()">+ ADD NEW BOUNTY</button>
+        </div>
+
         <div class="panel">
-            <div class="panel-header">DATABASE_STATUS</div>
-            <div style="padding:15px; font-size:10px; color:var(--text-dim);">
-                > SECURE_DB: ONLINE<br>
-                > SYNC_STATUS: STABLE<br><br>
-                <span style="color:var(--accent-cyan)">[#] READY FOR QUERY</span>
+            <div class="panel-header">BAN_PROTOCOL</div>
+            <div style="padding:20px;">
+                <input type="text" id="singleCode" placeholder="Search/Ban Secret Code..." style="width:100%; background:#000; border:1px solid #333; color:var(--accent-cyan); padding:10px;">
+                <div id="banLog" style="margin-top:10px; font-size:10px; color:#88ff88;">> Standby...</div>
             </div>
         </div>
 
         <div class="panel">
-            <div class="panel-header">
-                <span onclick="toggleBulkMode()" class="secret-trigger">TERMINATION_PROTOCOL (MODE_SWAP)</span>
-                <span id="modeStatus" style="font-size: 9px; color: var(--text-dim);">MODE: SINGLE_SEARCH</span>
-            </div>
+            <div class="panel-header">SECURE_COMMS</div>
+            <div id="chatFeed" style="flex-grow:1; padding:15px; font-size:11px;"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="bountyModal">
+        <div class="modal-box">
+            <div class="modal-title" id="modalTitle">INITIATING BOUNTY OPS...</div>
             
-            <div class="ban-container">
-                <label style="font-size: 10px; color: var(--accent-cyan); letter-spacing: 1px;">SECRET CODES IDENTIFICATION</label>
-                
-                <input type="text" id="singleCode" placeholder="Type to search database..." oninput="autoSearch(this.value)">
-                
-                <textarea id="bulkCodes" placeholder="Paste multiple codes here... (Deduplication Active)"></textarea>
-                
-                <button class="execute-btn" onclick="processBan()">EXECUTE BLACKLIST</button>
-                
-                <div class="terminal-log" id="banLog">> System Standby. Awaiting input sequence...</div>
+            <div class="modal-step active-step" id="step1">
+                <p style="font-size:11px; text-align:center;">WHOS AGENT?</p>
+                <button class="option-btn" onclick="selectAgent('LZ')">AGENT 1: LZ</button>
+                <button class="option-btn" onclick="selectAgent('JFSN')">AGENT 2: JFSN</button>
+                <button class="option-btn" onclick="closeModal()" style="color:var(--danger-red); border-color:var(--danger-red); margin-top:10px;">CANCEL</button>
             </div>
-        </div>
 
-        <div class="panel">
-            <div class="panel-header">CLASSIFIED_COMMS</div>
-            <div class="chat-area" id="chatFeed"></div>
-            <div class="chat-input-row">
-                <input type="text" id="chatInput" placeholder="Enter message..." onkeypress="if(event.key==='Enter') sendMsg()">
-                <button onclick="sendMsg()" style="background:var(--accent-cyan); border:none; padding:5px 10px; font-weight:800; cursor:pointer;">SEND</button>
+            <div class="modal-step" id="step2">
+                <p style="font-size:11px; text-align:center; color:var(--accent-cyan);" id="weaponMsg">SELECT WEAPON</p>
+                <div id="weaponOptions" style="display:flex; flex-direction:column; gap:10px;">
+                    </div>
+            </div>
+
+            <div class="modal-step" id="step3">
+                <p style="font-size:11px; text-align:center;" id="statsHeader">MISSION DETAILS</p>
+                
+                <div class="input-group">
+                    <label>V-AGENT# (MAX 99)</label>
+                    <input type="number" id="vAgentNum" class="modal-input" placeholder="e.g. 50">
+                </div>
+                
+                <div class="input-group">
+                    <label>BOUNTY AMOUNT (MAX 10,999)</label>
+                    <input type="number" id="bountyAmt" class="modal-input" placeholder="e.g. 5000">
+                </div>
+
+                <button class="add-bounty-btn" onclick="finalizeBounty()">DEPLOY BOUNTY</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Simulated Database (Dito mo i-fetch ang data mula sa Firebase mo later)
-        const bannedDatabase = ["12345", "ABCDE", "ADMIN-99", "GHOST-OPS"];
+        let currentAgent = "";
+        let currentWeapon = "";
 
-        // --- AUTO SEARCH LOGIC ---
-        function autoSearch(val) {
-            const log = document.getElementById('banLog');
-            const query = val.trim().toUpperCase();
+        // MODAL HANDLERS
+        function openBountyModal() {
+            document.getElementById('bountyModal').style.display = 'flex';
+            resetSteps();
+        }
 
-            if (query === "") {
-                log.innerHTML = `> System Standby. Awaiting input sequence...`;
+        function closeModal() {
+            document.getElementById('bountyModal').style.display = 'none';
+        }
+
+        function resetSteps() {
+            document.getElementById('step1').classList.add('active-step');
+            document.getElementById('step2').classList.remove('active-step');
+            document.getElementById('step3').classList.remove('active-step');
+            document.getElementById('modalTitle').innerText = "INITIATING BOUNTY OPS...";
+        }
+
+        // STEP 1 LOGIC
+        function selectAgent(agent) {
+            currentAgent = agent;
+            document.getElementById('step1').classList.remove('active-step');
+            document.getElementById('step2').classList.add('active-step');
+            document.getElementById('modalTitle').innerText = `AGENT: ${agent}`;
+            
+            const weaponBox = document.getElementById('weaponOptions');
+            weaponBox.innerHTML = ""; // Clear old buttons
+
+            let weapons = [];
+            if (agent === 'LZ') weapons = ['R8', 'RM14'];
+            if (agent === 'JFSN') weapons = ['R9', 'TechCP'];
+
+            weapons.forEach(w => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = `WEAPON: ${w}`;
+                btn.onclick = () => selectWeapon(w);
+                weaponBox.appendChild(btn);
+            });
+        }
+
+        // STEP 2 LOGIC
+        function selectWeapon(weapon) {
+            currentWeapon = weapon;
+            document.getElementById('step2').classList.remove('active-step');
+            document.getElementById('step3').classList.add('active-step');
+            document.getElementById('statsHeader').innerText = `WEAPON: ${weapon} LOADED`;
+        }
+
+        // STEP 3 LOGIC (Finalize)
+        function finalizeBounty() {
+            const vAgent = parseInt(document.getElementById('vAgentNum').value);
+            const bounty = parseInt(document.getElementById('bountyAmt').value);
+
+            // VALDIATIONS (Strict logic: not equal to 100, not equal to 11,000)
+            if (vAgent >= 100 || isNaN(vAgent)) {
+                alert("ACCESS DENIED: V-Agent# must be below 100");
+                return;
+            }
+            if (bounty >= 11000 || isNaN(bounty)) {
+                alert("ACCESS DENIED: Bounty must be below 11,000");
                 return;
             }
 
-            log.innerHTML = `<div>> SEARCHING DATABASE FOR: <span style="color:white">${query}</span>...</div>`;
+            // Display in Panel 1
+            const display = document.getElementById('bountyDisplay');
+            if (display.innerText.includes("NO ACTIVE")) display.innerHTML = "";
 
-            // Check if code exists
-            if (bannedDatabase.includes(query)) {
-                log.innerHTML += `<div class="found">> WARNING: TARGET [${query}] ALREADY TERMINATED.</div>`;
-            } else {
-                log.innerHTML += `<div class="clear">> STATUS: [${query}] IS CLEAR. READY FOR TERMINATION.</div>`;
-            }
-        }
+            const entry = document.createElement('div');
+            entry.style.borderLeft = "2px solid var(--accent-cyan)";
+            entry.style.padding = "5px 10px";
+            entry.style.marginBottom = "10px";
+            entry.style.background = "rgba(255,255,255,0.02)";
+            entry.innerHTML = `
+                <div style="color:var(--accent-cyan)">[TARGET_LOCKED]</div>
+                <div>AGENT: ${currentAgent}</div>
+                <div>WEAPON: ${currentWeapon}</div>
+                <div>V-ID: ${vAgent} | AMT: ${bounty}</div>
+                <hr style="border:0; border-top:1px solid #222;">
+            `;
+            
+            display.prepend(entry);
+            closeModal();
 
-        // --- MODE TOGGLE ---
-        let isBulkMode = false;
-        function toggleBulkMode() {
-            isBulkMode = !isBulkMode;
-            const single = document.getElementById('singleCode');
-            const bulk = document.getElementById('bulkCodes');
-            const status = document.getElementById('modeStatus');
-            const log = document.getElementById('banLog');
-
-            if (isBulkMode) {
-                single.classList.add('hidden');
-                bulk.style.display = 'block';
-                status.innerText = "MODE: BULK_AUTO_CLEAN";
-                status.style.color = "#ffb000";
-                log.innerHTML = `> BULK MODE ACTIVATED. AUTO-DEDUPLICATION ENABLED.`;
-            } else {
-                single.classList.remove('hidden');
-                bulk.style.display = 'none';
-                status.innerText = "MODE: SINGLE_SEARCH";
-                status.style.color = "var(--text-dim)";
-                log.innerHTML = `> SINGLE SEARCH MODE RESTORED.`;
-            }
-        }
-
-        // --- EXECUTION + DEDUPLICATION ---
-        function processBan() {
-            const log = document.getElementById('banLog');
-            let codes = [];
-
-            if (isBulkMode) {
-                const raw = document.getElementById('bulkCodes').value;
-                codes = raw.split(/[\n,]+/).map(s => s.trim()).filter(s => s !== "");
-            } else {
-                const val = document.getElementById('singleCode').value.trim();
-                if (val) codes.push(val);
-            }
-
-            if (codes.length === 0) return;
-
-            // DEDUPLICATION
-            const unique = [...new Set(codes)];
-            const dupesRemoved = codes.length - unique.length;
-
-            log.innerHTML += `<div style="color:white">> PROCESSING ${unique.length} UNIQUE IDS...</div>`;
-            if (dupesRemoved > 0) log.innerHTML += `<div style="color:#ffb000">> PURGED: ${dupesRemoved} DUPLICATES.</div>`;
-
-            setTimeout(() => {
-                log.innerHTML += `<div style="color:#00ff00">> SUCCESS: DATABASE UPDATED.</div>`;
-                document.getElementById('singleCode').value = "";
-                document.getElementById('bulkCodes').value = "";
-                log.scrollTop = log.scrollHeight;
-            }, 1000);
+            // Reset inputs
+            document.getElementById('vAgentNum').value = "";
+            document.getElementById('bountyAmt').value = "";
         }
 
         // Clock Script
         setInterval(() => {
             document.getElementById('clock').innerText = new Date().toLocaleTimeString();
         }, 1000);
-
-        function sendMsg() {
-            const input = document.getElementById('chatInput');
-            if (input.value.trim()) {
-                document.getElementById('chatFeed').innerHTML += `<div style="margin-bottom:5px;"><strong>[OP]:</strong> ${input.value}</div>`;
-                input.value = "";
-                document.getElementById('chatFeed').scrollTop = 9999;
-            }
-        }
     </script>
 </body>
 </html>

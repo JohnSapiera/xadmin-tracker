@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CIA - RAPID ELIMINATION TERMINAL</title>
+    <title>CIA - CLASSIFIED TERMINAL</title>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -15,7 +15,8 @@
         .success-flash { animation: flash-green 0.5s ease-out; }
         @keyframes flash-green { 0% { background-color: rgba(34, 197, 94, 0.2); } 100% { background-color: transparent; } }
 
-        .floating-window { display: none; position: fixed; top: 15%; right: 2%; z-index: 50; }
+        /* Pop-up Semi Page / Modal */
+        #archiveModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 200; backdrop-filter: blur(10px); }
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
 </head>
@@ -24,61 +25,66 @@
 
     <nav class="bg-black/95 p-3 border-b border-white/10 flex justify-between items-center sticky top-0 z-50">
         <div class="flex items-center gap-4">
-            <div class="px-2 py-0.5 border border-blue-500 text-blue-500 font-bold text-[8px] tracking-tighter">CIA_RAPID_v3</div>
-            <h1 class="tracking-[0.2em] uppercase font-bold text-white text-[10px]">High-Speed Elimination Terminal</h1>
+            <div class="px-2 py-0.5 border border-blue-500 text-blue-500 font-bold text-[8px]">CIA_SECURE_v4</div>
+            <h1 class="tracking-[0.2em] uppercase font-bold text-white text-[10px]">Rapid Elimination Unit</h1>
         </div>
-        <button onclick="toggleEliminated()" class="text-red-500 border border-red-500/30 px-3 py-1 hover:bg-red-500/10 font-bold uppercase text-[9px]">
-            [ REGISTRY ]
+        <button onclick="openModal()" class="text-red-500 border border-red-500/30 px-3 py-1 hover:bg-red-500/10 font-bold uppercase text-[9px]">
+            [ ACCESS REGISTRY ]
         </button>
     </nav>
 
-    <div class="max-w-5xl mx-auto p-4 space-y-4 h-[calc(100vh-60px)] flex flex-col">
+    <div class="max-w-4xl mx-auto p-4 space-y-4 h-[calc(100vh-60px)] flex flex-col justify-center">
         
-        <section id="inputUnit" class="bg-zinc-900/40 border border-white/5 p-6 rounded transition-all">
+        <section id="inputUnit" class="bg-zinc-900/40 border border-white/5 p-8 rounded shadow-2xl transition-all">
             <div class="flex justify-between items-center mb-2">
                 <h2 class="text-blue-500 tracking-widest uppercase font-bold text-[9px]">Input Target Code</h2>
-                <span id="targetStatus" class="text-[8px] text-gray-600 font-bold">READY FOR TRANSMISSION</span>
+                <span id="targetStatus" class="text-[8px] text-gray-600 font-bold">AWAITING INPUT...</span>
             </div>
             
             <input type="number" id="codeInput" oninput="autoScan()" autofocus
                    placeholder="0000" 
-                   class="w-full bg-black border border-white/10 p-4 outline-none focus:border-blue-500 text-blue-400 font-bold tracking-[1em] text-4xl text-center">
+                   class="w-full bg-black border border-white/10 p-5 outline-none focus:border-blue-500 text-blue-400 font-bold tracking-[1em] text-4xl text-center">
             
-            <div id="statusReport" class="mt-4 min-h-[100px] flex items-center justify-center border border-dashed border-white/10 rounded bg-black/20 p-2">
-                <p class="text-gray-700 italic uppercase tracking-widest text-[9px]">Awaiting signal...</p>
+            <div id="statusReport" class="mt-4 min-h-[80px] flex items-center justify-center border border-dashed border-white/10 rounded bg-black/20 p-4">
+                <p class="text-gray-700 italic uppercase tracking-widest text-[9px]">Awaiting signal from field operatives...</p>
             </div>
         </section>
 
-        <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 overflow-hidden">
-            <section class="bg-zinc-900/20 border border-white/5 rounded flex flex-col">
-                <div class="bg-white/5 p-2 text-[9px] font-bold text-red-500 uppercase tracking-widest border-b border-white/5 px-4">Recent Eliminations</div>
-                <div id="recentLogs" class="flex-1 p-4 overflow-y-auto space-y-1 text-red-400 font-mono text-[9px]">
-                    <p class="opacity-30 italic">No activity logs found.</p>
-                </div>
-            </section>
-
-            <section class="bg-zinc-900/20 border border-white/5 rounded flex flex-col">
-                <div class="bg-white/5 p-2 text-[9px] font-bold text-amber-500 uppercase tracking-widest border-b border-white/5 px-4">Secure Comms</div>
-                <div id="chatFeed" class="flex-1 p-4 overflow-y-auto space-y-1 bg-black/10 text-[9px] text-amber-500/80"></div>
-                <div class="p-2 border-t border-white/5 flex gap-1">
-                    <input type="text" id="chatMsg" placeholder="..." class="flex-1 bg-black border border-white/10 p-1.5 outline-none text-amber-500 uppercase text-[9px]">
-                    <button onclick="sendMsg()" class="bg-amber-600 px-3 py-1 font-bold text-black text-[9px] uppercase hover:bg-amber-500">SEND</button>
-                </div>
-            </section>
-        </div>
+        <section class="bg-zinc-900/20 border border-white/5 rounded flex flex-col h-[150px]">
+            <div class="bg-white/5 p-1.5 text-[8px] font-bold text-amber-500 uppercase tracking-widest border-b border-white/5 px-4">Live Comms</div>
+            <div id="chatFeed" class="flex-1 p-3 overflow-y-auto space-y-1 bg-black/10 text-[9px] text-amber-500/80"></div>
+            <div class="p-2 border-t border-white/5 flex gap-1">
+                <input type="text" id="chatMsg" placeholder="..." class="flex-1 bg-black border border-white/10 p-1.5 outline-none text-amber-500 uppercase text-[9px]">
+                <button onclick="sendMsg()" class="bg-amber-600 px-3 py-1 font-bold text-black text-[9px] uppercase hover:bg-amber-500">SEND</button>
+            </div>
+        </section>
     </div>
 
-    <div id="eliminatedWindow" class="floating-window w-72 bg-black border border-red-500 shadow-2xl">
-        <div class="bg-red-900/40 p-2 border-b border-red-500 flex justify-between text-[10px] font-bold text-red-500 uppercase">
-            <span>Eliminated Database</span>
-            <button onclick="toggleEliminated()">[X]</button>
+    <div id="archiveModal" class="flex flex-col p-6">
+        <div class="max-w-4xl mx-auto w-full flex flex-col h-full">
+            <div class="flex justify-between items-center border-b border-red-500/30 pb-4">
+                <div>
+                    <h1 class="text-red-500 font-black text-xl tracking-[0.2em] uppercase">Classified Registry</h1>
+                    <p class="text-gray-600 text-[9px] uppercase tracking-widest mt-1">Authorized personnel only // Data is permanent</p>
+                </div>
+                <button onclick="closeModal()" class="text-white border border-white/20 px-4 py-2 hover:bg-white/10 font-bold text-[10px] uppercase">
+                    [ CLOSE TERMINAL ]
+                </button>
+            </div>
+            
+            <div class="flex-1 mt-6 overflow-y-auto">
+                <div id="eliminatedList" class="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
+                    </div>
+                <div id="emptyMsg" class="text-center text-gray-700 italic uppercase tracking-widest text-[10px] mt-20">
+                    Registry database is currently empty.
+                </div>
+            </div>
         </div>
-        <div id="eliminatedList" class="p-4 max-h-80 overflow-y-auto space-y-1 text-red-500 text-center font-bold tracking-widest"></div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, query, where, getDocs, onSnapshot, serverTimestamp, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, where, getDocs, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
@@ -99,6 +105,9 @@
         const report = document.getElementById('statusReport');
         const targetStatus = document.getElementById('targetStatus');
 
+        // LOCAL CACHE PARA SA UNIQUE CHECKING
+        let existingCodes = new Set();
+
         // --- RAPID SCANNER ---
         window.autoScan = async () => {
             const code = codeInput.value;
@@ -110,6 +119,19 @@
             }
 
             targetStatus.innerText = "INQUIRING DATABASE...";
+
+            // Tingnan muna sa local memory kung andun na para mabilis
+            if (existingCodes.has(code)) {
+                targetStatus.innerText = "TARGET IDENTIFIED: ELIMINATED";
+                report.innerHTML = `
+                    <div class="text-center p-3 border border-red-600 bg-red-600/5 w-full">
+                        <p class="text-red-600 font-black tracking-widest text-lg uppercase">ALREADY ELIMINATED</p>
+                        <p class="text-gray-500 text-[8px] uppercase tracking-tighter italic">This code is already stored permanently in the database.</p>
+                    </div>`;
+                return;
+            }
+
+            // Kung wala sa memory, double check sa Firestore (Just to be safe)
             const q = query(collection(db, "eliminated_codes"), where("code", "==", code));
             const snapshot = await getDocs(q);
 
@@ -122,70 +144,77 @@
                         </button>
                     </div>`;
             } else {
+                existingCodes.add(code); // Isama na sa memory
                 targetStatus.innerText = "TARGET IDENTIFIED: ELIMINATED";
                 report.innerHTML = `
                     <div class="text-center p-3 border border-red-600 bg-red-600/5 w-full">
                         <p class="text-red-600 font-black tracking-widest text-lg uppercase">ALREADY ELIMINATED</p>
-                        <p class="text-gray-500 text-[8px] uppercase tracking-tighter italic">Cannot eliminate a neutralized target.</p>
                     </div>`;
             }
         };
 
-        // --- RAPID ELIMINATION (No Blocking) ---
+        // --- ELIMINATION ACTION ---
         window.initiateElimination = async (code) => {
             const inputUnit = document.getElementById('inputUnit');
             
             try {
-                // Save to Firestore
+                // Isave sa Firestore
                 await addDoc(collection(db, "eliminated_codes"), {
                     code: code,
                     timestamp: serverTimestamp()
                 });
 
-                // Subtle Visual Feedback
+                // Dagdag sa local set para hindi na ma-duplicate
+                existingCodes.add(code);
+
+                // Quick Visual Feedback
                 inputUnit.classList.add('success-flash');
                 setTimeout(() => inputUnit.classList.remove('success-flash'), 500);
 
-                // Quick reset for next number
+                // Auto reset
                 codeInput.value = "";
                 codeInput.focus();
                 autoScan();
 
             } catch (err) {
-                alert("Comm-Link Failed.");
+                alert("Comm-Link Failed. Check your internet or Firebase rules.");
             }
         };
 
-        // --- UI & LOGS ---
-        window.toggleEliminated = () => {
-            const win = document.getElementById('eliminatedWindow');
-            win.style.display = win.style.display === 'block' ? 'none' : 'block';
-        };
+        // --- MODAL CONTROLS ---
+        window.openModal = () => document.getElementById('archiveModal').style.display = 'flex';
+        window.closeModal = () => document.getElementById('archiveModal').style.display = 'none';
 
-        // Live Archive
+        // --- LIVE DATABASE LISTENER (ARCHIVE) ---
         onSnapshot(collection(db, "eliminated_codes"), (snap) => {
             const list = document.getElementById('eliminatedList');
+            const emptyMsg = document.getElementById('emptyMsg');
+            
             list.innerHTML = "";
-            snap.forEach(doc => {
+            existingCodes.clear(); // Refresh local memory
+
+            let hasData = false;
+            
+            // Inaayos natin ang listahan para bago sa taas (Client-side sorting)
+            const docs = [];
+            snap.forEach(doc => docs.push(doc.data()));
+            docs.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+
+            docs.forEach(data => {
+                hasData = true;
+                existingCodes.add(data.code); // I-cache ang mga codes
+
                 const item = document.createElement('div');
-                item.className = "border-b border-red-900/10 py-1 uppercase tracking-widest text-[10px]";
-                item.innerText = `ID: ${doc.data().code}`;
+                item.className = "bg-red-500/5 border border-red-500/20 p-3 font-bold text-red-500 tracking-[0.2em] text-sm hover:bg-red-500/10 transition-colors";
+                item.innerText = data.code;
                 list.appendChild(item);
             });
-        });
 
-        // Live Activity Logs (Huling 10)
-        const qRecent = query(collection(db, "eliminated_codes"), orderBy("timestamp", "desc"), limit(10));
-        onSnapshot(qRecent, (snap) => {
-            const logDiv = document.getElementById('recentLogs');
-            logDiv.innerHTML = "";
-            snap.forEach(doc => {
-                const p = document.createElement('p');
-                p.className = "mb-1 border-b border-white/5 pb-1 flex justify-between";
-                const time = doc.data().timestamp?.toDate().toLocaleTimeString() || "SYNCING";
-                p.innerHTML = `<span>[${time}] TARGET: ${doc.data().code}</span> <span class="text-white">NEUTRALIZED</span>`;
-                logDiv.appendChild(p);
-            });
+            if (hasData) {
+                emptyMsg.style.display = 'none';
+            } else {
+                emptyMsg.style.display = 'block';
+            }
         });
 
         // --- COMMS ---
@@ -201,11 +230,10 @@
             const data = snap.val();
             const div = document.createElement('div');
             div.className = "mb-1 border-l border-amber-800 pl-2";
-            div.innerHTML = `<span class="opacity-50 text-[7px] block">${new Date(data.time).toLocaleTimeString()}</span><span class="tracking-widest uppercase">${data.text}</span>`;
+            div.innerHTML = `<span class="opacity-50 text-[6px] block">${new Date(data.time).toLocaleTimeString()}</span><span class="tracking-widest uppercase">${data.text}</span>`;
             document.getElementById('chatFeed').appendChild(div);
             document.getElementById('chatFeed').scrollTop = document.getElementById('chatFeed').scrollHeight;
         });
-
     </script>
 </body>
 </html>

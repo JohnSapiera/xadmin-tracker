@@ -3,43 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login - FreeShoppingPH</title>
+    <title>CIA - Code Elimination Registry</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        mono: ['"Fira Code"', 'monospace'],
+                    },
+                    colors: {
+                        'cia-black': '#050505',
+                        'cia-dark': '#101010',
+                        'cia-gray': '#1a1a1a',
+                        'cia-blue': '#0070f3',
+                        'cia-amber': '#ffb000',
+                        'cia-red': '#ff0000',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #050505; color: #e0e0e0; }
+        .floating-window { 
+            display: none; 
+            position: fixed; 
+            top: 15%; 
+            right: 2%; 
+            z-index: 50; 
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.2);
+        }
+        /* Subteng scanline effect */
+        body::after {
+            content: "";
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
+            background-size: 100% 4px;
+            z-index: 100;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+    </style>
 </head>
-<body class="bg-slate-900 flex items-center justify-center h-screen">
+<body class="font-mono text-sm border-t-4 border-cia-blue">
 
-    <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md border-t-4 border-blue-600">
-        <div class="text-center mb-8">
-            <h2 class="text-3xl font-extrabold text-gray-800">Admin Portal</h2>
-            <p class="text-gray-500 mt-2 text-sm text-balance">Secure access for authorized administrators only.</p>
+    <nav class="bg-cia-dark p-4 shadow-lg border-b border-gray-800 flex justify-between items-center relative z-20">
+        <div class="flex items-center gap-3">
+            <div class="border-2 border-cia-blue text-cia-blue font-bold p-1 text-xs">C.I.A.</div>
+            <h1 class="font-bold text-lg tracking-widest text-white uppercase">Code Elimination Registry</h1>
         </div>
+        <div class="flex items-center gap-3">
+            <span id="userEmail" class="text-xs text-gray-500">Access Level: Classified</span>
+            <button onclick="toggleEliminatedList()" class="bg-cia-red/10 hover:bg-cia-red/20 text-cia-red px-4 py-1.5 rounded border border-cia-red/50 text-xs font-bold transition">
+                View Eliminated Codes ⚠
+            </button>
+            <button onclick="logout()" class="text-gray-600 hover:text-white text-xs">[ Logout ]</button>
+        </div>
+    </nav>
 
-        <div class="space-y-5">
-            <div>
-                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Email Address</label>
-                <input type="email" id="email" placeholder="admin@example.com" 
-                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all">
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Password</label>
-                <input type="password" id="password" placeholder="••••••••" 
-                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+    <div class="max-w-5xl mx-auto mt-12 p-6 relative z-10">
+        <div class="bg-cia-dark p-8 rounded border border-gray-800 shadow-2xl">
+            <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-800">
+                <h2 class="text-2xl font-bold text-white tracking-tight">Code Query & Threat Assessment</h2>
+                <span class="text-cia-amber text-xs animate-pulse">SYSTEM STATUS: NOMINAL</span>
             </div>
             
-            <button id="loginBtn" class="w-full bg-blue-600 text-white p-3 rounded-lg font-bold hover:bg-blue-700 active:scale-95 transition-all shadow-lg shadow-blue-500/30">
-                Login to Dashboard
-            </button>
+            <div class="flex gap-3">
+                <input type="number" id="searchInput" placeholder="INPUT TARGET CODE (e.g., 5-digits or 4 if starts with 0)" 
+                       class="flex-1 p-4 bg-cia-black border border-gray-700 rounded focus:ring-1 focus:ring-cia-blue focus:border-cia-blue outline-none text-lg text-cia-blue placeholder:text-gray-700 font-bold tracking-widest">
+                <button onclick="searchCode()" class="bg-cia-blue text-white px-8 py-4 rounded font-bold hover:bg-cia-blue/80 transition uppercase tracking-widest text-xs">
+                    Scan Database
+                </button>
+            </div>
+            
+            <div id="searchStatus" class="mt-6 min-h-[60px]">
+                <p class="text-gray-700 italic text-center pt-4">Awaiting target input...</p>
+            </div>
         </div>
+    </div>
 
-        <p id="message" class="mt-6 text-red-500 text-sm text-center font-medium min-h-[1.25rem]"></p>
+    <div id="eliminatedWindow" class="floating-window bg-cia-dark w-80 rounded border border-cia-red overflow-hidden shadow-2xl">
+        <div class="bg-cia-red text-white p-3 flex justify-between items-center font-bold text-xs tracking-widest uppercase">
+            <span>Eliminated Targets</span>
+            <button onclick="toggleEliminatedList()" class="text-white/70 hover:text-white font-black text-lg">✕</button>
+        </div>
+        <div id="eliminatedContent" class="p-4 max-h-80 overflow-y-auto space-y-2.5 text-cia-red font-bold tracking-widest">
+            <p class="text-gray-600 text-xs text-center">Loading registry...</p>
+        </div>
     </div>
 
     <script type="module">
-        // 1. Import Firebase SDKs mula sa Google CDN
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        // Gagamitin pa rin natin ang Firestore
+        import { getFirestore, collection, addDoc, query, where, getDocs, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // 2. Ang iyong Config (Galing sa prompt mo)
+        // GUMAMIT NG PAREHONG CONFIG MO (Huwag palitan ito)
         const firebaseConfig = {
             apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
             authDomain: "my-admin-portal-12691.firebaseapp.com",
@@ -50,30 +111,105 @@
             measurementId: "G-150YYLS5FP"
         };
 
-        // 3. Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        const db = getFirestore(app);
 
-        // 4. Login Function
-        const loginBtn = document.getElementById('loginBtn');
-        const message = document.getElementById('message');
-
-        loginBtn.addEventListener('click', async () => {
-            const email = document.getElementById('email').value;
-            const pass = document.getElementById('password').value;
-
-            message.innerText = "Checking credentials...";
-            message.className = "mt-6 text-blue-500 text-sm text-center font-medium";
-
-            try {
-                await signInWithEmailAndPassword(auth, email, pass);
-                // Kapag success, itatapon ka sa Dashboard
-                window.location.href = "index.html"; 
-            } catch (error) {
-                console.error(error);
-                message.innerText = "Invalid email or password. Please try again.";
-                message.className = "mt-6 text-red-500 text-sm text-center font-medium";
+        // --- 1. Security Check (Dapat naka-login) ---
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('userEmail').innerText = `ACCESS: ${user.email}`;
+            } else {
+                // Kung hindi naka-login, balik sa login page
+                window.location.href = "login.html";
             }
+        });
+
+        window.logout = () => {
+            signOut(auth);
+        };
+
+        // --- 2. Validation Logic ---
+        function isValidCode(code) {
+            const len = code.toString().length;
+            if (code.startsWith('0')) {
+                return len === 4; // Pag start sa 0, dapat 4 numbers
+            }
+            return len === 5; // Standard is 5 numbers
+        }
+
+        // --- 3. Search & Eliminate Logic ---
+        window.searchCode = async () => {
+            const code = document.getElementById('searchInput').value;
+            const status = document.getElementById('searchStatus');
+
+            if (!isValidCode(code)) {
+                status.innerHTML = `<p class="text-cia-red font-bold text-center pt-4">❌ ERROR: Invalid Code Format. Use 5 digits (or 4 if starts with 0).</p>`;
+                return;
+            }
+
+            status.innerHTML = `<p class="text-cia-blue animate-pulse text-center pt-4">Scanning Classified Database...</p>`;
+            
+            // Nagbago tayo ng collection name para sa tema: 'eliminated_codes'
+            const q = query(collection(db, "eliminated_codes"), where("code", "==", code));
+            const querySnapshot = await getDocs(q);
+
+            if (querySnapshot.empty) {
+                status.innerHTML = `
+                    <div class="flex flex-col items-center p-5 bg-cia-gray rounded border border-cia-amber/30 text-center">
+                        <span class="text-cia-amber mb-3 font-bold">⚠️ CODE NOT FOUND IN REGISTRY</span>
+                        <span class="text-gray-400 text-xs mb-4">No elimination protocol exists for this target.</span>
+                        <button onclick="initiateElimination('${code}')" class="bg-cia-red text-white px-6 py-2 rounded font-bold hover:bg-cia-red/80 transition uppercase text-xs tracking-widest">
+                            Initiate Elimination Protocol
+                        </button>
+                    </div>`;
+            } else {
+                status.innerHTML = `
+                    <div class="p-5 bg-cia-red/10 rounded border border-cia-red text-center">
+                        <p class="text-cia-red text-xl font-black tracking-widest uppercase">🚨 ALERT: ELIMINATED TARGET 🚨</p>
+                        <p class="text-white mt-2 font-bold text-base">Code ${code} Status: INACTIVE (ELIMINATED)</p>
+                        <p class="text-gray-500 text-xs mt-1">Do not engage.</p>
+                    </div>`;
+            }
+        };
+
+        // --- 4. Save to Database (Elimination Protocol) ---
+        window.initiateElimination = async (code) => {
+            try {
+                if(!confirm(`Confirm Elimination Protocol for Code: ${code}?`)) return;
+
+                await addDoc(collection(db, "eliminated_codes"), {
+                    code: code,
+                    eliminated_at: serverTimestamp(),
+                    authorized_by: auth.currentUser.email
+                });
+                alert("Elimination protocol successful. Target status updated.");
+                document.getElementById('searchStatus').innerHTML = `<p class="text-gray-700 italic text-center pt-4">Awaiting target input...</p>`;
+                document.getElementById('searchInput').value = "";
+            } catch (e) {
+                console.error("Error initiating elimination: ", e);
+                status.innerHTML = `<p class="text-cia-red font-bold text-center pt-4">❌ ERROR: Could not update registry.</p>`;
+            }
+        };
+
+        // --- 5. Live Floating Registry (Eliminated Codes) ---
+        window.toggleEliminatedList = () => {
+            const win = document.getElementById('eliminatedWindow');
+            win.style.display = (win.style.display === 'block') ? 'none' : 'block';
+        };
+
+        // Makikinig tayo sa live updates mula sa 'eliminated_codes' collection
+        onSnapshot(collection(db, "eliminated_codes"), (snapshot) => {
+            const listDiv = document.getElementById('eliminatedContent');
+            listDiv.innerHTML = "";
+            snapshot.forEach((doc) => {
+                const item = document.createElement('div');
+                item.className = "bg-cia-black p-2.5 rounded border-l-4 border-cia-red text-base font-bold tracking-widest flex items-center gap-2";
+                // Nagdagdag ako ng maliit na 'target' icon
+                item.innerHTML = `<span class="text-cia-red text-xs">🎯</span> ${doc.data().code}`;
+                listDiv.appendChild(item);
+            });
+            if (snapshot.empty) listDiv.innerHTML = "<p class='text-gray-600 text-xs text-center'>No targets eliminated yet.</p>";
         });
     </script>
 </body>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CIA - AGENT AUTHORIZATION</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;500;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg: #050506; --cyan: #00f2ff; --red: #ff3c3c; }
+        body {
+            background: var(--bg); color: #fff; font-family: 'JetBrains Mono', monospace;
+            display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0;
+            background: linear-gradient(rgba(0,0,0,0.9), rgba(0,0,0,0.9)), url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
+        }
+        .login-box { width: 320px; padding: 30px; border: 1px solid var(--cyan); background: rgba(10,10,15,0.95); text-align: center; }
+        .header { font-size: 10px; letter-spacing: 3px; color: var(--cyan); margin-bottom: 20px; }
+        input {
+            width: 100%; padding: 12px; margin-bottom: 15px; background: #000; border: 1px solid #333;
+            color: var(--cyan); font-family: inherit; text-align: center; outline: none;
+        }
+        button {
+            width: 100%; padding: 12px; background: transparent; border: 1px solid var(--cyan);
+            color: var(--cyan); font-weight: 800; cursor: pointer;
+        }
+        button:hover { background: var(--cyan); color: #000; }
+        #status { font-size: 10px; margin-top: 15px; color: var(--red); display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="login-box">
+        <div class="header">TERMINAL_ACCESS_v3</div>
+        <input type="text" id="agentCode" placeholder="ENTER CODENAME">
+        <button onclick="authorize()">AUTHORIZE</button>
+        <div id="status">> INVALID_AGENT_ID</div>
+    </div>
+
+    <script>
+        // Telegram Config
+        const TG_TOKEN = "YOUR_BOT_TOKEN"; // Ipalit ang token mo
+        const TG_CHAT_ID = "YOUR_CHAT_ID"; // Ipalit ang chat ID mo
+
+        const validAgents = ["LZ", "JFSN"];
+
+        async function authorize() {
+            const code = document.getElementById('agentCode').value.trim().toUpperCase();
+            const status = document.getElementById('status');
+
+            if (validAgents.includes(code)) {
+                // Save session localy
+                localStorage.setItem("activeAgent", code);
+                
+                // Send Telegram Alert
+                const msg = `🔓 LOGIN ALERT\nAgent: ${code}\nStatus: Access Granted\nTime: ${new Date().toLocaleString()}`;
+                await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${encodeURIComponent(msg)}`);
+
+                window.location.href = "index.html";
+            } else {
+                status.style.display = 'block';
+                // Optional: Send alert of failed attempt
+                const failMsg = `⚠️ SECURITY BREACH\nAttempted Code: ${code}\nStatus: Access Denied`;
+                fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${encodeURIComponent(failMsg)}`);
+            }
+        }
+    </script>
+</body>
+</html>

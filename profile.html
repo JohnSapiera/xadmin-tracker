@@ -2,86 +2,167 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AGENT_DOSSIER | ARCHIVE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AGENT_DOSSIER | ARCHIVE_SYSTEM</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;500;800&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #0c0c0e; --cyan: #00f2ff; --folder: #ffd700; --paper: #e0e0e0; }
-        body { 
-            background: var(--bg); color: #fff; font-family: 'JetBrains Mono'; 
-            margin: 0; padding: 20px; background-image: radial-gradient(#1a1a1a 1px, transparent 1px); background-size: 20px 20px;
+        :root { 
+            --bg: #0c0c0e; 
+            --cyan: #00f2ff; 
+            --folder: #ffd700; 
+            --paper: #f0f0f0; 
+            --red: #ff3c3c;
         }
 
-        .breadcrumb { font-size: 10px; color: var(--cyan); margin-bottom: 20px; border-bottom: 1px solid #222; padding-bottom: 5px; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-        /* Folder Grid */
-        .explorer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 20px; }
+        body { 
+            background: var(--bg); 
+            color: #fff; 
+            font-family: 'JetBrains Mono', monospace; 
+            margin: 0; 
+            padding: 15px; 
+            background-image: radial-gradient(#1a1a1a 1px, transparent 1px); 
+            background-size: 25px 25px;
+            min-height: 100vh;
+        }
+
+        /* Top Navigation Bar */
+        .nav-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #222;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .breadcrumb { font-size: 9px; color: var(--cyan); letter-spacing: 1px; }
+
+        .back-home {
+            background: none; border: 1px solid var(--cyan); color: var(--cyan);
+            padding: 5px 12px; font-size: 10px; cursor: pointer; font-family: inherit;
+        }
+
+        /* Root Explorer View (Folders) */
+        .explorer-grid { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 20px; 
+            padding: 10px;
+        }
+
+        .folder-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            padding: 15px;
+            border: 1px solid transparent;
+            transition: 0.2s;
+        }
+
+        .folder-item:active { background: rgba(0, 242, 255, 0.05); border-color: var(--cyan); }
 
         .folder-icon {
-            display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: 0.2s;
+            width: 70px; height: 50px;
+            background: var(--folder);
+            position: relative;
+            border-radius: 0 4px 4px 4px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
         }
-        .folder-icon:hover { transform: scale(1.05); }
-        .folder-shape {
-            width: 60px; height: 45px; background: var(--folder); position: relative;
-            border-radius: 0 5px 5px 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        .folder-icon::before {
+            content: ''; position: absolute; top: -8px; left: 0;
+            width: 30px; height: 10px; background: var(--folder);
+            border-radius: 4px 4px 0 0;
         }
-        .folder-shape::before {
-            content: ''; position: absolute; top: -10px; left: 0;
-            width: 25px; height: 10px; background: var(--folder); border-radius: 5px 5px 0 0;
-        }
-        .folder-label { font-size: 10px; margin-top: 8px; text-align: center; font-weight: 800; color: #fff; }
 
-        /* File / Paper Styling */
-        .file-list { display: none; grid-template-columns: 1fr; gap: 15px; margin-top: 20px; animation: fadeIn 0.5s; }
+        .folder-name { font-size: 11px; font-weight: 800; margin-top: 12px; text-align: center; color: #fff; }
+
+        /* File View (Papers) */
+        .file-view-container { display: none; animation: slideUp 0.3s ease-out; }
         
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .paper-stack { display: flex; flex-direction: column; gap: 20px; margin-top: 15px; }
+
         .mission-paper {
-            background: var(--paper); color: #111; padding: 20px; position: relative;
-            box-shadow: 5px 5px 0px rgba(0,242,255,0.2); border-left: 10px solid #ccc;
-        }
-        .mission-paper::after {
-            content: 'CONFIDENTIAL'; position: absolute; top: 10px; right: 10px;
-            border: 2px solid #ff3c3c; color: #ff3c3c; padding: 2px 5px;
-            font-size: 8px; transform: rotate(15deg); font-weight: 800;
+            background: var(--paper);
+            color: #1a1a1a;
+            padding: 25px 20px;
+            position: relative;
+            box-shadow: 8px 8px 0px rgba(0,0,0,0.5);
+            border-left: 12px solid #bbb;
         }
 
-        .paper-header { border-bottom: 2px solid #111; margin-bottom: 10px; font-weight: 800; font-size: 14px; }
-        .data-row { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 5px; border-bottom: 1px dashed #999; }
-        .label { font-weight: 800; text-transform: uppercase; }
+        /* Stamp Effect */
+        .stamp {
+            position: absolute; top: 15px; right: 15px;
+            border: 3px solid var(--red); color: var(--red);
+            padding: 4px 8px; font-size: 10px; font-weight: 900;
+            transform: rotate(12deg); opacity: 0.8;
+            letter-spacing: 1px;
+        }
 
-        .back-btn { background: none; border: 1px solid var(--cyan); color: var(--cyan); padding: 5px 10px; cursor: pointer; font-size: 10px; margin-bottom: 15px; }
-        
-        .hidden { display: none; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .paper-header { 
+            border-bottom: 2px solid #1a1a1a; 
+            margin-bottom: 15px; 
+            font-size: 15px; 
+            font-weight: 800;
+            padding-bottom: 5px;
+        }
+
+        .data-row {
+            display: flex; justify-content: space-between;
+            font-size: 11px; margin-bottom: 8px;
+            border-bottom: 1px dashed #aaa;
+            padding-bottom: 2px;
+        }
+
+        .label { font-weight: 800; text-transform: uppercase; color: #555; }
+        .value { font-weight: 500; }
+
+        .footer-note { font-size: 8px; color: #888; text-align: right; margin-top: 15px; font-style: italic; }
+
+        .hidden { display: none !important; }
+        .empty-msg { text-align: center; color: #444; font-size: 11px; margin-top: 50px; }
     </style>
-    
+
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
-    <div class="breadcrumb">C:\MOSSAD\AGENTS\<span id="agentDisplay">...</span>\DEPLOYMENTS</div>
+    <div class="nav-header">
+        <div class="breadcrumb">SYSTEM://ARCHIVE/<span id="agentDisplay">...</span></div>
+        <button class="back-home" onclick="window.location.href='dashboard.html'">DASHBOARD</button>
+    </div>
 
-    <div id="rootView">
+    <div id="explorerRoot">
         <div class="explorer-grid">
-            <div class="folder-icon" onclick="openFolder('R8P')">
-                <div class="folder-shape"></div>
-                <div class="folder-label">WEAPON_R8P</div>
+            <div class="folder-item" onclick="openFolder('R8P')">
+                <div class="folder-icon"></div>
+                <div class="folder-name">SYS_WEAPON_R8P</div>
             </div>
-            <div class="folder-icon" onclick="openFolder('RMN14')">
-                <div class="folder-shape"></div>
-                <div class="folder-label">WEAPON_RMN14</div>
+            <div class="folder-item" onclick="openFolder('RMN14')">
+                <div class="folder-icon"></div>
+                <div class="folder-name">SYS_WEAPON_RMN14</div>
             </div>
         </div>
     </div>
 
-    <div id="folderView" class="hidden">
-        <button class="back-btn" onclick="closeFolder()"><< BACK TO ROOT</button>
-        <div class="breadcrumb">PATH: DEPLOYMENTS / <span id="currentFolderName">...</span></div>
-        <div id="fileContainer" class="file-list" style="display: grid;">
+    <div id="fileView" class="file-view-container">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+            <button class="back-home" onclick="closeFolder()"><< BACK</button>
+            <div style="font-size: 10px; color: var(--cyan);">FOLDER: <span id="currentFolder">...</span></div>
+        </div>
+
+        <div id="paperStack" class="paper-stack">
             </div>
     </div>
 
     <script>
+        // 1. Firebase Initialization
         const activeAgent = localStorage.getItem("cia_agent") || "GHOST";
         document.getElementById('agentDisplay').innerText = activeAgent;
 
@@ -96,68 +177,85 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        function openFolder(weaponName) {
-            document.getElementById('rootView').classList.add('hidden');
-            document.getElementById('folderView').classList.remove('hidden');
-            document.getElementById('currentFolderName').innerText = weaponName;
-            fetchFiles(weaponName);
+        // 2. Folder Navigation Logic
+        function openFolder(weapon) {
+            document.getElementById('explorerRoot').classList.add('hidden');
+            document.getElementById('fileView').classList.remove('hidden');
+            document.getElementById('currentFolder').innerText = weapon;
+            loadDeploymentFiles(weapon);
         }
 
         function closeFolder() {
-            document.getElementById('folderView').classList.add('hidden');
-            document.getElementById('rootView').classList.remove('hidden');
+            document.getElementById('fileView').classList.add('hidden');
+            document.getElementById('explorerRoot').classList.remove('hidden');
         }
 
-        function fetchFiles(weaponName) {
-            const container = document.getElementById('fileContainer');
-            container.innerHTML = "<div style='color:var(--cyan)'>ACCESSING ENCRYPTED FILES...</div>";
+        // 3. Database Fetching (Real-time)
+        function loadDeploymentFiles(weaponType) {
+            const stack = document.getElementById('paperStack');
+            stack.innerHTML = "<div style='color:var(--cyan); font-size:10px;'>DECRYPTING_FILES...</div>";
 
             db.collection("bounties")
               .where("agent", "==", activeAgent)
-              .where("weapon", "==", weaponName)
               .orderBy("timestamp", "desc")
-              .onSnapshot(snap => {
-                  container.innerHTML = "";
-                  if (snap.empty) {
-                      container.innerHTML = "<div style='color:#555'>FOLDER_EMPTY: NO_RECORDS_FOUND</div>";
+              .onSnapshot(snapshot => {
+                  stack.innerHTML = "";
+                  
+                  // Filter by weapon (Case Insensitive)
+                  const filtered = snapshot.docs.filter(doc => {
+                      const d = doc.data();
+                      return d.weapon && d.weapon.toUpperCase() === weaponType.toUpperCase();
+                  });
+
+                  if(filtered.length === 0) {
+                      stack.innerHTML = `<div class="empty-msg">NO RECORDS FOUND IN ${weaponType} DIRECTORY.</div>`;
                       return;
                   }
 
-                  snap.forEach(doc => {
+                  filtered.forEach(doc => {
                       const data = doc.data();
-                      const deployDate = data.timestamp ? data.timestamp.toDate() : new Date();
                       
-                      // Termination Date (30 Days After)
+                      // Handle Dates
+                      const deployDate = data.timestamp ? data.timestamp.toDate() : new Date();
                       const termDate = new Date(deployDate);
-                      termDate.setDate(termDate.getDate() + 30);
+                      termDate.setDate(termDate.getDate() + 30); // 30 Day Termination logic
 
                       const isExpired = new Date() > termDate;
 
-                      container.innerHTML += `
+                      stack.innerHTML += `
                         <div class="mission-paper">
-                            <div class="paper-header">MISSION ORDER: #${data.missionOrder}</div>
+                            <div class="stamp">CLASSIFIED</div>
+                            <div class="paper-header">MO_NUM: #${data.missionOrder || 'N/A'}</div>
+                            
                             <div class="data-row">
                                 <span class="label">V-AGENT ID:</span>
-                                <span>V-${data.vid}</span>
+                                <span class="value">V-${data.vid || '0000'}</span>
                             </div>
+                            
                             <div class="data-row">
                                 <span class="label">EXPENSES:</span>
-                                <span>PHP 0.00</span>
+                                <span class="value">PHP 0.00</span>
                             </div>
+
                             <div class="data-row">
                                 <span class="label">DEPLOYMENT_DATE:</span>
-                                <span>${deployDate.toLocaleDateString()}</span>
+                                <span class="value">${deployDate.toLocaleDateString()}</span>
                             </div>
-                            <div class="data-row" style="${isExpired ? 'color:red; font-weight:800;' : ''}">
+
+                            <div class="data-row" style="${isExpired ? 'color:var(--red); font-weight:800;' : ''}">
                                 <span class="label">TERMINATION_DATE:</span>
-                                <span>${termDate.toLocaleDateString()} ${isExpired ? '[EXPIRED]' : ''}</span>
+                                <span class="value">${termDate.toLocaleDateString()} ${isExpired ? '[EXPIRED]' : ''}</span>
                             </div>
-                            <div style="font-size:8px; margin-top:10px; color:#777; text-align:right;">
-                                REF_ID: ${doc.id.substring(0,8).toUpperCase()}
+
+                            <div class="footer-note">
+                                SECURITY_HASH: ${doc.id.substring(0,10).toUpperCase()}
                             </div>
                         </div>
                       `;
                   });
+              }, error => {
+                  console.error(error);
+                  stack.innerHTML = "<div style='color:red; font-size:10px;'>ACCESS_ERROR: PLEASE CHECK FIREBASE INDEXES.</div>";
               });
         }
     </script>

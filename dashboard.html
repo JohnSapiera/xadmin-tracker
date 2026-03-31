@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>INTEL_CENTER_v10.0_ELITE</title>
+  <title>INTEL_CENTER_v10.1_ELITE</title>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
   <style>
     :root { 
@@ -24,16 +24,13 @@
         background-image: radial-gradient(circle at 50% 50%, #0a1f29 0%, var(--bg) 100%);
     }
 
-    /* Scanline Effect */
     body::after { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 2px; background: var(--cyan); opacity: 0.1; animation: scanline 8s linear infinite; pointer-events: none; z-index: 1000; }
 
     header { padding: 15px; background: #000; border-bottom: 2px solid var(--cyan); display: flex; justify-content: space-between; align-items: center; }
-    
     .status-bar { font-size: 9px; font-family: var(--mono); color: var(--cyan); padding: 8px 15px; background: rgba(0, 243, 255, 0.05); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; letter-spacing: 2px; }
 
     main { flex: 1; padding: 20px; overflow-y: auto; padding-bottom: 100px; }
 
-    /* REMASTERED COMMAND MODULE */
     .command-module { 
         background: var(--panel); border: 1px solid var(--border); padding: 30px; 
         position: relative; overflow: hidden; box-shadow: 0 0 40px rgba(0,0,0,0.8);
@@ -63,18 +60,14 @@
     }
     .btn:active { transform: scale(0.95); }
     .btn-save { color: var(--green); border-color: var(--green); }
-    .btn-save:hover { background: var(--green); color: #000; }
     .btn-terminate { color: var(--red); border-color: var(--red); }
-    .btn-terminate:hover { background: var(--red); color: #fff; }
 
-    /* Tactical Terminal */
     #terminal { 
         background: rgba(0,0,0,0.9); border: 1px solid #111; padding: 15px; 
         font-family: var(--mono); font-size: 11px; height: 160px; color: #4a5a61; 
         margin-top: 25px; overflow-y: auto; line-height: 1.6; border-radius: 2px;
     }
 
-    /* Nav Bar */
     nav { position: fixed; bottom: 0; width: 100%; height: 75px; background: #000; border-top: 2px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; }
     .nav-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #333; font-size: 11px; font-family: var(--mono); text-decoration: none; }
     .nav-btn.active { color: var(--cyan); background: rgba(0, 243, 255, 0.05); border-top: 4px solid var(--cyan); }
@@ -107,7 +100,7 @@
         <input type="tel" id="mission-input" placeholder="00000" maxlength="5" autocomplete="off">
     </div>
     <div class="btn-row">
-      <button id="action-btn" class="btn btn-save">CONFIRM_UPLINK</button>
+      <button id="action-btn" class="btn btn-save">SAVE</button>
       <button id="term-btn" class="btn btn-terminate">TERMINATE_ID</button>
     </div>
   </div>
@@ -122,7 +115,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, query, where, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, collection, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
@@ -140,36 +133,82 @@
   const actionBtn = document.getElementById('action-btn');
   const scanStatus = document.getElementById('scan-status');
   const termLog = document.getElementById('terminal');
-  const nodeSecret = localStorage.getItem("agency_node_secret");
   const deviceTag = document.getElementById('device-tag');
 
-  // --- DEVICE SYNC ---
-  async function syncDevice() {
-      if (!nodeSecret) {
-          deviceTag.innerHTML = `NODE: <span class="anim-device" style="color:var(--red)">UNAUTHORIZED</span>`;
-          return;
+  // --- HARDWARE FINGERPRINT ---
+  function getFingerprint() {
+      const canvas = document.createElement('canvas');
+      const gl = canvas.getContext('webgl');
+      const debugInfo = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
+      const gpu = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "GENERIC";
+      const specs = gpu + screen.width + "x" + screen.height + navigator.platform;
+      let hash = 0;
+      for (let i = 0; i < specs.length; i++) {
+          hash = ((hash << 5) - hash) + specs.charCodeAt(i);
+          hash |= 0;
       }
-      try {
-          const snap = await getDocs(collection(db, "agents"));
-          let foundBrand = "UNKNOWN_NODE";
-          snap.forEach(doc => {
-              const data = doc.data();
-              if (data.linkedDevice && data.linkedDevice.includes(nodeSecret)) {
-                  const detail = data.deviceDetails?.find(d => d.signature === nodeSecret);
-                  if (detail) foundBrand = detail.brandName || detail.brand;
-              }
-          });
-          deviceTag.innerHTML = `NODE: <span class="anim-device">${foundBrand.toUpperCase()}</span>`;
-          log(`NODE_SYNC: ${foundBrand} VERIFIED.`, 'green');
-      } catch (e) { deviceTag.innerHTML = `NODE: <span class="anim-device">OFFLINE</span>`; }
+      return "HW-" + Math.abs(hash).toString(16).toUpperCase();
   }
 
-  // --- LOGIC ---
-  input.addEventListener('input', (e) => {
-      const val = e.target.value;
-      if(val.length > 0) {
+  const currentFP = getFingerprint();
+
+  // --- DEVICE SYNC & VERIFICATION ---
+  async function syncDevice() {
+      try {
+          const q = query(collection(db, "agents"), where("lastFingerprint", "==", currentFP));
+          const snap = await getDocs(q);
+
+          if (!snap.empty) {
+              const data = snap.docs[0].data();
+              const brand = data.brandName || "RECOGNIZED_NODE";
+              deviceTag.innerHTML = `NODE: <span class="anim-device">${brand.toUpperCase()}</span>`;
+              log(`UPLINK_ESTABLISHED: Agent ${data.agentName} verified via Hardware ID.`, 'green');
+              localStorage.setItem("cia_agent", data.agentName);
+          } else {
+              deviceTag.innerHTML = `NODE: <span class="anim-device" style="color:var(--red)">UNREGISTERED</span>`;
+              log("WARNING: Unregistered hardware signature detected.", "red");
+          }
+      } catch (e) { 
+          deviceTag.innerHTML = `NODE: <span class="anim-device">OFFLINE</span>`; 
+      }
+  }
+
+  // --- AUTO-SCAN (BLACKLIST/MISSION) LOGIC ---
+  input.addEventListener('input', async (e) => {
+      const val = e.target.value.trim();
+      
+      if(val.length >= 4) {
           scanStatus.textContent = "SCANNING_SECTOR...";
           scanStatus.style.color = "var(--cyan)";
+
+          try {
+              // I-scan ang "blacklist" collection para sa match
+              const q = query(collection(db, "blacklist"), where("targetID", "==", val));
+              const snap = await getDocs(q);
+
+              if(!snap.empty) {
+                  scanStatus.textContent = "TARGET_RESTRICTED!";
+                  scanStatus.style.color = "var(--red)";
+                  log(`BLACKLIST_ALERT: ID ${val} is flagged!`, 'red');
+              } else {
+                  // I-scan naman ang "mission_orders"
+                  const q2 = query(collection(db, "mission_orders"), where("missionID", "==", val));
+                  const snap2 = await getDocs(q2);
+                  
+                  if(!snap2.empty) {
+                      scanStatus.textContent = "MISSION_MATCHED";
+                      scanStatus.style.color = "var(--green)";
+                      log(`INTEL: Mission ID ${val} recognized.`, 'green');
+                  } else {
+                      scanStatus.textContent = "CLEAN_ID";
+                      scanStatus.style.color = "var(--cyan)";
+                  }
+              }
+          } catch (err) {
+              console.error("Scan Error:", err);
+          }
+      } else if(val.length > 0) {
+          scanStatus.textContent = "AWAITING_DATA...";
       } else {
           scanStatus.textContent = "AWAITING_INPUT";
           scanStatus.style.color = "inherit";
@@ -184,7 +223,7 @@
 
   setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB'); }, 1000);
   
-  syncDevice();
+  window.onload = syncDevice;
 </script>
 </body>
 </html>

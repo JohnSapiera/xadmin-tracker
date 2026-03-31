@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>INTEL_CENTER_v18_FINAL</title>
+  <title>INTEL_CENTER_v19_FINAL</title>
   <link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;600&family=Chivo+Mono:wght@300;400;700&display=swap" rel="stylesheet">
   <style>
     :root { 
@@ -23,7 +23,7 @@
     body::before { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%); background-size: 100% 4px; z-index: 1000; pointer-events: none; opacity: 0.2; }
 
     header { padding: 15px 20px; background: rgba(0,0,0,0.8); border-bottom: 1px solid var(--cyan-dim); display: flex; justify-content: space-between; align-items: center; z-index: 100; backdrop-filter: blur(5px); }
-    .profile-link { background: none; border: 1px solid var(--cyan-dim); color: var(--cyan); font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; padding: 6px 12px; text-decoration: none; cursor: pointer; transition: 0.3s; }
+    .profile-link { background: none; border: 1px solid var(--cyan-dim); color: var(--cyan); font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; padding: 6px 12px; text-decoration: none; cursor: pointer; transition: 0.3s; letter-spacing: 1px; }
     .profile-link:hover { background: var(--cyan-dim); box-shadow: 0 0 10px var(--cyan-dim); }
 
     .status-bar { font-size: 10px; padding: 8px 20px; background: rgba(0, 243, 255, 0.03); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; color: var(--cyan); }
@@ -43,12 +43,11 @@
     .btn-save { color: var(--green); border-color: rgba(0,255,102,0.3); }
     .btn-retrieve { color: var(--blue); border-color: rgba(0,123,255,0.3); }
     .btn-reserve { background: linear-gradient(135deg, #1a0000 0%, #000a1a 100%); color: #fff; border-color: rgba(255,0,60,0.4); text-shadow: 0 0 5px var(--cyan); }
-    .btn-reserve:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-reserve:disabled { cursor: not-allowed; }
     .btn-faded { opacity: 0.1 !important; }
 
     #terminal { background: rgba(0,0,0,0.85); border: 1px solid #050a0c; padding: 15px; font-family: var(--font-mono); font-size: 11px; height: 160px; color: #5c7882; margin-top: 25px; overflow-y: auto; line-height: 1.6; }
 
-    /* REMASTERED POP-UP */
     .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,1,2,0.97); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
     .popup { width: 360px; background: #010608; border: 1px solid var(--cyan-dim); padding: 30px; position: relative; box-shadow: 0 0 60px rgba(0,243,255,0.15); }
     .pop-title { font-family: var(--font-main); font-size: 40px; color: var(--cyan); text-align: center; line-height: 1; text-shadow: 0 0 15px var(--cyan); }
@@ -56,8 +55,11 @@
 
     .data-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.03); padding-bottom: 6px; font-size: 12px; }
     .data-label { color: #556b73; text-transform: uppercase; letter-spacing: 1px; }
-    .pop-input { background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: var(--green); font-family: var(--font-mono); font-size: 13px; padding: 6px; width: 140px; text-align: right; outline: none; }
     
+    /* V_AGENT Input Design */
+    .pop-input { background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: var(--green); font-family: var(--font-mono); font-size: 13px; padding: 6px; width: 140px; text-align: right; outline: none; border-radius: 2px; }
+    .pop-input:focus { border-color: var(--green); box-shadow: 0 0 10px rgba(0, 255, 102, 0.2); }
+
     .device-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
     .dev-btn { background: rgba(0,0,0,0.5); border: 1px solid var(--border); color: #4a5a61; padding: 10px; font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; cursor: pointer; transition: 0.3s; }
     .dev-btn.active { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); box-shadow: inset 0 0 10px var(--cyan-dim); }
@@ -70,7 +72,7 @@
     .lockdown-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
 
     nav { position: fixed; bottom: 0; width: 100%; height: 75px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; z-index: 90; }
-    .nav-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #333; font-size: 11px; text-decoration: none; text-transform: uppercase; }
+    .nav-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #333; font-size: 11px; text-decoration: none; text-transform: uppercase; font-family: var(--font-mono); }
     .nav-btn.active { color: var(--cyan); background: rgba(0, 243, 255, 0.03); border-top: 3px solid var(--cyan); }
   </style>
 </head>
@@ -79,26 +81,26 @@
 <header>
   <div style="display:flex; align-items:center;">
     <div style="width:10px; height:10px; background:var(--cyan); margin-right:12px; box-shadow: 0 0 15px var(--cyan);"></div>
-    <span style="font-family: var(--font-main); font-size: 22px; color: var(--cyan); text-transform: uppercase;">INTEL_CORE_v18</span>
+    <span style="font-family: var(--font-main); font-size: 22px; color: var(--cyan); text-transform: uppercase; letter-spacing: 1px;">INTEL_CORE_v19</span>
   </div>
   <a href="profile.html" class="profile-link">AGENT_PROFILE</a>
 </header>
 
 <div class="status-bar">
-    <span id="clock">00:00:00</span>
-    <span>STATUS: <span style="font-weight:700">ENCRYPTED</span></span>
+    <span id="clock" style="font-weight:700">00:00:00</span>
+    <span>STATUS: <span style="font-weight:700; color:var(--green)">SECURE_LINK</span></span>
 </div>
 
 <main>
   <div class="command-module">
-    <div style="font-size: 10px; color: var(--cyan); margin-bottom: 15px; opacity: 0.5;">// TIER_1_UPLINK_SYSTEM</div>
+    <div style="font-size: 10px; color: var(--cyan); margin-bottom: 15px; opacity: 0.5; letter-spacing: 1px;">// SECTOR_SCANNER_READY</div>
     <input type="tel" id="mission-input" placeholder="0000" maxlength="5" autocomplete="off">
     <div class="btn-row">
       <button id="action-btn" class="btn btn-save">INITIALIZE_SAVE</button>
       <button id="reserve-btn" class="btn btn-reserve">RAPID_RESERVE</button>
     </div>
   </div>
-  <div id="terminal">> AWAITING_PRIMARY_INPUT...</div>
+  <div id="terminal">> AWAITING_INPUT_SEQUENCE...</div>
 </main>
 
 <div class="overlay" id="modal-overlay">
@@ -106,13 +108,16 @@
         <div class="pop-title" id="pop-m-id">#0000</div>
         <div class="pop-subtitle" id="pop-agent">AGENT_NAME</div>
         <div class="device-grid" id="device-list"></div>
+        
         <div class="data-row">
             <span class="data-label">V_AGENT_ID:</span> 
-            <input type="text" id="v-agent-input" class="pop-input" placeholder="REQUIRED">
+            <input type="text" id="v-agent-input" class="pop-input" placeholder="ASSIGN">
         </div>
-        <div class="data-row"><span class="data-label">OPERATIONAL_EXPENSES:</span> <span style="color:var(--green)">PHP 0.00</span></div>
-        <div class="data-row"><span class="data-label">DEPLOYMENT:</span> <span id="pop-dep">--/--/--</span></div>
-        <div class="data-row"><span class="data-label">RELIEVE:</span> <span id="pop-rel">--/--/--</span></div>
+        
+        <div class="data-row"><span class="data-label">OPERATIONAL_FUNDS:</span> <span style="color:var(--green)">PHP 0.00</span></div>
+        <div class="data-row"><span class="data-label">DEPLOYMENT:</span> <span id="pop-dep" style="color:#fff">--/--</span></div>
+        <div class="data-row"><span class="data-label">RELIEVE_EST:</span> <span id="pop-rel" style="color:#fff">--/--</span></div>
+        
         <div class="pop-btn-row">
             <button onclick="submitMission()" class="tactical-btn btn-confirm">CONFIRM_UPLINK</button>
             <button onclick="closePopup()" class="tactical-btn btn-abort">ABORT</button>
@@ -123,7 +128,7 @@
 <div class="lockdown-overlay" id="success-screen">
     <div style="border: 1px solid var(--green); width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--green); font-size: 35px; margin-bottom: 25px; box-shadow: 0 0 20px rgba(0,255,102,0.3);">✓</div>
     <div style="color:#fff; font-size:16px; letter-spacing:4px; text-transform:uppercase;" id="success-msg">UPLINK_SUCCESSFUL</div>
-    <button onclick="location.reload()" class="btn btn-save" style="margin-top: 50px; width: 220px; height: 50px;">RETURN_TO_CORE</button>
+    <button onclick="location.reload()" class="btn btn-save" style="margin-top: 50px; width: 220px; height: 50px;">NEXT_SEQUENCE</button>
 </div>
 
 <nav><a href="#" class="nav-btn active">DASHBOARD</a><a href="intel.html" class="nav-btn">INTEL_LOGS</a></nav>
@@ -143,11 +148,15 @@
   let selectedDevice = navigator.platform;
   let isRetrieveMode = false;
 
-  function log(msg, color = "#5c7882") {
+  const log = (msg, color = "#5c7882") => {
     const d = document.createElement('div');
     d.innerHTML = `<span style="opacity:0.4">${new Date().toLocaleTimeString('en-GB')}</span> > <span style="color:${color}">${msg}</span>`;
     termLog.prepend(d);
-  }
+  };
+
+  const formatMonthDay = (date) => {
+    return date.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
+  };
 
   input.addEventListener('input', async () => {
     const val = input.value.trim();
@@ -175,8 +184,8 @@
                 log(`CRITICAL: ID ${val} RESTRICTED`, 'var(--red)');
                 actionBtn.className = "btn btn-abort"; actionBtn.textContent = "LOCKED"; actionBtn.disabled = true;
                 reserveBtn.disabled = true; reserveBtn.classList.add('btn-faded');
-            } else { log(`STATUS: ${val} CLEAR_FOR_UPLINK`, 'var(--green)'); }
-        } catch (e) { log("COMMS_ERROR", "red"); }
+            } else { log(`STATUS: ${val} CLEAR`, 'var(--green)'); }
+        } catch (e) { log("DATABASE_OFFLINE", "red"); }
     }
   });
 
@@ -206,13 +215,13 @@
         const q = query(collection(db, "mission_orders"), where("missionID", "==", input.value));
         const snap = await getDocs(q);
         const data = snap.docs[0].data();
-        document.getElementById('v-agent-input').value = data.vAgentID;
-        document.getElementById('pop-dep').innerText = data.deploymentDate?.toDate().toLocaleDateString('en-GB') || "--/--/--";
-        document.getElementById('pop-rel').innerText = data.relieveDate?.toDate().toLocaleDateString('en-GB') || "--/--/--";
+        document.getElementById('v-agent-input').value = data.vAgentID === "RESERVED" ? "" : data.vAgentID;
+        document.getElementById('pop-dep').innerText = data.deploymentDate ? formatMonthDay(data.deploymentDate.toDate()) : "--/--";
+        document.getElementById('pop-rel').innerText = data.relieveDate ? formatMonthDay(data.relieveDate.toDate()) : "--/--";
     } else {
         const now = new Date(); const rel = new Date(); rel.setDate(now.getDate() + 30);
-        document.getElementById('pop-dep').innerText = now.toLocaleDateString('en-GB');
-        document.getElementById('pop-rel').innerText = rel.toLocaleDateString('en-GB');
+        document.getElementById('pop-dep').innerText = formatMonthDay(now);
+        document.getElementById('pop-rel').innerText = formatMonthDay(rel);
         document.getElementById('v-agent-input').value = "";
     }
     document.getElementById('modal-overlay').style.display = 'flex';
@@ -236,7 +245,7 @@
         }, { merge: true });
         document.getElementById('modal-overlay').style.display = 'none';
         document.getElementById('success-screen').style.display = 'flex';
-    } catch (e) { log("UPLINK_FAILED", "red"); }
+    } catch (e) { log("UPLOAD_FAILED", "red"); }
   };
 
   reserveBtn.onclick = async () => {

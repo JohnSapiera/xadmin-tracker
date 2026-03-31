@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>INTEL_CENTER_v10.1_ELITE</title>
+  <title>INTEL_CENTER_v10.2_ELITE</title>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
   <style>
     :root { 
@@ -55,11 +55,14 @@
     .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
     .btn { 
         height: 65px; font-family: var(--mono); font-size: 12px; font-weight: 800; 
-        border: 1px solid; background: rgba(0,0,0,0.4); cursor: pointer; transition: 0.2s;
+        border: 1px solid; background: rgba(0,0,0,0.4); cursor: pointer; transition: 0.3s;
         clip-path: polygon(10% 0, 100% 0, 90% 100%, 0% 100%);
     }
     .btn:active { transform: scale(0.95); }
+    
+    /* Button States */
     .btn-save { color: var(--green); border-color: var(--green); }
+    .btn-retrieve { color: var(--blue); border-color: var(--blue); }
     .btn-terminate { color: var(--red); border-color: var(--red); }
 
     #terminal { 
@@ -115,7 +118,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
@@ -152,58 +155,72 @@
 
   const currentFP = getFingerprint();
 
-  // --- DEVICE SYNC & VERIFICATION ---
+  // --- DEVICE SYNC ---
   async function syncDevice() {
       try {
           const q = query(collection(db, "agents"), where("lastFingerprint", "==", currentFP));
           const snap = await getDocs(q);
-
           if (!snap.empty) {
               const data = snap.docs[0].data();
-              const brand = data.brandName || "RECOGNIZED_NODE";
-              deviceTag.innerHTML = `NODE: <span class="anim-device">${brand.toUpperCase()}</span>`;
-              log(`UPLINK_ESTABLISHED: Agent ${data.agentName} verified via Hardware ID.`, 'green');
-              localStorage.setItem("cia_agent", data.agentName);
+              deviceTag.innerHTML = `NODE: <span class="anim-device">${(data.brandName || "VERIFIED").toUpperCase()}</span>`;
+              log(`UPLINK_ESTABLISHED: Agent ${data.agentName} verified.`, 'green');
           } else {
               deviceTag.innerHTML = `NODE: <span class="anim-device" style="color:var(--red)">UNREGISTERED</span>`;
-              log("WARNING: Unregistered hardware signature detected.", "red");
           }
-      } catch (e) { 
-          deviceTag.innerHTML = `NODE: <span class="anim-device">OFFLINE</span>`; 
-      }
+      } catch (e) { deviceTag.innerHTML = `NODE: <span class="anim-device">OFFLINE</span>`; }
   }
 
-  // --- AUTO-SCAN (BLACKLIST/MISSION) LOGIC ---
+  // --- AUTO-SCAN VALIDATOR (Blacklist & Mission Orders) ---
   input.addEventListener('input', async (e) => {
       const val = e.target.value.trim();
       
+      // Default State Reset
+      actionBtn.disabled = false;
+      actionBtn.style.opacity = "1";
+      actionBtn.className = "btn btn-save";
+      actionBtn.textContent = "SAVE";
+
       if(val.length >= 4) {
           scanStatus.textContent = "SCANNING_SECTOR...";
           scanStatus.style.color = "var(--cyan)";
 
           try {
-              // I-scan ang "blacklist" collection para sa match
-              const q = query(collection(db, "blacklist"), where("targetID", "==", val));
-              const snap = await getDocs(q);
+              // 1. PRIORITY: BLACKLIST CHECK
+              const qBlack = query(collection(db, "blacklist"), where("targetID", "==", val));
+              const snapBlack = await getDocs(qBlack);
 
-              if(!snap.empty) {
+              if(!snapBlack.empty) {
                   scanStatus.textContent = "TARGET_RESTRICTED!";
                   scanStatus.style.color = "var(--red)";
-                  log(`BLACKLIST_ALERT: ID ${val} is flagged!`, 'red');
-              } else {
-                  // I-scan naman ang "mission_orders"
-                  const q2 = query(collection(db, "mission_orders"), where("missionID", "==", val));
-                  const snap2 = await getDocs(q2);
                   
-                  if(!snap2.empty) {
-                      scanStatus.textContent = "MISSION_MATCHED";
-                      scanStatus.style.color = "var(--green)";
-                      log(`INTEL: Mission ID ${val} recognized.`, 'green');
-                  } else {
-                      scanStatus.textContent = "CLEAN_ID";
-                      scanStatus.style.color = "var(--cyan)";
-                  }
+                  // Disable SAVE button (Unavailable animation)
+                  actionBtn.disabled = true;
+                  actionBtn.style.opacity = "0.15";
+                  actionBtn.style.cursor = "not-allowed";
+                  
+                  log(`BLACKLIST_ALERT: ID ${val} IS BLOCKED.`, 'red');
+                  return; // Stop further checking
               }
+
+              // 2. MISSION ORDER CHECK
+              const qMission = query(collection(db, "mission_orders"), where("missionID", "==", val));
+              const snapMission = await getDocs(qMission);
+              
+              if(!snapMission.empty) {
+                  // Switch to RETRIEVE Mode (Blue)
+                  actionBtn.className = "btn btn-retrieve";
+                  actionBtn.textContent = "RETRIEVE";
+                  
+                  scanStatus.textContent = "MISSION_MATCHED";
+                  scanStatus.style.color = "var(--blue)";
+                  
+                  // Blue Result in Terminal
+                  log(`INTEL_ACCESS: Mission ID ${val} available for retrieval.`, 'blue');
+              } else {
+                  scanStatus.textContent = "CLEAN_ID";
+                  scanStatus.style.color = "var(--cyan)";
+              }
+
           } catch (err) {
               console.error("Scan Error:", err);
           }
@@ -222,7 +239,6 @@
   }
 
   setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB'); }, 1000);
-  
   window.onload = syncDevice;
 </script>
 </body>

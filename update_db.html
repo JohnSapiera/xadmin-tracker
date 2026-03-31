@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TERMINAL_UPLINK_v17</title>
+    <title>TERMINAL_UPLINK_v18</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
     <style>
         :root { --cyan: #00f2ff; --bg: #020a0d; --green: #00ff66; --border: rgba(0, 242, 255, 0.2); }
@@ -14,24 +14,21 @@
             background-image: radial-gradient(circle at center, #0a1f29 0%, #020a0d 100%);
         }
 
-        /* Compact & Balanced Card */
         .card { 
-            width: 300px; background: rgba(1, 15, 20, 0.9); padding: 25px; 
+            width: 320px; background: rgba(1, 15, 20, 0.9); padding: 25px; 
             border: 1px solid var(--border); backdrop-filter: blur(10px);
-            box-shadow: 0 0 40px rgba(0,0,0,0.9); position: relative; overflow: hidden;
+            box-shadow: 0 0 40px rgba(0,0,0,0.9); position: relative;
         }
 
         h2 { 
-            font-size: 12px; margin: 0 0 20px 0; color: var(--cyan); 
+            font-size: 14px; margin: 0 0 20px 0; color: var(--cyan); 
             text-align: center; letter-spacing: 3px; text-transform: uppercase;
             border-bottom: 1px solid var(--border); padding-bottom: 10px;
         }
 
-        /* Forms on Top - Perfectly Aligned */
         .form-container { display: flex; flex-direction: column; gap: 15px; }
-        
         .field-group { width: 100%; }
-        label { font-size: 9px; color: var(--cyan); text-transform: uppercase; margin-bottom: 6px; display: block; }
+        label { font-size: 9px; color: var(--cyan); text-transform: uppercase; margin-bottom: 6px; display: block; opacity: 0.7; }
         
         .input-field {
             width: 100%; box-sizing: border-box; padding: 12px; 
@@ -40,72 +37,56 @@
             outline: none; border-radius: 0;
         }
 
-        select.input-field { cursor: pointer; }
-
         .btn-auth {
             width: 100%; padding: 16px; background: transparent; 
             color: var(--green); border: 1px solid var(--green);
             font-family: 'Share Tech Mono'; font-weight: bold; cursor: pointer;
-            text-transform: uppercase; letter-spacing: 1px; font-size: 11px;
-            margin-top: 5px; transition: 0.2s;
+            text-transform: uppercase; letter-spacing: 2px; font-size: 11px;
+            margin-top: 10px; transition: 0.3s;
         }
         .btn-auth:hover { background: var(--green); color: #000; box-shadow: 0 0 20px rgba(0, 255, 102, 0.3); }
 
-        /* Marquee Ticker at the Bottom */
+        /* Ticker Styling */
         .ticker-wrap {
             margin-top: 25px; background: rgba(0, 242, 255, 0.05);
             border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
-            overflow: hidden; white-space: nowrap; padding: 5px 0;
+            overflow: hidden; white-space: nowrap; padding: 8px 0;
         }
-
-        .ticker-move {
-            display: inline-block; animation: marquee 15s linear infinite;
-            font-size: 9px; color: #556b73; text-transform: uppercase;
-        }
-
-        @keyframes marquee {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
-        .ticker-item { display: inline-block; margin-right: 30px; }
+        .ticker-move { display: inline-block; animation: marquee 20s linear infinite; font-size: 9px; color: #556b73; }
+        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        .ticker-item { display: inline-block; margin-right: 40px; }
         .ticker-item span { color: var(--cyan); font-weight: bold; }
 
-        #status { font-size: 8px; text-align: center; margin-top: 10px; color: #3d4d54; }
+        #status { font-size: 9px; text-align: center; margin-top: 15px; color: #4a5a61; min-height: 12px; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h2>UPLINK_SYSTEM</h2>
+        <h2>DEVICE_ENROLLMENT_v18</h2>
 
         <div class="form-container">
             <div class="field-group">
-                <label>Node_Signature (Auto):</label>
+                <label>HARDWARE_HASH (Signature):</label>
                 <input type="text" id="val-fp" class="input-field" readonly>
             </div>
 
             <div class="field-group">
-                <label>Agent_Assignment:</label>
+                <label>AGENT_ID_RECOGNITION:</label>
                 <select id="agentSelect" class="input-field">
-                    <option value="JFSN">AGENT_JFSN</option>
-                    <option value="LZ">AGENT_LZ</option>
+                    <option value="JEFFERSON VALLES">AGENT_JEFFERSON</option>
+                    <option value="AGENT_LZ">AGENT_LZ</option>
                 </select>
             </div>
 
             <button class="btn-auth" onclick="authorizeAccess()">Push to Database</button>
         </div>
 
-        <div id="status">> WAITING_FOR_COMMAND...</div>
+        <div id="status">> SYSTEM_IDLE...</div>
 
         <div class="ticker-wrap">
-            <div class="ticker-move">
-                <div class="ticker-item">MODEL: <span id="m-brand">...</span></div>
-                <div class="ticker-item">GPU: <span id="m-gpu">...</span></div>
-                <div class="ticker-item">SCREEN: <span id="m-res">...</span></div>
-                <div class="ticker-item">PLATFORM: <span id="m-plt">...</span></div>
-                <div class="ticker-item">STATUS: <span style="color:var(--green)">ENCRYPTED</span></div>
-            </div>
+            <div class="ticker-move" id="ticker-content">
+                </div>
         </div>
     </div>
 
@@ -124,57 +105,75 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        function getSpecs() {
+        function getHardwareSpecs() {
             const canvas = document.createElement('canvas');
             const gl = canvas.getContext('webgl');
             const debugInfo = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
-            const gpu = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "GENERIC_GPU";
+            const gpu = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "UNKNOWN_GPU";
             
             return {
                 brand: navigator.userAgent.match(/Android\s+([^\s;]+);?\s+([^\s;]+)/)?.[2] || "MOBILE_NODE",
                 gpu: gpu.split('/').pop().trim(),
                 res: `${window.screen.width}x${window.screen.height}`,
-                plt: navigator.platform
+                plt: navigator.platform,
+                ram: navigator.deviceMemory || "N/A"
             };
         }
 
-        function generateFP(s) {
-            const raw = s.gpu + s.res + s.plt;
+        // Pinagsamang logic para sa Signature (Hashed Hardware Data)
+        function generateSignature(s) {
+            const raw = s.gpu + s.res + s.plt + s.brand;
             let hash = 0;
             for (let i = 0; i < raw.length; i++) {
                 hash = ((hash << 5) - hash) + raw.charCodeAt(i);
                 hash |= 0;
             }
-            return "HW-" + Math.abs(hash).toString(16).toUpperCase();
+            return "SIG-" + Math.abs(hash).toString(16).toUpperCase();
         }
 
-        const specs = getSpecs();
-        const fingerprint = generateFP(specs);
+        const specs = getHardwareSpecs();
+        const signature = generateSignature(specs);
 
-        // Update Inputs & Marquee
-        document.getElementById('val-fp').value = fingerprint;
-        document.getElementById('m-brand').innerText = specs.brand.replace(/_/g, ' ');
-        document.getElementById('m-gpu').innerText = specs.gpu;
-        document.getElementById('m-res').innerText = specs.res;
-        document.getElementById('m-plt').innerText = specs.plt;
+        // UI Initialization
+        document.getElementById('val-fp').value = signature;
+        const tickerHtml = `
+            <div class="ticker-item">MODEL: <span>${specs.brand}</span></div>
+            <div class="ticker-item">GPU: <span>${specs.gpu}</span></div>
+            <div class="ticker-item">SCREEN: <span>${specs.res}</span></div>
+            <div class="ticker-item">PLATFORM: <span>${specs.plt}</span></div>
+        `;
+        document.getElementById('ticker-content').innerHTML = tickerHtml + tickerHtml;
 
         async function authorizeAccess() {
             const agent = document.getElementById('agentSelect').value;
             const log = document.getElementById('status');
-            log.innerHTML = `> SYNCING_WITH_FIREBASE...`;
+            log.innerHTML = `> INITIALIZING_HANDSHAKE...`;
 
             try {
+                // Device Data Object
+                const deviceData = {
+                    id: signature,
+                    label: specs.brand,
+                    platform: specs.plt,
+                    lastSeen: new Date().toISOString()
+                };
+
+                // PUSH TO FIREBASE
+                // Gagamit ng arrayUnion para ma-store ang MARAMING signatures sa isang agent
                 await db.collection("agents").doc(agent).set({
                     agentName: agent,
-                    lastFingerprint: fingerprint,
-                    linkedDevice: firebase.firestore.FieldValue.arrayUnion(fingerprint),
+                    lastFingerprint: signature, // current active signature
+                    linkedDevices: firebase.firestore.FieldValue.arrayUnion(deviceData),
                     brandName: specs.brand,
                     lastSync: firebase.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
 
-                localStorage.setItem("agency_node_secret", fingerprint);
-                log.innerHTML = `> <span style="color:var(--green)">SUCCESS: DEVICE_LINKED</span>`;
-                alert(`SUCCESS: Agent ${agent} Authorized.`);
+                // Isave sa local para sa mabilis na check sa dashboard
+                localStorage.setItem("cia_agent", agent);
+                localStorage.setItem("intel_device_signature", signature);
+
+                log.innerHTML = `> <span style="color:var(--green)">SUCCESS: DEVICE_RECOGNIZED</span>`;
+                alert(`SUCCESS: Agent ${agent} Enrollment Complete.`);
             } catch (e) {
                 log.innerHTML = `> ERROR: ${e.message}`;
             }

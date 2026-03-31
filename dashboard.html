@@ -4,7 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>GATEWAY_v8.0_MANUAL</title>
-  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&swap" rel="stylesheet">
   <style>
     :root { 
       --bg: #01080b; --panel: #051218; --cyan: #00f3ff; --red: #ff003c; 
@@ -37,23 +37,9 @@
 
     #terminal { background: #000; border: 1px solid #111; padding: 10px; font-family: var(--mono); font-size: 10px; min-height: 120px; color: #444; margin-top: 15px; overflow-y: auto; line-height: 1.4; border-radius: 4px; }
     
-    /* --- NEW AGENT PROFILE BUTTON STYLE --- */
-    .agent-center-hub {
-        display: flex; flex-direction: column; align-items: center; justify-content: center;
-        margin: 25px auto; gap: 10px; position: relative;
-    }
-    .profile-circle-btn {
-        width: 85px; height: 85px; background: #000; border: 2px solid var(--cyan);
-        border-radius: 50%; display: flex; align-items: center; justify-content: center;
-        cursor: pointer; transition: all 0.3s; box-shadow: 0 0 15px rgba(0, 243, 255, 0.1);
-    }
-    .agent-silhouette {
-        width: 40px; height: 40px; background: #fff;
-        clip-path: polygon(50% 10%, 75% 35%, 75% 50%, 65% 50%, 95% 100%, 5% 100%, 35% 50%, 25% 50%, 25% 35%);
-        opacity: 0.8; transition: 0.3s;
-    }
-    .profile-circle-btn:active { transform: scale(1.1); box-shadow: 0 0 30px rgba(0, 243, 255, 0.4); border-color: #fff; }
-    .profile-circle-btn:active .agent-silhouette { background: var(--cyan); opacity: 1; }
+    .agent-center-hub { display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 25px auto; gap: 10px; position: relative; }
+    .profile-circle-btn { width: 85px; height: 85px; background: #000; border: 2px solid var(--cyan); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s; box-shadow: 0 0 15px rgba(0, 243, 255, 0.1); }
+    .agent-silhouette { width: 40px; height: 40px; background: #fff; clip-path: polygon(50% 10%, 75% 35%, 75% 50%, 65% 50%, 95% 100%, 5% 100%, 35% 50%, 25% 50%, 25% 35%); opacity: 0.8; transition: 0.3s; }
     .hub-label { font-family: var(--mono); font-size: 10px; letter-spacing: 3px; color: var(--cyan); font-weight: bold; text-transform: uppercase; }
 
     /* MODAL SYSTEM */
@@ -75,10 +61,14 @@
     .modal-close { position: absolute; top: 0; right: 0; background: var(--red); color: #fff; border: none; padding: 10px 15px; font-family: var(--mono); cursor: pointer; font-weight: bold; }
     .form-header { text-align: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
     .form-id { font-size: 22px; color: var(--cyan); letter-spacing: 3px; font-family: var(--mono); }
+    
     .data-row { margin-bottom: 12px; font-family: var(--mono); border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px; display: flex; justify-content: space-between; align-items: center; }
     .data-label { font-size: 10px; color: #666; text-transform: uppercase; }
     .modal-input { background: rgba(0,243,255,0.05); border: 1px solid #333; color: var(--cyan); font-family: var(--mono); font-size: 14px; text-align: right; width: 130px; outline: none; padding: 4px 8px; border-radius: 2px; }
     .read-only-val { font-size: 14px; color: #ddd; text-align: right; }
+
+    /* New Styling for Device Display */
+    .device-info { position: absolute; top: 10px; left: 15px; font-size: 8px; color: var(--cyan); font-family: var(--mono); opacity: 0.6; }
 
     nav { position: fixed; bottom: 0; left: 0; right: 0; height: 55px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; }
     .nav-item { display: flex; align-items: center; justify-content: center; color: #333; font-size: 11px; font-family: var(--mono); text-decoration: none; }
@@ -114,7 +104,10 @@
 
 <div id="entry-modal" class="modal-overlay">
   <div class="modal-content">
+    <div class="device-info" id="m-linked-device">DEVICE: UNKNOWN</div>
+    
     <button class="modal-close" onclick="closeModal()">X</button>
+    
     <div class="form-header">
       <div style="font-size: 9px; color: #555;">REGISTRATION FORM</div>
       <div class="form-id" id="m-id-display">#00000</div>
@@ -174,9 +167,13 @@
   const initiateBtn = document.getElementById('initiate-btn');
   const vagentInput = document.getElementById('input-vagent');
   const termLog = document.getElementById('terminal');
+  const deviceDisplay = document.getElementById('m-linked-device');
   
   let currentData = null;
   let accessStatus = "NEW";
+
+  // Get Device Name from LocalStorage
+  const linkedDeviceName = localStorage.getItem("device_uuid") || "UNRECOGNIZED_HARDWARE";
 
   input.addEventListener('input', async (e) => {
     const val = e.target.value.trim();
@@ -233,6 +230,10 @@
     if (accessStatus === "PROHIBITED" || input.value.length < 4) return;
     const val = input.value.trim();
     document.getElementById('m-id-display').textContent = `#${val}`;
+    
+    // Display linked device in modal
+    deviceDisplay.textContent = `DEVICE: ${linkedDeviceName}`;
+
     if (accessStatus === "NEW") {
       const depDate = new Date();
       const expDate = new Date();
@@ -262,14 +263,24 @@
     if (!vAgentValue) { alert("PLEASE ENTER V-AGENT ID"); return; }
     log(`INITIATING UPLINK...`, 'green');
     initiateBtn.disabled = true; initiateBtn.textContent = "PROCESS...";
+    
     try {
       const depDate = new Date(document.getElementById('m-dep').textContent);
       const expDate = new Date(document.getElementById('m-expir').textContent);
+      
+      // Save data including linkedDevice
       await addDoc(collection(db, "mission_orders"), {
-        orderNumber: val, vAgent: vAgentValue, expenses: "0.00",
-        deploymentDate: depDate, expirationDate: expDate, timestamp: serverTimestamp()
+        orderNumber: val, 
+        vAgent: vAgentValue, 
+        expenses: 0, // Numeric for easier calculation later
+        deploymentDate: depDate, 
+        expirationDate: expDate, 
+        linkedDevice: linkedDeviceName, // Data is linked to the phone saving it
+        agentName: localStorage.getItem("cia_agent") || "UNKNOWN",
+        timestamp: serverTimestamp()
       });
-      log(`MISSION ${val} INITIATED.`, 'green');
+      
+      log(`MISSION ${val} INITIATED VIA ${linkedDeviceName}`, 'green');
       closeModal();
       input.value = ""; resetUI();
     } catch (e) { log(`FAILED: ${e.message}`, 'red'); } finally {

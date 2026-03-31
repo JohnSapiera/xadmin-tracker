@@ -3,20 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SECURE_GATEWAY_v3 // ACCESS</title>
+    <title>SECURE_GATEWAY_v3 // HARDWARE_LOCK</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;800&display=swap" rel="stylesheet">
     <style>
-        :root { --neon: #00f2ff; --bg: #050506; --error: #ff3c3c; }
+        :root { --neon: #00f2ff; --bg: #050506; --error: #ff3c3c; --success: #00ff66; }
         body { 
             background: var(--bg); color: #fff; font-family: 'JetBrains Mono', monospace; 
             display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0;
-            background-image: radial-gradient(circle at center, #111 0%, #050506 100%);
         }
 
         .login-card {
             width: 100%; max-width: 380px; padding: 40px; background: rgba(10, 10, 12, 0.9);
-            border: 1px solid rgba(0, 242, 255, 0.1); box-shadow: 0 0 50px rgba(0,0,0,0.8);
-            text-align: center; position: relative;
+            border: 1px solid rgba(0, 242, 255, 0.1); text-align: center; position: relative;
         }
 
         .login-card::before {
@@ -26,25 +24,21 @@
 
         h2 { font-size: 14px; letter-spacing: 4px; color: var(--neon); margin-bottom: 30px; text-transform: uppercase; }
 
-        /* DYNAMIC DROPDOWN STYLE */
         select {
             width: 100%; background: #000; border: 1px solid #222; color: var(--neon);
-            padding: 15px; font-family: inherit; font-size: 14px; outline: none;
-            cursor: pointer; transition: 0.3s; margin-bottom: 20px;
+            padding: 15px; font-family: inherit; font-size: 14px; outline: none; margin-bottom: 20px;
             appearance: none; -webkit-appearance: none;
         }
-        select:focus { border-color: var(--neon); box-shadow: 0 0 10px rgba(0, 242, 255, 0.2); }
 
         .btn-access {
             width: 100%; padding: 15px; background: var(--neon); color: #000;
             border: none; font-weight: 800; cursor: pointer; text-transform: uppercase;
             letter-spacing: 2px; transition: 0.4s;
         }
-        .btn-access:hover { background: #fff; box-shadow: 0 0 20px rgba(255,255,255,0.4); }
 
-        .status-msg { font-size: 10px; margin-top: 20px; color: #444; min-height: 15px; }
-        .loading-spinner { color: var(--neon); animation: pulse 1s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        .btn-access:disabled { background: #1a1a1a; color: #444; cursor: not-allowed; }
+
+        .status-msg { font-size: 10px; margin-top: 20px; color: #444; min-height: 15px; line-height: 1.5; }
     </style>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -55,17 +49,14 @@
     <div class="login-card">
         <h2>IDENT_VERIFICATION</h2>
         
-        <div id="loadingUI" class="loading-spinner">SCANNING_DATABASE...</div>
-        
-        <div id="loginForm" style="display: none;">
+        <div id="loginForm">
             <label style="display:block; text-align:left; font-size:9px; color:#555; margin-bottom:5px;">SELECT_ACTIVE_AGENT:</label>
-            <select id="agentDropdown">
-                </select>
+            <select id="agentDropdown"></select>
             
-            <button class="btn-access" onclick="requestAccess()">GRANT_ACCESS</button>
+            <button id="accessBtn" class="btn-access" onclick="verifyHardware()">GRANT_ACCESS</button>
         </div>
 
-        <div id="status" class="status-msg"></div>
+        <div id="status" class="status-msg">>> SYSTEM_READY_</div>
     </div>
 
     <script>
@@ -80,54 +71,59 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // 1. DYNAMIC RETRIEVAL: Load agents from Portal 01 collection
+        // 1. Kuhanin ang listahan ng Agents sa Database
         async function loadAgents() {
             const dropdown = document.getElementById('agentDropdown');
+            const snap = await db.collection("agents").get();
+            dropdown.innerHTML = "";
+            snap.forEach(doc => {
+                dropdown.innerHTML += `<option value="${doc.id}">AGENT_${doc.id}</option>`;
+            });
+        }
+
+        // 2. LIVE HARDWARE CHECK LABAN SA DATABASE
+        async function verifyHardware() {
+            const selectedAgent = document.getElementById('agentDropdown').value;
             const status = document.getElementById('status');
+            const btn = document.getElementById('accessBtn');
             
+            // Kunin ang "Fingerprint" ng phone mo
+            const localID = localStorage.getItem("device_uuid");
+
+            btn.disabled = true;
+            status.style.color = "var(--neon)";
+            status.innerText = "QUERYING_DATABASE_FOR_HARDWARE_LOCK...";
+
             try {
-                const snap = await db.collection("agents").get();
+                // HUGOT NG DATA DIREKTA SA FIREBASE
+                const doc = await db.collection("agents").doc(selectedAgent).get();
                 
-                if (snap.empty) {
-                    status.innerHTML = "<span style='color:red'>NO_AGENTS_FOUND_IN_REGISTRY</span>";
-                    return;
+                if (doc.exists) {
+                    const dbDeviceID = doc.data().linkedDevice; // Ito yung ni-register mo sa update_db.html
+
+                    if (localID === dbDeviceID && localID !== null) {
+                        // MATCH!
+                        status.style.color = "var(--success)";
+                        status.innerHTML = "HARDWARE_RECOGNIZED_BY_DATABASE!<br>ACCESS_GRANTED.";
+                        
+                        localStorage.setItem("cia_agent", selectedAgent);
+                        setTimeout(() => { window.location.href = "dashboard.html"; }, 1500);
+                    } else {
+                        // HINDI RECOGNIZED O IBANG PHONE
+                        status.style.color = "var(--error)";
+                        status.innerHTML = "ACCESS_DENIED: UNKNOWN_DEVICE<br>HARDWARE_NOT_REGISTERED_FOR_" + selectedAgent;
+                        btn.disabled = false;
+                    }
+                } else {
+                    status.innerText = "ERROR: AGENT_NOT_FOUND";
+                    btn.disabled = false;
                 }
-
-                dropdown.innerHTML = ""; // Clear
-                snap.forEach(doc => {
-                    const agent = doc.id; // Gagamitin ang Document ID bilang name
-                    dropdown.innerHTML += `<option value="${agent}">AGENT_${agent}</option>`;
-                });
-
-                // Show UI
-                document.getElementById('loadingUI').style.display = "none";
-                document.getElementById('loginForm').style.display = "block";
-                status.innerText = ">> DATABASE_SYNC_COMPLETE";
-
-            } catch (error) {
-                status.style.color = "red";
-                status.innerText = "CONNECTION_ERROR: " + error.message;
+            } catch (e) {
+                status.innerText = "UPLINK_ERROR: " + e.message;
+                btn.disabled = false;
             }
         }
 
-        // 2. SESSION LOCK
-        function requestAccess() {
-            const selectedAgent = document.getElementById('agentDropdown').value;
-            const status = document.getElementById('status');
-
-            status.style.color = "var(--neon)";
-            status.innerText = "AUTHENTICATING...";
-
-            // Save session to LocalStorage para magamit sa Profile at Dashboard
-            localStorage.setItem("cia_agent", selectedAgent);
-
-            setTimeout(() => {
-                // Redirect to Dashboard
-                window.location.href = "dashboard.html";
-            }, 1500);
-        }
-
-        // Initial Load
         window.onload = loadAgents;
     </script>
 </body>

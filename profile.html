@@ -15,12 +15,11 @@
         body { 
             background: var(--bg); color: #fff; font-family: 'JetBrains Mono', monospace; 
             margin: 0; padding: 15px; overflow-x: hidden;
-            background-image: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            background-image: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 255, 0, 0.03));
             background-size: 100% 4px, 3px 100%;
         }
         .container { max-width: 500px; margin: 0 auto; }
 
-        /* Tactical Header */
         .header { 
             border: 1px solid var(--border); border-left: 4px solid var(--neon); 
             padding: 15px; margin-bottom: 25px; display: flex; 
@@ -37,7 +36,6 @@
         #agentName { font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700; text-transform: uppercase; color: #fff; }
         #brandTag { font-size: 10px; color: var(--neon); font-weight: bold; letter-spacing: 1.5px; }
 
-        /* File Grid */
         .file-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 15px; }
         .file-item { position: relative; cursor: pointer; transition: 0.2s; }
         .file-item:active { transform: scale(0.9); }
@@ -53,7 +51,6 @@
         .file-label { font-size: 7px; color: rgba(0,0,0,0.6); font-weight: 800; }
         .file-id { font-size: 11px; color: #1a1a1a; font-weight: 900; }
 
-        /* Overlay Styles */
         .overlay {
             display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95);
             z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(8px);
@@ -72,29 +69,28 @@
         <div class="header">
             <div>
                 <a href="dashboard.html" style="color:var(--neon); font-size:10px; text-decoration:none;">< SYSTEM_EXIT</a>
-                <h2 id="agentName">IDENTIFYING...</h2>
+                <h2 id="agentName">SYNCING_NODE...</h2>
                 <button class="btn-memoir" onclick="openMemoir()">MEMOIR</button>
             </div>
             <div style="text-align: right;">
                 <div id="brandTag">BRAND: ---</div>
-                <div style="font-size: 7px; color: var(--red); margin-top: 8px; border: 1px solid var(--red); padding: 2px;">ENCRYPTED_UPLINK</div>
+                <div id="syncStatus" style="font-size: 7px; color: var(--neon); margin-top: 8px; border: 1px solid var(--neon); padding: 2px;">RECOVERY_READY</div>
             </div>
         </div>
 
-        <div style="font-size: 10px; color: #555; margin-bottom: 15px; border-left: 2px solid var(--neon); padding-left: 10px;">
-            >> RETRIEVING_VIA_AGENT_DATABASE...
+        <div id="terminalStatus" style="font-size: 10px; color: #555; margin-bottom: 15px; border-left: 2px solid var(--neon); padding-left: 10px;">
+            >> INITIALIZING_HARDWARE_UPLINK...
         </div>
 
-        <div class="file-grid" id="mainFileGrid">
-            </div>
+        <div class="file-grid" id="mainFileGrid"></div>
     </div>
 
     <div id="memoirOverlay" class="overlay" onclick="closeMemoir()">
         <div class="modal-box" style="background:#000; color:var(--neon); border: 1px solid var(--neon);" onclick="event.stopPropagation()">
             <button class="close-btn" onclick="closeMemoir()">×</button>
             <h3 style="letter-spacing:2px; text-align:center;">// MEMOIR_VAULT</h3>
-            <div style="height:100px; display:flex; align-items:center; justify-content:center; font-size:10px; opacity:0.5;">
-                [ PENDING_UPDATES_... ]
+            <div id="memoirContent" style="padding:15px; font-size:11px;">
+                [ NO_RECORDS_FOUND ]
             </div>
         </div>
     </div>
@@ -106,14 +102,13 @@
                 <h2 style="margin: 0; font-size: 16px;">CLASSIFIED DOSSIER</h2>
                 <span id="moID" style="font-size: 9px; font-weight: bold; color: #666;">--</span>
             </div>
-            <div id="docContent">
-                </div>
+            <div id="docContent"></div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getFirestore, collection, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        import { getFirestore, collection, query, where, getDocs, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
         const firebaseConfig = { 
             apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
@@ -127,43 +122,87 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- NEW BRANDING SYSTEM ---
-        async function initBranding() {
-            // Check URL for ?key=YOURKEY first, then LocalStorage
-            let accessKey = new URLSearchParams(window.location.search).get('key') || localStorage.getItem("agent_access_key");
-
-            if (!accessKey) {
-                accessKey = prompt("UNAUTHORIZED_ACCESS: PLEASE INPUT AGENT_ACCESS_KEY");
-                if (accessKey) localStorage.setItem("agent_access_key", accessKey);
-                else { document.body.innerHTML = "<h1>ACCESS_DENIED</h1>"; return; }
+        // --- ANTI-CLEAR CACHE: HARDWARE FINGERPRINT LOGIC ---
+        function getFingerprint() {
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl');
+            const debugInfo = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
+            const gpu = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "GENERIC";
+            const specs = gpu + screen.width + "x" + screen.height + navigator.platform;
+            let hash = 0;
+            for (let i = 0; i < specs.length; i++) {
+                hash = ((hash << 5) - hash) + specs.charCodeAt(i);
+                hash |= 0;
             }
+            return "HW-" + Math.abs(hash).toString(16).toUpperCase();
+        }
+
+        async function initProfile() {
+            const currentFP = getFingerprint();
+            const terminal = document.getElementById('terminalStatus');
+            const syncUI = document.getElementById('syncStatus');
+
+            // 1. Fallback Check: Kung walang Access Key sa LocalStorage, gamitin ang Fingerprint
+            let accessKey = localStorage.getItem("agent_access_key");
+            
+            terminal.innerText = ">> SCANNING_HARDWARE_SIGNATURE...";
 
             try {
-                // Find agent by accessKey field in Firestore
-                const q = query(collection(db, "agents"), where("accessKey", "==", accessKey));
-                const snap = await getDocs(q);
+                let agentDoc = null;
 
-                if (!snap.empty) {
-                    const data = snap.docs[0].data();
+                if (accessKey) {
+                    // Try to match via Access Key
+                    const qKey = query(collection(db, "agents"), where("accessKey", "==", accessKey));
+                    const snapKey = await getDocs(qKey);
+                    if (!snapKey.empty) agentDoc = snapKey.docs[0];
+                }
+
+                // 2. Automatic Recovery: Kung walang match sa Key, gamitin ang Hardware ID
+                if (!agentDoc) {
+                    terminal.innerText = ">> CACHE_MISS: INITIATING_HARDWARE_RECOVERY...";
+                    const qFP = query(collection(db, "agents"), where("lastFingerprint", "==", currentFP));
+                    const snapFP = await getDocs(qFP);
+                    if (!snapFP.empty) agentDoc = snapFP.docs[0];
+                }
+
+                if (agentDoc) {
+                    const data = agentDoc.data();
+                    
+                    // Firestore Matching & UI Update
                     document.getElementById('agentName').innerText = `AGENT_${data.agentName}`;
                     document.getElementById('brandTag').innerText = `BRAND: ${data.brandName.toUpperCase()}`;
                     
-                    // Store locally for quick access but primary data is always from Key
+                    // Re-save to local cache (Self-Healing)
+                    localStorage.setItem("agent_access_key", data.accessKey);
                     localStorage.setItem("cia_agent", data.agentName);
+                    
+                    terminal.innerText = ">> DATABASE_MATCH_FOUND. ARCHIVES_OPEN.";
+                    syncUI.innerText = "UPLINK_STABLE";
+                    syncUI.style.color = "var(--neon)";
+                    syncUI.style.borderColor = "var(--neon)";
+
                     loadArchives(data.agentName);
                 } else {
-                    localStorage.removeItem("agent_access_key");
-                    alert("INVALID_KEY_EXPIRED");
-                    location.reload();
+                    // Fallback: Prompt for Key if Hardware is also new
+                    terminal.innerText = ">> UNAUTHORIZED_HARDWARE. ACCESS_KEY_REQUIRED.";
+                    const inputKey = prompt("UNRECOGNIZED_DEVICE: ENTER AGENT_ACCESS_KEY");
+                    if (inputKey) {
+                        localStorage.setItem("agent_access_key", inputKey);
+                        location.reload();
+                    } else {
+                        document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:50px;'>ACCESS_DENIED</h1>";
+                    }
                 }
-            } catch (e) { console.error(e); }
+            } catch (e) {
+                console.error(e);
+                terminal.innerText = ">> CRITICAL_UPLINK_FAILURE.";
+            }
         }
 
         async function loadArchives(agentName) {
             const grid = document.getElementById('mainFileGrid');
             const q = query(collection(db, "mission_orders"), where("agentName", "==", agentName));
             const snap = await getDocs(q);
-            
             grid.innerHTML = "";
             snap.forEach(d => {
                 const data = d.data();
@@ -177,10 +216,10 @@
             });
         }
 
+        // Window Functions
         window.openMemoir = () => document.getElementById('memoirOverlay').style.display = 'flex';
         window.closeMemoir = () => document.getElementById('memoirOverlay').style.display = 'none';
         window.closeDoc = () => document.getElementById('missionOverlay').style.display = 'none';
-
         window.openDoc = async (id) => {
             const snap = await getDoc(doc(db, "mission_orders", id));
             if (snap.exists()) {
@@ -196,7 +235,7 @@
             }
         };
 
-        window.onload = initBranding;
+        window.onload = initProfile;
     </script>
 </body>
 </html>

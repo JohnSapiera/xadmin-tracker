@@ -10,12 +10,16 @@
         body { background: var(--bg); color: #fff; font-family: 'JetBrains Mono', monospace; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
         .gate-card { width: 100%; max-width: 350px; padding: 40px; background: #0a0a0c; border: 1px solid #222; text-align: center; box-shadow: 0 0 30px rgba(0,0,0,0.5); }
         h2 { font-size: 15px; letter-spacing: 5px; color: var(--neon); margin-bottom: 30px; text-transform: uppercase; }
-        .btn-auth { width: 100%; padding: 20px; background: transparent; color: var(--neon); border: 1px solid var(--neon); font-weight: 800; cursor: pointer; letter-spacing: 2px; transition: 0.3s; text-transform: uppercase; }
+        .btn-auth { width: 100%; padding: 20px; background: transparent; color: var(--neon); border: 1px solid var(--neon); font-weight: 800; cursor: pointer; letter-spacing: 2px; transition: 0.3s; text-transform: uppercase; margin-bottom: 10px; }
         .btn-auth:hover { background: rgba(0, 242, 255, 0.1); box-shadow: 0 0 15px rgba(0, 242, 255, 0.2); }
         .btn-auth:disabled { opacity: 0.3; cursor: not-allowed; border-color: #333; color: #333; }
-        #status { font-size: 10px; color: #444; margin-top: 25px; min-height: 80px; line-height: 1.6; text-align: left; background: #000; padding: 12px; border: 1px solid #111; word-break: break-all; }
+        #status { font-size: 10px; color: #444; margin-top: 25px; min-height: 100px; line-height: 1.6; text-align: left; background: #000; padding: 12px; border: 1px solid #111; word-break: break-all; }
         .glitch-text { animation: glitch 2s infinite; }
         @keyframes glitch { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+        
+        /* Hidden input for recovery */
+        #recovery-zone { display: none; margin-top: 15px; }
+        input { width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: var(--success); font-family: 'JetBrains Mono'; text-align: center; margin-bottom: 10px; }
     </style>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
@@ -25,11 +29,16 @@
     <div class="gate-card">
         <h2 class="glitch-text">CENTRAL_UPLINK</h2>
         <button class="btn-auth" id="authBtn" onclick="verifyDevice()">INITIALIZE_HANDSHAKE</button>
+        
+        <div id="recovery-zone">
+            <input type="text" id="recoveryKey" placeholder="ENTER_ACCESS_KEY">
+            <button class="btn-auth" style="font-size: 10px; padding: 10px;" onclick="recoverByKey()">RECOVER_ACCESS</button>
+        </div>
+
         <div id="status">> SYSTEM_READY_</div>
     </div>
 
     <script>
-        // --- FIREBASE CONFIGURATION ---
         const firebaseConfig = { 
             apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
             authDomain: "my-admin-portal-12691.firebaseapp.com", 
@@ -41,60 +50,105 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // 1. Kuhanin ang PERMANENT ID na ginawa sa update_db.html
-        const nodeID = localStorage.getItem("agency_node_secret");
+        // --- HARDWARE FINGERPRINT ENGINE ---
+        function getFingerprint() {
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl');
+            const debugInfo = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
+            const specs = (debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "") + 
+                          window.screen.width + "x" + window.screen.height + navigator.platform;
+            
+            let hash = 0;
+            for (let i = 0; i < specs.length; i++) {
+                hash = ((hash << 5) - hash) + specs.charCodeAt(i);
+                hash |= 0;
+            }
+            return "HW-" + Math.abs(hash).toString(16).toUpperCase();
+        }
+
+        const currentFP = getFingerprint();
+        const localID = localStorage.getItem("agency_node_secret");
 
         async function verifyDevice() {
             const status = document.getElementById('status');
             const btn = document.getElementById('authBtn');
-
             btn.disabled = true;
-            status.innerHTML = `> SCANNING_LOCAL_NODE...<br>> ID: ${nodeID || "NULL"}`;
 
-            // Kung walang ID, ibig sabihin hindi pa nabubuksan ang update_db.html sa device na ito
-            if (!nodeID) {
-                status.innerHTML += `<br>> <span style="color:var(--error)">[!] ACCESS_DENIED: NO_NODE_SECRET</span>`;
-                status.innerHTML += `<br>> STATUS: RUN_AUTHORIZATION_FIRST`;
-                btn.disabled = false;
-                return;
-            }
+            status.innerHTML = `> ANALYZING_HARDWARE...<br>> FP: ${currentFP}`;
 
             try {
-                // 2. Hanapin sa Firebase collection "agents" kung ang nodeID ay nasa listahan ng kahit sinong Agent
+                // Step 1: Search by Fingerprint (Kahit na-clear cache, itong ID ay pareho pa rin)
                 const snap = await db.collection("agents")
-                                   .where("linkedDevice", "array-contains", nodeID)
-                                   .get();
+                                     .where("lastFingerprint", "==", currentFP)
+                                     .get();
 
-                if (snap.empty) {
-                    // Walang nahanap na agent na may ganitong device ID
-                    status.innerHTML += `<br>> <span style="color:var(--error)">[!] ACCESS_DENIED: UNKNOWN_SIGNATURE</span>`;
-                    status.innerHTML += `<br>> STATUS: NODE_NOT_LINKED_TO_CLOUD`;
-                    btn.disabled = false;
+                if (!snap.empty) {
+                    handleSuccess(snap.docs[0].data());
                 } else {
-                    // SUCCESS! Nahanap ang Agent (JFSN or LZ)
-                    const agentData = snap.docs[0].data();
-                    const agentName = agentData.agentName;
-
-                    status.innerHTML += `<br>> <span style="color:var(--success)">[+] MATCH_FOUND: AGENT_${agentName}</span>`;
-                    status.innerHTML += `<br>> STATUS: ESTABLISHING_SECURE_TUNNEL...`;
+                    // Step 2: Search by LocalStorage ID (Kung hindi nag-clear cache)
+                    if (localID) {
+                        const snapID = await db.collection("agents")
+                                               .where("linkedDevice", "array-contains", localID)
+                                               .get();
+                        if (!snapID.empty) {
+                            handleSuccess(snapID.docs[0].data());
+                            return;
+                        }
+                    }
                     
-                    // I-save ang verified agent para sa Dashboard
-                    localStorage.setItem("cia_agent", agentName);
-                    
-                    setTimeout(() => { 
-                        window.location.href = "dashboard.html"; 
-                    }, 1500);
+                    // Step 3: Kung wala talaga, ipakita ang Recovery
+                    status.innerHTML += `<br>> <span style="color:var(--error)">[!] ACCESS_DENIED</span>`;
+                    status.innerHTML += `<br>> CACHE_CLEARED_OR_NEW_DEVICE`;
+                    document.getElementById('recovery-zone').style.display = 'block';
+                    btn.style.display = 'none';
                 }
             } catch (e) {
-                status.innerHTML += `<br>> <span style="color:var(--error)">[!] UPLINK_ERROR: ${e.message}</span>`;
+                status.innerHTML += `<br>> ERROR: ${e.message}`;
                 btn.disabled = false;
             }
         }
 
-        // AUTO-INITIATE: Kung kilala na ang ID, mag-scan agad pag-load
-        if(nodeID) {
-            setTimeout(verifyDevice, 800);
+        async function recoverByKey() {
+            const key = document.getElementById('recoveryKey').value.trim();
+            const status = document.getElementById('status');
+            if(!key) return;
+
+            status.innerHTML = `> VERIFYING_KEY: ${key}...`;
+
+            const snap = await db.collection("agents")
+                                 .where("accessKey", "==", key)
+                                 .get();
+
+            if(!snap.empty) {
+                const data = snap.docs[0].data();
+                // Update the fingerprint in DB para sa susunod auto-login na
+                await db.collection("agents").doc(data.agentName).update({
+                    lastFingerprint: currentFP,
+                    linkedDevice: firebase.firestore.FieldValue.arrayUnion(currentFP)
+                });
+                handleSuccess(data);
+            } else {
+                status.innerHTML += `<br>> <span style="color:var(--error)">INVALID_ACCESS_KEY</span>`;
+            }
         }
+
+        function handleSuccess(data) {
+            const status = document.getElementById('status');
+            status.innerHTML += `<br>> <span style="color:var(--success)">[+] MATCH: AGENT_${data.agentName}</span>`;
+            status.innerHTML += `<br>> BRAND: ${data.brandName || "GENERIC"}`;
+            
+            // Re-store locally
+            localStorage.setItem("cia_agent", data.agentName);
+            localStorage.setItem("agency_node_secret", currentFP);
+            localStorage.setItem("agent_access_key", data.accessKey);
+
+            setTimeout(() => { window.location.href = "dashboard.html"; }, 1500);
+        }
+
+        // Auto-run scanning on load
+        window.onload = () => {
+            setTimeout(verifyDevice, 500);
+        };
     </script>
 </body>
 </html>

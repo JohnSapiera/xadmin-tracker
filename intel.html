@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>AGENCY_INTEL_SYSTEM_v12.5</title>
+  <title>AGENCY_INTEL_SYSTEM_v13</title>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
   <style>
     :root { --bg: #01080b; --panel: rgba(2, 12, 18, 0.95); --cyan: #00f3ff; --red: #ff003c; --green: #00ff66; --border: rgba(0, 243, 255, 0.2); --mono: 'Share Tech Mono', monospace; }
@@ -15,23 +15,29 @@
     .intel-greet { text-align: center; font-size: 24px; font-weight: bold; margin-bottom: 35px; text-shadow: 0 0 10px var(--cyan); line-height: 1.4; }
     .report-btn { background: transparent; border: 2px solid var(--cyan); color: var(--cyan); padding: 22px 55px; font-family: var(--mono); font-size: 16px; cursor: pointer; clip-path: polygon(15% 0, 85% 0, 100% 50%, 85% 100%, 15% 100%, 0 50%); transition: 0.3s; }
     .report-btn.locked { opacity: 0.15; cursor: not-allowed; pointer-events: none; border-color: #333; color: #333; }
+    
+    /* Modal & Layout */
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; backdrop-filter: blur(8px); }
     .modal-panel { position: fixed; top: 50%; left: 50%; width: 95%; max-width: 380px; background: var(--panel); border: 2px solid var(--cyan); padding: 30px 20px; transform: translate(-50%, -50%); border-radius: 3px; }
     .intel-input { width: 100%; background: #000; border: 1px solid #1a262b; padding: 15px; color: #fff; font-family: var(--mono); margin-bottom: 15px; outline: none; }
     .send-btn { width: 100%; padding: 20px; background: var(--green); color: #000; border: none; font-family: var(--mono); font-weight: bold; cursor: pointer; }
+    
     nav { position: fixed; bottom: 0; width: 100%; height: 70px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; }
     .nav-link { display: flex; align-items: center; justify-content: center; color: #333; font-size: 10px; font-family: var(--mono); text-decoration: none; }
     .nav-link.active { color: var(--cyan); border-top: 2px solid var(--cyan); }
-    #device-info { font-size: 10px; color: #4a5a61; margin-top: 15px; font-family: var(--mono); text-align: center; max-width: 80%; line-height: 1.5; }
+    
+    #device-info { font-size: 9px; color: #4a5a61; margin-top: 15px; font-family: var(--mono); text-align: center; max-width: 85%; line-height: 1.5; }
+    .status-ticker { color: var(--green); font-weight: bold; }
   </style>
 </head>
 <body>
 
-<header><div class="agent-welcome" id="agent-display">TRACE_INITIALIZING...</div></header>
+<header><div class="agent-welcome" id="agent-display">UPLINK_SEARCHING...</div></header>
+
 <main>
-    <div class="intel-greet" id="intel-msg">SCANNING_HARDWARE...</div>
+    <div class="intel-greet" id="intel-msg">ANALYZING_HARDWARE...</div>
     <button id="main-report-btn" class="report-btn locked" onclick="openReport()" disabled>INITIATE REPORT</button>
-    <div id="device-info">WAITING_FOR_NODE_SIGNATURE...</div>
+    <div id="device-info">FINGERPRINTING_IN_PROGRESS...</div>
 </main>
 
 <div id="report-modal" class="modal-overlay">
@@ -51,7 +57,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
@@ -65,8 +71,23 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  // Kuhanin ang PERMANENT ID sa browser memory
-  const localNodeSecret = localStorage.getItem("agency_node_secret");
+  // --- HARDWARE FINGERPRINT ENGINE ---
+  function getHardwareFingerprint() {
+      const canvas = document.createElement('canvas');
+      const gl = canvas.getContext('webgl');
+      const debugInfo = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
+      const gpu = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "GENERIC_GPU";
+      const specs = gpu + screen.width + "x" + screen.height + navigator.platform;
+      
+      let hash = 0;
+      for (let i = 0; i < specs.length; i++) {
+          hash = ((hash << 5) - hash) + specs.charCodeAt(i);
+          hash |= 0;
+      }
+      return "HW-" + Math.abs(hash).toString(16).toUpperCase();
+  }
+
+  const currentFP = getHardwareFingerprint();
 
   async function silentTrace() {
     const display = document.getElementById('agent-display');
@@ -74,64 +95,58 @@
     const btn = document.getElementById('main-report-btn');
     const info = document.getElementById('device-info');
 
-    if (!localNodeSecret) {
-        display.textContent = "ACCESS_DENIED";
-        msg.innerHTML = `<span style="color:var(--red);">UNREGISTERED_HARDWARE</span>`;
-        info.innerHTML = `ERROR: NO_NODE_SECRET_FOUND<br>PLEASE RUN AUTHORIZATION_PROTOCOL.`;
-        return;
-    }
-
-    info.textContent = `TRACE_ID: ${localNodeSecret}...`;
+    info.innerHTML = `SCANNING_NODE: <span class="status-ticker">${currentFP}</span>`;
 
     try {
-        const snap = await getDocs(collection(db, "agents"));
-        let foundAgent = null;
-        let deviceBrandFromDB = "GENERIC_NODE";
+        // Step 1: Search by Hardware Fingerprint (Anti-Clear Cache)
+        const q = query(collection(db, "agents"), where("lastFingerprint", "==", currentFP));
+        const snap = await getDocs(q);
 
-        snap.forEach(doc => {
-            const data = doc.data();
-            
-            // 1. I-check kung ang localNodeSecret ay nasa linkedDevice array
-            if (data.linkedDevice && data.linkedDevice.includes(localNodeSecret)) {
-                foundAgent = data.agentName;
+        let foundAgentData = null;
 
-                // 2. Hanapin ang Brand Name sa deviceDetails array para sa UI display
-                if (data.deviceDetails) {
-                    const detail = data.deviceDetails.find(d => d.signature === localNodeSecret || d.id === localNodeSecret);
-                    if (detail) {
-                        deviceBrandFromDB = detail.brandName || detail.brand;
-                    }
-                }
+        if (!snap.empty) {
+            foundAgentData = snap.docs[0].data();
+        } else {
+            // Step 2: Fallback to LocalStorage (kung hindi nag-clear cache pero nag-update ng specs)
+            const localSecret = localStorage.getItem("agency_node_secret");
+            if (localSecret) {
+                const q2 = query(collection(db, "agents"), where("linkedDevice", "array-contains", localSecret));
+                const snap2 = await getDocs(q2);
+                if (!snap2.empty) foundAgentData = snap2.docs[0].data();
             }
-        });
+        }
 
-        if (foundAgent) {
-            display.textContent = `AGENT_VERIFIED: ${foundAgent}`;
-            msg.innerHTML = `Welcome back, Agent ${foundAgent}.<br><span style="font-size:12px; color:var(--green);">UPLINK_STABLE</span>`;
-            info.innerHTML = `AUTHORIZED_BRAND: <span style="color:var(--cyan)">${deviceBrandFromDB}</span><br>NODE_ID: ${localNodeSecret}`;
+        if (foundAgentData) {
+            const agentName = foundAgentData.agentName;
+            display.textContent = `AGENT_VERIFIED: ${agentName}`;
+            msg.innerHTML = `Welcome back, Agent ${agentName}.<br><span style="font-size:12px; color:var(--green);">UPLINK_STABLE</span>`;
+            info.innerHTML += `<br>BRAND: <span style="color:var(--cyan)">${foundAgentData.brandName || "GENERIC_NODE"}</span>`;
             
             btn.classList.remove('locked');
             btn.disabled = false;
-            
-            // I-save ang verified agent name para sa ibang pages
-            localStorage.setItem("cia_agent", foundAgent);
+
+            // Sync back to localStorage para sa persistence
+            localStorage.setItem("cia_agent", agentName);
+            localStorage.setItem("agency_node_secret", currentFP);
         } else {
             display.textContent = "ACCESS_DENIED";
-            msg.innerHTML = `<span style="color:var(--red);">SIGNATURE_MISMATCH</span>`;
-            info.innerHTML = `NODE_ID ${localNodeSecret} is not linked to any active Agent profile.`;
+            msg.innerHTML = `<span style="color:var(--red);">UNAUTHORIZED_NODE</span>`;
+            info.innerHTML = `ERROR: Node Signature not found in Bureau database.<br>Please run <a href="update_db.html" style="color:var(--cyan)">AUTHORIZATION_PROTOCOL</a>.`;
         }
     } catch (e) { 
         console.error(e);
         display.textContent = "UPLINK_ERROR";
-        info.textContent = "DATABASE_CONNECTION_FAILED";
+        info.textContent = "DATABASE_CONNECTION_OFFLINE";
     }
   }
 
   window.openReport = () => document.getElementById('report-modal').style.display = 'block';
   window.closeReport = () => document.getElementById('report-modal').style.display = 'none';
 
-  // Simulan ang trace pag-load
-  silentTrace();
+  // Start the hardware scan on load
+  window.onload = () => {
+      setTimeout(silentTrace, 500);
+  };
 </script>
 </body>
 </html>

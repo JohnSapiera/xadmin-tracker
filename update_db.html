@@ -3,46 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AGENCY_DEVICE_AUTHORIZATION</title>
+    <title>AGENCY_DEVICE_AUTHORIZATION_v13</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
     <style>
         :root { --cyan: #00f2ff; --bg: #01080b; --green: #00ff66; --border: rgba(0, 242, 255, 0.2); --mono: 'Share Tech Mono', monospace; }
         body { background: var(--bg); color: #fff; font-family: 'Rajdhani', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background-image: radial-gradient(circle at 50% 50%, #0a1f29 0%, var(--bg) 100%); }
-        .card { width: 90%; max-width: 400px; background: rgba(2, 12, 18, 0.98); padding: 30px; border: 1px solid var(--border); box-shadow: 0 0 50px rgba(0,0,0,1); }
-        h2 { color: var(--cyan); font-family: var(--mono); font-size: 1.2rem; border-left: 3px solid var(--cyan); padding-left: 10px; margin-bottom: 25px; }
-        .info-box { background: #000; padding: 15px; border: 1px solid #1a262b; margin-bottom: 20px; font-family: var(--mono); font-size: 12px; color: #888; }
-        .info-box span { color: var(--green); display: block; font-size: 14px; margin-top: 5px; word-break: break-all; }
-        select { width: 100%; padding: 15px; background: #000; color: #fff; border: 1px solid #333; font-family: var(--mono); margin-bottom: 25px; outline: none; }
-        .btn-auth { width: 100%; padding: 20px; background: transparent; color: var(--green); border: 2px solid var(--green); font-family: var(--mono); font-weight: 800; cursor: pointer; transition: 0.3s; letter-spacing: 2px; }
+        .card { width: 90%; max-width: 400px; background: rgba(2, 12, 18, 0.98); padding: 30px; border: 1px solid var(--border); box-shadow: 0 0 50px rgba(0,0,0,1); position: relative; }
+        h2 { color: var(--cyan); font-family: var(--mono); font-size: 1.2rem; border-left: 3px solid var(--cyan); padding-left: 10px; margin-bottom: 25px; letter-spacing: 2px; }
+        .info-box { background: #000; padding: 15px; border: 1px solid #1a262b; margin-bottom: 20px; font-family: var(--mono); font-size: 11px; color: #666; }
+        .info-box span { color: var(--green); display: block; font-size: 14px; margin-top: 5px; word-break: break-all; font-weight: bold; }
+        label { font-size: 10px; color: #555; font-family: var(--mono); display: block; margin-bottom: 5px; }
+        select { width: 100%; padding: 15px; background: #000; color: #fff; border: 1px solid #333; font-family: var(--mono); margin-bottom: 25px; outline: none; border-radius: 0; -webkit-appearance: none; }
+        .btn-auth { width: 100%; padding: 20px; background: transparent; color: var(--green); border: 2px solid var(--green); font-family: var(--mono); font-weight: 800; cursor: pointer; transition: 0.3s; letter-spacing: 2px; text-transform: uppercase; }
         .btn-auth:hover { background: var(--green); color: #000; box-shadow: 0 0 20px rgba(0, 255, 102, 0.4); }
-        #status { font-family: var(--mono); font-size: 11px; margin-top: 15px; color: #555; }
+        .btn-auth:active { transform: scale(0.98); }
+        #status { font-family: var(--mono); font-size: 10px; margin-top: 20px; color: #444; background: #000; padding: 10px; min-height: 50px; border: 1px solid #111; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h2>DEVICE_UPLINK_v12.2</h2>
+        <h2>UPLINK_REGISTRY</h2>
         
         <div class="info-box">
-            PERMANENT_HARDWARE_ID:
-            <span id="detected-device">ANALYZING...</span>
+            CURRENT_NODE_SIGNATURE:
+            <span id="detected-device">GENERATING_ID...</span>
         </div>
 
-        <label style="font-size: 10px; color: #555; font-family: var(--mono);">SELECT_AGENT_IDENTITY:</label>
+        <label>SELECT_AGENT_PROFILE:</label>
         <select id="agentSelect">
             <option value="JFSN">AGENT_JFSN</option>
             <option value="LZ">AGENT_LZ</option>
         </select>
 
-        <button class="btn-auth" onclick="authorizeAccess()">AUTHORIZE ACCESS</button>
+        <button class="btn-auth" onclick="authorizeAccess()">AUTHORIZE_THIS_DEVICE</button>
         
-        <div id="status">> SYSTEM_READY_FOR_HANDSHAKE</div>
+        <div id="status">> AWAITING_COMMAND...</div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
     <script>
+        // --- FIREBASE CONFIGURATION ---
         const firebaseConfig = { 
             apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
             authDomain: "my-admin-portal-12691.firebaseapp.com", 
@@ -54,57 +57,63 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // --- ENHANCED PERMANENT DETECTION ---
-        function getPermanentDeviceSignature() {
-            // 1. Check kung may existing ID na sa browser memory
-            let existingID = localStorage.getItem("agency_node_secret");
+        // --- PERMANENT IDENTITY ENGINE ---
+        function getPermanentID() {
+            // 1. Titingnan kung may luma nang ID sa memory ng browser
+            let id = localStorage.getItem("agency_node_secret");
             
-            // 2. Kung wala pa, gumawa ng bago based sa hardware
-            if (!existingID) {
+            if (!id) {
+                // 2. Kung bago ang device, kukuha ng Hardware info
                 const ua = navigator.userAgent;
                 let brand = "NODE";
 
-                if (/windows/i.test(ua)) brand = "WIN_PC";
+                if (/windows/i.test(ua)) brand = "PC_WIN";
+                else if (/macintosh/i.test(ua)) brand = "PC_MAC";
                 else if (/android/i.test(ua)) {
                     const match = ua.match(/Android\s+([^\s;]+);?\s+([^\s;]+)/);
                     brand = match ? match[2].toUpperCase().replace(/\s/g, '_') : "ANDROID";
                 }
                 else if (/iphone|ipad/i.test(ua)) brand = "APPLE_IOS";
 
-                // Generate random 4-char suffix
+                // 3. Gagawa ng random 4-letter suffix (e.g. WIN_PC_7X9K)
                 const suffix = Math.random().toString(36).substr(2, 4).toUpperCase();
-                existingID = `${brand}_${suffix}`;
+                id = `${brand}_${suffix}`;
                 
-                // I-save para permanent na sa browser na ito
-                localStorage.setItem("agency_node_secret", existingID);
+                // 4. I-save sa memory para kahit mag-refresh, ito pa rin ang ID
+                localStorage.setItem("agency_node_secret", id);
             }
-            return existingID;
+            return id;
         }
 
-        const finalSignature = getPermanentDeviceSignature();
-        document.getElementById('detected-device').innerText = finalSignature;
+        // Display the ID immediately
+        const nodeSignature = getPermanentID();
+        document.getElementById('detected-device').innerText = nodeSignature;
 
+        // --- DATABASE AUTHORIZATION ---
         async function authorizeAccess() {
             const agent = document.getElementById('agentSelect').value;
             const log = document.getElementById('status');
             
-            log.innerHTML = "> INITIATING_CLOUD_UPLINK...";
+            log.innerHTML = `> ATTEMPTING_UPLINK...<br>> TARGET: agents/${agent}`;
 
             try {
-                // Gamitin ang Agent Name bilang Document ID para malinis
+                // Gagamitin ang mismong Agent Name bilang Document ID (JFSN o LZ)
                 const agentRef = db.collection("agents").doc(agent);
 
+                // Isulat sa Firebase
                 await agentRef.set({
                     agentName: agent,
-                    // arrayUnion para dagdag lang nang dagdag sa iisang agent record
-                    linkedDevice: firebase.firestore.FieldValue.arrayUnion(finalSignature),
+                    // arrayUnion: Idadagdag ang nodeSignature sa listahan nang hindi nagbubura ng dati
+                    linkedDevice: firebase.firestore.FieldValue.arrayUnion(nodeSignature),
                     lastSync: firebase.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
 
-                log.innerHTML = `> <span style="color:var(--green)">SUCCESS: ${finalSignature} AUTHORIZED!</span>`;
-                alert("Device Authorization Successful!\n\nRegistered as: " + finalSignature);
+                log.innerHTML += `<br>> <span style="color:var(--green)">[+] SUCCESS: DEVICE_AUTHORIZED</span>`;
+                log.innerHTML += `<br>> ID: ${nodeSignature}`;
+                
+                alert(`SUCCESS!\n\nDevice: ${nodeSignature}\nAgent: ${agent}\n\nNgayon, buksan mo ang index.html at i-click ang handshake.`);
             } catch (e) {
-                log.innerHTML = "> ERROR: " + e.message;
+                log.innerHTML += `<br>> <span style="color:red">[!] ERROR: ${e.message}</span>`;
                 console.error(e);
             }
         }

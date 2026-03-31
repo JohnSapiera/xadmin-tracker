@@ -70,21 +70,45 @@
         .btn-terminate:hover { background: #ff3c3c; color: #000; }
 
         .footer-close { text-align: center; margin-top: 20px; font-size: 10px; color: #777; cursor: pointer; text-decoration: underline; }
+
+        /* Dashboard Button Style */
+.btn-dashboard {
+    background: transparent;
+    color: var(--neon);
+    border: 1px solid var(--neon);
+    padding: 5px 12px;
+    font-size: 10px;
+    text-decoration: none;
+    text-transform: uppercase;
+    font-weight: bold;
+    transition: 0.3s;
+    display: inline-block;
+    margin-bottom: 5px;
+    cursor: pointer;
+}
+
+.btn-dashboard:hover {
+    background: var(--neon);
+    color: #000;
+    box-shadow: 0 0 10px var(--neon);
+}
     </style>
 </head>
 <body>
 
     <div class="container">
         <div class="header">
-            <div>
-                <div style="font-size: 10px; color: #555;">RECORDS_SECTION</div>
-                <h2 id="agentName" style="margin:0; color: var(--neon); letter-spacing: 2px;">AGENT_--</h2>
-            </div>
-            <div id="deviceTag" style="font-size: 9px; color: #333;">DEVICE: UNKNOWN</div>
-        </div>
-
-        <div style="font-size: 11px; color: #555; margin-bottom: 10px;">>> ACTIVE_DOSSIERS:</div>
-        <div class="file-grid" id="mainFileGrid"></div>
+    <div>
+        <a href="dashboard.html" class="btn-dashboard"><< RETURN_TO_DASHBOARD</a>
+        
+        <div style="font-size: 10px; color: #555; margin-top: 5px;">RECORDS_SECTION</div>
+        <h2 id="agentName" style="margin:0; color: var(--neon); letter-spacing: 2px;">AGENT_--</h2>
+    </div>
+    <div style="text-align: right;">
+        <div id="deviceTag" style="font-size: 9px; color: #333;">DEVICE: UNKNOWN</div>
+        <div style="font-size: 8px; color: var(--red); font-weight: bold; margin-top: 5px;">RESTRICTED_ACCESS</div>
+    </div>
+</div>
     </div>
 
     <div id="missionOverlay">

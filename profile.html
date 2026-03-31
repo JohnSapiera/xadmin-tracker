@@ -12,13 +12,9 @@
         .container { max-width: 600px; margin: 0 auto; }
         .header { border-bottom: 2px solid var(--neon); padding-bottom: 10px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end; }
         
-        /* File Grid System */
         .file-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 25px; margin-top: 20px; }
 
-        /* The File/Folder Design */
         .file-item { position: relative; width: 100px; cursor: pointer; transition: 0.3s; }
-        
-        /* Folder Tab */
         .file-folder { 
             height: 80px; width: 100%; background: var(--folder-tan); border-radius: 2px 10px 2px 2px;
             position: relative; box-shadow: 4px 4px 0px rgba(0,0,0,0.5);
@@ -29,43 +25,45 @@
             background: var(--folder-tan); border-radius: 4px 4px 0 0;
         }
 
-        /* Top Secret Stamp on File */
         .file-label { font-size: 9px; color: #000; font-weight: 800; text-align: center; line-height: 1; }
         .file-id { font-size: 12px; color: #000; font-weight: 900; margin-top: 5px; }
 
-        /* Silhouette / Placeholder Style */
         .silhouette { opacity: 0.15; filter: grayscale(1); cursor: default; pointer-events: none; }
         .silhouette .file-folder { background: #333; }
-        .silhouette .file-label { color: #555; }
 
-        .file-item:not(.silhouette):hover { transform: translateY(-5px) rotate(-2deg); z-index: 10; }
-
-        /* Classified Document Overlay */
+        /* CLASSIFIED DOCUMENT MODAL */
         #missionOverlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.95); z-index: 100; justify-content: center; align-items: center;
+            backdrop-filter: blur(5px);
         }
         .classified-doc {
             background: #e2dcc8; color: #1a1a1a; width: 85%; max-width: 420px; padding: 40px;
             box-shadow: 15px 15px 0px #000; border: 1px solid #999;
-            animation: pullOut 0.4s ease-out; background-image: radial-gradient(#dcd5bc 1px, transparent 1px); background-size: 20px 20px;
+            position: relative; animation: pullOut 0.4s ease-out;
+            background-image: radial-gradient(#dcd5bc 1px, transparent 1px); background-size: 20px 20px;
         }
-        @keyframes pullOut { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes pullOut { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* Close X Button */
+        .doc-close-x {
+            position: absolute; top: 0; right: 0; background: #b22222; color: #fff;
+            border: none; padding: 10px 15px; font-weight: bold; cursor: pointer; font-family: 'JetBrains Mono';
+        }
 
         .doc-title { text-align: center; border-bottom: 3px double #1a1a1a; margin-bottom: 20px; padding-bottom: 10px; }
-        .doc-title h1 { margin: 0; font-size: 22px; letter-spacing: 4px; text-decoration: underline; }
+        .doc-title h1 { margin: 0; font-size: 20px; letter-spacing: 2px; text-decoration: underline; }
         
         .data-row { margin-bottom: 15px; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 5px; }
         .data-label { font-size: 9px; color: #666; font-weight: bold; }
-        .data-value { font-size: 14px; color: #000; text-transform: uppercase; }
+        .data-value { font-size: 14px; color: #000; text-transform: uppercase; font-weight: bold; }
 
-        .expense-tag { font-size: 18px; color: #b22222; font-weight: 800; display: block; margin-top: 5px; }
-        .btn-add { background: #000; color: #fff; border: none; padding: 5px 12px; font-size: 9px; cursor: pointer; border-radius: 3px; }
+        .expense-container { display: flex; align-items: center; justify-content: space-between; margin-top: 5px; }
+        .expense-tag { font-size: 22px; color: #b22222; font-weight: 800; }
+        .btn-edit { background: #1a1a1a; color: #fff; border: none; padding: 4px 10px; font-size: 9px; cursor: pointer; border-radius: 2px; }
 
-        .close-btn { position: absolute; bottom: -60px; left: 50%; transform: translateX(-50%); color: var(--neon); cursor: pointer; font-size: 12px; }
+        .footer-close { text-align: center; margin-top: 30px; font-size: 10px; color: #777; cursor: pointer; text-decoration: underline; }
     </style>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -85,153 +83,142 @@
 
     <div id="missionOverlay">
         <div class="classified-doc">
-            <div style="border: 2px solid #1a1a1a; padding: 5px; position: absolute; top: 15px; right: 15px; color: #1a1a1a; font-size: 8px; font-weight: 800;">CONFIDENTIAL</div>
+            <button class="doc-close-x" onclick="closeDoc()">X</button>
+            
+            <div style="border: 1px solid #1a1a1a; padding: 3px; position: absolute; top: 15px; left: 15px; color: #1a1a1a; font-size: 7px; font-weight: 800;">TOP_SECRET</div>
+            
             <div class="doc-title">
                 <h1>MISSION ORDER</h1>
-                <div id="moID" style="font-size: 10px; letter-spacing: 2px;">VA-00-RED</div>
+                <div id="moID" style="font-size: 10px; letter-spacing: 1px; color: #555;">REF: --</div>
             </div>
 
             <div class="data-row">
-                <div class="data-label">OPERATIONAL_OBJECTIVE:</div>
-                <div class="data-value" id="moObj">-- DATA_REDACTED --</div>
+                <div class="data-label">MISSION_IDENTITY:</div>
+                <div class="data-value" id="moObj">#00000</div>
             </div>
 
             <div class="data-row">
-                <div class="data-label">FUNDS_ALLOCATED (PHP):</div>
-                <span class="expense-tag" id="moPrice">₱ 0.00</span>
-                <button class="btn-add" onclick="addFunds()">+ INJECT_FUNDS</button>
+                <div class="data-label">TOTAL_EXPENSES (PHP):</div>
+                <div class="expense-container">
+                    <span class="expense-tag" id="moPrice">₱ 0.00</span>
+                    <button class="btn-edit" onclick="editExpenses()">[ EDIT_VALUE ]</button>
+                </div>
             </div>
 
             <div style="display: flex; justify-content: space-between; margin-top: 20px;">
                 <div class="data-row" style="flex: 1;">
                     <div class="data-label">DEPLOYMENT:</div>
-                    <div class="data-value" id="moStart" style="font-size: 11px;">00/00/26</div>
+                    <div class="data-value" id="moStart" style="font-size: 11px;">--/--/--</div>
                 </div>
                 <div class="data-row" style="flex: 1;">
                     <div class="data-label">EXPIRATION:</div>
-                    <div class="data-value" id="moEnd" style="font-size: 11px;">00/00/26</div>
+                    <div class="data-value" id="moEnd" style="font-size: 11px;">--/--/--</div>
                 </div>
             </div>
-            <div class="close-btn" onclick="closeDoc()">[ CLICK_TO_ARCHIVE_FILE ]</div>
+            
+            <div class="footer-close" onclick="closeDoc()">[ CLICK TO ARCHIVE FILE ]</div>
         </div>
     </div>
 
     <script type="module">
-    // Gamitin ang Modular Firebase (v10) para mag-match sa Dashboard mo
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, query, where, getDocs, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getFirestore, collection, query, where, getDocs, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    const firebaseConfig = { 
-        apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
-        authDomain: "my-admin-portal-12691.firebaseapp.com", 
-        projectId: "my-admin-portal-12691", 
-        storageBucket: "my-admin-portal-12691.firebasestorage.app", 
-        messagingSenderId: "317015091563", 
-        appId: "1:317015091563:web:d996e585751d5087cd442e" 
-    };
+        const firebaseConfig = { 
+            apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
+            authDomain: "my-admin-portal-12691.firebaseapp.com", 
+            projectId: "my-admin-portal-12691", 
+            storageBucket: "my-admin-portal-12691.firebasestorage.app", 
+            messagingSenderId: "317015091563", 
+            appId: "1:317015091563:web:d996e585751d5087cd442e" 
+        };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-    const agent = localStorage.getItem("cia_agent") || "LZ";
-    let activeDocID = null; // Ito ang Firestore Document ID
+        const agent = localStorage.getItem("cia_agent") || "LZ";
+        let activeDocID = null;
 
-    async function loadArchives() {
-        document.getElementById('agentName').innerText = `AGENT_${agent}`;
-        document.getElementById('deviceTag').innerText = `DEVICE: ${localStorage.getItem("device_uuid") || "---"}`;
-        
-        const grid = document.getElementById('mainFileGrid');
-        grid.innerHTML = ""; 
-
-        try {
-            // QUERY: Hanapin lahat sa 'mission_orders' kung saan ang agentName ay tugma
-            const q = query(collection(db, "mission_orders"), where("agentName", "==", agent));
-            const snap = await getDocs(q);
+        async function loadArchives() {
+            document.getElementById('agentName').innerText = `AGENT_${agent}`;
+            document.getElementById('deviceTag').innerText = `DEVICE: ${localStorage.getItem("device_uuid") || "---"}`;
             
-            // Render Active Files mula sa database
-            snap.forEach(documentSnap => {
-                const data = documentSnap.data();
-                const vNum = data.vAgent || "??";
-                const docID = documentSnap.id;
+            const grid = document.getElementById('mainFileGrid');
+            grid.innerHTML = ""; 
 
-                grid.innerHTML += `
-                    <div class="file-item" onclick="openDoc('${docID}')">
-                        <div class="file-folder">
-                            <span class="file-label">MISSION</span>
-                            <span class="file-id">#${vNum}</span>
+            try {
+                const q = query(collection(db, "mission_orders"), where("agentName", "==", agent));
+                const snap = await getDocs(q);
+                
+                snap.forEach(documentSnap => {
+                    const data = documentSnap.data();
+                    const vNum = data.vAgent || "??";
+                    const docID = documentSnap.id;
+
+                    grid.innerHTML += `
+                        <div class="file-item" onclick="openDoc('${docID}')">
+                            <div class="file-folder">
+                                <span class="file-label">MISSION</span>
+                                <span class="file-id">#${vNum}</span>
+                            </div>
                         </div>
-                    </div>
-                `;
-            });
+                    `;
+                });
 
-            // Laging mag-append ng 2 Silhouette Files sa dulo (Preview)
-            for(let i=0; i<2; i++) {
-                grid.innerHTML += `
-                    <div class="file-item silhouette">
-                        <div class="file-folder">
-                            <span class="file-label">PENDING</span>
-                            <span class="file-id">??</span>
+                // 2 Ghost Files
+                for(let i=0; i<2; i++) {
+                    grid.innerHTML += `
+                        <div class="file-item silhouette">
+                            <div class="file-folder">
+                                <span class="file-label">PENDING</span>
+                                <span class="file-id">??</span>
+                            </div>
                         </div>
-                    </div>
-                `;
-            }
-
-        } catch (e) {
-            console.error("Archive Read Error", e);
+                    `;
+                }
+            } catch (e) { console.error(e); }
         }
-    }
 
-    // Function para buksan ang Classified Document
-    window.openDoc = async (docID) => {
-        activeDocID = docID;
-        const docRef = doc(db, "mission_orders", docID);
-        const docSnap = await getDoc(docRef);
-        
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-            
-            // I-populate ang modal
-            document.getElementById('moID').innerText = `CASE_REF: VA-${data.vAgent}`;
-            document.getElementById('moObj').innerText = `MISSION_ID: #${data.orderNumber}`;
-            
-            // Formatting ng Currency
-            const formattedExpense = parseFloat(data.expenses || 0).toLocaleString('en-PH', {
-                minimumFractionDigits: 2, 
-                maximumFractionDigits: 2
-            });
-            document.getElementById('moPrice').innerText = `₱ ${formattedExpense}`;
-            
-            // Handle Dates (Firestore Timestamp to String)
-            const dDate = data.deploymentDate?.toDate ? data.deploymentDate.toDate().toLocaleDateString() : data.deploymentDate;
-            const eDate = data.expirationDate?.toDate ? data.expirationDate.toDate().toLocaleDateString() : data.expirationDate;
-            
-            document.getElementById('moStart').innerText = dDate || "N/A";
-            document.getElementById('moEnd').innerText = eDate || "N/A";
-
-            document.getElementById('missionOverlay').style.display = 'flex';
-        }
-    };
-
-    window.closeDoc = () => {
-        document.getElementById('missionOverlay').style.display = 'none';
-    };
-
-    window.addFunds = async () => {
-        const amount = prompt("Enter additional operational funds (PHP):");
-        if(amount && !isNaN(amount)) {
-            const docRef = doc(db, "mission_orders", activeDocID);
+        window.openDoc = async (docID) => {
+            activeDocID = docID;
+            const docRef = doc(db, "mission_orders", docID);
             const docSnap = await getDoc(docRef);
-            const currentExpenses = parseFloat(docSnap.data().expenses || 0);
-            const newTotal = currentExpenses + parseFloat(amount);
             
-            await updateDoc(docRef, { expenses: newTotal });
-            
-            document.getElementById('moPrice').innerText = `₱ ${newTotal.toLocaleString('en-PH', {minimumFractionDigits: 2})}`;
-            alert("FINANCIAL_UPLINK_SUCCESSFUL.");
-        }
-    };
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                document.getElementById('moID').innerText = `REF: VAGENT-${data.vAgent}`;
+                document.getElementById('moObj').innerText = `#${data.orderNumber}`;
+                
+                const exp = parseFloat(data.expenses || 0);
+                document.getElementById('moPrice').innerText = `₱ ${exp.toLocaleString('en-PH', {minimumFractionDigits: 2})}`;
+                
+                const dDate = data.deploymentDate?.toDate ? data.deploymentDate.toDate().toLocaleDateString() : data.deploymentDate;
+                const eDate = data.expirationDate?.toDate ? data.expirationDate.toDate().toLocaleDateString() : data.expirationDate;
+                
+                document.getElementById('moStart').innerText = dDate || "--";
+                document.getElementById('moEnd').innerText = eDate || "--";
+                document.getElementById('missionOverlay').style.display = 'flex';
+            }
+        };
 
-    window.onload = loadArchives;
-</script>
+        window.editExpenses = async () => {
+            const currentStr = document.getElementById('moPrice').innerText.replace('₱ ', '').replace(/,/g, '');
+            const newAmount = prompt("ENTER NEW TOTAL EXPENSE AMOUNT (PHP):", currentStr);
+            
+            if(newAmount !== null && !isNaN(newAmount) && newAmount.trim() !== "") {
+                const docRef = doc(db, "mission_orders", activeDocID);
+                await updateDoc(docRef, { expenses: parseFloat(newAmount) });
+                
+                document.getElementById('moPrice').innerText = `₱ ${parseFloat(newAmount).toLocaleString('en-PH', {minimumFractionDigits: 2})}`;
+                alert("DATABASE UPDATED.");
+            }
+        };
+
+        window.closeDoc = () => {
+            document.getElementById('missionOverlay').style.display = 'none';
+        };
+
+        window.onload = loadArchives;
+    </script>
 </body>
 </html>

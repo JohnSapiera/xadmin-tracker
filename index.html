@@ -3,99 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BUREAU_SYSTEM_AUTH</title>
+    <title>CENTRAL_INTELLIGENCE_AUTH</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #01080b;
-            --cyan: #00f3ff;
-            --red: #ff003c;
+            --bg-color: #050505;
+            --accent-color: #00f3ff;
+            --alert-color: #ff003c;
+            --text-dim: #4a5a61;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * { box-sizing: border-box; margin: 0; padding: 0; overflow: hidden; }
 
         body { 
-            background: var(--bg); 
-            color: var(--cyan); 
+            background: var(--bg-color); 
+            color: var(--accent-color); 
             font-family: 'Share Tech Mono', monospace;
             height: 100vh; 
             display: flex; 
             align-items: center; 
-            justify-content: center; 
-            overflow: hidden;
+            justify-content: center;
         }
 
-        .auth-container {
-            text-align: center;
-            padding: 40px;
-            border: 1px solid rgba(0, 243, 255, 0.1);
-            background: rgba(0, 0, 0, 0.4);
+        /* Scanline Effect */
+        body::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        .auth-frame {
+            width: 280px;
+            padding: 30px;
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            background: rgba(2, 12, 18, 0.8);
             position: relative;
-            width: 80%;
-            max-width: 300px;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.05);
         }
 
-        .status-label {
-            font-size: 10px;
-            letter-spacing: 2px;
-            margin-bottom: 15px;
-            opacity: 0.6;
+        .corner {
+            position: absolute; width: 10px; height: 10px;
+            border: 2px solid var(--accent-color);
+        }
+        .top-l { top: -2px; left: -2px; border-right: none; border-bottom: none; }
+        .top-r { top: -2px; right: -2px; border-left: none; border-bottom: none; }
+        .bot-l { bottom: -2px; left: -2px; border-right: none; border-top: none; }
+        .bot-r { bottom: -2px; right: -2px; border-left: none; border-top: none; }
+
+        .header-tag {
+            font-size: 9px;
+            letter-spacing: 4px;
+            color: var(--text-dim);
+            margin-bottom: 25px;
+            text-align: center;
             text-transform: uppercase;
         }
 
-        .terminal-text {
-            font-size: 14px;
-            margin-bottom: 25px;
-            height: 20px;
+        .status-container {
+            margin: 20px 0;
+            text-align: left;
         }
 
-        /* Scanning Animation */
-        .scan-line {
+        .terminal-line {
+            font-size: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .label { color: var(--text-dim); }
+
+        #auth-status {
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .progress-container {
             width: 100%;
-            height: 1px;
-            background: var(--cyan);
-            box-shadow: 0 0 10px var(--cyan);
-            position: absolute;
-            left: 0;
-            animation: moveScan 2s infinite ease-in-out;
+            height: 2px;
+            background: #111;
+            margin-top: 15px;
+            position: relative;
         }
 
-        @keyframes moveScan {
-            0% { top: 0; opacity: 0; }
-            50% { opacity: 1; }
-            100% { top: 100%; opacity: 0; }
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: var(--accent-color);
+            box-shadow: 0 0 10px var(--accent-color);
+            transition: width 0.5s ease;
         }
 
-        #error-notice {
+        #error-overlay {
             display: none;
-            color: var(--red);
-            font-size: 11px;
-            margin-top: 20px;
-            border-top: 1px dashed var(--red);
-            padding-top: 15px;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 0, 0, 0.95);
+            z-index: 10;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: var(--alert-color);
+            border: 1px solid var(--alert-color);
         }
 
-        .hidden-id {
-            font-size: 8px;
-            color: #1a262b;
-            margin-top: 30px;
-        }
+        .blink { animation: blinker 1s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
 
-    <div class="auth-container">
-        <div class="scan-line"></div>
-        <div class="status-label">Bureau_Security_Audit</div>
-        <div class="terminal-text" id="status-display">INITIALIZING_SCAN...</div>
-        
-        <div id="error-notice">
-            ACCESS_DENIED<br>
-            UNAUTHORIZED_HARDWARE_DETECTED<br>
-            TERMINATING_CONNECTION...
+    <div class="auth-frame">
+        <div class="corner top-l"></div>
+        <div class="corner top-r"></div>
+        <div class="corner bot-l"></div>
+        <div class="corner bot-r"></div>
+
+        <div class="header-tag">Global_Node_Security</div>
+
+        <div class="status-container">
+            <div class="terminal-line">
+                <span class="label">NODE:</span>
+                <span id="node-id">FETCHING...</span>
+            </div>
+            <div class="terminal-line">
+                <span class="label">PROTOCOL:</span>
+                <span>SEC_AUDIT_v4</span>
+            </div>
+            <div class="terminal-line">
+                <span class="label">STATUS:</span>
+                <span id="auth-status">WAITING...</span>
+            </div>
         </div>
 
-        <div class="hidden-id" id="sig-debug"></div>
+        <div class="progress-container">
+            <div id="bar" class="progress-bar"></div>
+        </div>
+
+        <div id="error-overlay">
+            <div class="blink" style="font-weight:bold; font-size:16px;">ACCESS_DENIED</div>
+            <div style="font-size:8px; margin-top:10px;">HARDWARE_MISMATCH_TERMINATED</div>
+        </div>
     </div>
 
 <script type="module">
@@ -114,62 +168,58 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    async function performAudit() {
-        const status = document.getElementById('status-display');
-        const errorNotice = document.getElementById('error-notice');
-        const debug = document.getElementById('sig-debug');
+    async function initializeSystem() {
+        const bar = document.getElementById('bar');
+        const status = document.getElementById('auth-status');
+        const nodeId = document.getElementById('node-id');
+        const errorOverlay = document.getElementById('error-overlay');
 
-        // Generate Hardware Fingerprint
+        // Generate Signature
         const signature = (navigator.userAgent + screen.width + navigator.platform).replace(/\s/g, '');
-        
-        // I-save sa console/hidden div para ma-copy mo if needed sa Firebase
-        console.log("Device Signature:", signature);
-        debug.innerText = "SIG_ID: " + signature.substring(0, 15) + "...";
+        nodeId.innerText = signature.substring(0, 10).toUpperCase();
+
+        // Start Animation sequence
+        bar.style.width = "40%";
+        status.innerText = "SCANNING...";
 
         try {
-            status.innerText = "SCANNING_NODE...";
             const querySnapshot = await getDocs(collection(db, "agents"));
-            let isVerified = false;
+            let verified = false;
 
             querySnapshot.forEach((doc) => {
                 const data = doc.data();
-                
-                // I-check ang lastFingerprint o linkedDevice array
                 const hwMatch = data.lastFingerprint === signature;
                 const secretMatch = data.linkedDevice && data.linkedDevice.includes(localStorage.getItem("agency_node_secret"));
 
                 if (hwMatch || secretMatch) {
-                    isVerified = true;
-                    // I-store ang verified agent name para magamit sa intel.html
+                    verified = true;
                     localStorage.setItem("cia_agent", data.agentName);
-                    
-                    // Auto-heal secret key if missing
+                    // Heal key if missing
                     if(!localStorage.getItem("agency_node_secret") && data.linkedDevice) {
                         localStorage.setItem("agency_node_secret", data.linkedDevice[0]);
                     }
                 }
             });
 
-            if (isVerified) {
-                status.innerText = "ACCESS_GRANTED";
+            bar.style.width = "100%";
+
+            if (verified) {
+                status.innerText = "GRANTED";
                 status.style.color = "#00ff66";
-                setTimeout(() => {
-                    window.location.href = "intel.html";
-                }, 1500);
+                setTimeout(() => { window.location.href = "intel.html"; }, 1200);
             } else {
-                status.innerText = "AUTH_FAILED";
-                errorNotice.style.display = "block";
+                status.innerText = "DENIED";
+                status.style.color = "var(--alert-color)";
+                setTimeout(() => { errorOverlay.style.display = "flex"; }, 500);
             }
 
         } catch (e) {
-            status.innerText = "UPLINK_ERROR";
+            status.innerText = "OFFLINE";
             console.error(e);
         }
     }
 
-    // Run audit immediately
-    window.onload = performAudit;
+    window.onload = initializeSystem;
 </script>
-
 </body>
 </html>

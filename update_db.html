@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TERMINAL_UPLINK_v18</title>
+    <title>TERMINAL_UPLINK_v18.5</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
     <style>
         :root { --cyan: #00f2ff; --bg: #020a0d; --green: #00ff66; --border: rgba(0, 242, 255, 0.2); }
@@ -46,7 +46,6 @@
         }
         .btn-auth:hover { background: var(--green); color: #000; box-shadow: 0 0 20px rgba(0, 255, 102, 0.3); }
 
-        /* Ticker Styling */
         .ticker-wrap {
             margin-top: 25px; background: rgba(0, 242, 255, 0.05);
             border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
@@ -63,30 +62,29 @@
 <body>
 
     <div class="card">
-        <h2>DEVICE_ENROLLMENT_v18</h2>
+        <h2>MULTI_DEVICE_UPLINK</h2>
 
         <div class="form-container">
             <div class="field-group">
-                <label>HARDWARE_HASH (Signature):</label>
+                <label>CURRENT_NODE_SIGNATURE:</label>
                 <input type="text" id="val-fp" class="input-field" readonly>
             </div>
 
             <div class="field-group">
-                <label>AGENT_ID_RECOGNITION:</label>
+                <label>SELECT_AGENT_PROFILE:</label>
                 <select id="agentSelect" class="input-field">
                     <option value="JEFFERSON VALLES">AGENT_JEFFERSON</option>
                     <option value="AGENT_LZ">AGENT_LZ</option>
                 </select>
             </div>
 
-            <button class="btn-auth" onclick="authorizeAccess()">Push to Database</button>
+            <button class="btn-auth" onclick="authorizeAccess()">Authorize Current Device</button>
         </div>
 
-        <div id="status">> SYSTEM_IDLE...</div>
+        <div id="status">> SYSTEM_READY...</div>
 
         <div class="ticker-wrap">
-            <div class="ticker-move" id="ticker-content">
-                </div>
+            <div class="ticker-move" id="ticker-content"></div>
         </div>
     </div>
 
@@ -109,18 +107,16 @@
             const canvas = document.createElement('canvas');
             const gl = canvas.getContext('webgl');
             const debugInfo = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
-            const gpu = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "UNKNOWN_GPU";
+            const gpu = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "GENERIC_GPU";
             
             return {
-                brand: navigator.userAgent.match(/Android\s+([^\s;]+);?\s+([^\s;]+)/)?.[2] || "MOBILE_NODE",
+                brand: navigator.userAgent.match(/Android\s+([^\s;]+);?\s+([^\s;]+)/)?.[2] || "NODE_STATION",
                 gpu: gpu.split('/').pop().trim(),
                 res: `${window.screen.width}x${window.screen.height}`,
-                plt: navigator.platform,
-                ram: navigator.deviceMemory || "N/A"
+                plt: navigator.platform
             };
         }
 
-        // Pinagsamang logic para sa Signature (Hashed Hardware Data)
         function generateSignature(s) {
             const raw = s.gpu + s.res + s.plt + s.brand;
             let hash = 0;
@@ -134,7 +130,6 @@
         const specs = getHardwareSpecs();
         const signature = generateSignature(specs);
 
-        // UI Initialization
         document.getElementById('val-fp').value = signature;
         const tickerHtml = `
             <div class="ticker-item">MODEL: <span>${specs.brand}</span></div>
@@ -147,33 +142,21 @@
         async function authorizeAccess() {
             const agent = document.getElementById('agentSelect').value;
             const log = document.getElementById('status');
-            log.innerHTML = `> INITIALIZING_HANDSHAKE...`;
+            log.innerHTML = `> SYNCING_WITH_CENTRAL_DB...`;
 
             try {
-                // Device Data Object
-                const deviceData = {
-                    id: signature,
-                    label: specs.brand,
-                    platform: specs.plt,
-                    lastSeen: new Date().toISOString()
-                };
-
-                // PUSH TO FIREBASE
-                // Gagamit ng arrayUnion para ma-store ang MARAMING signatures sa isang agent
+                // Gagamit tayo ng arrayUnion para ma-store ang signature sa 'linkedSignatures' array
                 await db.collection("agents").doc(agent).set({
                     agentName: agent,
-                    lastFingerprint: signature, // current active signature
-                    linkedDevices: firebase.firestore.FieldValue.arrayUnion(deviceData),
-                    brandName: specs.brand,
+                    // Ito ang magic part: ina-add nito ang bagong signature sa listahan nang hindi nabubura ang luma
+                    linkedSignatures: firebase.firestore.FieldValue.arrayUnion(signature),
+                    lastFingerprint: signature,
                     lastSync: firebase.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
 
-                // Isave sa local para sa mabilis na check sa dashboard
                 localStorage.setItem("cia_agent", agent);
-                localStorage.setItem("intel_device_signature", signature);
-
-                log.innerHTML = `> <span style="color:var(--green)">SUCCESS: DEVICE_RECOGNIZED</span>`;
-                alert(`SUCCESS: Agent ${agent} Enrollment Complete.`);
+                log.innerHTML = `> <span style="color:var(--green)">UPLINK_SUCCESSFUL</span>`;
+                alert(`DEVICE AUTHORIZED: Current device signature [${signature}] has been linked to Agent ${agent}.`);
             } catch (e) {
                 log.innerHTML = `> ERROR: ${e.message}`;
             }

@@ -116,85 +116,122 @@
         </div>
     </div>
 
-    <script>
-        const firebaseConfig = { apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", authDomain: "my-admin-portal-12691.firebaseapp.com", projectId: "my-admin-portal-12691", storageBucket: "my-admin-portal-12691.firebasestorage.app", messagingSenderId: "317015091563", appId: "1:317015091563:web:baab5171d8e0a58acd442e" };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+    <script type="module">
+    // Gamitin ang Modular Firebase (v10) para mag-match sa Dashboard mo
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, query, where, getDocs, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-        const agent = localStorage.getItem("cia_agent") || "LZ";
-        let activeVNum = null;
+    const firebaseConfig = { 
+        apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
+        authDomain: "my-admin-portal-12691.firebaseapp.com", 
+        projectId: "my-admin-portal-12691", 
+        storageBucket: "my-admin-portal-12691.firebasestorage.app", 
+        messagingSenderId: "317015091563", 
+        appId: "1:317015091563:web:d996e585751d5087cd442e" 
+    };
 
-        async function loadArchives() {
-            document.getElementById('agentName').innerText = `AGENT_${agent}`;
-            document.getElementById('deviceTag').innerText = `DEVICE: ${localStorage.getItem("device_uuid") || "---"}`;
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const agent = localStorage.getItem("cia_agent") || "LZ";
+    let activeDocID = null; // Ito ang Firestore Document ID
+
+    async function loadArchives() {
+        document.getElementById('agentName').innerText = `AGENT_${agent}`;
+        document.getElementById('deviceTag').innerText = `DEVICE: ${localStorage.getItem("device_uuid") || "---"}`;
+        
+        const grid = document.getElementById('mainFileGrid');
+        grid.innerHTML = ""; 
+
+        try {
+            // QUERY: Hanapin lahat sa 'mission_orders' kung saan ang agentName ay tugma
+            const q = query(collection(db, "mission_orders"), where("agentName", "==", agent));
+            const snap = await getDocs(q);
             
-            const grid = document.getElementById('mainFileGrid');
-            grid.innerHTML = ""; // Clear grid
+            // Render Active Files mula sa database
+            snap.forEach(documentSnap => {
+                const data = documentSnap.data();
+                const vNum = data.vAgent || "??";
+                const docID = documentSnap.id;
 
-            try {
-                // 1. Kuhanin lahat ng Active VAgents sa Database
-                const snap = await db.collection("agents").doc(agent).collection("VAgents").get();
-                
-                // 2. I-render ang mga existing files
-                snap.forEach(doc => {
-                    const id = doc.id.replace('Agent', '');
-                    grid.innerHTML += `
-                        <div class="file-item" onclick="openDoc('${doc.id}')">
-                            <div class="file-folder">
-                                <span class="file-label">MISSION</span>
-                                <span class="file-id">#${id}</span>
-                            </div>
+                grid.innerHTML += `
+                    <div class="file-item" onclick="openDoc('${docID}')">
+                        <div class="file-folder">
+                            <span class="file-label">MISSION</span>
+                            <span class="file-id">#${vNum}</span>
                         </div>
-                    `;
-                });
+                    </div>
+                `;
+            });
 
-                // 3. I-append ang 2 Silhouette Files (Preview Only) sa dulo
-                for(let i=0; i<2; i++) {
-                    grid.innerHTML += `
-                        <div class="file-item silhouette">
-                            <div class="file-folder">
-                                <span class="file-label">PENDING</span>
-                                <span class="file-id">??</span>
-                            </div>
+            // Laging mag-append ng 2 Silhouette Files sa dulo (Preview)
+            for(let i=0; i<2; i++) {
+                grid.innerHTML += `
+                    <div class="file-item silhouette">
+                        <div class="file-folder">
+                            <span class="file-label">PENDING</span>
+                            <span class="file-id">??</span>
                         </div>
-                    `;
-                }
-
-            } catch (e) {
-                console.error("Archive Read Error", e);
+                    </div>
+                `;
             }
+
+        } catch (e) {
+            console.error("Archive Read Error", e);
         }
+    }
 
-        async function openDoc(vID) {
-            activeVNum = vID;
-            const doc = await db.collection("agents").doc(agent).collection("VAgents").doc(vID).get();
-            const data = doc.data();
-
-            document.getElementById('moID').innerText = `CASE_REF: ${vID.toUpperCase()}`;
-            document.getElementById('moObj').innerText = data.missionDetails || "NO_DESCRIPTION";
-            document.getElementById('moPrice').innerText = `₱ ${parseFloat(data.expenses || 0).toLocaleString('en-PH', {minimumFractionDigits: 2})}`;
-            document.getElementById('moStart').innerText = data.deploymentDate || "N/A";
-            document.getElementById('moEnd').innerText = data.expirationDate || "N/A";
+    // Function para buksan ang Classified Document
+    window.openDoc = async (docID) => {
+        activeDocID = docID;
+        const docRef = doc(db, "mission_orders", docID);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            
+            // I-populate ang modal
+            document.getElementById('moID').innerText = `CASE_REF: VA-${data.vAgent}`;
+            document.getElementById('moObj').innerText = `MISSION_ID: #${data.orderNumber}`;
+            
+            // Formatting ng Currency
+            const formattedExpense = parseFloat(data.expenses || 0).toLocaleString('en-PH', {
+                minimumFractionDigits: 2, 
+                maximumFractionDigits: 2
+            });
+            document.getElementById('moPrice').innerText = `₱ ${formattedExpense}`;
+            
+            // Handle Dates (Firestore Timestamp to String)
+            const dDate = data.deploymentDate?.toDate ? data.deploymentDate.toDate().toLocaleDateString() : data.deploymentDate;
+            const eDate = data.expirationDate?.toDate ? data.expirationDate.toDate().toLocaleDateString() : data.expirationDate;
+            
+            document.getElementById('moStart').innerText = dDate || "N/A";
+            document.getElementById('moEnd').innerText = eDate || "N/A";
 
             document.getElementById('missionOverlay').style.display = 'flex';
         }
+    };
 
-        function closeDoc() { document.getElementById('missionOverlay').style.display = 'none'; }
+    window.closeDoc = () => {
+        document.getElementById('missionOverlay').style.display = 'none';
+    };
 
-        async function addFunds() {
-            const amount = prompt("Enter additional operational funds (PHP):");
-            if(amount && !isNaN(amount)) {
-                const ref = db.collection("agents").doc(agent).collection("VAgents").doc(activeVNum);
-                const currentDoc = await ref.get();
-                const newTotal = parseFloat(currentDoc.data().expenses || 0) + parseFloat(amount);
-                
-                await ref.update({ expenses: newTotal });
-                document.getElementById('moPrice').innerText = `₱ ${newTotal.toLocaleString('en-PH', {minimumFractionDigits: 2})}`;
-                alert("FINANCIAL_UPLINK_SUCCESSFUL.");
-            }
+    window.addFunds = async () => {
+        const amount = prompt("Enter additional operational funds (PHP):");
+        if(amount && !isNaN(amount)) {
+            const docRef = doc(db, "mission_orders", activeDocID);
+            const docSnap = await getDoc(docRef);
+            const currentExpenses = parseFloat(docSnap.data().expenses || 0);
+            const newTotal = currentExpenses + parseFloat(amount);
+            
+            await updateDoc(docRef, { expenses: newTotal });
+            
+            document.getElementById('moPrice').innerText = `₱ ${newTotal.toLocaleString('en-PH', {minimumFractionDigits: 2})}`;
+            alert("FINANCIAL_UPLINK_SUCCESSFUL.");
         }
+    };
 
-        window.onload = loadArchives;
-    </script>
+    window.onload = loadArchives;
+</script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>GATEWAY_v7.5_INITIATE</title>
+  <title>GATEWAY_v8.0_MANUAL</title>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
   <style>
     :root { 
@@ -33,11 +33,11 @@
     .btn-retrieve { background: var(--blue) !important; border-color: var(--blue) !important; color: #fff !important; }
     .btn-prohibited { background: var(--gray) !important; border-color: #444 !important; color: #555 !important; cursor: not-allowed !important; }
     .btn-terminate { color: var(--red); border-color: var(--red); }
-    .btn-initiate { width: 100%; margin-top: 15px; background: var(--green); color: #000; border: none; }
+    .btn-initiate { width: 100%; margin-top: 15px; background: var(--green); color: #000; border: none; font-size: 16px; letter-spacing: 2px; }
 
     #terminal { background: #000; border: 1px solid #111; padding: 10px; font-family: var(--mono); font-size: 10px; min-height: 120px; color: #444; margin-top: 15px; overflow-y: auto; line-height: 1.4; }
     
-    /* MODAL SYSTEM & ANIMATION */
+    /* MODAL SYSTEM */
     .modal-overlay { 
       display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); 
       z-index: 1000; align-items: center; justify-content: center; padding: 20px;
@@ -58,9 +58,17 @@
     .form-header { text-align: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
     .form-id { font-size: 22px; color: var(--cyan); letter-spacing: 3px; font-family: var(--mono); }
 
-    .data-row { margin-bottom: 12px; font-family: var(--mono); border-bottom: 1px solid rgba(255,255,255,0.03); padding-bottom: 5px; display: flex; justify-content: space-between; }
+    .data-row { margin-bottom: 12px; font-family: var(--mono); border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px; display: flex; justify-content: space-between; align-items: center; }
     .data-label { font-size: 10px; color: #666; text-transform: uppercase; }
-    .data-val { font-size: 14px; color: #ddd; text-align: right; }
+    
+    /* INPUT STYLE INSIDE MODAL */
+    .modal-input {
+      background: rgba(0,243,255,0.05); border: 1px solid #333;
+      color: var(--cyan); font-family: var(--mono); font-size: 14px; text-align: right;
+      width: 130px; outline: none; padding: 4px 8px; border-radius: 2px;
+    }
+    .modal-input:focus { border-color: var(--cyan); }
+    .read-only-val { font-size: 14px; color: #ddd; text-align: right; }
 
     nav { position: fixed; bottom: 0; left: 0; right: 0; height: 55px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; }
     .nav-item { display: flex; align-items: center; justify-content: center; color: #333; font-size: 11px; font-family: var(--mono); }
@@ -70,10 +78,10 @@
 <body>
 
 <header>
-  <span>INITIATE_GATEWAY_v7.5</span>
+  <span>GATEWAY_PROTOCOL_v8.0</span>
   <span id="clock" style="color:var(--cyan)">00:00:00</span>
 </header>
-<div class="ticker">PROTOCOLS: ACTIVE // AUTO_SCAN: ON // STATUS: SECURE</div>
+<div class="ticker">MODE: MANUAL_VAGENT_INPUT // EXPENSES: FIXED_0.00 // STATUS: READY</div>
 
 <main>
   <div class="search-box">
@@ -83,31 +91,46 @@
       <button id="term-btn" class="btn btn-terminate">TERMINATE</button>
     </div>
   </div>
-  <div id="terminal">> WAITING_FOR_INPUT...</div>
+  <div id="terminal">> AWAITING MISSION ID...</div>
 </main>
 
 <div id="entry-modal" class="modal-overlay">
   <div class="modal-content">
     <button class="modal-close" onclick="closeModal()">X</button>
     <div class="form-header">
-      <div style="font-size: 9px; color: #555;">MISSION ORDER</div>
+      <div style="font-size: 9px; color: #555;">REGISTRATION FORM</div>
       <div class="form-id" id="m-id-display">#00000</div>
     </div>
     
-    <div class="data-row"><span class="data-label">VAgent#</span><span class="data-val" id="m-agent">--</span></div>
-    <div class="data-row"><span class="data-label">Expenses</span><span class="data-val" id="m-exp">0.00</span></div>
-    <div class="data-row"><span class="data-label">Deployment</span><span class="data-val" id="m-dep">--</span></div>
-    <div class="data-row"><span class="data-label">Expiration</span><span class="data-val" id="m-expir" style="color:var(--red)">--</span></div>
+    <div class="data-row">
+      <span class="data-label">VAgent#</span>
+      <input type="tel" id="input-vagent" class="modal-input" placeholder="INPUT ID">
+    </div>
+
+    <div class="data-row">
+      <span class="data-label">Expenses</span>
+      <span class="read-only-val" style="color: var(--green);">0.00</span>
+    </div>
     
-    <div id="status-box" style="text-align: center; font-size: 12px; margin-top: 10px; font-family: var(--mono);"></div>
+    <div class="data-row">
+      <span class="data-label">Deployment</span>
+      <span class="read-only-val" id="m-dep">--</span>
+    </div>
+
+    <div class="data-row">
+      <span class="data-label">Expiration</span>
+      <span class="read-only-val" id="m-expir" style="color:var(--red)">--</span>
+    </div>
     
-    <button id="initiate-btn" class="btn btn-initiate">INITIATE SAVE</button>
+    <div id="status-box" style="text-align: center; font-size: 11px; margin-top: 10px; font-family: var(--mono); opacity: 0.6;"></div>
+    
+    <button id="initiate-btn" class="btn btn-initiate">INITIATE</button>
   </div>
 </div>
 
 <nav>
   <div class="nav-item active">DASHBOARD</div>
-  <div class="nav-item">LOGS</div>
+  <div class="nav-item">ARCHIVE</div>
 </nav>
 
 <script type="module">
@@ -131,23 +154,24 @@
   const actionBtn = document.getElementById('action-btn');
   const termBtn = document.getElementById('term-btn');
   const initiateBtn = document.getElementById('initiate-btn');
+  const vagentInput = document.getElementById('input-vagent');
   const termLog = document.getElementById('terminal');
   
   let currentData = null;
   let accessStatus = "NEW";
 
-  // --- AUTO SEARCH ---
+  // --- AUTO SEARCH LOGIC ---
   input.addEventListener('input', async (e) => {
     const val = e.target.value.trim();
     if (val.length >= 4) {
-      log(`SCANNING: ${val}...`, 'cyan');
+      log(`SCANNING...`, 'cyan');
       try {
         const qB = query(collection(db, "blacklist"), where("targetID", "==", val));
         const sB = await getDocs(qB);
         if (!sB.empty) {
           accessStatus = "PROHIBITED";
           updateButton("PROHIBITED", "btn-prohibited");
-          log(`ID ${val} BLOCKED.`, 'red');
+          log(`ID ${val} BLACKLISTED.`, 'red');
           return;
         }
 
@@ -158,22 +182,22 @@
           const expDate = data.expirationDate.toDate ? data.expirationDate.toDate() : new Date(data.expirationDate);
           
           if (new Date() > expDate) {
-            log(`ID ${val} EXPIRED. AUTO-TERMINATING...`, 'red');
-            await addDoc(collection(db, "blacklist"), { targetID: val, reason: "EXPIRED", timestamp: serverTimestamp() });
+            log(`ID ${val} EXPIRED. MOVING TO BLACKLIST...`, 'red');
+            await addDoc(collection(db, "blacklist"), { targetID: val, reason: "AUTO_EXPIRY", timestamp: serverTimestamp() });
             accessStatus = "PROHIBITED";
             updateButton("PROHIBITED", "btn-prohibited");
           } else {
             accessStatus = "AUTHORIZED";
             currentData = data;
             updateButton("RETRIEVE", "btn-retrieve");
-            log(`ID ${val} ACTIVE.`, 'blue');
+            log(`ID ${val} AUTHORIZED.`, 'blue');
           }
         } else {
           accessStatus = "NEW";
           updateButton("SAVE", "btn-save");
-          log(`ID ${val} CLEAR.`, 'green');
+          log(`ID ${val} NOT FOUND.`, 'green');
         }
-      } catch (err) { log("DB_ERR", "red"); }
+      } catch (err) { log("DB_ERROR", "red"); }
     } else { resetUI(); }
   });
 
@@ -188,7 +212,7 @@
     currentData = null;
   }
 
-  // --- OPEN MODAL (SAVE OR RETRIEVE) ---
+  // --- OPEN MODAL HANDLER ---
   actionBtn.addEventListener('click', () => {
     if (accessStatus === "PROHIBITED" || input.value.length < 4) return;
     
@@ -196,73 +220,76 @@
     document.getElementById('m-id-display').textContent = `#${val}`;
     
     if (accessStatus === "NEW") {
-      // GENERATE TEMPORARY DATA (Not saved yet)
       const depDate = new Date();
       const expDate = new Date();
       expDate.setDate(depDate.getDate() + 30);
       
-      document.getElementById('m-agent').textContent = Math.floor(1000 + Math.random() * 9000);
-      document.getElementById('m-exp').textContent = "0.00";
+      vagentInput.value = ""; // Clear for manual entry
+      vagentInput.readOnly = false;
       document.getElementById('m-dep').textContent = depDate.toLocaleDateString();
       document.getElementById('m-expir').textContent = expDate.toLocaleDateString();
       
       initiateBtn.style.display = "block";
-      document.getElementById('status-box').textContent = "STATUS: PENDING INITIATION";
-      document.getElementById('status-box').style.color = "var(--green)";
+      document.getElementById('status-box').textContent = "AWAITING VAGENT ID";
     } else {
-      // SHOW RETRIEVED DATA
       const dep = currentData.deploymentDate.toDate ? currentData.deploymentDate.toDate() : new Date(currentData.deploymentDate);
       const exp = currentData.expirationDate.toDate ? currentData.expirationDate.toDate() : new Date(currentData.expirationDate);
       
-      document.getElementById('m-agent').textContent = currentData.vAgent;
-      document.getElementById('m-exp').textContent = currentData.expenses;
+      vagentInput.value = currentData.vAgent;
+      vagentInput.readOnly = true; // Lock when retrieving
       document.getElementById('m-dep').textContent = dep.toLocaleDateString();
       document.getElementById('m-expir').textContent = exp.toLocaleDateString();
       
-      initiateBtn.style.display = "none"; // Hide button if just retrieving
-      document.getElementById('status-box').textContent = "STATUS: AUTHORIZED";
-      document.getElementById('status-box').style.color = "var(--blue)";
+      initiateBtn.style.display = "none";
+      document.getElementById('status-box').textContent = "ACCESS AUTHORIZED";
     }
     
     document.getElementById('entry-modal').style.display = 'flex';
+    if(accessStatus === "NEW") vagentInput.focus();
   });
 
-  // --- INITIATE SAVE (The Actual Database Write) ---
+  // --- INITIATE ACTION ---
   initiateBtn.addEventListener('click', async () => {
     const val = input.value.trim();
-    const vAgent = document.getElementById('m-agent').textContent;
-    const expenses = document.getElementById('m-exp').textContent;
-    const depStr = document.getElementById('m-dep').textContent;
-    const expStr = document.getElementById('m-expir').textContent;
+    const vAgentValue = vagentInput.value.trim();
+    
+    if (!vAgentValue) {
+      alert("PLEASE ENTER V-AGENT ID");
+      return;
+    }
 
-    log(`INITIATING UPLINK FOR ${val}...`, 'green');
+    log(`INITIATING UPLINK...`, 'green');
     initiateBtn.disabled = true;
-    initiateBtn.textContent = "UPLINKING...";
+    initiateBtn.textContent = "PROCESS...";
 
     try {
+      const depDate = new Date(document.getElementById('m-dep').textContent);
+      const expDate = new Date(document.getElementById('m-expir').textContent);
+
       await addDoc(collection(db, "mission_orders"), {
         orderNumber: val,
-        vAgent: vAgent,
-        expenses: expenses,
-        deploymentDate: new Date(depStr),
-        expirationDate: new Date(expStr),
+        vAgent: vAgentValue,
+        expenses: "0.00",
+        deploymentDate: depDate,
+        expirationDate: expDate,
         timestamp: serverTimestamp()
       });
-      log(`MISSION ${val} SUCCESSFULLY INITIATED.`, 'green');
+
+      log(`MISSION ${val} INITIATED.`, 'green');
       closeModal();
       input.value = ""; resetUI();
     } catch (e) {
-      log(`INITIATE_FAILED`, 'red');
+      log(`FAILED: ${e.message}`, 'red');
     } finally {
       initiateBtn.disabled = false;
-      initiateBtn.textContent = "INITIATE SAVE";
+      initiateBtn.textContent = "INITIATE";
     }
   });
 
   // --- TERMINATE ---
   termBtn.addEventListener('click', async () => {
     const val = input.value.trim();
-    if (val.length < 4 || !confirm(`BLACKLIST MISSION #${val}?`)) return;
+    if (val.length < 4 || !confirm(`CONFIRM BLACKLIST #${val}?`)) return;
     await addDoc(collection(db, "blacklist"), { targetID: val, reason: "MANUAL", timestamp: serverTimestamp() });
     log(`ID ${val} TERMINATED.`, 'red');
     input.value = ""; resetUI();

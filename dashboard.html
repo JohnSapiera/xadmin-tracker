@@ -17,7 +17,7 @@
     header { padding: 4px 12px; height: 35px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 12px; background: #000; font-family: var(--mono); }
     .ticker { font-size: 9px; color: var(--cyan); padding: 3px 12px; border-bottom: 1px solid var(--border); opacity: 0.7; letter-spacing: 1px; }
 
-    main { flex: 1; padding: 12px; overflow-y: auto; padding-bottom: 70px; }
+    main { flex: 1; padding: 12px; overflow-y: auto; padding-bottom: 70px; display: flex; flex-direction: column; }
     .search-box { background: var(--panel); border: 1px solid var(--border); padding: 15px; border-radius: 4px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
     
     #mission-input { 
@@ -35,8 +35,27 @@
     .btn-terminate { color: var(--red); border-color: var(--red); }
     .btn-initiate { width: 100%; margin-top: 15px; background: var(--green); color: #000; border: none; font-size: 16px; letter-spacing: 2px; }
 
-    #terminal { background: #000; border: 1px solid #111; padding: 10px; font-family: var(--mono); font-size: 10px; min-height: 120px; color: #444; margin-top: 15px; overflow-y: auto; line-height: 1.4; }
+    #terminal { background: #000; border: 1px solid #111; padding: 10px; font-family: var(--mono); font-size: 10px; min-height: 120px; color: #444; margin-top: 15px; overflow-y: auto; line-height: 1.4; border-radius: 4px; }
     
+    /* --- NEW AGENT PROFILE BUTTON STYLE --- */
+    .agent-center-hub {
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        margin: 25px auto; gap: 10px; position: relative;
+    }
+    .profile-circle-btn {
+        width: 85px; height: 85px; background: #000; border: 2px solid var(--cyan);
+        border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        cursor: pointer; transition: all 0.3s; box-shadow: 0 0 15px rgba(0, 243, 255, 0.1);
+    }
+    .agent-silhouette {
+        width: 40px; height: 40px; background: #fff;
+        clip-path: polygon(50% 10%, 75% 35%, 75% 50%, 65% 50%, 95% 100%, 5% 100%, 35% 50%, 25% 50%, 25% 35%);
+        opacity: 0.8; transition: 0.3s;
+    }
+    .profile-circle-btn:active { transform: scale(1.1); box-shadow: 0 0 30px rgba(0, 243, 255, 0.4); border-color: #fff; }
+    .profile-circle-btn:active .agent-silhouette { background: var(--cyan); opacity: 1; }
+    .hub-label { font-family: var(--mono); font-size: 10px; letter-spacing: 3px; color: var(--cyan); font-weight: bold; text-transform: uppercase; }
+
     /* MODAL SYSTEM */
     .modal-overlay { 
       display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); 
@@ -54,24 +73,15 @@
     }
 
     .modal-close { position: absolute; top: 0; right: 0; background: var(--red); color: #fff; border: none; padding: 10px 15px; font-family: var(--mono); cursor: pointer; font-weight: bold; }
-    
     .form-header { text-align: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
     .form-id { font-size: 22px; color: var(--cyan); letter-spacing: 3px; font-family: var(--mono); }
-
     .data-row { margin-bottom: 12px; font-family: var(--mono); border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px; display: flex; justify-content: space-between; align-items: center; }
     .data-label { font-size: 10px; color: #666; text-transform: uppercase; }
-    
-    /* INPUT STYLE INSIDE MODAL */
-    .modal-input {
-      background: rgba(0,243,255,0.05); border: 1px solid #333;
-      color: var(--cyan); font-family: var(--mono); font-size: 14px; text-align: right;
-      width: 130px; outline: none; padding: 4px 8px; border-radius: 2px;
-    }
-    .modal-input:focus { border-color: var(--cyan); }
+    .modal-input { background: rgba(0,243,255,0.05); border: 1px solid #333; color: var(--cyan); font-family: var(--mono); font-size: 14px; text-align: right; width: 130px; outline: none; padding: 4px 8px; border-radius: 2px; }
     .read-only-val { font-size: 14px; color: #ddd; text-align: right; }
 
     nav { position: fixed; bottom: 0; left: 0; right: 0; height: 55px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; }
-    .nav-item { display: flex; align-items: center; justify-content: center; color: #333; font-size: 11px; font-family: var(--mono); }
+    .nav-item { display: flex; align-items: center; justify-content: center; color: #333; font-size: 11px; font-family: var(--mono); text-decoration: none; }
     .nav-item.active { color: var(--cyan); background: rgba(0,243,255,0.05); }
   </style>
 </head>
@@ -91,6 +101,14 @@
       <button id="term-btn" class="btn btn-terminate">TERMINATE</button>
     </div>
   </div>
+
+  <div class="agent-center-hub">
+      <div class="profile-circle-btn" onclick="window.location.href='profile.html'">
+          <div class="agent-silhouette"></div>
+      </div>
+      <div class="hub-label">PROFILE</div>
+  </div>
+
   <div id="terminal">> AWAITING MISSION ID...</div>
 </main>
 
@@ -129,8 +147,8 @@
 </div>
 
 <nav>
-  <div class="nav-item active">DASHBOARD</div>
-  <div class="nav-item">ARCHIVE</div>
+  <a href="#" class="nav-item active">DASHBOARD</a>
+  <a href="profile.html" class="nav-item">ARCHIVE</a>
 </nav>
 
 <script type="module">
@@ -160,7 +178,6 @@
   let currentData = null;
   let accessStatus = "NEW";
 
-  // --- AUTO SEARCH LOGIC ---
   input.addEventListener('input', async (e) => {
     const val = e.target.value.trim();
     if (val.length >= 4) {
@@ -212,81 +229,54 @@
     currentData = null;
   }
 
-  // --- OPEN MODAL HANDLER ---
   actionBtn.addEventListener('click', () => {
     if (accessStatus === "PROHIBITED" || input.value.length < 4) return;
-    
     const val = input.value.trim();
     document.getElementById('m-id-display').textContent = `#${val}`;
-    
     if (accessStatus === "NEW") {
       const depDate = new Date();
       const expDate = new Date();
       expDate.setDate(depDate.getDate() + 30);
-      
-      vagentInput.value = ""; // Clear for manual entry
-      vagentInput.readOnly = false;
+      vagentInput.value = ""; vagentInput.readOnly = false;
       document.getElementById('m-dep').textContent = depDate.toLocaleDateString();
       document.getElementById('m-expir').textContent = expDate.toLocaleDateString();
-      
       initiateBtn.style.display = "block";
       document.getElementById('status-box').textContent = "AWAITING VAGENT ID";
     } else {
       const dep = currentData.deploymentDate.toDate ? currentData.deploymentDate.toDate() : new Date(currentData.deploymentDate);
       const exp = currentData.expirationDate.toDate ? currentData.expirationDate.toDate() : new Date(currentData.expirationDate);
-      
       vagentInput.value = currentData.vAgent;
-      vagentInput.readOnly = true; // Lock when retrieving
+      vagentInput.readOnly = true;
       document.getElementById('m-dep').textContent = dep.toLocaleDateString();
       document.getElementById('m-expir').textContent = exp.toLocaleDateString();
-      
       initiateBtn.style.display = "none";
       document.getElementById('status-box').textContent = "ACCESS AUTHORIZED";
     }
-    
     document.getElementById('entry-modal').style.display = 'flex';
     if(accessStatus === "NEW") vagentInput.focus();
   });
 
-  // --- INITIATE ACTION ---
   initiateBtn.addEventListener('click', async () => {
     const val = input.value.trim();
     const vAgentValue = vagentInput.value.trim();
-    
-    if (!vAgentValue) {
-      alert("PLEASE ENTER V-AGENT ID");
-      return;
-    }
-
+    if (!vAgentValue) { alert("PLEASE ENTER V-AGENT ID"); return; }
     log(`INITIATING UPLINK...`, 'green');
-    initiateBtn.disabled = true;
-    initiateBtn.textContent = "PROCESS...";
-
+    initiateBtn.disabled = true; initiateBtn.textContent = "PROCESS...";
     try {
       const depDate = new Date(document.getElementById('m-dep').textContent);
       const expDate = new Date(document.getElementById('m-expir').textContent);
-
       await addDoc(collection(db, "mission_orders"), {
-        orderNumber: val,
-        vAgent: vAgentValue,
-        expenses: "0.00",
-        deploymentDate: depDate,
-        expirationDate: expDate,
-        timestamp: serverTimestamp()
+        orderNumber: val, vAgent: vAgentValue, expenses: "0.00",
+        deploymentDate: depDate, expirationDate: expDate, timestamp: serverTimestamp()
       });
-
       log(`MISSION ${val} INITIATED.`, 'green');
       closeModal();
       input.value = ""; resetUI();
-    } catch (e) {
-      log(`FAILED: ${e.message}`, 'red');
-    } finally {
-      initiateBtn.disabled = false;
-      initiateBtn.textContent = "INITIATE";
+    } catch (e) { log(`FAILED: ${e.message}`, 'red'); } finally {
+      initiateBtn.disabled = false; initiateBtn.textContent = "INITIATE";
     }
   });
 
-  // --- TERMINATE ---
   termBtn.addEventListener('click', async () => {
     const val = input.value.trim();
     if (val.length < 4 || !confirm(`CONFIRM BLACKLIST #${val}?`)) return;
@@ -296,7 +286,6 @@
   });
 
   window.closeModal = () => document.getElementById('entry-modal').style.display = 'none';
-  
   function log(m, c) {
     const d = document.createElement('div'); d.style.color = `var(--${c})`;
     d.textContent = `[${new Date().toLocaleTimeString('en-GB')}] > ${m}`;

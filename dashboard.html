@@ -3,10 +3,14 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>INTEL_GATEWAY_v6.8</title>
+  <title>GATEWAY_v7.0_PROHIBITED</title>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
   <style>
-    :root { --bg: #01080b; --panel: #051218; --cyan: #00f3ff; --red: #ff003c; --blue: #007bff; --green: #00ff66; --border: rgba(0, 243, 255, 0.15); --mono: 'Share Tech Mono', monospace; }
+    :root { 
+      --bg: #01080b; --panel: #051218; --cyan: #00f3ff; --red: #ff003c; 
+      --blue: #007bff; --green: #00ff66; --gray: #333; --border: rgba(0, 243, 255, 0.15); 
+      --mono: 'Share Tech Mono', monospace; 
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { background: var(--bg); color: #c8e1e5; font-family: 'Rajdhani', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
@@ -14,7 +18,7 @@
     .ticker { font-size: 9px; color: var(--cyan); padding: 3px 12px; border-bottom: 1px solid var(--border); opacity: 0.7; letter-spacing: 1px; }
 
     main { flex: 1; padding: 12px; overflow-y: auto; padding-bottom: 70px; }
-    .search-box { background: var(--panel); border: 1px solid var(--border); padding: 15px; border-radius: 4px; }
+    .search-box { background: var(--panel); border: 1px solid var(--border); padding: 15px; border-radius: 4px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
     
     #mission-input { 
       width: 100%; background: #000; border: 1px solid var(--cyan); color: var(--cyan); 
@@ -23,15 +27,16 @@
     }
     
     .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .btn { padding: 14px; font-family: var(--mono); font-size: 13px; font-weight: bold; border: 1px solid; background: transparent; text-transform: uppercase; cursor: pointer; transition: 0.3s; }
+    .btn { padding: 14px; font-family: var(--mono); font-size: 13px; font-weight: bold; border: 1px solid; background: transparent; text-transform: uppercase; cursor: pointer; transition: 0.3s; border-radius: 2px; }
     
+    /* Dynamic Button States */
     .btn-save { color: var(--green); border-color: var(--green); }
-    .btn-retrieve { background: var(--blue) !important; border-color: var(--blue) !important; color: #fff !important; }
+    .btn-retrieve { background: var(--blue) !important; border-color: var(--blue) !important; color: #fff !important; box-shadow: 0 0 10px rgba(0,123,255,0.3); }
+    .btn-prohibited { background: var(--gray) !important; border-color: #444 !important; color: #777 !important; cursor: not-allowed !important; opacity: 0.8; box-shadow: none !important; }
     .btn-terminate { color: var(--red); border-color: var(--red); }
 
-    #terminal { background: #000; border: 1px solid #111; padding: 10px; font-family: var(--mono); font-size: 10px; min-height: 120px; color: #555; margin-top: 15px; overflow-y: auto; line-height: 1.4; }
+    #terminal { background: #000; border: 1px solid #111; padding: 10px; font-family: var(--mono); font-size: 10px; min-height: 120px; color: #444; margin-top: 15px; overflow-y: auto; line-height: 1.4; border-radius: 2px; }
     
-    /* Result Modal */
     #res-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
     .modal-content { background: var(--panel); border: 1px solid var(--cyan); width: 100%; max-width: 320px; padding: 30px 15px 20px; position: relative; }
     .modal-close { position: absolute; top: 0; right: 0; background: var(--red); color: #fff; border: none; padding: 8px 12px; font-family: var(--mono); cursor: pointer; }
@@ -47,10 +52,10 @@
 <body>
 
 <header>
-  <span>GATEWAY_PROTOCOL_v6.8</span>
+  <span>LOCKDOWN_v7.0</span>
   <span id="clock" style="color:var(--cyan)">00:00:00</span>
 </header>
-<div class="ticker">PRIORITY: BLACKLIST_FIRST // AUTO_MIGRATION: ENABLED</div>
+<div class="ticker">SECURITY: HIGH // BLACKLIST_PRIORITY: ACTIVE // STATUS: ARMED</div>
 
 <main>
   <div class="search-box">
@@ -61,15 +66,15 @@
     </div>
   </div>
 
-  <div id="terminal">> AWAITING_ID_SCAN...</div>
+  <div id="terminal">> WAITING_FOR_UPLINK...</div>
 </main>
 
 <div id="res-modal">
   <div class="modal-content">
     <button class="modal-close" onclick="closeM()">X</button>
     <div class="data-row"><span class="data-label">Mission ID</span><span class="data-val" id="r-id">#00000</span></div>
-    <div class="data-row"><span class="data-label">V-Agent Assigned</span><span class="data-val" id="r-agent">--</span></div>
-    <div class="data-row"><span class="data-label">Expenses (Total)</span><span class="data-val" id="r-exp">--</span></div>
+    <div class="data-row"><span class="data-label">V-Agent</span><span class="data-val" id="r-agent">--</span></div>
+    <div class="data-row"><span class="data-label">Expenses</span><span class="data-val" id="r-exp">--</span></div>
     <div class="data-row"><span class="data-label">Deployed</span><span class="data-val" id="r-dep">--</span></div>
     <div class="data-row"><span class="data-label">Expiration</span><span class="data-val" id="r-expir" style="color:var(--red)">--</span></div>
     <div class="data-row" style="border:none; text-align:center; margin-top:15px;"><span class="data-val" id="r-stat">--</span></div>
@@ -77,8 +82,8 @@
 </div>
 
 <nav>
-  <div class="nav-item active">DASHBOARD</div>
-  <div class="nav-item">HISTORY</div>
+  <div class="nav-item active">GATEWAY</div>
+  <div class="nav-item">SECURITY</div>
 </nav>
 
 <script type="module">
@@ -100,29 +105,30 @@
 
   const input = document.getElementById('mission-input');
   const actionBtn = document.getElementById('action-btn');
+  const termBtn = document.getElementById('term-btn');
   const termLog = document.getElementById('terminal');
   
   let currentData = null;
-  let currentStatus = "NEW"; // NEW, BLACKLISTED, AUTHORIZED, EXPIRED
+  let accessStatus = "NEW"; // NEW, PROHIBITED, AUTHORIZED
 
-  // --- AUTO SEARCH & AUTO MIGRATION ---
+  // --- AUTO SEARCH LOGIC ---
   input.addEventListener('input', async (e) => {
     const val = e.target.value.trim();
     if (val.length >= 4) {
-      log(`SCANNING PRIORITY DATABASE...`, 'cyan');
+      log(`SCANNING DATABASE: ${val}...`, 'cyan');
       try {
-        // 1. Check Blacklist First
+        // 1. PRIORITY SEARCH: BLACKLIST
         const qB = query(collection(db, "blacklist"), where("targetID", "==", val));
         const sB = await getDocs(qB);
         
         if (!sB.empty) {
-          currentStatus = "BLACKLISTED";
-          setUI("blue");
-          log(`[ALERT] ID ${val} IS ON BLACKLIST.`, 'red');
+          accessStatus = "PROHIBITED";
+          updateButton("PROHIBITED", "btn-prohibited");
+          log(`[ACCESS DENIED] ID ${val} IS PROHIBITED.`, 'red');
           return;
         }
 
-        // 2. Check Mission Orders
+        // 2. SECONDARY SEARCH: MISSION ORDERS
         const qM = query(collection(db, "mission_orders"), where("orderNumber", "==", val));
         const sM = await getDocs(qM);
 
@@ -130,107 +136,92 @@
           const data = sM.docs[0].data();
           const expDate = data.expirationDate.toDate ? data.expirationDate.toDate() : new Date(data.expirationDate);
           
-          // --- AUTO TERMINATION TRIGGER ---
+          // AUTO-MIGRATION IF EXPIRED
           if (new Date() > expDate) {
-            log(`[EXPIRATION_DETECTED] MIGRATING ${val} TO BLACKLIST...`, 'red');
-            await autoBlacklist(val, "AUTO_EXPIRY_30D");
-            currentStatus = "BLACKLISTED";
-            log(`[MIGRATION_COMPLETE] ${val} IS NOW PERMANENTLY BLACKLISTED.`, 'red');
+            log(`[EXPIRATION DETECTED] MIGRATING ${val}...`, 'red');
+            await addDoc(collection(db, "blacklist"), { targetID: val, reason: "AUTO_EXPIRY", timestamp: serverTimestamp() });
+            accessStatus = "PROHIBITED";
+            updateButton("PROHIBITED", "btn-prohibited");
+            log(`[LOCKED] ${val} HAS BEEN MOVED TO BLACKLIST.`, 'red');
           } else {
-            currentStatus = "AUTHORIZED";
-            log(`[MATCH] MISSION ${val} IS ACTIVE.`, 'blue');
+            accessStatus = "AUTHORIZED";
+            currentData = data;
+            updateButton("RETRIEVE", "btn-retrieve");
+            log(`[MATCH FOUND] MISSION ${val} IS ACTIVE.`, 'blue');
           }
-          currentData = data;
-          setUI("blue");
         } else {
-          currentStatus = "NEW";
-          setUI("green");
-          log(`ID ${val} NOT FOUND. READY FOR UPLINK.`, 'green');
+          accessStatus = "NEW";
+          updateButton("SAVE", "btn-save");
+          log(`ID ${val} CLEAR. READY FOR ARCHIVE.`, 'green');
         }
-      } catch (err) { log(`DB_ERR: ${err.message}`, 'red'); }
+      } catch (err) { log(`SCAN_ERR: ${err.message}`, 'red'); }
     } else { resetUI(); }
   });
 
-  async function autoBlacklist(id, reason) {
-    try {
-      await addDoc(collection(db, "blacklist"), {
-        targetID: id,
-        reason: reason,
-        timestamp: serverTimestamp()
-      });
-    } catch (e) { console.error("AutoBlacklist Failed", e); }
-  }
-
-  function setUI(color) {
-    actionBtn.textContent = (color === "blue") ? "RETRIEVE" : "SAVE";
-    actionBtn.className = (color === "blue") ? "btn btn-retrieve" : "btn btn-save";
+  function updateButton(text, className) {
+    actionBtn.textContent = text;
+    actionBtn.className = `btn ${className}`;
   }
 
   function resetUI() {
-    currentStatus = "NEW";
-    setUI("green");
+    accessStatus = "NEW";
+    updateButton("SAVE", "btn-save");
     currentData = null;
   }
 
-  // --- SAVE LOGIC ---
+  // --- ACTION HANDLER ---
   actionBtn.addEventListener('click', async () => {
+    if (accessStatus === "PROHIBITED") return; // Block any action if prohibited
+
     const val = input.value.trim();
     if (val.length < 4) return;
 
-    if (actionBtn.textContent === "RETRIEVE") {
+    if (accessStatus === "AUTHORIZED") {
       showModal();
     } else {
-      log(`INITIATING_DEPLOYMENT...`, 'green');
+      // SAVE LOGIC
+      log(`SAVING MISSION DATA...`, 'green');
       try {
         const depDate = new Date();
         const expDate = new Date();
-        expDate.setDate(depDate.getDate() + 30); // Deployment + 30 Days
+        expDate.setDate(depDate.getDate() + 30);
 
-        const newOrder = {
+        await addDoc(collection(db, "mission_orders"), {
           orderNumber: val,
           vAgent: "V-" + Math.floor(1000 + Math.random() * 9000),
-          expenses: "₱" + (Math.floor(Math.random() * 8000) + 1200).toLocaleString(),
+          expenses: "₱" + (Math.floor(Math.random() * 6000) + 2000).toLocaleString(),
           deploymentDate: depDate,
           expirationDate: expDate,
           timestamp: serverTimestamp()
-        };
-
-        await addDoc(collection(db, "mission_orders"), newOrder);
-        log(`SUCCESS: ${val} REGISTERED. EXPIRES: ${expDate.toLocaleDateString()}`, 'green');
+        });
+        log(`SUCCESS: ${val} REGISTERED.`, 'green');
         input.value = ""; resetUI();
       } catch (e) { log(`SAVE_ERR`, 'red'); }
     }
   });
 
-  // --- MANUAL TERMINATE ---
-  document.getElementById('term-btn').addEventListener('click', async () => {
+  // --- TERMINATE BUTTON ---
+  termBtn.addEventListener('click', async () => {
     const val = input.value.trim();
-    if (val.length < 4 || !confirm(`MANUALLY BLACKLIST #${val}?`)) return;
-    log(`TERMINATING ${val}...`, 'red');
-    await autoBlacklist(val, "MANUAL_TERMINATION");
-    log(`ID ${val} HAS BEEN BLACKLISTED.`, 'red');
-    input.value = ""; resetUI();
+    if (val.length < 4 || !confirm(`BLACKLIST MISSION #${val}?`)) return;
+    try {
+      await addDoc(collection(db, "blacklist"), { targetID: val, reason: "MANUAL", timestamp: serverTimestamp() });
+      log(`ID ${val} BLACKLISTED.`, 'red');
+      input.value = ""; resetUI();
+    } catch (e) { log("TERM_ERR", "red"); }
   });
 
   function showModal() {
     document.getElementById('r-id').textContent = `#${input.value}`;
-    if (currentStatus === "BLACKLISTED") {
-      document.getElementById('r-agent').textContent = "REDACTED";
-      document.getElementById('r-exp').textContent = "LOCKED";
-      document.getElementById('r-dep').textContent = "LOCKED";
-      document.getElementById('r-expir').textContent = "LOCKED";
-      document.getElementById('r-stat').textContent = "STATUS: BLACKLISTED";
-      document.getElementById('r-stat').style.color = "var(--red)";
-    } else {
-      const dep = currentData.deploymentDate.toDate ? currentData.deploymentDate.toDate() : new Date(currentData.deploymentDate);
-      const exp = currentData.expirationDate.toDate ? currentData.expirationDate.toDate() : new Date(currentData.expirationDate);
-      document.getElementById('r-agent').textContent = currentData.vAgent;
-      document.getElementById('r-exp').textContent = currentData.expenses;
-      document.getElementById('r-dep').textContent = dep.toLocaleDateString();
-      document.getElementById('r-expir').textContent = exp.toLocaleDateString();
-      document.getElementById('r-stat').textContent = "STATUS: AUTHORIZED";
-      document.getElementById('r-stat').style.color = "var(--green)";
-    }
+    const dep = currentData.deploymentDate.toDate ? currentData.deploymentDate.toDate() : new Date(currentData.deploymentDate);
+    const exp = currentData.expirationDate.toDate ? currentData.expirationDate.toDate() : new Date(currentData.expirationDate);
+    
+    document.getElementById('r-agent').textContent = currentData.vAgent;
+    document.getElementById('r-exp').textContent = currentData.expenses;
+    document.getElementById('r-dep').textContent = dep.toLocaleDateString();
+    document.getElementById('r-expir').textContent = exp.toLocaleDateString();
+    document.getElementById('r-stat').textContent = "ACCESS: AUTHORIZED";
+    document.getElementById('r-stat').style.color = "var(--green)";
     document.getElementById('res-modal').style.display = 'flex';
   }
 

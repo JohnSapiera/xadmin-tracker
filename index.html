@@ -3,223 +3,121 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CENTRAL_INTELLIGENCE_AUTH</title>
+    <title>CENTRAL_AUTH_v17</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg-color: #050505;
-            --accent-color: #00f3ff;
-            --alert-color: #ff003c;
-            --text-dim: #4a5a61;
-        }
-
+        :root { --bg: #01080b; --cyan: #00f2ff; --red: #ff003c; }
         * { box-sizing: border-box; margin: 0; padding: 0; overflow: hidden; }
-
         body { 
-            background: var(--bg-color); 
-            color: var(--accent-color); 
+            background: var(--bg); color: var(--cyan); 
             font-family: 'Share Tech Mono', monospace;
-            height: 100vh; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
+            height: 100vh; display: flex; align-items: center; justify-content: center;
         }
-
-        /* Scanline Effect */
-        body::before {
-            content: " ";
-            display: block;
-            position: absolute;
-            top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
-                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            z-index: 2;
-            background-size: 100% 2px, 3px 100%;
-            pointer-events: none;
+        /* CIA Terminal Aesthetic */
+        .auth-box {
+            width: 280px; padding: 40px 30px;
+            border: 1px solid rgba(0, 242, 255, 0.1);
+            background: rgba(2, 10, 13, 0.9);
+            text-align: center; position: relative;
         }
-
-        .auth-frame {
-            width: 280px;
-            padding: 30px;
-            border: 1px solid rgba(0, 243, 255, 0.2);
-            background: rgba(2, 12, 18, 0.8);
-            position: relative;
-            box-shadow: 0 0 20px rgba(0, 243, 255, 0.05);
+        .scan-line {
+            width: 100%; height: 1px; background: var(--cyan);
+            position: absolute; left: 0; top: 0;
+            box-shadow: 0 0 15px var(--cyan);
+            animation: move 2.5s infinite linear;
         }
-
-        .corner {
-            position: absolute; width: 10px; height: 10px;
-            border: 2px solid var(--accent-color);
-        }
-        .top-l { top: -2px; left: -2px; border-right: none; border-bottom: none; }
-        .top-r { top: -2px; right: -2px; border-left: none; border-bottom: none; }
-        .bot-l { bottom: -2px; left: -2px; border-right: none; border-top: none; }
-        .bot-r { bottom: -2px; right: -2px; border-left: none; border-top: none; }
-
-        .header-tag {
-            font-size: 9px;
-            letter-spacing: 4px;
-            color: var(--text-dim);
-            margin-bottom: 25px;
-            text-align: center;
-            text-transform: uppercase;
-        }
-
-        .status-container {
-            margin: 20px 0;
-            text-align: left;
-        }
-
-        .terminal-line {
-            font-size: 12px;
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .label { color: var(--text-dim); }
-
-        #auth-status {
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-
-        .progress-container {
-            width: 100%;
-            height: 2px;
-            background: #111;
-            margin-top: 15px;
-            position: relative;
-        }
-
-        .progress-bar {
-            width: 0%;
-            height: 100%;
-            background: var(--accent-color);
-            box-shadow: 0 0 10px var(--accent-color);
-            transition: width 0.5s ease;
-        }
-
-        #error-overlay {
-            display: none;
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(10, 0, 0, 0.95);
-            z-index: 10;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            color: var(--alert-color);
-            border: 1px solid var(--alert-color);
-        }
-
-        .blink { animation: blinker 1s linear infinite; }
-        @keyframes blinker { 50% { opacity: 0; } }
+        @keyframes move { 0% { top: 0; opacity: 0; } 50% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+        .label { font-size: 9px; letter-spacing: 4px; color: #3d4d54; margin-bottom: 20px; text-transform: uppercase; }
+        #status { font-size: 14px; font-weight: bold; height: 20px; }
+        #error-msg { display: none; color: var(--red); font-size: 10px; margin-top: 20px; line-height: 1.5; }
     </style>
 </head>
 <body>
 
-    <div class="auth-frame">
-        <div class="corner top-l"></div>
-        <div class="corner top-r"></div>
-        <div class="corner bot-l"></div>
-        <div class="corner bot-r"></div>
-
-        <div class="header-tag">Global_Node_Security</div>
-
-        <div class="status-container">
-            <div class="terminal-line">
-                <span class="label">NODE:</span>
-                <span id="node-id">FETCHING...</span>
-            </div>
-            <div class="terminal-line">
-                <span class="label">PROTOCOL:</span>
-                <span>SEC_AUDIT_v4</span>
-            </div>
-            <div class="terminal-line">
-                <span class="label">STATUS:</span>
-                <span id="auth-status">WAITING...</span>
-            </div>
-        </div>
-
-        <div class="progress-container">
-            <div id="bar" class="progress-bar"></div>
-        </div>
-
-        <div id="error-overlay">
-            <div class="blink" style="font-weight:bold; font-size:16px;">ACCESS_DENIED</div>
-            <div style="font-size:8px; margin-top:10px;">HARDWARE_MISMATCH_TERMINATED</div>
+    <div class="auth-box">
+        <div class="scan-line"></div>
+        <div class="label">Hardware_Security_Audit</div>
+        <div id="status">AUDITING...</div>
+        
+        <div id="error-msg">
+            ACCESS_DENIED<br>
+            UNREGISTERED_HARDWARE<br>
+            <span style="font-size:8px; opacity:0.5;">LINK DEVICE VIA UPLINK_v17</span>
         </div>
     </div>
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
-        authDomain: "my-admin-portal-12691.firebaseapp.com",
-        projectId: "my-admin-portal-12691",
-        storageBucket: "my-admin-portal-12691.firebasestorage.app",
-        messagingSenderId: "317015091563",
-        appId: "1:317015091563:web:baab5171d8e0a58acd442e"
-    };
+    <script>
+        const firebaseConfig = { 
+            apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
+            authDomain: "my-admin-portal-12691.firebaseapp.com", 
+            projectId: "my-admin-portal-12691", 
+            storageBucket: "my-admin-portal-12691.firebasestorage.app", 
+            messagingSenderId: "317015091563", 
+            appId: "1:317015091563:web:baab5171d8e0a58acd442e" 
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+        // 1. Get Hardware Specs (Match sa update_db logic)
+        function getHardwareID() {
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl');
+            const debugInfo = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
+            const gpu = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "GENERIC_GPU";
+            
+            const specs = {
+                gpu: gpu.split('/').pop().trim(),
+                res: `${window.screen.width}x${window.screen.height}`,
+                plt: navigator.platform
+            };
 
-    async function initializeSystem() {
-        const bar = document.getElementById('bar');
-        const status = document.getElementById('auth-status');
-        const nodeId = document.getElementById('node-id');
-        const errorOverlay = document.getElementById('error-overlay');
-
-        // Generate Signature
-        const signature = (navigator.userAgent + screen.width + navigator.platform).replace(/\s/g, '');
-        nodeId.innerText = signature.substring(0, 10).toUpperCase();
-
-        // Start Animation sequence
-        bar.style.width = "40%";
-        status.innerText = "SCANNING...";
-
-        try {
-            const querySnapshot = await getDocs(collection(db, "agents"));
-            let verified = false;
-
-            querySnapshot.forEach((doc) => {
-                const data = doc.data();
-                const hwMatch = data.lastFingerprint === signature;
-                const secretMatch = data.linkedDevice && data.linkedDevice.includes(localStorage.getItem("agency_node_secret"));
-
-                if (hwMatch || secretMatch) {
-                    verified = true;
-                    localStorage.setItem("cia_agent", data.agentName);
-                    // Heal key if missing
-                    if(!localStorage.getItem("agency_node_secret") && data.linkedDevice) {
-                        localStorage.setItem("agency_node_secret", data.linkedDevice[0]);
-                    }
-                }
-            });
-
-            bar.style.width = "100%";
-
-            if (verified) {
-                status.innerText = "GRANTED";
-                status.style.color = "#00ff66";
-                setTimeout(() => { window.location.href = "dashboard.html"; }, 1200);
-            } else {
-                status.innerText = "DENIED";
-                status.style.color = "var(--alert-color)";
-                setTimeout(() => { errorOverlay.style.display = "flex"; }, 500);
+            // 2. Generate Hash Fingerprint (Match sa generateFP function mo)
+            const raw = specs.gpu + specs.res + specs.plt;
+            let hash = 0;
+            for (let i = 0; i < raw.length; i++) {
+                hash = ((hash << 5) - hash) + raw.charCodeAt(i);
+                hash |= 0;
             }
-
-        } catch (e) {
-            status.innerText = "OFFLINE";
-            console.error(e);
+            return "HW-" + Math.abs(hash).toString(16).toUpperCase();
         }
-    }
 
-    window.onload = initializeSystem;
-</script>
+        async function verifyDevice() {
+            const status = document.getElementById('status');
+            const error = document.getElementById('error-msg');
+            const currentFP = getHardwareID();
+
+            try {
+                // I-check sa "agents" collection kung may record na may ganitong fingerprint
+                const snap = await db.collection("agents")
+                                     .where("lastFingerprint", "==", currentFP)
+                                     .get();
+
+                if (!snap.empty) {
+                    const agentData = snap.docs[0].data();
+                    status.innerText = "ACCESS_GRANTED";
+                    status.style.color = "#00ff66";
+                    
+                    // Itabi ang pangalan for personal session
+                    localStorage.setItem("cia_agent", agentData.agentName);
+                    
+                    setTimeout(() => {
+                        window.location.href = "intel.html";
+                    }, 1200);
+                } else {
+                    status.innerText = "DENIED";
+                    status.style.color = "var(--red)";
+                    error.style.display = "block";
+                }
+            } catch (e) {
+                status.innerText = "OFFLINE";
+                console.error(e);
+            }
+        }
+
+        window.onload = verifyDevice;
+    </script>
 </body>
 </html>

@@ -3,33 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CENTRAL_AUTH_v17</title>
+    <title>CENTRAL_AUTH_v18</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #01080b; --cyan: #00f2ff; --red: #ff003c; }
+        :root { --bg: #01080b; --cyan: #00f2ff; --red: #ff003c; --green: #00ff66; }
         * { box-sizing: border-box; margin: 0; padding: 0; overflow: hidden; }
         body { 
             background: var(--bg); color: var(--cyan); 
             font-family: 'Share Tech Mono', monospace;
             height: 100vh; display: flex; align-items: center; justify-content: center;
+            background-image: radial-gradient(circle at center, #0a1f29 0%, #01080b 100%);
         }
-        /* CIA Terminal Aesthetic */
+
         .auth-box {
-            width: 280px; padding: 40px 30px;
+            width: 300px; padding: 50px 30px;
             border: 1px solid rgba(0, 242, 255, 0.1);
-            background: rgba(2, 10, 13, 0.9);
+            background: rgba(2, 10, 13, 0.95);
             text-align: center; position: relative;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
         }
+
         .scan-line {
-            width: 100%; height: 1px; background: var(--cyan);
+            width: 100%; height: 2px; background: var(--cyan);
             position: absolute; left: 0; top: 0;
-            box-shadow: 0 0 15px var(--cyan);
-            animation: move 2.5s infinite linear;
+            box-shadow: 0 0 20px var(--cyan);
+            animation: move 3s infinite ease-in-out;
+            opacity: 0.7;
         }
-        @keyframes move { 0% { top: 0; opacity: 0; } 50% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
-        .label { font-size: 9px; letter-spacing: 4px; color: #3d4d54; margin-bottom: 20px; text-transform: uppercase; }
-        #status { font-size: 14px; font-weight: bold; height: 20px; }
-        #error-msg { display: none; color: var(--red); font-size: 10px; margin-top: 20px; line-height: 1.5; }
+
+        @keyframes move { 
+            0% { top: 0; opacity: 0; } 
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { top: 100%; opacity: 0; } 
+        }
+
+        .label { font-size: 10px; letter-spacing: 5px; color: #3d4d54; margin-bottom: 25px; text-transform: uppercase; }
+        #status { font-size: 16px; font-weight: bold; height: 24px; letter-spacing: 2px; transition: 0.3s; }
+        
+        #error-msg { 
+            display: none; color: var(--red); font-size: 11px; margin-top: 25px; 
+            line-height: 1.6; border-top: 1px solid rgba(255,0,60,0.2); padding-top: 15px;
+        }
+
+        .trace-id { font-size: 8px; color: #233138; margin-top: 30px; text-transform: uppercase; }
     </style>
 </head>
 <body>
@@ -37,13 +54,15 @@
     <div class="auth-box">
         <div class="scan-line"></div>
         <div class="label">Hardware_Security_Audit</div>
-        <div id="status">AUDITING...</div>
+        <div id="status">INITIATING_SCAN...</div>
         
         <div id="error-msg">
             ACCESS_DENIED<br>
-            UNREGISTERED_HARDWARE<br>
-            <span style="font-size:8px; opacity:0.5;">LINK DEVICE VIA UPLINK_v17</span>
+            UNREGISTERED_HARDWARE_SIGNATURE<br>
+            <span style="font-size:9px; opacity:0.6; color: var(--cyan);">ENROLL VIA UPLINK_v18</span>
         </div>
+
+        <div class="trace-id" id="trace-id">SIG-PENDING</div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -61,63 +80,76 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // 1. Get Hardware Specs (Match sa update_db logic)
-        function getHardwareID() {
+        // 1. Get Hardware Signature (Exact match sa update_db logic)
+        function getSignature() {
             const canvas = document.createElement('canvas');
             const gl = canvas.getContext('webgl');
             const debugInfo = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
             const gpu = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "GENERIC_GPU";
             
             const specs = {
+                brand: navigator.userAgent.match(/Android\s+([^\s;]+);?\s+([^\s;]+)/)?.[2] || "MOBILE_NODE",
                 gpu: gpu.split('/').pop().trim(),
                 res: `${window.screen.width}x${window.screen.height}`,
                 plt: navigator.platform
             };
 
-            // 2. Generate Hash Fingerprint (Match sa generateFP function mo)
-            const raw = specs.gpu + specs.res + specs.plt;
+            const raw = specs.gpu + specs.res + specs.plt + specs.brand;
             let hash = 0;
             for (let i = 0; i < raw.length; i++) {
                 hash = ((hash << 5) - hash) + raw.charCodeAt(i);
                 hash |= 0;
             }
-            return "HW-" + Math.abs(hash).toString(16).toUpperCase();
+            return "SIG-" + Math.abs(hash).toString(16).toUpperCase();
         }
 
         async function verifyDevice() {
             const status = document.getElementById('status');
             const error = document.getElementById('error-msg');
-            const currentFP = getHardwareID();
+            const trace = document.getElementById('trace-id');
+            const currentSIG = getSignature();
+            
+            trace.innerText = currentSIG;
 
             try {
-                // I-check sa "agents" collection kung may record na may ganitong fingerprint
+                // I-check sa lahat ng agents kung ang currentSIG ay nasa loob ng kanilang 'linkedDevices' array
+                // Gagamit tayo ng 'array-contains' filter para sa object checking
+                // Note: Sa Firestore, ang 'array-contains' sa objects ay kailangan ng exact match. 
+                // Kaya mas safe na i-query muna ang agent list o i-match ang lastFingerprint.
+                
                 const snap = await db.collection("agents")
-                                     .where("lastFingerprint", "==", currentFP)
+                                     .where("lastFingerprint", "==", currentSIG)
                                      .get();
 
                 if (!snap.empty) {
                     const agentData = snap.docs[0].data();
                     status.innerText = "ACCESS_GRANTED";
-                    status.style.color = "#00ff66";
+                    status.style.color = "var(--green)";
                     
-                    // Itabi ang pangalan for personal session
+                    // Permanent Session Storage
                     localStorage.setItem("cia_agent", agentData.agentName);
+                    localStorage.setItem("intel_device_signature", currentSIG);
                     
                     setTimeout(() => {
-                        window.location.href = "intel.html";
-                    }, 1200);
+                        window.location.href = "dashboard.html";
+                    }, 1500);
                 } else {
+                    // Fallback check: Baka registered na siya pero hindi siya ang "last fingerprint"
+                    // Mas mainam na i-link natin ang 'lastFingerprint' sa update_db para dito.
                     status.innerText = "DENIED";
                     status.style.color = "var(--red)";
                     error.style.display = "block";
                 }
             } catch (e) {
-                status.innerText = "OFFLINE";
+                status.innerText = "COMMS_OFFLINE";
                 console.error(e);
             }
         }
 
-        window.onload = verifyDevice;
+        // Delay scan to allow animation to start
+        window.onload = () => {
+            setTimeout(verifyDevice, 1000);
+        };
     </script>
 </body>
 </html>

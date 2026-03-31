@@ -3,71 +3,115 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-    <title>AGENCY_INTEL_v18.5</title>
+    <title>AGENCY_INTEL_v20.0</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
     <style>
         :root { 
             --bg: #01080b; --cyan: #00f3ff; --red: #ff003c; --green: #00ff66; 
             --border: rgba(0, 243, 255, 0.15); --mono: 'Share Tech Mono', monospace; 
+            --glass: rgba(2, 12, 18, 0.95);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        
         body { 
             background: var(--bg); color: #c8e1e5; font-family: 'Rajdhani', sans-serif; 
             height: 100vh; overflow: hidden; display: flex; flex-direction: column;
-            background-image: radial-gradient(circle at center, #0a1f29 0%, #01080b 100%);
+            background-image: 
+                linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
         }
-        header { padding: 15px; border-bottom: 1px solid var(--border); text-align: center; background: #000; }
-        .intel-title { font-family: var(--mono); color: var(--cyan); font-size: 14px; letter-spacing: 5px; }
+
+        header { padding: 15px; border-bottom: 1px solid var(--border); text-align: center; background: #000; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .intel-title { font-family: var(--mono); color: var(--cyan); font-size: 14px; letter-spacing: 5px; text-shadow: 0 0 10px var(--cyan); }
 
         main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 25px; text-align: center; }
         
         .auth-zone { margin-bottom: 40px; }
-        #log-status { font-family: var(--mono); font-size: 10px; color: #555; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
-        .agent-name { font-size: 32px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; text-shadow: 0 0 15px rgba(0, 243, 255, 0.2); }
-        .device-tag { font-size: 10px; padding: 4px 10px; border: 1px solid #333; color: #555; display: inline-block; font-family: var(--mono); }
+        #log-status { font-family: var(--mono); font-size: 10px; color: #5c7882; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; }
+        .agent-name { font-size: 42px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: #fff; margin-bottom: 5px; }
+        .device-tag { font-size: 11px; padding: 5px 12px; background: rgba(0,0,0,0.5); border: 1px solid #1a2f37; color: #5c7882; font-family: var(--mono); display: inline-block; border-radius: 2px; }
 
         .report-btn { 
-            background: transparent; border: 2px solid var(--cyan); color: var(--cyan); 
-            padding: 22px 55px; font-family: var(--mono); font-size: 16px; 
-            cursor: pointer; clip-path: polygon(10% 0, 90% 0, 100% 50%, 90% 100%, 10% 100%, 0 50%); 
-            transition: 0.3s; opacity: 0.1; pointer-events: none;
+            background: transparent; border: 1px solid var(--cyan); color: var(--cyan); 
+            padding: 25px 60px; font-family: var(--mono); font-size: 18px; font-weight: bold;
+            cursor: pointer; position: relative; transition: 0.3s;
+            clip-path: polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%);
+            opacity: 0.1; pointer-events: none;
         }
         .report-btn.unlocked { opacity: 1; pointer-events: auto; background: rgba(0, 243, 255, 0.05); }
-        .report-btn.unlocked:hover { background: var(--cyan); color: #000; box-shadow: 0 0 20px var(--cyan); }
+        .report-btn.unlocked:hover { background: var(--cyan); color: #000; box-shadow: 0 0 30px rgba(0, 243, 255, 0.4); }
 
-        /* Modal / Form */
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; backdrop-filter: blur(10px); }
-        .modal-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 360px; background: #020c12; border: 1px solid var(--cyan); padding: 30px; box-shadow: 0 0 30px rgba(0, 243, 255, 0.1); }
-        .intel-input { width: 100%; background: rgba(0,0,0,0.5); border: 1px solid var(--border); padding: 15px; color: #fff; font-family: var(--mono); margin-bottom: 15px; outline: none; border-radius: 0; }
-        .intel-input:focus { border-color: var(--cyan); }
-        .btn-transmit { width: 100%; padding: 20px; background: var(--green); color: #000; border: none; font-family: var(--mono); font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        /* Remastered Modal */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; backdrop-filter: blur(15px); }
+        .modal-box { 
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            width: 90%; max-width: 380px; background: var(--glass); 
+            border-top: 4px solid var(--cyan); padding: 40px 30px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+        }
 
-        nav { position: fixed; bottom: 0; width: 100%; height: 70px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; }
-        .nav-link { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #333; font-size: 10px; font-family: var(--mono); text-decoration: none; transition: 0.3s; }
-        .nav-link.active { color: var(--cyan); border-top: 2px solid var(--cyan); background: rgba(0,243,255,0.02); }
+        .input-group { margin-bottom: 25px; text-align: left; }
+        .input-label { font-family: var(--mono); font-size: 10px; color: var(--cyan); margin-bottom: 8px; display: block; letter-spacing: 1px; }
+        
+        .intel-input { 
+            width: 100%; background: #05131a; border: 1px solid #1a2f37; padding: 18px; 
+            color: #fff; font-family: var(--mono); font-size: 16px; outline: none;
+            transition: 0.3s; border-left: 3px solid #1a2f37;
+        }
+        .intel-input:focus { border-color: var(--cyan); border-left-color: var(--cyan); background: #071b25; }
+
+        .btn-transmit { 
+            width: 100%; padding: 22px; background: var(--cyan); color: #000; 
+            border: none; font-family: var(--font-main); font-size: 18px; font-weight: 900; 
+            cursor: pointer; text-transform: uppercase; letter-spacing: 2px;
+            clip-path: polygon(0 0, 100% 0, 100% 75%, 92% 100%, 0 100%);
+        }
+        .btn-transmit:active { transform: scale(0.98); }
+
+        nav { position: fixed; bottom: 0; width: 100%; height: 75px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; }
+        .nav-link { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #333; font-size: 11px; font-family: var(--mono); text-decoration: none; font-weight: bold; }
+        .nav-link.active { color: var(--cyan); background: rgba(0,243,255,0.03); border-top: 2px solid var(--cyan); }
     </style>
 </head>
 <body>
 
-<header><div class="intel-title">INTEL_TERMINAL</div></header>
+<header><div class="intel-title">INTEL_TERMINAL_V20</div></header>
 
 <main>
     <div class="auth-zone">
         <div id="log-status">>> Establishing_Secure_Link...</div>
         <div class="agent-name" id="display-name">---</div>
-        <div class="device-tag" id="device-tag">NODE_UNRECOGNIZED</div>
+        <div class="device-tag" id="device-tag">SCANNING_HARDWARE...</div>
     </div>
 
-    <button id="main-btn" class="report-btn" onclick="openReport()">INITIATE REPORT</button>
+    <button id="main-btn" class="report-btn" onclick="openReport()">
+        [ INITIATE_BOUNTY_REPORT ]
+    </button>
 </main>
 
 <div id="report-modal" class="modal">
     <div class="modal-box">
-        <h3 style="color:var(--cyan); font-family:var(--mono); margin-bottom:20px; text-align:center;">DATA_TRANSMISSION</h3>
-        <input type="tel" id="vAgent" class="intel-input" placeholder="V-AGENT #">
-        <input type="number" id="expenses" class="intel-input" placeholder="EXPENSES (PHP)">
-        <button onclick="transmitData()" class="btn-transmit">SEND_TO_BUREAU</button>
-        <button onclick="closeReport()" style="width:100%; background:transparent; color:var(--red); border:none; margin-top:15px; font-family:var(--mono); cursor:pointer; font-size:10px;">[ ABORT_MISSION ]</button>
+        <div style="text-align:center; margin-bottom:30px;">
+            <h2 style="font-family:var(--mono); font-size:14px; letter-spacing:3px; color:var(--cyan);">BOUNTY_DATA_ENTRY</h2>
+            <p style="font-size:10px; color:#5c7882;">SECURE_TRANSMISSION_PROTOCOL_ACTIVE</p>
+        </div>
+
+        <div class="input-group">
+            <span class="input-label">TARGET_V_AGENT_ID</span>
+            <input type="tel" id="vAgent" class="intel-input" placeholder="EX: 0098" autocomplete="off">
+        </div>
+
+        <div class="input-group">
+            <span class="input-label">BOUNTY_EXPENSES (PHP)</span>
+            <input type="number" id="expenses" class="intel-input" placeholder="0.00" autocomplete="off">
+        </div>
+
+        <button onclick="transmitData()" class="btn-transmit">CONFIRM_TRANSMISSION</button>
+        
+        <button onclick="closeReport()" style="width:100%; background:transparent; color:var(--red); border:none; margin-top:20px; font-family:var(--mono); cursor:pointer; font-size:11px; letter-spacing:1px;">
+            // ABORT_ENTRY
+        </button>
     </div>
 </div>
 
@@ -92,99 +136,80 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // --- 18.5 SIGNATURE GENERATOR (Dapat match sa index at update_db) ---
     function getSignature() {
         const canvas = document.createElement('canvas');
         const gl = canvas.getContext('webgl');
-        const debugInfo = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
-        const gpu = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "GENERIC_GPU";
-        
-        const specs = {
-            brand: navigator.userAgent.match(/Android\s+([^\s;]+);?\s+([^\s;]+)/)?.[2] || "NODE_STATION",
-            gpu: gpu.split('/').pop().trim(),
-            res: `${window.screen.width}x${window.screen.height}`,
-            plt: navigator.platform
-        };
-
-        const raw = specs.gpu + specs.res + specs.plt + specs.brand;
+        const gpu = gl ? gl.getParameter(gl.getExtension('WEBGL_debug_renderer_info').UNMASKED_RENDERER_WEBGL) : "GENERIC";
+        const raw = gpu + screen.width + navigator.platform;
         let hash = 0;
-        for (let i = 0; i < raw.length; i++) {
-            hash = ((hash << 5) - hash) + raw.charCodeAt(i);
-            hash |= 0;
-        }
+        for (let i = 0; i < raw.length; i++) { hash = ((hash << 5) - hash) + raw.charCodeAt(i); hash |= 0; }
         return "SIG-" + Math.abs(hash).toString(16).toUpperCase();
     }
 
-    // --- SECURITY SCANNER v18.5 ---
     async function runSecurityScan() {
         const log = document.getElementById('log-status');
         const nameDisplay = document.getElementById('display-name');
         const tag = document.getElementById('device-tag');
         const btn = document.getElementById('main-btn');
-
         const currentSIG = getSignature();
 
         try {
-            // MULTI-DEVICE LOOKUP: I-check kung ang SIG ay nasa linkedSignatures array
             const q = query(collection(db, "agents"), where("linkedSignatures", "array-contains", currentSIG));
             const snap = await getDocs(q);
 
             if (!snap.empty) {
                 const verifiedAgent = snap.docs[0].data();
-                
-                // Update UI
                 nameDisplay.innerText = verifiedAgent.agentName;
-                tag.innerText = currentSIG; // Ipakita ang signature code
+                tag.innerText = "NODE_LOCKED: " + currentSIG;
                 tag.style.color = "var(--green)";
-                tag.style.borderColor = "var(--green)";
-                log.innerText = ">> UPLINK_STABLE // ACCESS_GRANTED";
-                
+                log.innerText = ">> UPLINK_STABLE // AGENT_VERIFIED";
                 btn.classList.add('unlocked');
                 
-                // Sync Local Storage
                 localStorage.setItem("cia_agent", verifiedAgent.agentName);
                 localStorage.setItem("intel_device_signature", currentSIG);
-
+                localStorage.setItem("agent_brand", verifiedAgent.brandName || "UNKNOWN");
             } else {
-                nameDisplay.innerText = "UNAUTHORIZED";
+                nameDisplay.innerText = "ACCESS_DENIED";
                 nameDisplay.style.color = "var(--red)";
-                log.innerText = ">> CRITICAL_ERROR: NODE_NOT_RECOGNIZED";
-                tag.innerText = currentSIG;
-                tag.style.color = "var(--red)";
+                log.innerText = ">> UNAUTHORIZED_HARDWARE_DETECTED";
+                tag.innerText = "NODE_ID: " + currentSIG;
             }
-        } catch (e) {
-            log.innerText = ">> CONNECTION_LOST";
-            console.error(e);
-        }
+        } catch (e) { log.innerText = ">> DATABASE_UPLINK_OFFLINE"; }
     }
 
-    // --- DATA TRANSMISSION ---
     window.transmitData = async () => {
         const v = document.getElementById('vAgent').value;
         const e = document.getElementById('expenses').value;
         const agentName = localStorage.getItem("cia_agent");
         const sig = localStorage.getItem("intel_device_signature");
+        const brand = localStorage.getItem("agent_brand");
 
-        if(!v || !e) return alert("DATA_INCOMPLETE");
+        if(!v || !e) {
+            alert("⚠️ SYSTEM_ERROR: INCOMPLETE_INTEL_FIELDS");
+            return;
+        }
 
         try {
-            await addDoc(collection(db, "mission_orders"), {
+            // DATABASE NAME: bounties (remastered)
+            await addDoc(collection(db, "bounties"), {
                 agentName: agentName,
+                brandName: brand,
+                vAgentID: v,
+                expenses: parseFloat(e),
                 deviceSignature: sig,
-                vAgent: v,
-                expenses: e,
                 timestamp: serverTimestamp(),
-                orderNumber: Math.floor(1000 + Math.random() * 9000)
+                orderNumber: "BNT-" + Math.floor(10000 + Math.random() * 90000),
+                status: "PENDING_REVIEW"
             });
-            alert("TRANSMISSION_SUCCESSFUL");
+            
+            alert("✅ TRANSMISSION_COMPLETE: BOUNTY_LOGGED");
             location.reload();
-        } catch (err) { alert("ERROR_SENDING_DATA"); }
+        } catch (err) { alert("❌ CRITICAL_FAILURE: DATA_NOT_SENT"); }
     };
 
     window.openReport = () => document.getElementById('report-modal').style.display = 'block';
     window.closeReport = () => document.getElementById('report-modal').style.display = 'none';
 
-    // Start Scan
     window.onload = runSecurityScan;
 </script>
 

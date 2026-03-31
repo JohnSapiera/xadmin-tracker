@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>SECURE_GATEWAY_v5.2</title>
+  <title>INTEL_GATEWAY_v5.5</title>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -14,7 +14,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { background: var(--bg); color: #c8e1e5; font-family: 'Rajdhani', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
-    /* Ultra Compact Header - Iwas "Malapad" */
+    /* Compact Mobile Header */
     header { padding: 4px 10px; height: 32px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 11px; background: #000; }
     .ticker { font-size: 9px; color: var(--cyan); padding: 2px 10px; border-bottom: 1px solid var(--border); opacity: 0.7; letter-spacing: 1px; }
 
@@ -36,7 +36,7 @@
 
     #terminal { background: #000; border: 1px solid #111; padding: 8px; font-family: var(--font-mono); font-size: 10px; min-height: 100px; color: #555; margin-top: 12px; overflow-y: auto; line-height: 1.3; }
     
-    /* Modal Design */
+    /* Modal */
     #weapon-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
     .modal-content { background: var(--panel); border: 1px solid var(--red); width: 100%; max-width: 300px; padding: 30px 15px 15px; position: relative; }
     .modal-close { position: absolute; top: 0; right: 0; background: var(--red); color: #fff; border: none; padding: 5px 10px; font-family: var(--font-mono); }
@@ -49,13 +49,14 @@
 <body>
 
 <header>
-  <div>SECURE_GATEWAY_v5.2</div>
+  <div>INTEL_GATEWAY_v5.5</div>
   <div id="clock" style="color:var(--cyan)">00:00:00</div>
 </header>
-<div class="ticker">UPLINK_STATUS: ENCRYPTED // READY_FOR_SCAN</div>
+<div class="ticker">UPLINK: ACTIVE // DATABASE: BLACKLIST_COLLECTION</div>
 
 <main>
   <div class="search-box">
+    <label style="font-size:10px; color:var(--cyan); display:block; margin-bottom:5px; font-family:var(--font-mono)">MISSION ORDER ID SCANNER</label>
     <input type="tel" id="mission-input" placeholder="00000" maxlength="5" autocomplete="off">
     <div class="btn-row">
       <button id="action-btn" class="btn btn-save">SAVE</button>
@@ -64,7 +65,7 @@
   </div>
 
   <div id="terminal">
-    <div>> INITIALIZING...</div>
+    <div>> WAITING_FOR_INPUT...</div>
   </div>
 </main>
 
@@ -75,21 +76,20 @@
     <div style="font-size:14px; line-height:1.8; font-family: var(--font-mono);">
       SYSTEM: <span id="m-weap" style="color:var(--cyan)">--</span><br>
       AGENT: <span id="m-age" style="color:var(--cyan)">--</span><br>
-      LEVEL: <span id="m-stat">--</span>
+      STATUS: <span id="m-stat" style="color:var(--red)">BLACKLISTED</span>
     </div>
   </div>
 </div>
 
 <nav>
   <div class="nav-item active">CONSOLE</div>
-  <div class="nav-item">ARCHIVE</div>
+  <div class="nav-item">LOGS</div>
 </nav>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getFirestore, collection, query, where, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  // Applied Firebase Config
   const firebaseConfig = {
     apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
     authDomain: "my-admin-portal-12691.firebaseapp.com",
@@ -108,100 +108,67 @@
   const term = document.getElementById('terminal');
   
   let currentData = null;
-  let isBlacklisted = false;
 
-  // --- DUAL SEARCH LOGIC (STR + NUM) ---
+  // --- AUTO SEARCH (SINGLE COLLECTION: blacklist) ---
   input.addEventListener('input', async (e) => {
     const val = e.target.value.trim();
     if (val.length >= 4) {
-      log(`SCANNING DATA: ${val}`, 'cyan');
+      log(`SCANNING BLACKLIST: ${val}`, 'cyan');
       try {
-        let found = false;
-
-        // 1. SCAN BLACKLIST FIRST
-        const qB = [
-          query(collection(db, "blacklist"), where("targetID", "==", val)),
-          query(collection(db, "blacklist"), where("targetID", "==", Number(val)))
-        ];
+        // Hahanapin natin ang 'targetID' as String at Number
+        const qStr = query(collection(db, "blacklist"), where("targetID", "==", val));
+        const qNum = query(collection(db, "blacklist"), where("targetID", "==", Number(val)));
         
-        for(let q of qB) {
-          const s = await getDocs(q);
-          if(!s.empty) { 
-            isBlacklisted = true; found = true; 
-            currentData = { weaponSystem: "BLOCKED", agent: "TERMINATED" };
-            break; 
-          }
-        }
+        const [sStr, sNum] = await Promise.all([getDocs(qStr), getDocs(qNum)]);
 
-        // 2. SCAN MISSIONS (If not in blacklist)
-        if(!found) {
-          const qM = [
-            query(collection(db, "mission_orders"), where("orderNumber", "==", val)),
-            query(collection(db, "mission_orders"), where("orderNumber", "==", Number(val)))
-          ];
-          for(let q of qM) {
-            const s = await getDocs(q);
-            if(!s.empty) { 
-              currentData = s.docs[0].data();
-              isBlacklisted = false; found = true; 
-              break; 
-            }
-          }
-        }
-
-        if (found) {
+        if (!sStr.empty || !sNum.empty) {
+          const doc = !sStr.empty ? sStr.docs[0] : sNum.docs[0];
+          currentData = doc.data();
           actionBtn.textContent = "RETRIEVE";
           actionBtn.className = "btn btn-retrieve";
-          log(`DATA MATCHED. SECURITY: ${isBlacklisted ? 'RED' : 'GREEN'}`, 'blue');
+          log(`MATCH FOUND IN BLACKLIST.`, 'blue');
         } else {
           reset();
-          log(`NO RECORD FOUND.`, 'green');
+          log(`ID ${val} IS CLEAR.`, 'green');
         }
       } catch (err) { log(`DB_ERR: ${err.message}`, 'red'); }
     } else { reset(); }
   });
 
   function reset() {
-    currentData = null; isBlacklisted = false;
+    currentData = null;
     actionBtn.textContent = "SAVE";
     actionBtn.className = "btn btn-save";
   }
 
-  // Action Logic
+  // --- ACTIONS ---
   actionBtn.addEventListener('click', async () => {
     const val = input.value;
     if (val.length < 4) return;
 
     if (actionBtn.textContent === "RETRIEVE") {
       document.getElementById('m-id').textContent = `ORDER: #${val}`;
-      document.getElementById('m-weap').textContent = currentData.weaponSystem || "UNKNOWN";
-      document.getElementById('m-age').textContent = currentData.agent || "REDACTED";
-      document.getElementById('m-stat').innerHTML = isBlacklisted ? "<b style='color:red'>BLACKLISTED</b>" : "<b style='color:green'>AUTHORIZED</b>";
+      document.getElementById('m-weap').textContent = currentData.weaponSystem || "TACTICAL_V1";
+      document.getElementById('m-age').textContent = currentData.agent || "V-AGENT";
       document.getElementById('weapon-modal').style.display = 'flex';
     } else {
-      log(`ARCHIVING DATA: ${val}`, 'green');
+      // SAVE DIRECT TO BLACKLIST
+      log(`RECORDING TO BLACKLIST: ${val}`, 'green');
       try {
-        await addDoc(collection(db, "mission_orders"), {
-          orderNumber: val, 
-          weaponSystem: "TACTICAL_V1", 
-          agent: "V"+Math.floor(100+Math.random()*900), 
+        await addDoc(collection(db, "blacklist"), {
+          targetID: val,
+          weaponSystem: "ARC_GEN_1",
+          agent: "V"+Math.floor(100+Math.random()*900),
           timestamp: serverTimestamp()
         });
-        log(`SUCCESS: ${val} UPLOADED.`, 'green');
+        log(`SUCCESS: ${val} BLACKLISTED.`, 'green');
         input.value = ""; reset();
       } catch (e) { log("SAVE_ERROR", "red"); }
     }
   });
 
-  document.getElementById('term-btn').onclick = async () => {
-    const val = input.value;
-    if (val.length < 4 || !confirm("TERMINATE THIS ID?")) return;
-    try {
-      await addDoc(collection(db, "blacklist"), { targetID: val, timestamp: serverTimestamp() });
-      log(`ID ${val} BLACKLISTED.`, 'red');
-      input.value = ""; reset();
-    } catch (e) { log("TERM_ERR", "red"); }
-  };
+  // TERMINATE Button (Same as Save to Blacklist)
+  document.getElementById('term-btn').onclick = () => actionBtn.click();
 
   window.closeM = () => document.getElementById('weapon-modal').style.display = 'none';
   

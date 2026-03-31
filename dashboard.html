@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>INTEL_CENTER_v14_SECURITY_PATCH</title>
+  <title>INTEL_CENTER_v16_AUTOSCAN</title>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
   <style>
     :root { 
@@ -11,17 +11,11 @@
       --red: #ff003c; --blue: #007bff; --green: #00ff66; --yellow: #ffcc00;
       --border: rgba(0, 243, 255, 0.2); --mono: 'Share Tech Mono', monospace; 
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { background: var(--bg); color: #c8e1e5; font-family: 'Rajdhani', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
     header { padding: 15px; background: #000; border-bottom: 2px solid var(--cyan); display: flex; justify-content: space-between; align-items: center; }
-    
-    /* Profile Button Link */
-    .profile-link { background: none; border: 1px solid var(--cyan); color: var(--cyan); font-family: var(--mono); font-size: 9px; padding: 5px 10px; text-decoration: none; cursor: pointer; transition: 0.3s; }
-    .profile-link:hover { background: var(--cyan); color: #000; }
-
-    .status-bar { font-size: 9px; font-family: var(--mono); color: var(--cyan); padding: 8px 15px; background: rgba(0, 243, 255, 0.05); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; }
+    .profile-link { background: none; border: 1px solid var(--cyan); color: var(--cyan); font-family: var(--mono); font-size: 9px; padding: 5px 10px; text-decoration: none; cursor: pointer; }
 
     main { flex: 1; padding: 20px; overflow-y: auto; padding-bottom: 100px; }
     .command-module { background: var(--panel); border: 1px solid var(--border); padding: 30px; box-shadow: 0 0 40px rgba(0,0,0,0.8); }
@@ -36,19 +30,21 @@
     
     .btn-save { color: var(--green); border-color: var(--green); }
     .btn-retrieve { color: var(--blue); border-color: var(--blue); }
-    
-    /* Reserve Button States */
     .btn-reserve { background: linear-gradient(45deg, #4d0000, #001a4d); color: #fff; border: 1px solid #ff003c; }
-    .btn-reserve:disabled { cursor: not-allowed; }
-    .btn-faded { opacity: 0.2; } /* Fade effect for Blacklist */
+    .btn-reserve:disabled { cursor: not-allowed; opacity: 0.5; }
+    .btn-faded { opacity: 0.1 !important; }
 
-    #terminal { background: rgba(0,0,0,0.9); border: 1px solid #111; padding: 15px; font-family: var(--mono); font-size: 11px; height: 140px; color: #4a5a61; margin-top: 20px; overflow-y: auto; }
+    #terminal { background: rgba(0,0,0,0.9); border: 1px solid #111; padding: 15px; font-family: var(--mono); font-size: 11px; height: 140px; color: #4a5a61; margin-top: 20px; overflow-y: auto; border-radius: 2px; }
 
-    /* Pop-up Overlay */
+    /* Pop-up UI */
     .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
     .popup { width: 340px; background: #020a0d; border: 1px solid var(--cyan); padding: 25px; }
-    
-    /* Lockdown Overlay */
+    .pop-title { font-family: var(--mono); font-size: 24px; color: var(--cyan); text-align: center; margin-bottom: 5px; }
+    .device-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 5px; }
+    .dev-btn { background: transparent; border: 1px solid #1a262b; color: #4a5a61; padding: 8px; font-family: var(--mono); font-size: 9px; cursor: pointer; }
+    .dev-btn.active { border-color: var(--cyan); color: var(--cyan); background: rgba(0, 243, 255, 0.1); }
+
+    /* Lockdown/Success */
     .lockdown-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
 
     nav { position: fixed; bottom: 0; width: 100%; height: 75px; background: #000; border-top: 2px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; }
@@ -61,54 +57,56 @@
 <header>
   <div style="display:flex; align-items:center;">
     <div style="width:12px; height:12px; background:var(--cyan); margin-right:10px; box-shadow: 0 0 10px var(--cyan);"></div>
-    <span style="font-family: var(--mono); font-size: 14px; letter-spacing: 2px; color: var(--cyan);">INTEL_CORE_v14</span>
+    <span style="font-family: var(--mono); font-size: 14px; letter-spacing: 2px; color: var(--cyan);">INTEL_CORE_v16</span>
   </div>
   <a href="profile.html" class="profile-link">AGENT_PROFILE</a>
 </header>
 
-<div class="status-bar">
-    <span id="clock">00:00:00</span>
-    <span id="device-tag">NODE: <span style="color:var(--cyan)">SECURE</span></span>
-</div>
-
 <main>
   <div class="command-module">
-    <div style="font-family: var(--mono); font-size: 10px; color: var(--cyan); margin-bottom: 20px; opacity: 0.6;">// SECTOR_SCANNER_v14</div>
-    <div class="input-container">
-        <input type="tel" id="mission-input" placeholder="00000" maxlength="5">
-    </div>
+    <div style="font-family: var(--mono); font-size: 10px; color: var(--cyan); margin-bottom: 15px; opacity: 0.6;">// AUTO_SCAN_UNIT_READY</div>
+    <div class="input-container"><input type="tel" id="mission-input" placeholder="0000" maxlength="5"></div>
     <div class="btn-row">
       <button id="action-btn" class="btn btn-save">SAVE</button>
       <button id="reserve-btn" class="btn btn-reserve">RESERVE</button>
     </div>
   </div>
-  <div id="terminal">> SYSTEM_READY...</div>
+  <div id="terminal">> AWAITING_INPUT...</div>
 </main>
+
+<div class="overlay" id="modal-overlay">
+    <div class="popup">
+        <div class="pop-title" id="pop-m-id">#0000</div>
+        <div id="pop-agent" style="font-size:10px; color:#4a5a61; text-align:center; margin-bottom:20px; font-family:var(--mono);">AGENT_NAME</div>
+        
+        <div style="font-size:11px; color:#556b73; margin-bottom:5px; font-family:var(--mono);">WEAPON_SYSTEM:</div>
+        <div class="device-grid" id="device-list"></div>
+
+        <div style="margin-top:20px; display:flex; justify-content:space-between; font-family:var(--mono); font-size:11px;">
+            <span>V_AGENT#:</span>
+            <input type="text" id="v-agent-input" style="background:transparent; border:none; border-bottom:1px solid var(--cyan); color:var(--green); width:100px; text-align:right; outline:none;" placeholder="ID_REQUIRED">
+        </div>
+
+        <div style="display: flex; justify-content: space-around; margin-top: 30px;">
+            <button onclick="submitMission()" style="width:60px; height:60px; border-radius:50%; border:2px solid var(--green); color:var(--green); background:transparent; font-size:24px; cursor:pointer;">O</button>
+            <button onclick="closePopup()" style="width:60px; height:60px; border-radius:50%; border:2px solid var(--red); color:var(--red); background:transparent; font-size:24px; cursor:pointer;">X</button>
+        </div>
+    </div>
+</div>
 
 <div class="lockdown-overlay" id="success-screen">
     <div style="border: 2px solid var(--green); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--green); font-size: 40px; margin-bottom: 20px;">✓</div>
-    <div style="color:#fff; font-family:var(--mono); letter-spacing:5px;" id="success-msg">MISSION_RESERVED</div>
-    <button onclick="location.reload()" class="btn btn-save" style="margin-top: 50px; width: 200px; height: 45px;">RETURN</button>
+    <div style="color:#fff; font-family:var(--mono); letter-spacing:5px;">UPLINK_SUCCESSFUL</div>
+    <button onclick="location.reload()" class="btn btn-save" style="margin-top: 50px; width: 200px; height: 45px;">NEXT_MISSION</button>
 </div>
 
-<nav>
-  <a href="#" class="nav-btn active">DASHBOARD</a>
-  <a href="intel.html" class="nav-btn">INTEL_LOGS</a>
-</nav>
+<nav><a href="#" class="nav-btn active">DASHBOARD</a><a href="intel.html" class="nav-btn">INTEL_LOGS</a></nav>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getFirestore, collection, query, where, getDocs, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
-    authDomain: "my-admin-portal-12691.firebaseapp.com",
-    projectId: "my-admin-portal-12691",
-    storageBucket: "my-admin-portal-12691.firebasestorage.app",
-    messagingSenderId: "317015091563",
-    appId: "1:317015091563:web:baab5171d8e0a58acd442e"
-  };
-
+  const firebaseConfig = { apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", authDomain: "my-admin-portal-12691.firebaseapp.com", projectId: "my-admin-portal-12691", storageBucket: "my-admin-portal-12691.firebasestorage.app", messagingSenderId: "317015091563", appId: "1:317015091563:web:baab5171d8e0a58acd442e" };
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
@@ -116,6 +114,7 @@
   const actionBtn = document.getElementById('action-btn');
   const reserveBtn = document.getElementById('reserve-btn');
   const termLog = document.getElementById('terminal');
+  let selectedDevice = navigator.platform;
 
   function log(msg, color = "#4a5a61") {
     const d = document.createElement('div');
@@ -123,62 +122,106 @@
     termLog.prepend(d);
   }
 
-  input.addEventListener('input', async (e) => {
-    const val = e.target.value.trim();
+  // --- REFINED AUTO-SCAN LOGIC ---
+  input.addEventListener('input', async () => {
+    const val = input.value.trim();
     
-    // Default Reset
-    actionBtn.className = "btn btn-save";
-    actionBtn.textContent = "SAVE";
-    actionBtn.disabled = false;
-    
-    reserveBtn.disabled = false;
-    reserveBtn.classList.remove('btn-faded');
+    // Reset Buttons to default
+    actionBtn.className = "btn btn-save"; actionBtn.textContent = "SAVE"; actionBtn.disabled = false;
+    reserveBtn.disabled = false; reserveBtn.classList.remove('btn-faded');
 
     if (val.length >= 4) {
-        log(`SCANNING: [${val}]`, 'var(--cyan)');
+        log(`CORE_SCAN: [${val}]`, 'var(--cyan)');
         
         try {
-            // 1. Check MISSION_ORDERS (Existing Data)
+            // 1. Check Mission Orders (Existing)
             const qExist = query(collection(db, "mission_orders"), where("missionID", "==", val));
             const snapExist = await getDocs(qExist);
 
             if (!snapExist.empty) {
-                log(`MATCH_FOUND: Mission ${val}`, 'var(--yellow)');
-                actionBtn.className = "btn btn-retrieve";
-                actionBtn.textContent = "RETRIEVE";
-                
-                // Rule: Unclickable but NOT Faded
-                reserveBtn.disabled = true;
+                log(`IDENT_MATCH: ${val} IS_ACTIVE`, 'var(--yellow)');
+                actionBtn.className = "btn btn-retrieve"; actionBtn.textContent = "RETRIEVE";
+                reserveBtn.disabled = true; // Still visible but not clickable
                 return;
             }
 
-            // 2. Check BLACKLIST (Restricted)
+            // 2. Check Blacklist (Restricted)
             const qBlack = query(collection(db, "blacklist"), where("targetID", "==", val));
             const snapBlack = await getDocs(qBlack);
 
             if (!snapBlack.empty) {
-                log(`ALERT: ID ${val} RESTRICTED.`, 'var(--red)');
-                actionBtn.className = "btn btn-terminate";
-                actionBtn.textContent = "LOCKED";
+                log(`CRITICAL: ID ${val} BLACKLISTED`, 'var(--red)');
+                actionBtn.className = "btn btn-terminate"; actionBtn.textContent = "LOCKED";
                 actionBtn.disabled = true;
-                
-                // Rule: Unclickable AND Faded
-                reserveBtn.disabled = true;
-                reserveBtn.classList.add('btn-faded');
+                reserveBtn.disabled = true; 
+                reserveBtn.classList.add('btn-faded'); // Fade out
+            } else {
+                log(`STATUS: ${val} CLEAR_FOR_UPLINK`, 'var(--green)');
             }
-        } catch (e) { log("OFFLINE", "red"); }
+        } catch (e) { log("COMMS_ERROR", "red"); }
     }
   });
 
-  // RESERVE ACTION
-  reserveBtn.onclick = async () => {
-    const val = input.value;
-    if (val.length < 4 || reserveBtn.disabled) return;
+  // --- SAVE/RETRIEVE POP-UP ---
+  actionBtn.onclick = async () => {
+    if (input.value.length < 4 || actionBtn.disabled) return;
 
-    log(`INITIATING_RESERVE: [${val}]`, "var(--yellow)");
+    const agentName = localStorage.getItem("cia_agent") || "JEFFERSON VALLES";
+    const devGrid = document.getElementById('device-list');
+    devGrid.innerHTML = "";
+    
+    // Load devices logic
+    try {
+        const q = query(collection(db, "agents"), where("agentName", "==", agentName));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+            (snap.docs[0].data().linkedDevice || [navigator.platform]).forEach(dev => {
+                const b = document.createElement('button');
+                b.className = `dev-btn ${dev === selectedDevice ? 'active' : ''}`;
+                b.innerText = dev;
+                b.onclick = () => { 
+                    document.querySelectorAll('.dev-btn').forEach(x => x.classList.remove('active'));
+                    b.classList.add('active'); selectedDevice = dev; 
+                };
+                devGrid.appendChild(b);
+            });
+        }
+    } catch(e) {}
+
+    document.getElementById('pop-m-id').innerText = `#${input.value}`;
+    document.getElementById('pop-agent').innerText = agentName;
+    document.getElementById('modal-overlay').style.display = 'flex';
+  };
+
+  window.closePopup = () => document.getElementById('modal-overlay').style.display = 'none';
+
+  // --- FINAL SUBMISSION (O Button) ---
+  window.submitMission = async () => {
+    const val = input.value;
+    const vId = document.getElementById('v-agent-input').value;
+    if(!vId) return alert("V_AGENT# REQUIRED");
+
     try {
         await setDoc(doc(db, "mission_orders", val), {
             missionID: val,
+            agentName: document.getElementById('pop-agent').innerText,
+            vAgentID: vId,
+            weaponSystem: selectedDevice,
+            expenses: "PHP 0.00",
+            deploymentDate: serverTimestamp(),
+            relieveDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+            status: "ACTIVE"
+        }, { merge: true });
+        document.getElementById('success-screen').style.display = 'flex';
+    } catch (e) { log("UPLINK_FAILED", "red"); }
+  };
+
+  // --- RAPID RESERVE ---
+  reserveBtn.onclick = async () => {
+    if (input.value.length < 4 || reserveBtn.disabled) return;
+    try {
+        await setDoc(doc(db, "mission_orders", input.value), {
+            missionID: input.value,
             agentName: localStorage.getItem("cia_agent") || "JEFFERSON VALLES",
             vAgentID: "RESERVED",
             weaponSystem: navigator.platform,
@@ -187,13 +230,11 @@
             relieveDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
             status: "RESERVED"
         }, { merge: true });
-
-        document.getElementById('success-msg').innerText = "MISSION_RESERVED";
         document.getElementById('success-screen').style.display = 'flex';
-    } catch (e) { log("RESERVE_FAILED", "red"); }
+    } catch (e) { log("RESERVE_FAIL", "red"); }
   };
 
-  setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB'); }, 1000);
+  setInterval(() => { document.title = `INTEL [${new Date().toLocaleTimeString('en-GB')}]`; }, 1000);
 </script>
 </body>
 </html>

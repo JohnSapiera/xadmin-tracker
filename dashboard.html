@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>Operations Registry</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -448,7 +448,7 @@
       margin-right: 6px; vertical-align: middle;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-track { background: var(--bg2); }
     ::-webkit-scrollbar-thumb { background: var(--rule); }
 
@@ -462,11 +462,99 @@
       color: var(--ink4); letter-spacing: 1px;
       background: var(--bg2);
     }
+
+    /* =========================================
+       📱 MOBILE RESPONSIVE TWEAKS 
+       ========================================= */
+    @media (max-width: 768px) {
+      /* TOPBAR */
+      #topbar { padding: 0 16px; }
+      .topbar-sub, .topbar-divider { display: none; }
+      .topbar-right span:first-child { display: none; } /* Hide clock on mobile */
+
+      /* LAYOUT STACK */
+      #layout { flex-direction: column; }
+      
+      /* SIDEBAR BECOMES TOP NAVIGATION TABS */
+      #sidebar {
+        width: 100%;
+        padding: 0;
+        flex-direction: row;
+        border-right: none;
+        border-bottom: 1px solid var(--rule);
+      }
+      .sidebar-section-label { display: none; } /* Hide sections label */
+      .nav-btn {
+        width: 50%;
+        justify-content: center;
+        border-left: none;
+        border-bottom: 2px solid transparent;
+        padding: 14px 10px;
+      }
+      .nav-btn.active {
+        border-left: none;
+        border-bottom: 2px solid var(--ink);
+      }
+      .sidebar-footer { display: none; } /* Hide stats on mobile to save space */
+
+      /* MAIN CONTAINER */
+      #main { padding: 20px 16px; }
+
+      /* PAGE HEADER */
+      .page-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+      .page-meta { text-align: left; margin-top: 4px; }
+      .restricted-stamp { margin-bottom: 0; margin-top: 10px; }
+
+      /* SEARCH PANEL & INPUTS */
+      .search-panel { padding: 16px; }
+      .search-row { flex-direction: column; }
+      #mission-input { width: 100%; }
+      .search-row > .btn { width: 100%; justify-content: center; }
+
+      /* RESULTS CARD CONVERT TO MOBILE GRID */
+      .result-card {
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+      }
+      .result-order-num { grid-column: 1 / 2; }
+      .result-card > div:nth-child(2) { grid-column: 1 / -1; } /* Title & Meta spans full width */
+      .result-card > span.clearance-tag { grid-column: 2 / 3; justify-self: end; }
+      .result-card > span.badge { grid-column: 1 / 2; justify-self: start; }
+      .result-card > .btn-view { grid-column: 2 / 3; width: 100%; text-align: center; }
+
+      /* HORIZONTAL SCROLL FOR DATA TABLE */
+      .table-wrap { 
+        overflow-x: auto; 
+        -webkit-overflow-scrolling: touch; 
+        border-right: none; border-left: none;
+      }
+      .table-head, .table-row { min-width: 600px; }
+
+      /* CLASSIFIED INFO CARDS */
+      .info-card-body { flex-direction: column; gap: 12px; }
+      .info-card-meta { 
+        text-align: left; 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        width: 100%; 
+        border-top: 1px dashed var(--rule);
+        padding-top: 10px;
+      }
+      .info-card-date { margin-top: 0; }
+
+      /* MODAL */
+      #modal { width: 90vw; }
+      .modal-footer { flex-direction: column; gap: 10px; }
+      .modal-footer > .btn { width: 100%; margin: 0; }
+
+      /* FOOTER */
+      #footer { padding: 16px; flex-direction: column; gap: 8px; text-align: center; }
+    }
   </style>
 </head>
 <body>
 
-<!-- TOPBAR -->
 <div id="topbar">
   <div class="topbar-left">
     <div class="topbar-org">Operations Registry</div>
@@ -479,17 +567,15 @@
   </div>
 </div>
 
-<!-- LAYOUT -->
 <div id="layout">
 
-  <!-- SIDEBAR -->
   <div id="sidebar">
     <div class="sidebar-section-label">Sections</div>
     <button class="nav-btn active" onclick="switchTab('mission')" id="nav-mission">
       <span class="nav-dot"></span> Mission Orders
     </button>
     <button class="nav-btn" onclick="switchTab('classified')" id="nav-classified">
-      <span class="nav-dot"></span> Classified Information
+      <span class="nav-dot"></span> Classified Intelligence
     </button>
     <div class="sidebar-footer">
       <div class="sidebar-stat-label">Total Records</div>
@@ -498,10 +584,8 @@
     </div>
   </div>
 
-  <!-- MAIN -->
   <div id="main">
 
-    <!-- ===== MISSION ORDERS ===== -->
     <div id="tab-mission">
       <div class="page-header">
         <div>
@@ -546,7 +630,6 @@
       </div>
     </div>
 
-    <!-- ===== CLASSIFIED INFO ===== -->
     <div id="tab-classified" class="hidden">
       <div class="page-header">
         <div>
@@ -620,14 +703,12 @@
   </div>
 </div>
 
-<!-- FOOTER -->
 <div id="footer">
   <span>Operations Registry &mdash; v4.2</span>
   <span>For official use only</span>
   <span id="footer-time">—</span>
 </div>
 
-<!-- MODAL -->
 <div id="modal-overlay" onclick="if(event.target===this)closeModal()">
   <div id="modal">
     <div class="modal-header">
@@ -654,7 +735,6 @@
 
 <div id="toast"></div>
 
-<!-- FIREBASE -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import {
@@ -674,7 +754,7 @@
   const db  = getFirestore(app);
   const COL = "mission_orders";
 
-  function statusBadge(s) {
+  window.statusBadge = function(s) {
     const map = { ACTIVE:"badge-active", COMPLETED:"badge-completed", PENDING:"badge-pending", CLASSIFIED:"badge-classified", UNVERIFIED:"badge-unverified" };
     const key = (s || "PENDING").toUpperCase();
     return `<span class="badge ${map[key]||"badge-unverified"}">${key}</span>`;
@@ -700,7 +780,7 @@
           <span style="font-family:var(--mono);color:var(--ink4)">${r.orderNumber||"—"}</span>
           <span style="color:var(--ink2)">${r.title||"[Imported]"}</span>
           <span><span class="clearance-tag">${r.clearance||"Unverified"}</span></span>
-          <span>${statusBadge(r.status)}</span>
+          <span>${window.statusBadge(r.status)}</span>
           <span style="font-family:var(--mono);font-size:10px;color:var(--ink4)">${r.date||"—"}</span>
         </div>
       `).join("");
@@ -736,7 +816,7 @@
               <div class="result-meta">Agent: ${r.agent||"—"} &nbsp;·&nbsp; ${r.date||"—"}</div>
             </div>
             <span class="clearance-tag">${r.clearance||"Unverified"}</span>
-            ${statusBadge(r.status)}
+            ${window.statusBadge(r.status)}
             <button class="btn-view">View &rsaquo;</button>
           </div>
         `).join("");
@@ -813,7 +893,7 @@
     setTimeout(()=>document.getElementById("bulk-input").focus(),100);
   }
   function closeModal() { document.getElementById("modal-overlay").classList.remove("open"); }
-  function showToast(msg, err=false) {
+  window.showToast = function(msg, err=false) {
     const t = document.getElementById("toast");
     t.textContent = msg; t.className = err?"error show":"show";
     clearTimeout(t._t); t._t = setTimeout(()=>t.classList.remove("show"), 3000);

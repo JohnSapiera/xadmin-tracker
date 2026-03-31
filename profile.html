@@ -19,9 +19,7 @@
         body { 
             background: var(--bg); color: #e1f5f9; font-family: var(--font-mono); 
             overflow-x: hidden; padding: 15px; padding-bottom: 50px;
-            background-image: 
-                radial-gradient(circle at top, rgba(0, 243, 255, 0.05), transparent 60%),
-                linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%);
+            background-image: radial-gradient(circle at top, rgba(0, 243, 255, 0.05), transparent 60%), linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%);
             background-size: 100% 100%, 100% 4px;
         }
 
@@ -31,81 +29,49 @@
         .header { 
             border: 1px solid var(--border); border-left: 5px solid var(--neon); 
             padding: 15px; margin-bottom: 15px; background: rgba(5, 15, 20, 0.85); 
-            backdrop-filter: blur(5px); position: relative;
-            box-shadow: 0 5px 20px rgba(0, 243, 255, 0.05);
+            backdrop-filter: blur(5px);
         }
-        .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
-        .header-bottom { display: flex; justify-content: space-between; border-top: 1px dashed var(--border); padding-top: 10px; font-size: 11px; }
-
-        .btn-memoir {
-            background: var(--neon); color: #000; border: none; padding: 6px 15px;
-            font-family: var(--font-main); font-size: 14px; font-weight: bold; 
-            cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
-            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
-        }
-
-        #agentName { font-family: var(--font-main); font-size: 26px; font-weight: 700; color: #fff; letter-spacing: 1px; line-height: 1; margin-top: 5px; }
-        #brandTag { font-size: 10px; color: var(--neon); font-weight: bold; letter-spacing: 2px; }
+        .header-top { display: flex; justify-content: space-between; align-items: flex-start; }
         
-        .breadcrumb { font-size: 11px; color: #5c7882; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;}
-        .back-btn { background: rgba(0,0,0,0.5); border: 1px solid var(--border); color: var(--neon); padding: 5px 10px; cursor: pointer; display: none; border-radius: 2px; }
-
-        /* Device Selection View */
-        .device-card {
-            background: rgba(0,0,0,0.6); border: 1px solid #1a2f37; padding: 20px;
-            margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;
-            cursor: pointer; transition: 0.2s;
+        .btn-memoir {
+            background: var(--neon); color: #000; border: none; padding: 8px 15px;
+            font-family: var(--font-main); font-size: 14px; font-weight: bold; 
+            cursor: pointer; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
         }
-        .device-card:active { transform: scale(0.98); background: rgba(0, 243, 255, 0.05); }
-        .device-name { font-family: var(--font-main); font-size: 20px; font-weight: 700; color: #fff; text-transform: uppercase; }
-        .device-count { font-size: 10px; color: #5c7882; }
 
-        /* Folder View */
+        #agentName { font-family: var(--font-main); font-size: 26px; font-weight: 700; color: #fff; text-transform: uppercase; }
+        #brandTag { font-size: 10px; color: var(--neon); font-weight: bold; letter-spacing: 1px; }
+
+        .status-bar { font-size: 9px; color: #5c7882; margin: 10px 0; border-top: 1px solid var(--border); padding-top: 5px; display: flex; justify-content: space-between; }
+
+        /* Device Grid */
+        .device-card {
+            background: rgba(0,0,0,0.6); border: 1px solid #1a2f37; padding: 15px;
+            margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
+            cursor: pointer; border-radius: 2px; transition: 0.2s;
+        }
+        .device-card:active { background: rgba(0, 243, 255, 0.1); }
+        .device-label { font-family: var(--font-main); font-size: 18px; font-weight: 700; color: #fff; }
+
+        /* File Grid */
         .folder-grid { display: none; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-        .file-item { position: relative; cursor: pointer; margin-top: 10px; }
+        .file-item { position: relative; cursor: pointer; text-align: center; }
         .file-folder { 
-            height: 85px; background: var(--folder-tan); border-radius: 0 5px 2px 2px;
+            height: 80px; background: var(--folder-tan); border-radius: 0 4px 2px 2px;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            position: relative; z-index: 3; border-bottom: 4px solid var(--folder-dark);
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+            position: relative; z-index: 2; border-bottom: 3px solid var(--folder-dark);
         }
         .file-folder::before {
-            content: ""; position: absolute; top: -8px; left: 0; width: 30px; height: 10px;
-            background: var(--folder-tan); border-radius: 3px 3px 0 0;
+            content: ""; position: absolute; top: -7px; left: 0; width: 25px; height: 8px;
+            background: var(--folder-tan); border-radius: 2px 2px 0 0;
         }
-        .file-item::before {
-            content: ""; position: absolute; top: -4px; left: 2px; right: -2px; height: 85px; 
-            background: #a39371; z-index: 2; transform: rotate(2deg); border-radius: 0 5px 2px 2px;
-        }
+        .file-id { font-size: 11px; color: #000; font-weight: 900; font-family: var(--font-main); }
 
-        .file-label { font-size: 8px; color: rgba(0,0,0,0.6); font-weight: bold; z-index: 4; }
-        .file-id { font-size: 13px; color: #000; font-family: var(--font-main); font-weight: 900; z-index: 4; }
-
-        /* Memoir Vault */
-        .overlay { display: none; position: fixed; inset: 0; background: rgba(1, 4, 5, 0.98); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(10px); }
-        #memoirContainer { position: relative; width: 320px; height: 460px; perspective: 1000px; }
-        
-        .dirty-paper {
-            width: 100%; height: 100%; background: #e8e0cc;
-            background-image: linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px);
-            background-size: 100% 20px; border-radius: 2px; box-shadow: 5px 10px 40px rgba(0,0,0,0.9);
-            padding: 30px 20px; color: #222; position: relative; transform: rotate(-2deg);
-        }
-
-        .paper-header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
-        .paper-data { font-size: 12px; margin-bottom: 15px; border-bottom: 1px dashed rgba(0,0,0,0.2); padding-bottom: 5px; }
-        .paper-label { font-weight: bold; color: #666; font-size: 10px; display: block; }
-        .paper-value { font-family: var(--font-main); font-size: 19px; font-weight: 700; color: #111; }
-        
-        .memoir-controls { position: absolute; bottom: -70px; left: 0; width: 100%; display: flex; justify-content: space-between; }
-        .m-btn { background: var(--neon); color: #000; border: none; padding: 12px 20px; font-family: var(--font-main); font-weight: 700; cursor: pointer; }
-        .m-close { background: var(--red); color: #fff; }
-
-        .flip-card { animation: paperFlip 0.4s ease-in-out; }
-        @keyframes paperFlip {
-            0% { transform: rotate(-2deg) scale(1); opacity: 1; }
-            50% { transform: rotate(-5deg) scale(0.9); opacity: 0.5; }
-            100% { transform: rotate(-2deg) scale(1); opacity: 1; }
+        /* Overlay */
+        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(8px); }
+        .paper {
+            width: 300px; background: #e8e0cc; padding: 25px; color: #222; transform: rotate(-1deg);
+            box-shadow: 5px 5px 20px rgba(0,0,0,0.5);
         }
     </style>
 </head>
@@ -115,54 +81,44 @@
         <div class="header">
             <div class="header-top">
                 <div>
-                    <a href="dashboard.html" style="color:#5c7882; font-size:10px; text-decoration:none;">< SYSTEM_EXIT</a>
-                    <h2 id="agentName">GUEST_AGENT</h2>
-                    <div id="brandTag">BRAND: UNKNOWN_UPLINK</div>
+                    <h2 id="agentName">LOADING_DOSSIER...</h2>
+                    <div id="brandTag">ID: ---</div>
                 </div>
                 <button class="btn-memoir" onclick="openMemoir()">MEMOIR</button>
             </div>
-            
-            <div class="header-bottom">
-                <div><span style="color:#5c7882;">UPLINK:</span> <span id="currentDate" style="color:var(--neon);">--/--/----</span></div>
-                <div style="text-align: right;"><span style="color:#5c7882;">TOTAL_EXPENSES:</span><br><span id="totalExpenses" style="color:var(--red); font-weight:bold;">₱ 0.00</span></div>
+            <div class="status-bar">
+                <span id="currentDate">--/--/----</span>
+                <span id="sigDisplay" style="color:var(--neon)">SIG: PENDING</span>
+                <span id="totalExpenses" style="color:var(--red)">₱ 0.00</span>
             </div>
         </div>
 
-        <div id="terminalStatus" style="font-size: 10px; color: #5c7882; margin-bottom: 15px; padding-left: 10px; border-left: 2px solid var(--neon);">
-            >> PUBLIC_ACCESS_MODE_ACTIVE...
-        </div>
-
-        <div class="breadcrumb">
-            <button class="back-btn" id="btnBack" onclick="showDevices()">< BACK</button>
-            <span id="viewTitle">ARCHIVE_OVERVIEW</span>
-        </div>
+        <div id="terminal" style="font-size:10px; color:#5c7882; margin-bottom:15px;">>> INITIALIZING_SECURE_UPLINK...</div>
 
         <div id="deviceGrid"></div>
+        
         <div class="folder-grid" id="mainFileGrid"></div>
+        <button id="btnBack" style="display:none; margin-top:20px; background:none; border:1px solid var(--neon); color:var(--neon); padding:5px 15px; cursor:pointer;" onclick="showDevices()">< BACK TO NODES</button>
     </div>
 
     <div id="memoirOverlay" class="overlay">
-        <div id="memoirContainer">
-            <div class="dirty-paper" id="paperCard">
-                <div class="paper-header">
-                    <span style="font-size: 9px; color: var(--red); font-weight: bold; letter-spacing: 2px;">SECRET // EYES ONLY</span>
-                    <div id="m-mission" style="font-family: var(--font-main); font-size: 26px; font-weight: 900;">#00000</div>
-                </div>
-                <div class="paper-data"><span class="paper-label">HARDWARE_NODE:</span><span class="paper-value" id="m-weapon">---</span></div>
-                <div class="paper-data"><span class="paper-label">V_AGENT_ID:</span><span class="paper-value" id="m-vagent">---</span></div>
-                <div class="paper-data"><span class="paper-label">PENALIZE_DATE:</span><span class="paper-value" id="m-date">--/--/----</span></div>
-                <div class="paper-data" style="border:none;"><span class="paper-label">EXPENSES_CLAIM:</span><span class="paper-value" id="m-expenses" style="color:#8b0000; font-size:24px;">₱ 0.00</span></div>
-            </div>
-            <div class="memoir-controls">
-                <button class="m-btn m-close" onclick="closeMemoir()">EXIT</button>
-                <button class="m-btn" onclick="nextMemoir()">NEXT_DATA ></button>
+        <div class="paper">
+            <h3 style="border-bottom:2px solid #333; margin-bottom:10px;">MISSION_LOG</h3>
+            <p style="font-size:12px;"><strong>ORDER:</strong> <span id="m-order">---</span></p>
+            <p style="font-size:12px;"><strong>WEAPON:</strong> <span id="m-weapon">---</span></p>
+            <p style="font-size:12px;"><strong>AGENT:</strong> <span id="m-vagent">---</span></p>
+            <p style="font-size:12px;"><strong>DATE:</strong> <span id="m-date">---</span></p>
+            <h2 id="m-expenses" style="color:#8b0000; margin-top:15px;">₱ 0.00</h2>
+            <div style="margin-top:20px; display:flex; justify-content:space-between;">
+                <button onclick="closeMemoir()" style="padding:5px 10px; cursor:pointer;">CLOSE</button>
+                <button onclick="nextMemoir()" style="padding:5px 10px; cursor:pointer; background:var(--neon); border:none;">NEXT</button>
             </div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        import { getFirestore, collection, query, where, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
         const firebaseConfig = { 
             apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
@@ -177,139 +133,127 @@
         const db = getFirestore(app);
 
         let deviceDataMap = {}; 
-        let allMissionsArray = [];
-        let currentMemoirIndex = 0;
+        let allMissions = [];
+        let currentIdx = 0;
 
-        // No more firewall - just for tracking if possible
-        function getSignature() {
-            const canvas = document.createElement('canvas');
-            const gl = canvas.getContext('webgl');
-            const gpu = gl ? gl.getParameter(gl.getExtension('WEBGL_debug_renderer_info').UNMASKED_RENDERER_WEBGL) : "GENERIC";
-            return "SIG-" + Math.abs(gpu.length + screen.width).toString(16).toUpperCase();
+        // Generate Stable Device Signature
+        function generateSignature() {
+            const raw = navigator.userAgent + screen.width + navigator.hardwareConcurrency;
+            let hash = 0;
+            for (let i = 0; i < raw.length; i++) hash = ((hash << 5) - hash) + raw.charCodeAt(i);
+            return "SIG-" + Math.abs(hash).toString(16).toUpperCase();
         }
 
-        async function initProfile() {
-            document.getElementById('currentDate').innerText = new Date().toLocaleDateString('en-US');
-            const currentSignature = getSignature();
-            const terminal = document.getElementById('terminalStatus');
-            let accessKey = new URLSearchParams(window.location.search).get('key') || localStorage.getItem("agent_access_key");
+        async function syncProfile() {
+            const signature = generateSignature();
+            document.getElementById('sigDisplay').innerText = "SIG: " + signature;
+            document.getElementById('currentDate').innerText = new Date().toLocaleDateString();
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const accessKey = urlParams.get('key') || localStorage.getItem("agent_access_key");
 
             try {
-                let agentDoc = null;
-                // Try to find agent but don't block
-                if (accessKey) {
-                    const snap = await getDocs(query(collection(db, "agents"), where("accessKey", "==", accessKey)));
-                    if (!snap.empty) agentDoc = snap.docs[0];
-                }
-                if (!agentDoc) {
-                    const snap = await getDocs(query(collection(db, "agents"), where("deviceSignature", "==", currentSignature)));
-                    if (!snap.empty) agentDoc = snap.docs[0];
+                // 1. Review the Device/Agent
+                let agentSnap = await getDocs(query(collection(db, "agents"), where("accessKey", "==", accessKey)));
+                
+                if (agentSnap.empty) {
+                    // Check by signature if key fails
+                    agentSnap = await getDocs(query(collection(db, "agents"), where("deviceSignature", "==", signature)));
                 }
 
-                if (agentDoc) {
-                    const data = agentDoc.data();
-                    document.getElementById('agentName').innerText = `AGENT_${data.agentName}`;
-                    document.getElementById('brandTag').innerText = `BRAND: ${data.brandName.toUpperCase()}`;
-                    loadArchives(data.agentName);
+                if (!agentSnap.empty) {
+                    const agentDoc = agentSnap.docs[0];
+                    const agentData = agentDoc.data();
+
+                    // Auto-update signature if missing (Review Implementation)
+                    if (!agentData.deviceSignature) {
+                        await updateDoc(doc(db, "agents", agentDoc.id), { deviceSignature: signature });
+                    }
+
+                    document.getElementById('agentName').innerText = "AGENT_" + agentData.agentName;
+                    document.getElementById('brandTag').innerText = "BRAND: " + agentData.brandName.toUpperCase();
+                    document.getElementById('terminal').innerText = ">> UPLINK_SUCCESSFUL. DATA_SYNCED.";
+
+                    loadMissions(agentData.agentName);
                 } else {
-                    terminal.innerText = ">> NO_SIGNATURE_FOUND. DISPLAYING_GENERAL_ARCHIVES.";
-                    // Optionally load all or just stay empty. Let's try to load based on a default if you want.
+                    document.getElementById('agentName').innerText = "UNKNOWN_AGENT";
+                    document.getElementById('terminal').innerText = ">> ERROR: UNAUTHORIZED_DEVICE.";
                 }
-            } catch (e) { terminal.innerText = ">> DATABASE_UPLINK_OFFLINE."; }
+            } catch (err) {
+                console.error(err);
+                document.getElementById('terminal').innerText = ">> UPLINK_CRITICAL_FAILURE.";
+            }
         }
 
-        async function loadArchives(agentName) {
+        async function loadMissions(agentName) {
             const q = query(collection(db, "mission_orders"), where("agentName", "==", agentName));
             const snap = await getDocs(q);
-            let totalBounty = 0;
-            
+            let total = 0;
+
             snap.forEach(d => {
                 const data = d.data();
-                allMissionsArray.push(data);
-                const dev = data.weaponSystem || "UNKNOWN_NODE";
-                if(!deviceDataMap[dev]) deviceDataMap[dev] = [];
-                deviceDataMap[dev].push(data);
-                totalBounty += parseFloat((data.expenses || "0").toString().replace(/[^0-9.-]+/g,"")) || 0;
+                allMissions.push(data);
+                const weapon = data.weaponSystem || "GENERIC_NODE";
+                if(!deviceDataMap[weapon]) deviceDataMap[weapon] = [];
+                deviceDataMap[weapon].push(data);
+                total += parseFloat(data.expenses || 0);
             });
 
-            document.getElementById('totalExpenses').innerText = `₱ ${totalBounty.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+            document.getElementById('totalExpenses').innerText = `₱ ${total.toLocaleString()}`;
             renderDevices();
         }
 
         function renderDevices() {
             const grid = document.getElementById('deviceGrid');
-            grid.innerHTML = "";
-            Object.keys(deviceDataMap).forEach(name => {
-                grid.innerHTML += `
+            grid.innerHTML = Object.keys(deviceDataMap).map(name => `
                 <div class="device-card" onclick="openDevice('${name}')">
-                    <div class="device-info">
-                        <div class="device-name">${name}</div>
-                        <div class="device-count">${deviceDataMap[name].length} FILES</div>
-                    </div>
-                    <div style="color:var(--neon);">></div>
-                </div>`;
-            });
+                    <div class="device-label">${name}</div>
+                    <div style="color:var(--neon); font-size:10px;">${deviceDataMap[name].length} RECORDS</div>
+                </div>
+            `).join('');
         }
 
         window.openDevice = (name) => {
             document.getElementById('deviceGrid').style.display = 'none';
             document.getElementById('mainFileGrid').style.display = 'grid';
             document.getElementById('btnBack').style.display = 'block';
-            document.getElementById('viewTitle').innerText = `NODE: ${name}`;
-
             const fGrid = document.getElementById('mainFileGrid');
-            fGrid.innerHTML = "";
-            deviceDataMap[name].forEach(data => {
-                fGrid.innerHTML += `
+            fGrid.innerHTML = deviceDataMap[name].map(d => `
                 <div class="file-item">
-                    <div class="file-folder">
-                        <span class="file-label">V_AGENT</span>
-                        <span class="file-id">#${data.vAgentID || data.vAgent || '??'}</span>
-                    </div>
-                </div>`;
-            });
+                    <div class="file-folder"><span class="file-id">#${d.vAgentID || '??'}</span></div>
+                </div>
+            `).join('');
         };
 
         window.showDevices = () => {
             document.getElementById('deviceGrid').style.display = 'block';
             document.getElementById('mainFileGrid').style.display = 'none';
             document.getElementById('btnBack').style.display = 'none';
-            document.getElementById('viewTitle').innerText = 'ARCHIVE_OVERVIEW';
         };
 
         window.openMemoir = () => {
-            if(allMissionsArray.length === 0) return;
-            currentMemoirIndex = 0;
-            updateMemoirUI();
+            if (allMissions.length === 0) return alert("NO MISSION DATA FOUND.");
+            updateMemoir();
             document.getElementById('memoirOverlay').style.display = 'flex';
         };
 
         window.closeMemoir = () => document.getElementById('memoirOverlay').style.display = 'none';
 
         window.nextMemoir = () => {
-            const card = document.getElementById('paperCard');
-            card.classList.remove('flip-card');
-            void card.offsetWidth;
-            card.classList.add('flip-card');
-            setTimeout(() => {
-                currentMemoirIndex = (currentMemoirIndex + 1) % allMissionsArray.length;
-                updateMemoirUI();
-            }, 200);
+            currentIdx = (currentIdx + 1) % allMissions.length;
+            updateMemoir();
         };
 
-        function updateMemoirUI() {
-            const data = allMissionsArray[currentMemoirIndex];
-            document.getElementById('m-mission').innerText = `#${data.orderNumber || data.missionID || '0000'}`;
-            document.getElementById('m-weapon').innerText = data.weaponSystem || '---';
-            document.getElementById('m-vagent').innerText = data.vAgentID || data.vAgent || '---';
-            let pDate = "N/A";
-            if(data.penalizeDate) pDate = data.penalizeDate.toDate ? data.penalizeDate.toDate().toLocaleDateString() : data.penalizeDate;
-            document.getElementById('m-date').innerText = pDate;
-            const exp = parseFloat((data.expenses || "0").toString().replace(/[^0-9.-]+/g,"")) || 0;
-            document.getElementById('m-expenses').innerText = `₱ ${exp.toLocaleString(undefined, {minimumFractionDigits:2})}`;
+        function updateMemoir() {
+            const d = allMissions[currentIdx];
+            document.getElementById('m-order').innerText = d.orderNumber || "N/A";
+            document.getElementById('m-weapon').innerText = d.weaponSystem || "N/A";
+            document.getElementById('m-vagent').innerText = d.vAgentID || "N/A";
+            document.getElementById('m-date').innerText = d.penalizeDate || "N/A";
+            document.getElementById('m-expenses').innerText = "₱ " + parseFloat(d.expenses || 0).toLocaleString();
         }
 
-        window.onload = initProfile;
+        window.onload = syncProfile;
     </script>
 </body>
 </html>

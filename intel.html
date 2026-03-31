@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-    <title>AGENCY_INTEL_v12.7</title>
+    <title>AGENCY_INTEL_v18.5</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
     <style>
         :root { 
@@ -15,6 +14,7 @@
         body { 
             background: var(--bg); color: #c8e1e5; font-family: 'Rajdhani', sans-serif; 
             height: 100vh; overflow: hidden; display: flex; flex-direction: column;
+            background-image: radial-gradient(circle at center, #0a1f29 0%, #01080b 100%);
         }
         header { padding: 15px; border-bottom: 1px solid var(--border); text-align: center; background: #000; }
         .intel-title { font-family: var(--mono); color: var(--cyan); font-size: 14px; letter-spacing: 5px; }
@@ -22,7 +22,7 @@
         main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 25px; text-align: center; }
         
         .auth-zone { margin-bottom: 40px; }
-        #log-status { font-family: var(--mono); font-size: 10px; color: #555; margin-bottom: 10px; text-transform: uppercase; }
+        #log-status { font-family: var(--mono); font-size: 10px; color: #555; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
         .agent-name { font-size: 32px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; text-shadow: 0 0 15px rgba(0, 243, 255, 0.2); }
         .device-tag { font-size: 10px; padding: 4px 10px; border: 1px solid #333; color: #555; display: inline-block; font-family: var(--mono); }
 
@@ -33,16 +33,18 @@
             transition: 0.3s; opacity: 0.1; pointer-events: none;
         }
         .report-btn.unlocked { opacity: 1; pointer-events: auto; background: rgba(0, 243, 255, 0.05); }
+        .report-btn.unlocked:hover { background: var(--cyan); color: #000; box-shadow: 0 0 20px var(--cyan); }
 
         /* Modal / Form */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; backdrop-filter: blur(10px); }
         .modal-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 360px; background: #020c12; border: 1px solid var(--cyan); padding: 30px; box-shadow: 0 0 30px rgba(0, 243, 255, 0.1); }
         .intel-input { width: 100%; background: rgba(0,0,0,0.5); border: 1px solid var(--border); padding: 15px; color: #fff; font-family: var(--mono); margin-bottom: 15px; outline: none; border-radius: 0; }
+        .intel-input:focus { border-color: var(--cyan); }
         .btn-transmit { width: 100%; padding: 20px; background: var(--green); color: #000; border: none; font-family: var(--mono); font-weight: bold; cursor: pointer; text-transform: uppercase; }
 
         nav { position: fixed; bottom: 0; width: 100%; height: 70px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; }
-        .nav-link { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #333; font-size: 10px; font-family: var(--mono); text-decoration: none; }
-        .nav-link.active { color: var(--cyan); border-top: 2px solid var(--cyan); }
+        .nav-link { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #333; font-size: 10px; font-family: var(--mono); text-decoration: none; transition: 0.3s; }
+        .nav-link.active { color: var(--cyan); border-top: 2px solid var(--cyan); background: rgba(0,243,255,0.02); }
     </style>
 </head>
 <body>
@@ -76,7 +78,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, query, where, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
@@ -90,79 +92,88 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // --- 4-KEY SECURITY SCANNER ---
+    // --- 18.5 SIGNATURE GENERATOR (Dapat match sa index at update_db) ---
+    function getSignature() {
+        const canvas = document.createElement('canvas');
+        const gl = canvas.getContext('webgl');
+        const debugInfo = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
+        const gpu = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "GENERIC_GPU";
+        
+        const specs = {
+            brand: navigator.userAgent.match(/Android\s+([^\s;]+);?\s+([^\s;]+)/)?.[2] || "NODE_STATION",
+            gpu: gpu.split('/').pop().trim(),
+            res: `${window.screen.width}x${window.screen.height}`,
+            plt: navigator.platform
+        };
+
+        const raw = specs.gpu + specs.res + specs.plt + specs.brand;
+        let hash = 0;
+        for (let i = 0; i < raw.length; i++) {
+            hash = ((hash << 5) - hash) + raw.charCodeAt(i);
+            hash |= 0;
+        }
+        return "SIG-" + Math.abs(hash).toString(16).toUpperCase();
+    }
+
+    // --- SECURITY SCANNER v18.5 ---
     async function runSecurityScan() {
         const log = document.getElementById('log-status');
         const nameDisplay = document.getElementById('display-name');
         const tag = document.getElementById('device-tag');
         const btn = document.getElementById('main-btn');
 
-        // 1. Hardware Fingerprint (Signature)
-        const hwSignature = (navigator.userAgent + screen.width + navigator.platform).replace(/\s/g, '');
-        
-        // 2. Secret Key (Stored in Memory)
-        const localSecret = localStorage.getItem("agency_node_secret");
+        const currentSIG = getSignature();
 
         try {
-            const snap = await getDocs(collection(db, "agents"));
-            let verifiedAgent = null;
+            // MULTI-DEVICE LOOKUP: I-check kung ang SIG ay nasa linkedSignatures array
+            const q = query(collection(db, "agents"), where("linkedSignatures", "array-contains", currentSIG));
+            const snap = await getDocs(q);
 
-            snap.forEach(doc => {
-                const data = doc.data();
+            if (!snap.empty) {
+                const verifiedAgent = snap.docs[0].data();
                 
-                // Determinant Logic using the 4 Keys in Database:
-                // Key 1: accessKey (Direct input)
-                // Key 2: lastFingerprint (Hardware Signature)
-                // Key 3: linkedDevice (Secret ID array)
-                // Key 4: brandName (Device Identity)
-                
-                const matchSecret = data.linkedDevice && data.linkedDevice.includes(localSecret);
-                const matchHardware = data.lastFingerprint === hwSignature;
-
-                if (matchSecret || matchHardware) {
-                    verifiedAgent = data;
-                }
-            });
-
-            if (verifiedAgent) {
-                // Success: Recognized Device
+                // Update UI
                 nameDisplay.innerText = verifiedAgent.agentName;
-                tag.innerText = verifiedAgent.brandName.toUpperCase();
+                tag.innerText = currentSIG; // Ipakita ang signature code
                 tag.style.color = "var(--green)";
                 tag.style.borderColor = "var(--green)";
                 log.innerText = ">> UPLINK_STABLE // ACCESS_GRANTED";
                 
                 btn.classList.add('unlocked');
-                localStorage.setItem("cia_agent", verifiedAgent.agentName);
                 
-                // Heal storage if missing (Auto-recovery)
-                if(!localSecret && verifiedAgent.linkedDevice) {
-                    localStorage.setItem("agency_node_secret", verifiedAgent.linkedDevice[0]);
-                }
+                // Sync Local Storage
+                localStorage.setItem("cia_agent", verifiedAgent.agentName);
+                localStorage.setItem("intel_device_signature", currentSIG);
+
             } else {
-                // Fail: Unknown Device
                 nameDisplay.innerText = "UNAUTHORIZED";
                 nameDisplay.style.color = "var(--red)";
-                log.innerText = ">> CRITICAL_ERROR: NODE_NOT_FOUND";
+                log.innerText = ">> CRITICAL_ERROR: NODE_NOT_RECOGNIZED";
+                tag.innerText = currentSIG;
+                tag.style.color = "var(--red)";
             }
         } catch (e) {
             log.innerText = ">> CONNECTION_LOST";
+            console.error(e);
         }
     }
 
+    // --- DATA TRANSMISSION ---
     window.transmitData = async () => {
         const v = document.getElementById('vAgent').value;
         const e = document.getElementById('expenses').value;
         const agentName = localStorage.getItem("cia_agent");
+        const sig = localStorage.getItem("intel_device_signature");
 
         if(!v || !e) return alert("DATA_INCOMPLETE");
 
         try {
             await addDoc(collection(db, "mission_orders"), {
                 agentName: agentName,
+                deviceSignature: sig,
                 vAgent: v,
                 expenses: e,
-                timestamp: new Date(),
+                timestamp: serverTimestamp(),
                 orderNumber: Math.floor(1000 + Math.random() * 9000)
             });
             alert("TRANSMISSION_SUCCESSFUL");

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>TACTICAL DASHBOARD V4</title>
+  <title>TACTICAL OPS | DASHBOARD V4.2</title>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -35,7 +35,7 @@
     .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .btn { padding: 15px; font-family: var(--font-mono); font-size: 14px; font-weight: bold; border: 1px solid; background: transparent; text-transform: uppercase; cursor: pointer; transition: 0.3s; }
     
-    /* Dynamic Button States */
+    /* Button States */
     .btn-save { color: var(--green); border-color: var(--green); }
     .btn-retrieve { background: var(--blue) !important; border-color: var(--blue) !important; color: #fff !important; }
     .btn-terminate { color: var(--red); border-color: var(--red); }
@@ -43,16 +43,14 @@
     #terminal { background: #000; border: 1px solid #1a1a1a; padding: 15px; font-family: var(--font-mono); font-size: 11px; min-height: 150px; color: #888; margin-top: 20px; overflow-y: auto; }
     .log-entry { margin-bottom: 5px; border-bottom: 1px solid #111; padding-bottom: 2px; }
 
-    /* --- MODAL --- */
+    /* Modal */
     #weapon-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
     .modal-content { background: var(--panel); border: 2px solid var(--red); width: 100%; max-width: 380px; position: relative; padding: 40px 20px 25px; box-shadow: 0 0 30px rgba(255,0,60,0.3); }
     .modal-close { position: absolute; top: 0; right: 0; background: var(--red); color: #fff; border: none; padding: 8px 15px; cursor: pointer; font-family: var(--font-mono); }
     .modal-tag { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--bg); padding: 2px 15px; border: 1px solid var(--red); color: var(--red); font-family: var(--font-mono); font-size: 14px; white-space: nowrap; }
     .weapon-info { font-family: var(--font-mono); border: 1px solid rgba(255,255,255,0.1); padding: 15px; background: rgba(0,0,0,0.2); }
-    .weapon-info div { margin-bottom: 10px; }
-    .weapon-info span { color: var(--cyan); display: block; font-size: 18px; }
+    .weapon-info span { color: var(--cyan); display: block; font-size: 18px; margin-top: 5px; }
 
-    /* --- NAV --- */
     nav { position: fixed; bottom: 0; left: 0; right: 0; height: 70px; background: #000; border-top: 2px solid var(--cyan); display: grid; grid-template-columns: 1fr 1fr; z-index: 200; }
     .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #444; font-family: var(--font-mono); font-size: 12px; }
     .nav-item.active { color: var(--cyan); background: rgba(0, 243, 255, 0.1); }
@@ -61,17 +59,17 @@
 <body>
 
 <header>
-  <div style="font-family: var(--font-mono);">[ OPS_GATEWAY_v4 ]</div>
+  <div style="font-family: var(--font-mono);">[ GATEWAY_V4.2 ]</div>
   <div id="clock" style="color: var(--cyan); font-family: var(--font-mono);">00:00:00</div>
 </header>
 
-<div class="ticker-wrap"><span id="ticker-text">SECURE UPLINK ESTABLISHED...</span></div>
+<div class="ticker-wrap"><span id="ticker-text">SYSTEM STANDBY...</span></div>
 
 <main>
   <section id="mission" class="portal-section active">
     <div class="search-box">
-      <label style="font-family: var(--font-mono); font-size: 11px; color: var(--cyan); margin-bottom: 8px; display: block;">MISSION ID SCANNER</label>
-      <input type="tel" id="mission-input" placeholder="XXXXX" maxlength="5">
+      <label style="font-family: var(--font-mono); font-size: 11px; color: var(--cyan); margin-bottom: 8px; display: block;">MISSION ID ENTRY</label>
+      <input type="tel" id="mission-input" placeholder="00000" maxlength="5">
       
       <div class="btn-row">
         <button id="main-action-btn" class="btn btn-save">SAVE</button>
@@ -80,12 +78,12 @@
     </div>
 
     <div id="terminal">
-      <div class="log-entry">> Awaiting frequency input...</div>
+      <div class="log-entry">> Initializing secure console...</div>
     </div>
   </section>
 
   <section id="vault" class="portal-section">
-    <div style="text-align: center; margin-top: 50px; color: var(--red);">[ ENCRYPTED_VAULT ]</div>
+    <div style="text-align: center; margin-top: 50px; color: var(--cyan);">[ DATA_VAULT_ACTIVE ]</div>
   </section>
 </main>
 
@@ -96,6 +94,7 @@
     <div class="weapon-info">
       <div>WEAPON SYSTEM: <span id="disp-weapon">--</span></div>
       <div>V-AGENT #: <span id="disp-agent">--</span></div>
+      <div id="blacklist-status" style="margin-top:10px; font-size:12px;"></div>
     </div>
   </div>
 </div>
@@ -109,7 +108,6 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getFirestore, collection, query, where, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  // --- FIREBASE CONFIG ---
   const firebaseConfig = {
     apiKey: "YOUR_API_KEY",
     authDomain: "YOUR_PROJECT.firebaseapp.com",
@@ -125,26 +123,37 @@
   const missionInput = document.getElementById('mission-input');
   const mainBtn = document.getElementById('main-action-btn');
   const term = document.getElementById('terminal');
-  
   let activeData = null;
+  let isBlacklisted = false;
 
-  // --- 1. SEARCH LOGIC (Auto-Switch) ---
+  // --- DUAL SEARCH LOGIC ---
   missionInput.addEventListener('input', async (e) => {
     let val = e.target.value.replace(/\D/g, '');
     missionInput.value = val;
 
     if (val.length >= 4) {
-      writeLog(`SCANNING DATABASE for ${val}...`, 'cyan');
+      writeLog(`SCANNING FREQUENCY: ${val}...`, 'cyan');
       try {
-        // Tandaan: "orderNumber" ay dapat String sa Firebase para mag-match
-        const q = query(collection(db, "mission_orders"), where("orderNumber", "==", val));
-        const snap = await getDocs(q);
+        // 1. Check Blacklist first
+        const qB = query(collection(db, "blacklist"), where("targetID", "==", val));
+        const snapB = await getDocs(qB);
+        isBlacklisted = !snapB.empty;
 
-        if (!snap.empty) {
-          activeData = snap.docs[0].data();
+        // 2. Check Mission Orders
+        const qM = query(collection(db, "mission_orders"), where("orderNumber", "==", val));
+        const snapM = await getDocs(qM);
+
+        if (!snapM.empty) {
+          activeData = snapM.docs[0].data();
           mainBtn.textContent = "RETRIEVE";
-          mainBtn.className = "btn btn-retrieve";
-          writeLog(`RECORD DETECTED. RETRIEVAL READY.`, 'blue');
+          mainBtn.className = "btn btn-retrieve"; // Becomes Blue
+          writeLog(isBlacklisted ? `[!!!] BLACKLISTED ID DETECTED.` : `RECORD FOUND. RETRIEVAL READY.`, 'blue');
+        } else if (isBlacklisted) {
+            // Even if not in mission_orders but in blacklist
+            mainBtn.textContent = "RETRIEVE";
+            mainBtn.className = "btn btn-retrieve";
+            activeData = { weaponSystem: "BLOCKED", agent: "BLACKLISTED" };
+            writeLog(`[!!!] BLACKLISTED ID WITHOUT RECORD.`, 'red');
         } else {
           resetBtn();
         }
@@ -156,57 +165,63 @@
 
   function resetBtn() {
     activeData = null;
+    isBlacklisted = false;
     mainBtn.textContent = "SAVE";
     mainBtn.className = "btn btn-save";
   }
 
-  // --- 2. SAVE & RETRIEVE LOGIC ---
+  // --- SAVE / RETRIEVE ACTION ---
   mainBtn.addEventListener('click', async () => {
     const code = missionInput.value;
-    if (code.length < 4) return writeLog("INVALID ID LENGTH", "red");
+    if (code.length < 4) return writeLog("INVALID ID", "red");
 
     if (mainBtn.textContent === "RETRIEVE" && activeData) {
       document.getElementById('modal-title').textContent = `MISSION ORDER #: ${code}`;
       document.getElementById('disp-weapon').textContent = activeData.weaponSystem || "TACTICAL_V1";
       document.getElementById('disp-agent').textContent = activeData.agent || "AGENT_REDACTED";
+      
+      const bStatus = document.getElementById('blacklist-status');
+      bStatus.innerHTML = isBlacklisted ? "<b style='color:red;'>STATUS: BLACKLISTED</b>" : "<b style='color:green;'>STATUS: AUTHORIZED</b>";
+      
       document.getElementById('weapon-modal').style.display = 'flex';
     } else {
-      writeLog(`CREATING MISSION ${code}...`, 'green');
+      writeLog(`UPLOADING MISSION ${code}...`, 'green');
       try {
         await addDoc(collection(db, "mission_orders"), {
           orderNumber: code,
-          weaponSystem: "ARC_BLADE_v2",
+          weaponSystem: "ARC_GEN_1",
           agent: "V-AGENT_" + Math.floor(100+Math.random()*900),
           timestamp: serverTimestamp()
         });
-        writeLog(`MISSION ${code} ARCHIVED SUCCESSFULLY.`, 'green');
+        writeLog(`SUCCESS: MISSION ${code} SAVED.`, 'green');
         missionInput.value = ''; resetBtn();
-      } catch (e) { writeLog("SAVE ERROR", "red"); }
+      } catch (e) { writeLog("SAVE FAILED", "red"); }
     }
   });
 
-  // --- 3. TERMINATE (Blacklist) LOGIC ---
+  // --- TERMINATE / BLACKLIST ACTION ---
   document.getElementById('terminate-btn').addEventListener('click', async () => {
     const code = missionInput.value;
     if (code.length < 4) return writeLog("INVALID ID", "red");
 
-    if(confirm(`BLACKLIST MISSION ${code}?`)) {
-      writeLog(`BLACKLISTING ${code}...`, 'red');
+    if(confirm(`TERMINATE & BLACKLIST ID ${code}?`)) {
+      writeLog(`EXECUTING BLACKLIST FOR ${code}...`, 'red');
       try {
-        // Save to mission_orders
-        await addDoc(collection(db, "mission_orders"), {
-          orderNumber: code,
-          status: "BLACKLISTED",
-          timestamp: serverTimestamp()
-        });
-        // Save to blacklist
         await addDoc(collection(db, "blacklist"), {
           targetID: code,
           timestamp: serverTimestamp()
         });
-        writeLog(`${code} TERMINATED & BLACKLISTED.`, 'red');
+        // Also ensure it exists in mission orders marked as terminated
+        await addDoc(collection(db, "mission_orders"), {
+          orderNumber: code,
+          status: "TERMINATED",
+          weaponSystem: "DEACTIVATED",
+          agent: "NONE",
+          timestamp: serverTimestamp()
+        });
+        writeLog(`${code} IS NOW BLACKLISTED.`, 'red');
         missionInput.value = ''; resetBtn();
-      } catch (e) { writeLog("TERMINATION FAILED", "red"); }
+      } catch (e) { writeLog("BLACKLIST FAILED", "red"); }
     }
   });
 

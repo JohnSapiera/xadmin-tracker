@@ -2,43 +2,59 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SECURE_GATEWAY_v3 // HARDWARE_LOCK</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GHOST_PROTOCOL // UPLINK</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;800&display=swap" rel="stylesheet">
     <style>
-        :root { --neon: #00f2ff; --bg: #050506; --error: #ff3c3c; --success: #00ff66; }
+        :root { --neon: #00f2ff; --bg: #050506; --error: #ff3c3c; --success: #00ff66; --dark: #0a0a0c; }
         body { 
             background: var(--bg); color: #fff; font-family: 'JetBrains Mono', monospace; 
             display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0;
+            background-image: 
+                radial-gradient(circle at center, rgba(0, 242, 255, 0.05) 0%, transparent 60%),
+                linear-gradient(rgba(0,0,0,0.9), rgba(0,0,0,0.9));
+            overflow: hidden;
         }
 
-        .login-card {
-            width: 100%; max-width: 380px; padding: 40px; background: rgba(10, 10, 12, 0.9);
-            border: 1px solid rgba(0, 242, 255, 0.1); text-align: center; position: relative;
+        .terminal-card {
+            width: 100%; max-width: 350px; padding: 40px 30px; background: var(--dark);
+            border: 1px solid #222; box-shadow: 0 0 40px rgba(0,0,0,0.9);
+            text-align: center; position: relative;
         }
 
-        .login-card::before {
-            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 2px;
-            background: linear-gradient(90deg, transparent, var(--neon), transparent);
+        /* Top Red Bar - Classified Vibe */
+        .terminal-card::before {
+            content: "TOP_SECRET // EYES_ONLY"; position: absolute; top: -1px; left: -1px; 
+            background: var(--error); color: #000; font-size: 9px; padding: 3px 10px; font-weight: 800;
         }
 
-        h2 { font-size: 14px; letter-spacing: 4px; color: var(--neon); margin-bottom: 30px; text-transform: uppercase; }
-
-        select {
-            width: 100%; background: #000; border: 1px solid #222; color: var(--neon);
-            padding: 15px; font-family: inherit; font-size: 14px; outline: none; margin-bottom: 20px;
-            appearance: none; -webkit-appearance: none;
+        h2 { 
+            font-size: 16px; letter-spacing: 4px; color: var(--neon); 
+            margin-bottom: 10px; text-transform: uppercase; 
         }
 
-        .btn-access {
-            width: 100%; padding: 15px; background: var(--neon); color: #000;
-            border: none; font-weight: 800; cursor: pointer; text-transform: uppercase;
-            letter-spacing: 2px; transition: 0.4s;
+        .subtitle { font-size: 9px; color: #555; margin-bottom: 40px; letter-spacing: 1px; }
+
+        /* Fingerprint / Scan Button */
+        .btn-scan {
+            width: 100%; padding: 20px; background: transparent; color: var(--neon);
+            border: 1px solid var(--neon); font-weight: 800; cursor: pointer; 
+            text-transform: uppercase; letter-spacing: 2px; transition: 0.3s;
+            position: relative; overflow: hidden;
         }
 
-        .btn-access:disabled { background: #1a1a1a; color: #444; cursor: not-allowed; }
+        .btn-scan:hover { background: rgba(0, 242, 255, 0.1); box-shadow: 0 0 20px rgba(0, 242, 255, 0.2); }
+        .btn-scan:active { transform: scale(0.98); }
+        .btn-scan:disabled { border-color: #333; color: #555; cursor: not-allowed; box-shadow: none; background: transparent; }
 
-        .status-msg { font-size: 10px; margin-top: 20px; color: #444; min-height: 15px; line-height: 1.5; }
+        .terminal-log { 
+            font-size: 10px; margin-top: 30px; color: #555; 
+            min-height: 50px; line-height: 1.6; text-align: left;
+            background: #000; padding: 10px; border: 1px solid #111;
+        }
+        
+        .blink { animation: blinker 1s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0; } }
     </style>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -46,17 +62,15 @@
 </head>
 <body>
 
-    <div class="login-card">
-        <h2>IDENT_VERIFICATION</h2>
+    <div class="terminal-card">
+        <h2>CENTRAL_MAINFRAME</h2>
+        <div class="subtitle">ENCRYPTED HARDWARE HANDSHAKE REQUIRED</div>
         
-        <div id="loginForm">
-            <label style="display:block; text-align:left; font-size:9px; color:#555; margin-bottom:5px;">SELECT_ACTIVE_AGENT:</label>
-            <select id="agentDropdown"></select>
-            
-            <button id="accessBtn" class="btn-access" onclick="verifyHardware()">GRANT_ACCESS</button>
-        </div>
+        <button id="authBtn" class="btn-scan" onclick="authenticateTerminal()">
+            Authenticate_Terminal
+        </button>
 
-        <div id="status" class="status-msg">>> SYSTEM_READY_</div>
+        <div id="logBox" class="terminal-log">> STANDBY_ <span class="blink">_</span></div>
     </div>
 
     <script>
@@ -71,60 +85,65 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // 1. Kuhanin ang listahan ng Agents sa Database
-        async function loadAgents() {
-            const dropdown = document.getElementById('agentDropdown');
-            const snap = await db.collection("agents").get();
-            dropdown.innerHTML = "";
-            snap.forEach(doc => {
-                dropdown.innerHTML += `<option value="${doc.id}">AGENT_${doc.id}</option>`;
-            });
-        }
-
-        // 2. LIVE HARDWARE CHECK LABAN SA DATABASE
-        async function verifyHardware() {
-            const selectedAgent = document.getElementById('agentDropdown').value;
-            const status = document.getElementById('status');
-            const btn = document.getElementById('accessBtn');
+        async function authenticateTerminal() {
+            const btn = document.getElementById('authBtn');
+            const logBox = document.getElementById('logBox');
             
-            // Kunin ang "Fingerprint" ng phone mo
-            const localID = localStorage.getItem("device_uuid");
+            // 1. Kunin ang Hardware Signature ng phone na gamit ngayon
+            const localUUID = localStorage.getItem("device_uuid");
 
             btn.disabled = true;
-            status.style.color = "var(--neon)";
-            status.innerText = "QUERYING_DATABASE_FOR_HARDWARE_LOCK...";
+            btn.innerText = "SCANNING_SIGNATURE...";
+            logBox.innerHTML = `> EXTRACTING_LOCAL_KEY...<br>> <span style="color:var(--neon)">KEY: ${localUUID ? localUUID : "NULL"}</span><br>> TRANSMITTING_TO_HQ...`;
+
+            // Kapag walang UUID, ibig sabihin hindi pa ito na-register sa update_db.html
+            if (!localUUID) {
+                setTimeout(() => {
+                    logBox.innerHTML += `<br>> <span style="color:var(--error)">[!] FATAL: NO_CRYPTOGRAPHIC_SIGNATURE_FOUND</span><br>> ALIEN_DEVICE_DETECTED.`;
+                    btn.disabled = false;
+                    btn.innerText = "AUTHENTICATION_FAILED";
+                }, 1000);
+                return;
+            }
 
             try {
-                // HUGOT NG DATA DIREKTA SA FIREBASE
-                const doc = await db.collection("agents").doc(selectedAgent).get();
-                
-                if (doc.exists) {
-                    const dbDeviceID = doc.data().linkedDevice; // Ito yung ni-register mo sa update_db.html
+                // 2. HANAPIN SA DATABASE KUNG KANINONG AGENT NAKAPANGALAN ANG PHONE NA ITO
+                // (Zero-Input Magic: Ang system ang maghahanap, hindi ka na pipili)
+                const snapshot = await db.collection("agents").where("linkedDevice", "==", localUUID).get();
 
-                    if (localID === dbDeviceID && localID !== null) {
-                        // MATCH!
-                        status.style.color = "var(--success)";
-                        status.innerHTML = "HARDWARE_RECOGNIZED_BY_DATABASE!<br>ACCESS_GRANTED.";
-                        
-                        localStorage.setItem("cia_agent", selectedAgent);
-                        setTimeout(() => { window.location.href = "dashboard.html"; }, 1500);
-                    } else {
-                        // HINDI RECOGNIZED O IBANG PHONE
-                        status.style.color = "var(--error)";
-                        status.innerHTML = "ACCESS_DENIED: UNKNOWN_DEVICE<br>HARDWARE_NOT_REGISTERED_FOR_" + selectedAgent;
+                setTimeout(() => {
+                    if (snapshot.empty) {
+                        // Walang nakitang match sa database
+                        logBox.innerHTML += `<br>> <span style="color:var(--error)">[!] ACCESS_DENIED: HARDWARE_NOT_RECOGNIZED</span><br>> INITIATING_LOCKDOWN...`;
                         btn.disabled = false;
+                        btn.innerText = "ACCESS_DENIED";
+                    } else {
+                        // MATCH FOUND! 
+                        const agentDoc = snapshot.docs[0];
+                        const agentName = agentDoc.id; // Kukunin niya kung "LZ" o "JFSN"
+
+                        logBox.innerHTML += `<br>> <span style="color:var(--success)">[+] MATCH_FOUND_IN_REGISTRY.</span>`;
+                        logBox.innerHTML += `<br>> <span style="color:var(--neon)">WELCOME_BACK, AGENT_${agentName}</span>`;
+                        logBox.innerHTML += `<br>> DECRYPTING_DASHBOARD...`;
+                        
+                        btn.style.color = "var(--success)";
+                        btn.style.borderColor = "var(--success)";
+                        btn.innerText = "ACCESS_GRANTED";
+
+                        // 3. I-save ang pangalan ng Agent para gamitin sa Dashboard
+                        localStorage.setItem("cia_agent", agentName);
+
+                        // 4. Pasok sa Dashboard
+                        setTimeout(() => { window.location.href = "dashboard.html"; }, 2000);
                     }
-                } else {
-                    status.innerText = "ERROR: AGENT_NOT_FOUND";
-                    btn.disabled = false;
-                }
-            } catch (e) {
-                status.innerText = "UPLINK_ERROR: " + e.message;
+                }, 1500); // Artificial delay para mas dama ang "scanning" vibe
+
+            } catch (error) {
+                logBox.innerHTML += `<br>> <span style="color:var(--error)">[!] UPLINK_ERROR: ${error.message}</span>`;
                 btn.disabled = false;
+                btn.innerText = "RETRY_AUTHENTICATION";
             }
         }
-
-        window.onload = loadAgents;
     </script>
 </body>
 </html>

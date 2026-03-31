@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AGENCY_DEVICE_AUTHORIZATION_v13</title>
+    <title>AGENCY_DEVICE_AUTHORIZATION_v14</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
     <style>
         :root { --cyan: #00f2ff; --bg: #01080b; --green: #00ff66; --border: rgba(0, 242, 255, 0.2); --mono: 'Share Tech Mono', monospace; }
@@ -28,6 +28,7 @@
         <div class="info-box">
             CURRENT_NODE_SIGNATURE:
             <span id="detected-device">GENERATING_ID...</span>
+            <small id="brand-display" style="color: #444; font-size: 9px; display: block; margin-top: 4px;">Detecting Brand...</small>
         </div>
 
         <label>SELECT_AGENT_PROFILE:</label>
@@ -57,64 +58,68 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
+        // --- BRAND DETECTION ENGINE ---
+        function getDetailedBrand() {
+            const ua = navigator.userAgent;
+            if (/android/i.test(ua)) {
+                const match = ua.match(/Android\s+([^\s;]+);?\s+([^\s;]+)/);
+                return match ? match[2].toUpperCase().replace(/_/g, ' ') : "ANDROID_MOBILE";
+            }
+            if (/iphone|ipad|ipod/i.test(ua)) return "APPLE_DEVICE";
+            if (/windows/i.test(ua)) return "WINDOWS_PC";
+            if (/macintosh/i.test(ua)) return "MAC_PC";
+            return "GENERIC_NODE";
+        }
+
         // --- PERMANENT IDENTITY ENGINE ---
         function getPermanentID() {
-            // 1. Titingnan kung may luma nang ID sa memory ng browser
             let id = localStorage.getItem("agency_node_secret");
-            
             if (!id) {
-                // 2. Kung bago ang device, kukuha ng Hardware info
-                const ua = navigator.userAgent;
-                let brand = "NODE";
-
-                if (/windows/i.test(ua)) brand = "PC_WIN";
-                else if (/macintosh/i.test(ua)) brand = "PC_MAC";
-                else if (/android/i.test(ua)) {
-                    const match = ua.match(/Android\s+([^\s;]+);?\s+([^\s;]+)/);
-                    brand = match ? match[2].toUpperCase().replace(/\s/g, '_') : "ANDROID";
-                }
-                else if (/iphone|ipad/i.test(ua)) brand = "APPLE_IOS";
-
-                // 3. Gagawa ng random 4-letter suffix (e.g. WIN_PC_7X9K)
+                const brand = getDetailedBrand().replace(/\s/g, '_');
                 const suffix = Math.random().toString(36).substr(2, 4).toUpperCase();
                 id = `${brand}_${suffix}`;
-                
-                // 4. I-save sa memory para kahit mag-refresh, ito pa rin ang ID
                 localStorage.setItem("agency_node_secret", id);
             }
             return id;
         }
 
-        // Display the ID immediately
         const nodeSignature = getPermanentID();
+        const deviceBrand = getDetailedBrand();
+        
         document.getElementById('detected-device').innerText = nodeSignature;
+        document.getElementById('brand-display').innerText = "BRAND: " + deviceBrand;
 
         // --- DATABASE AUTHORIZATION ---
         async function authorizeAccess() {
             const agent = document.getElementById('agentSelect').value;
             const log = document.getElementById('status');
             
-            log.innerHTML = `> ATTEMPTING_UPLINK...<br>> TARGET: agents/${agent}`;
+            log.innerHTML = `> ATTEMPTING_UPLINK...<br>> BRAND: ${deviceBrand}`;
 
             try {
-                // Gagamitin ang mismong Agent Name bilang Document ID (JFSN o LZ)
                 const agentRef = db.collection("agents").doc(agent);
 
-                // Isulat sa Firebase
                 await agentRef.set({
                     agentName: agent,
-                    // arrayUnion: Idadagdag ang nodeSignature sa listahan nang hindi nagbubura ng dati
+                    // Pinapanatili ang array para sa access verification
                     linkedDevice: firebase.firestore.FieldValue.arrayUnion(nodeSignature),
+                    
+                    // Dito ise-save ang BRAND para makita mo sa Database Console
+                    deviceDetails: firebase.firestore.FieldValue.arrayUnion({
+                        signature: nodeSignature,
+                        brandName: deviceBrand,
+                        authorizedDate: new Date().toISOString()
+                    }),
+                    
                     lastSync: firebase.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
 
-                log.innerHTML += `<br>> <span style="color:var(--green)">[+] SUCCESS: DEVICE_AUTHORIZED</span>`;
-                log.innerHTML += `<br>> ID: ${nodeSignature}`;
+                log.innerHTML += `<br>> <span style="color:var(--green)">[+] SUCCESS: DEVICE_LOGGED</span>`;
+                log.innerHTML += `<br>> BRAND DATA STORED IN FIREBASE`;
                 
-                alert(`SUCCESS!\n\nDevice: ${nodeSignature}\nAgent: ${agent}\n\nNgayon, buksan mo ang index.html at i-click ang handshake.`);
+                alert(`SUCCESS!\n\nDevice: ${deviceBrand}\nSignature: ${nodeSignature}\n\nAuthorized for Agent ${agent}.`);
             } catch (e) {
                 log.innerHTML += `<br>> <span style="color:red">[!] ERROR: ${e.message}</span>`;
-                console.error(e);
             }
         }
     </script>

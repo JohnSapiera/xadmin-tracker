@@ -3,88 +3,164 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>GATEWAY_v8.0_MANUAL</title>
-  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&swap" rel="stylesheet">
+  <title>GATEWAY_v9.0_INTEL_CENTER</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
   <style>
     :root { 
-      --bg: #01080b; --panel: #051218; --cyan: #00f3ff; --red: #ff003c; 
-      --blue: #007bff; --green: #00ff66; --gray: #222; --border: rgba(0, 243, 255, 0.15); 
+      --bg: #01080b; 
+      --panel: rgba(5, 18, 24, 0.95); 
+      --cyan: #00f3ff; 
+      --red: #ff003c; 
+      --blue: #007bff; 
+      --green: #00ff66; 
+      --border: rgba(0, 243, 255, 0.2); 
       --mono: 'Share Tech Mono', monospace; 
     }
+
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    body { background: var(--bg); color: #c8e1e5; font-family: 'Rajdhani', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-
-    header { padding: 4px 12px; height: 35px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 12px; background: #000; font-family: var(--mono); }
-    .ticker { font-size: 9px; color: var(--cyan); padding: 3px 12px; border-bottom: 1px solid var(--border); opacity: 0.7; letter-spacing: 1px; }
-
-    main { flex: 1; padding: 12px; overflow-y: auto; padding-bottom: 70px; display: flex; flex-direction: column; }
-    .search-box { background: var(--panel); border: 1px solid var(--border); padding: 15px; border-radius: 4px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
     
+    body { 
+        background: var(--bg); 
+        color: #c8e1e5; 
+        font-family: 'Rajdhani', sans-serif; 
+        height: 100vh; 
+        overflow: hidden; 
+        display: flex; 
+        flex-direction: column;
+    }
+
+    /* Background Scanner Effect */
+    body::before {
+        content: ""; position: fixed; inset: 0;
+        background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+        background-size: 50px 50px; pointer-events: none; opacity: 0.05;
+    }
+
+    header { 
+        padding: 10px 15px; background: #000; 
+        border-bottom: 2px solid var(--cyan); 
+        display: flex; justify-content: space-between; align-items: center; 
+        box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
+        z-index: 10;
+    }
+    
+    .status-bar { 
+        font-size: 10px; font-family: var(--mono); color: var(--cyan); 
+        padding: 6px 15px; background: rgba(0, 243, 255, 0.05); 
+        border-bottom: 1px solid var(--border); letter-spacing: 1px;
+        display: flex; justify-content: space-between;
+    }
+
+    main { flex: 1; padding: 20px; overflow-y: auto; padding-bottom: 100px; }
+
+    /* Entry Module */
+    .command-box { 
+        background: var(--panel); border: 1px solid var(--border); 
+        padding: 20px; border-radius: 4px; position: relative;
+        backdrop-filter: blur(10px); box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+    }
+
+    .box-label { font-family: var(--mono); font-size: 10px; color: #444; margin-bottom: 10px; border-left: 2px solid var(--cyan); padding-left: 8px; }
+
     #mission-input { 
       width: 100%; background: #000; border: 1px solid var(--cyan); color: var(--cyan); 
-      font-family: var(--mono); font-size: 28px; padding: 10px; text-align: center; 
-      letter-spacing: 5px; outline: none; margin-bottom: 15px;
+      font-family: var(--mono); font-size: 38px; padding: 10px; text-align: center; 
+      letter-spacing: 12px; outline: none; margin-bottom: 15px;
+      box-shadow: inset 0 0 10px rgba(0, 243, 255, 0.2);
     }
-    
+
     .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .btn { padding: 14px; font-family: var(--mono); font-size: 13px; font-weight: bold; border: 1px solid; background: transparent; text-transform: uppercase; cursor: pointer; transition: 0.3s; border-radius: 2px; }
-    
+    .btn { 
+        padding: 16px; font-family: var(--mono); font-size: 13px; font-weight: bold; 
+        border: 1px solid; background: transparent; text-transform: uppercase; 
+        cursor: pointer; transition: 0.2s; border-radius: 2px;
+    }
+
     .btn-save { color: var(--green); border-color: var(--green); }
     .btn-retrieve { background: var(--blue) !important; border-color: var(--blue) !important; color: #fff !important; }
-    .btn-prohibited { background: var(--gray) !important; border-color: #444 !important; color: #555 !important; cursor: not-allowed !important; }
     .btn-terminate { color: var(--red); border-color: var(--red); }
-    .btn-initiate { width: 100%; margin-top: 15px; background: var(--green); color: #000; border: none; font-size: 16px; letter-spacing: 2px; }
+    .btn-prohibited { color: #333; border-color: #222; cursor: not-allowed; opacity: 0.5; }
 
-    #terminal { background: #000; border: 1px solid #111; padding: 10px; font-family: var(--mono); font-size: 10px; min-height: 120px; color: #444; margin-top: 15px; overflow-y: auto; line-height: 1.4; border-radius: 4px; }
+    /* Agent Profile Central Hub */
+    .agent-center { 
+        margin: 35px 0; display: flex; flex-direction: column; align-items: center; 
+    }
     
-    .agent-center-hub { display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 25px auto; gap: 10px; position: relative; }
-    .profile-circle-btn { width: 85px; height: 85px; background: #000; border: 2px solid var(--cyan); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s; box-shadow: 0 0 15px rgba(0, 243, 255, 0.1); }
-    .agent-silhouette { width: 40px; height: 40px; background: #fff; clip-path: polygon(50% 10%, 75% 35%, 75% 50%, 65% 50%, 95% 100%, 5% 100%, 35% 50%, 25% 50%, 25% 35%); opacity: 0.8; transition: 0.3s; }
-    .hub-label { font-family: var(--mono); font-size: 10px; letter-spacing: 3px; color: var(--cyan); font-weight: bold; text-transform: uppercase; }
+    .profile-hex {
+        width: 90px; height: 90px; background: #000; 
+        border: 2px solid var(--cyan); clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; transition: 0.3s;
+        box-shadow: 0 0 20px rgba(0, 243, 255, 0.1);
+    }
+    .profile-hex:active { transform: scale(0.9); box-shadow: 0 0 40px var(--cyan); }
+    
+    .hex-inner { 
+        width: 40px; height: 40px; background: var(--cyan); 
+        clip-path: polygon(50% 10%, 90% 90%, 10% 90%); opacity: 0.8; 
+    }
 
-    /* MODAL SYSTEM */
+    .agent-label { font-family: var(--mono); font-size: 11px; color: var(--cyan); margin-top: 12px; letter-spacing: 3px; font-weight: bold; }
+
+    /* Logs */
+    #terminal { 
+        background: rgba(0,0,0,0.6); border-radius: 4px; padding: 12px; 
+        font-family: var(--mono); font-size: 10px; height: 120px; color: #555; 
+        margin-top: 10px; overflow-y: auto; border: 1px solid #111;
+    }
+
+    /* Modal Styling */
     .modal-overlay { 
-      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); 
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); 
       z-index: 1000; align-items: center; justify-content: center; padding: 20px;
-      backdrop-filter: blur(4px);
     }
     .modal-content { 
-      background: var(--panel); border: 1px solid var(--cyan); width: 100%; max-width: 320px; 
-      padding: 30px 15px 20px; position: relative; border-radius: 4px;
-      animation: popIn 0.3s cubic-bezier(0.17, 0.89, 0.32, 1.49);
+      background: var(--panel); border: 2px solid var(--cyan); width: 100%; max-width: 320px; 
+      padding: 30px 20px; position: relative; border-radius: 4px;
     }
-    @keyframes popIn {
-      from { transform: scale(0.8) translateY(20px); opacity: 0; }
-      to { transform: scale(1) translateY(0); opacity: 1; }
+    .modal-close { position: absolute; top: 0; right: 0; background: var(--red); color: #fff; border: none; padding: 10px 15px; cursor: pointer; font-family: var(--mono); }
+
+    .form-id { font-size: 28px; color: var(--cyan); text-align: center; margin-bottom: 25px; font-family: var(--mono); }
+    .data-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; }
+    .data-label { font-size: 10px; color: #666; text-transform: uppercase; font-family: var(--mono); }
+    .data-val { font-size: 14px; font-family: var(--mono); color: #fff; }
+    .m-input { background: rgba(0,243,255,0.05); border: 1px solid #333; color: var(--cyan); width: 130px; text-align: right; font-family: var(--mono); padding: 5px; outline: none; }
+
+    .btn-initiate { width: 100%; margin-top: 15px; background: var(--green); color: #000; border: none; padding: 18px; font-family: var(--mono); font-weight: bold; cursor: pointer; letter-spacing: 2px; }
+
+    /* Nav Bar */
+    nav { 
+        position: fixed; bottom: 0; width: 100%; height: 75px; 
+        background: #000; border-top: 2px solid var(--border); 
+        display: grid; grid-template-columns: 1fr 1fr; z-index: 100;
     }
-
-    .modal-close { position: absolute; top: 0; right: 0; background: var(--red); color: #fff; border: none; padding: 10px 15px; font-family: var(--mono); cursor: pointer; font-weight: bold; }
-    .form-header { text-align: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
-    .form-id { font-size: 22px; color: var(--cyan); letter-spacing: 3px; font-family: var(--mono); }
-    
-    .data-row { margin-bottom: 12px; font-family: var(--mono); border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px; display: flex; justify-content: space-between; align-items: center; }
-    .data-label { font-size: 10px; color: #666; text-transform: uppercase; }
-    .modal-input { background: rgba(0,243,255,0.05); border: 1px solid #333; color: var(--cyan); font-family: var(--mono); font-size: 14px; text-align: right; width: 130px; outline: none; padding: 4px 8px; border-radius: 2px; }
-    .read-only-val { font-size: 14px; color: #ddd; text-align: right; }
-
-    /* New Styling for Device Display */
-    .device-info { position: absolute; top: 10px; left: 15px; font-size: 8px; color: var(--cyan); font-family: var(--mono); opacity: 0.6; }
-
-    nav { position: fixed; bottom: 0; left: 0; right: 0; height: 55px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; }
-    .nav-item { display: flex; align-items: center; justify-content: center; color: #333; font-size: 11px; font-family: var(--mono); text-decoration: none; }
-    .nav-item.active { color: var(--cyan); background: rgba(0,243,255,0.05); }
+    .nav-btn { 
+        display: flex; flex-direction: column; align-items: center; 
+        justify-content: center; color: #333; font-size: 11px; 
+        font-family: var(--mono); text-decoration: none; transition: 0.3s;
+    }
+    .nav-btn.active { color: var(--cyan); background: rgba(0, 243, 255, 0.05); border-top: 3px solid var(--cyan); }
+    .nav-ico { font-size: 22px; margin-bottom: 5px; }
   </style>
 </head>
 <body>
 
 <header>
-  <span>GATEWAY_PROTOCOL_v8.0</span>
-  <span id="clock" style="color:var(--cyan)">00:00:00</span>
+  <div style="display:flex; align-items:center;">
+    <div style="width:12px; height:12px; background:var(--cyan); border-radius:50%; margin-right:10px; box-shadow: 0 0 10px var(--cyan);"></div>
+    <span style="font-family: var(--mono); font-size: 13px; font-weight: bold; letter-spacing: 2px;">INTEL_CENTER</span>
+  </div>
+  <span id="clock" style="color:var(--cyan); font-family: var(--mono); font-weight: bold;">00:00:00</span>
 </header>
-<div class="ticker">MODE: MANUAL_VAGENT_INPUT // EXPENSES: FIXED_0.00 // STATUS: READY</div>
+
+<div class="status-bar">
+    <span>UPLINK: ACTIVE</span>
+    <span id="device-tag">DEVICE: --</span>
+</div>
 
 <main>
-  <div class="search-box">
+  <div class="command-box">
+    <div class="box-label">AWAITING_MISSION_INPUT</div>
     <input type="tel" id="mission-input" placeholder="00000" maxlength="5" autocomplete="off">
     <div class="btn-row">
       <button id="action-btn" class="btn btn-save">SAVE</button>
@@ -92,56 +168,52 @@
     </div>
   </div>
 
-  <div class="agent-center-hub">
-      <div class="profile-circle-btn" onclick="window.location.href='profile.html'">
-          <div class="agent-silhouette"></div>
+  <div class="agent-center">
+      <div class="profile-hex" onclick="window.location.href='profile.html'">
+          <div class="hex-inner"></div>
       </div>
-      <div class="hub-label">PROFILE</div>
+      <div class="agent-label">AGENT'S PROFILE</div>
   </div>
 
-  <div id="terminal">> AWAITING MISSION ID...</div>
+  <div id="terminal">> CORE_INITIALIZED...<br>> READY_FOR_SCAN...</div>
 </main>
 
 <div id="entry-modal" class="modal-overlay">
   <div class="modal-content">
-    <div class="device-info" id="m-linked-device">DEVICE: UNKNOWN</div>
-    
-    <button class="modal-close" onclick="closeModal()">X</button>
-    
-    <div class="form-header">
-      <div style="font-size: 9px; color: #555;">REGISTRATION FORM</div>
-      <div class="form-id" id="m-id-display">#00000</div>
-    </div>
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <div class="form-id" id="m-id-display">#00000</div>
     
     <div class="data-row">
-      <span class="data-label">VAgent#</span>
-      <input type="tel" id="input-vagent" class="modal-input" placeholder="INPUT ID">
+      <span class="data-label">VAgent_ID</span>
+      <input type="tel" id="input-vagent" class="m-input" placeholder="REQUIRED">
     </div>
-
     <div class="data-row">
       <span class="data-label">Expenses</span>
-      <span class="read-only-val" style="color: var(--green);">0.00</span>
+      <span class="data-val" style="color: var(--green);">0.00</span>
     </div>
-    
     <div class="data-row">
       <span class="data-label">Deployment</span>
-      <span class="read-only-val" id="m-dep">--</span>
+      <span class="data-val" id="m-dep">--</span>
     </div>
-
     <div class="data-row">
       <span class="data-label">Expiration</span>
-      <span class="read-only-val" id="m-expir" style="color:var(--red)">--</span>
+      <span class="data-val" id="m-expir" style="color: var(--red);">--</span>
     </div>
+    <div id="status-box" style="text-align: center; font-size: 11px; color: var(--cyan); margin-top: 15px; font-family: var(--mono); opacity: 0.6;"></div>
     
-    <div id="status-box" style="text-align: center; font-size: 11px; margin-top: 10px; font-family: var(--mono); opacity: 0.6;"></div>
-    
-    <button id="initiate-btn" class="btn btn-initiate">INITIATE</button>
+    <button id="initiate-btn" class="btn btn-initiate">INITIATE_UPLINK</button>
   </div>
 </div>
 
 <nav>
-  <a href="#" class="nav-item active">DASHBOARD</a>
-  <a href="profile.html" class="nav-item">ARCHIVE</a>
+  <a href="#" class="nav-btn active">
+      <span class="nav-ico">◈</span>
+      DASHBOARD
+  </a>
+  <a href="intel.html" class="nav-btn">
+      <span class="nav-ico">◰</span>
+      INTEL
+  </a>
 </nav>
 
 <script type="module">
@@ -154,8 +226,7 @@
     projectId: "my-admin-portal-12691",
     storageBucket: "my-admin-portal-12691.firebasestorage.app",
     messagingSenderId: "317015091563",
-    appId: "1:317015091563:web:d996e585751d5087cd442e",
-    measurementId: "G-ZSV1PYKPZQ"
+    appId: "1:317015091563:web:d996e585751d5087cd442e"
   };
 
   const app = initializeApp(firebaseConfig);
@@ -167,13 +238,12 @@
   const initiateBtn = document.getElementById('initiate-btn');
   const vagentInput = document.getElementById('input-vagent');
   const termLog = document.getElementById('terminal');
-  const deviceDisplay = document.getElementById('m-linked-device');
+  const deviceTag = document.getElementById('device-tag');
   
   let currentData = null;
   let accessStatus = "NEW";
-
-  // Get Device Name from LocalStorage
-  const linkedDeviceName = localStorage.getItem("device_uuid") || "UNRECOGNIZED_HARDWARE";
+  const linkedDeviceName = localStorage.getItem("device_uuid") || "UNRECOGNIZED_HW";
+  deviceTag.textContent = `DEVICE: ${linkedDeviceName}`;
 
   input.addEventListener('input', async (e) => {
     const val = e.target.value.trim();
@@ -196,7 +266,7 @@
           const expDate = data.expirationDate.toDate ? data.expirationDate.toDate() : new Date(data.expirationDate);
           
           if (new Date() > expDate) {
-            log(`ID ${val} EXPIRED. MOVING TO BLACKLIST...`, 'red');
+            log(`ID ${val} EXPIRED.`, 'red');
             await addDoc(collection(db, "blacklist"), { targetID: val, reason: "AUTO_EXPIRY", timestamp: serverTimestamp() });
             accessStatus = "PROHIBITED";
             updateButton("PROHIBITED", "btn-prohibited");
@@ -230,9 +300,6 @@
     if (accessStatus === "PROHIBITED" || input.value.length < 4) return;
     const val = input.value.trim();
     document.getElementById('m-id-display').textContent = `#${val}`;
-    
-    // Display linked device in modal
-    deviceDisplay.textContent = `DEVICE: ${linkedDeviceName}`;
 
     if (accessStatus === "NEW") {
       const depDate = new Date();
@@ -260,37 +327,36 @@
   initiateBtn.addEventListener('click', async () => {
     const val = input.value.trim();
     const vAgentValue = vagentInput.value.trim();
-    if (!vAgentValue) { alert("PLEASE ENTER V-AGENT ID"); return; }
+    if (!vAgentValue) { alert("ENTER V-AGENT ID"); return; }
     log(`INITIATING UPLINK...`, 'green');
-    initiateBtn.disabled = true; initiateBtn.textContent = "PROCESS...";
+    initiateBtn.disabled = true; initiateBtn.textContent = "WAIT...";
     
     try {
       const depDate = new Date(document.getElementById('m-dep').textContent);
       const expDate = new Date(document.getElementById('m-expir').textContent);
       
-      // Save data including linkedDevice
       await addDoc(collection(db, "mission_orders"), {
         orderNumber: val, 
         vAgent: vAgentValue, 
-        expenses: 0, // Numeric for easier calculation later
+        expenses: 0,
         deploymentDate: depDate, 
         expirationDate: expDate, 
-        linkedDevice: linkedDeviceName, // Data is linked to the phone saving it
+        linkedDevice: linkedDeviceName, 
         agentName: localStorage.getItem("cia_agent") || "UNKNOWN",
         timestamp: serverTimestamp()
       });
       
-      log(`MISSION ${val} INITIATED VIA ${linkedDeviceName}`, 'green');
+      log(`MISSION ${val} INITIATED.`, 'green');
       closeModal();
       input.value = ""; resetUI();
     } catch (e) { log(`FAILED: ${e.message}`, 'red'); } finally {
-      initiateBtn.disabled = false; initiateBtn.textContent = "INITIATE";
+      initiateBtn.disabled = false; initiateBtn.textContent = "INITIATE_UPLINK";
     }
   });
 
   termBtn.addEventListener('click', async () => {
     const val = input.value.trim();
-    if (val.length < 4 || !confirm(`CONFIRM BLACKLIST #${val}?`)) return;
+    if (val.length < 4 || !confirm(`TERMINATE #${val}?`)) return;
     await addDoc(collection(db, "blacklist"), { targetID: val, reason: "MANUAL", timestamp: serverTimestamp() });
     log(`ID ${val} TERMINATED.`, 'red');
     input.value = ""; resetUI();
@@ -298,8 +364,8 @@
 
   window.closeModal = () => document.getElementById('entry-modal').style.display = 'none';
   function log(m, c) {
-    const d = document.createElement('div'); d.style.color = `var(--${c})`;
-    d.textContent = `[${new Date().toLocaleTimeString('en-GB')}] > ${m}`;
+    const d = document.createElement('div');
+    d.innerHTML = `<span style="opacity:0.4">[${new Date().toLocaleTimeString('en-GB')}]</span> > <span style="color:var(--${c})">${m}</span>`;
     termLog.prepend(d);
   }
   setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB'); }, 1000);

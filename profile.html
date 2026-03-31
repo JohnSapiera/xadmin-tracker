@@ -27,7 +27,7 @@
 
         .container { max-width: 500px; margin: 0 auto; }
 
-        /* CIA Tactical Header */
+        /* Tactical Header */
         .header { 
             border: 1px solid var(--border); border-left: 5px solid var(--neon); 
             padding: 15px; margin-bottom: 15px; background: rgba(5, 15, 20, 0.85); 
@@ -42,35 +42,26 @@
             font-family: var(--font-main); font-size: 14px; font-weight: bold; 
             cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
             clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
-            transition: 0.2s;
         }
-        .btn-memoir:active { transform: scale(0.95); }
 
         #agentName { font-family: var(--font-main); font-size: 26px; font-weight: 700; color: #fff; letter-spacing: 1px; line-height: 1; margin-top: 5px; }
         #brandTag { font-size: 10px; color: var(--neon); font-weight: bold; letter-spacing: 2px; }
         
-        /* Navigation & Breadcrumbs */
         .breadcrumb { font-size: 11px; color: #5c7882; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;}
         .back-btn { background: rgba(0,0,0,0.5); border: 1px solid var(--border); color: var(--neon); padding: 5px 10px; cursor: pointer; display: none; }
 
-        /* Device Grid */
+        /* Device Cards */
         .device-card {
             background: rgba(0,0,0,0.6); border: 1px solid #1a2f37; padding: 20px;
             margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;
             cursor: pointer; transition: 0.3s;
         }
-        .device-card:active { background: var(--border); }
-        .device-icon { font-size: 24px; color: var(--neon); }
-        .device-info { flex: 1; margin-left: 15px; }
         .device-name { font-family: var(--font-main); font-size: 20px; font-weight: 700; color: #fff; text-transform: uppercase; }
         .device-count { font-size: 10px; color: #5c7882; }
 
-        /* Folder Grid (Inside Device) */
+        /* Folder Design with 2 Shadows */
         .folder-grid { display: none; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-        .file-item { position: relative; cursor: pointer; transition: 0.2s; margin-top: 10px; }
-        .file-item:active { transform: translateY(5px); }
-        
-        /* 2 Shadow Files Logic */
+        .file-item { position: relative; cursor: pointer; margin-top: 10px; }
         .file-folder { 
             height: 90px; background: var(--folder-tan); border-radius: 0 5px 2px 2px;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
@@ -81,7 +72,7 @@
             content: ""; position: absolute; top: -8px; left: 0; width: 35px; height: 10px;
             background: var(--folder-tan); border-radius: 4px 4px 0 0;
         }
-        /* Shadows */
+        /* Shadow Folder Layers */
         .file-item::before, .file-item::after {
             content: ""; position: absolute; left: 2px; right: -2px; height: 90px; 
             border-radius: 0 5px 2px 2px; border-bottom: 4px solid rgba(0,0,0,0.3);
@@ -89,36 +80,23 @@
         .file-item::before { top: -4px; background: #a39371; z-index: 2; transform: rotate(2deg); }
         .file-item::after { top: -8px; background: #8b7d60; z-index: 1; transform: rotate(-2deg); }
 
-        .file-label { font-size: 8px; color: rgba(0,0,0,0.6); font-weight: bold; letter-spacing: 1px; z-index: 4; }
+        .file-label { font-size: 8px; color: rgba(0,0,0,0.6); font-weight: bold; z-index: 4; }
         .file-id { font-size: 13px; color: #000; font-family: var(--font-main); font-weight: 900; z-index: 4; }
 
-        /* OVERLAYS */
+        /* Memoir Vault UI */
         .overlay { display: none; position: fixed; inset: 0; background: rgba(1, 4, 5, 0.95); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(10px); }
-        
-        /* Memoir Hand & Paper Effect */
         #memoirContainer { position: relative; width: 320px; height: 450px; perspective: 1000px; }
         
         .dirty-paper {
             width: 100%; height: 100%; background: #e8e0cc;
-            background-image: 
-                linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px),
-                radial-gradient(circle at 20% 30%, rgba(0,0,0,0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(139, 69, 19, 0.05) 0%, transparent 40%);
-            background-size: 100% 20px, 100% 100%, 100% 100%;
-            border-radius: 2px; box-shadow: 5px 10px 30px rgba(0,0,0,0.8), inset 0 0 40px rgba(100, 80, 50, 0.3);
+            background-image: linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px), radial-gradient(circle at 20% 30%, rgba(0,0,0,0.1) 0%, transparent 50%);
+            background-size: 100% 20px, 100% 100%;
+            border-radius: 2px; box-shadow: 5px 10px 30px rgba(0,0,0,0.8);
             padding: 30px 20px; color: #222; position: relative;
-            transform: rotate(-3deg) translateY(20px); transition: 0.3s;
-            border-left: 2px solid rgba(0,0,0,0.1); border-top: 1px solid rgba(255,255,255,0.5);
-            /* Scratches */
+            transform: rotate(-3deg) translateY(20px); border-left: 2px solid rgba(0,0,0,0.1);
             overflow: hidden;
         }
-        .dirty-paper::before {
-            content:""; position:absolute; top:0; left:0; width:100%; height:100%;
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><path d="M10 10 L30 30 M50 20 L40 60 M80 10 L70 90" stroke="rgba(0,0,0,0.05)" stroke-width="1" fill="none"/></svg>');
-            pointer-events: none; opacity: 0.7;
-        }
-
-        /* The thumb holding the paper */
+        /* Thumb Holding Paper */
         #memoirContainer::after {
             content: ""; position: absolute; bottom: -20px; left: -10px; width: 80px; height: 120px;
             background: #0a0e11; border-radius: 40px 40px 10px 10px;
@@ -127,25 +105,20 @@
         }
 
         .paper-header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
-        .paper-title { font-family: var(--font-main); font-size: 24px; font-weight: 900; letter-spacing: -1px; text-transform: uppercase; }
         .paper-data { font-size: 12px; margin-bottom: 15px; border-bottom: 1px dashed rgba(0,0,0,0.2); padding-bottom: 5px; }
         .paper-label { font-weight: bold; color: #555; font-size: 10px; display: block; }
         .paper-value { font-family: var(--font-main); font-size: 18px; font-weight: 700; color: #111; }
         
         .memoir-controls { position: absolute; bottom: -60px; left: 0; width: 100%; display: flex; justify-content: space-between; z-index: 20;}
-        .m-btn { background: var(--neon); color: #000; border: none; padding: 10px 20px; font-family: var(--font-main); font-weight: 700; font-size: 16px; cursor: pointer; }
+        .m-btn { background: var(--neon); color: #000; border: none; padding: 10px 20px; font-family: var(--font-main); font-weight: 700; cursor: pointer; }
         .m-close { background: var(--red); color: #fff; }
 
-        /* Animation class */
         .flip-card { animation: paperFlip 0.4s ease-in-out; }
         @keyframes paperFlip {
-            0% { transform: rotate(-3deg) translateY(20px) scale(1); opacity: 1; }
-            50% { transform: rotate(-10deg) translateY(-50px) scale(0.9); opacity: 0; }
-            51% { transform: rotate(10deg) translateY(-50px) scale(0.9); }
-            100% { transform: rotate(-3deg) translateY(20px) scale(1); opacity: 1; }
+            0% { transform: rotate(-3deg) translateY(20px); opacity: 1; }
+            50% { transform: rotate(-10deg) translateY(-50px); opacity: 0; }
+            100% { transform: rotate(-3deg) translateY(20px); opacity: 1; }
         }
-
-        .close-btn { position: absolute; top: -15px; right: -15px; background: var(--red); color: #fff; border: 2px solid #000; width: 35px; height: 35px; border-radius: 0; font-family: var(--font-mono); font-weight: bold; cursor: pointer; z-index: 1001; }
     </style>
 </head>
 <body>
@@ -162,14 +135,8 @@
             </div>
             
             <div class="header-bottom">
-                <div>
-                    <span style="color:#5c7882;">DATE:</span> 
-                    <span id="currentDate" style="color:var(--neon); font-weight:bold;">--/--/----</span>
-                </div>
-                <div style="text-align: right;">
-                    <span style="color:#5c7882;">TOTAL_EXPENSES:</span><br>
-                    <span id="totalExpenses" style="color:var(--red); font-size: 14px; font-weight:bold;">₱ 0.00</span>
-                </div>
+                <div><span style="color:#5c7882;">CURRENT DATE:</span> <span id="currentDate" style="color:var(--neon);">--/--/----</span></div>
+                <div style="text-align: right;"><span style="color:#5c7882;">TOTAL EXPENSES:</span><br><span id="totalExpenses" style="color:var(--red); font-weight:bold;">₱ 0.00</span></div>
             </div>
         </div>
 
@@ -183,7 +150,6 @@
         </div>
 
         <div id="deviceGrid"></div>
-
         <div class="folder-grid" id="mainFileGrid"></div>
     </div>
 
@@ -192,30 +158,13 @@
             <div class="dirty-paper" id="paperCard">
                 <div class="paper-header">
                     <span style="font-size: 10px; color: var(--red); font-weight: bold;">CLASSIFIED // EYES ONLY</span>
-                    <div class="paper-title" id="m-mission">#00000</div>
+                    <div id="m-mission" style="font-family: var(--font-main); font-size: 24px; font-weight: 900;">#00000</div>
                 </div>
-                
-                <div class="paper-data">
-                    <span class="paper-label">WEAPON_SYSTEM:</span>
-                    <span class="paper-value" id="m-weapon">UNKNOWN</span>
-                </div>
-                
-                <div class="paper-data">
-                    <span class="paper-label">V_AGENT_ID:</span>
-                    <span class="paper-value" id="m-vagent">---</span>
-                </div>
-                
-                <div class="paper-data">
-                    <span class="paper-label">PENALIZE_DATE (RELIEVE):</span>
-                    <span class="paper-value" id="m-date">--/--/----</span>
-                </div>
-                
-                <div class="paper-data" style="border:none;">
-                    <span class="paper-label">EXPENSES:</span>
-                    <span class="paper-value" id="m-expenses" style="color:#8b0000; font-size:22px;">₱ 0.00</span>
-                </div>
+                <div class="paper-data"><span class="paper-label">WEAPON SYSTEM:</span><span class="paper-value" id="m-weapon">---</span></div>
+                <div class="paper-data"><span class="paper-label">V_AGENT_ID:</span><span class="paper-value" id="m-vagent">---</span></div>
+                <div class="paper-data"><span class="paper-label">PENALIZE DATE:</span><span class="paper-value" id="m-date">--/--/----</span></div>
+                <div class="paper-data" style="border:none;"><span class="paper-label">EXPENSES:</span><span class="paper-value" id="m-expenses" style="color:#8b0000; font-size:22px;">₱ 0.00</span></div>
             </div>
-            
             <div class="memoir-controls">
                 <button class="m-btn m-close" onclick="closeMemoir()">CLOSE</button>
                 <button class="m-btn" onclick="nextMemoir()">NEXT_FILE ></button>
@@ -239,32 +188,22 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Global States
         let deviceDataMap = {}; 
         let allMissionsArray = [];
         let currentMemoirIndex = 0;
 
-        // --- HARDWARE FINGERPRINT LOGIC ---
         function getFingerprint() {
             const canvas = document.createElement('canvas');
             const gl = canvas.getContext('webgl');
             const debugInfo = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
             const gpu = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "GENERIC";
-            const specs = gpu + screen.width + "x" + screen.height + navigator.platform;
-            let hash = 0;
-            for (let i = 0; i < specs.length; i++) {
-                hash = ((hash << 5) - hash) + specs.charCodeAt(i);
-                hash |= 0;
-            }
-            return "HW-" + Math.abs(hash).toString(16).toUpperCase();
+            return "HW-" + Math.abs(gpu.length + screen.width).toString(16).toUpperCase();
         }
 
-        // --- INIT & FETCH DATA ---
         async function initBranding() {
-            // Set Date
             const today = new Date();
-            document.getElementById('currentDate').innerText = today.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
-
+            document.getElementById('currentDate').innerText = today.toLocaleDateString('en-US');
+            
             const currentFP = getFingerprint();
             const terminal = document.getElementById('terminalStatus');
             let accessKey = new URLSearchParams(window.location.search).get('key') || localStorage.getItem("agent_access_key");
@@ -276,9 +215,7 @@
                     const snapKey = await getDocs(qKey);
                     if (!snapKey.empty) agentDoc = snapKey.docs[0];
                 }
-
                 if (!agentDoc) {
-                    terminal.innerText = ">> CACHE_MISS: INITIATING_HARDWARE_RECOVERY...";
                     const qFP = query(collection(db, "agents"), where("lastFingerprint", "==", currentFP));
                     const snapFP = await getDocs(qFP);
                     if (!snapFP.empty) agentDoc = snapFP.docs[0];
@@ -288,89 +225,54 @@
                     const data = agentDoc.data();
                     document.getElementById('agentName').innerText = `AGENT_${data.agentName}`;
                     document.getElementById('brandTag').innerText = `BRAND: ${data.brandName.toUpperCase()}`;
-                    
-                    localStorage.setItem("agent_access_key", data.accessKey);
-                    localStorage.setItem("cia_agent", data.agentName);
-                    
-                    terminal.innerText = ">> DATABASE_MATCH_FOUND. SECURE_UPLINK.";
                     loadArchives(data.agentName);
                 } else {
-                    terminal.innerText = ">> UNAUTHORIZED_ACCESS_DETECTED.";
-                    const inputKey = prompt("UNRECOGNIZED_DEVICE: ENTER AGENT_ACCESS_KEY");
-                    if (inputKey) {
-                        localStorage.setItem("agent_access_key", inputKey);
-                        location.reload();
-                    }
+                    terminal.innerText = ">> UNAUTHORIZED_ACCESS_DETECTED. SYSTEM_LOCKED.";
+                    document.getElementById('agentName').innerText = "ACCESS_DENIED";
+                    document.getElementById('agentName').style.color = "var(--red)";
+                    document.querySelector('.btn-memoir').style.display = 'none';
                 }
-            } catch (e) { terminal.innerText = ">> CRITICAL_UPLINK_FAILURE."; }
+            } catch (e) { terminal.innerText = ">> UPLINK_ERROR."; }
         }
 
-        // --- PROCESS MISSIONS ---
         async function loadArchives(agentName) {
             const q = query(collection(db, "mission_orders"), where("agentName", "==", agentName));
             const snap = await getDocs(q);
+            let total = 0;
             
-            let totalBountyExp = 0;
-            deviceDataMap = {};
-            allMissionsArray = [];
-
             snap.forEach(d => {
                 const data = d.data();
                 allMissionsArray.push(data);
-
-                // Group by Device
-                const device = data.weaponSystem || "UNREGISTERED_SYSTEM";
-                if(!deviceDataMap[device]) deviceDataMap[device] = [];
-                deviceDataMap[device].push(data);
-
-                // Calculate Expenses
-                const expStr = data.expenses ? data.expenses.toString().replace(/[^0-9.-]+/g,"") : "0";
-                totalBountyExp += parseFloat(expStr) || 0;
+                const dev = data.weaponSystem || "UNKNOWN_NODE";
+                if(!deviceDataMap[dev]) deviceDataMap[dev] = [];
+                deviceDataMap[dev].push(data);
+                total += parseFloat((data.expenses || "0").toString().replace(/[^0-9.-]+/g,"")) || 0;
             });
 
-            // Update Total Header
-            document.getElementById('totalExpenses').innerText = `₱ ${totalBountyExp.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-
+            document.getElementById('totalExpenses').innerText = `₱ ${total.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
             renderDevices();
         }
 
-        // --- RENDER VIEWS ---
         function renderDevices() {
-            const dGrid = document.getElementById('deviceGrid');
-            dGrid.innerHTML = "";
-            
-            Object.keys(deviceDataMap).forEach(deviceName => {
-                const count = deviceDataMap[deviceName].length;
-                dGrid.innerHTML += `
-                    <div class="device-card" onclick="openDevice('${deviceName}')">
-                        <div class="device-icon">✦</div>
-                        <div class="device-info">
-                            <div class="device-name">${deviceName}</div>
-                            <div class="device-count">${count} CLASSIFIED FILES</div>
-                        </div>
-                        <div style="color:var(--neon);">></div>
-                    </div>
-                `;
+            const grid = document.getElementById('deviceGrid');
+            grid.innerHTML = "";
+            Object.keys(deviceDataMap).forEach(name => {
+                grid.innerHTML += `<div class="device-card" onclick="openDevice('${name}')">
+                    <div class="device-info"><div class="device-name">${name}</div><div class="device-count">${deviceDataMap[name].length} FILES</div></div>
+                    <div style="color:var(--neon); font-weight:bold;">></div>
+                </div>`;
             });
         }
 
-        window.openDevice = (deviceName) => {
+        window.openDevice = (name) => {
             document.getElementById('deviceGrid').style.display = 'none';
             document.getElementById('mainFileGrid').style.display = 'grid';
             document.getElementById('btnBack').style.display = 'block';
-            document.getElementById('viewTitle').innerText = `NODE: ${deviceName}`;
-
+            document.getElementById('viewTitle').innerText = `NODE: ${name}`;
             const fGrid = document.getElementById('mainFileGrid');
             fGrid.innerHTML = "";
-            
-            deviceDataMap[deviceName].forEach(data => {
-                fGrid.innerHTML += `
-                    <div class="file-item">
-                        <div class="file-folder">
-                            <span class="file-label">V_AGENT</span>
-                            <span class="file-id">#${data.vAgentID || data.vAgent || '???'}</span>
-                        </div>
-                    </div>`;
+            deviceDataMap[name].forEach(data => {
+                fGrid.innerHTML += `<div class="file-item"><div class="file-folder"><span class="file-label">V_AGENT</span><span class="file-id">#${data.vAgentID || data.vAgent || '??'}</span></div></div>`;
             });
         };
 
@@ -381,51 +283,34 @@
             document.getElementById('viewTitle').innerText = 'SYSTEM_OVERVIEW';
         };
 
-        // --- MEMOIR SYSTEM ---
         window.openMemoir = () => {
-            if(allMissionsArray.length === 0) return alert("NO FILES FOUND IN ARCHIVE");
+            if(allMissionsArray.length === 0) return;
             currentMemoirIndex = 0;
             updateMemoirCard();
             document.getElementById('memoirOverlay').style.display = 'flex';
         };
 
-        window.closeMemoir = () => {
-            document.getElementById('memoirOverlay').style.display = 'none';
-        };
+        window.closeMemoir = () => document.getElementById('memoirOverlay').style.display = 'none';
 
         window.nextMemoir = () => {
             const card = document.getElementById('paperCard');
-            
-            // Trigger Animation
             card.classList.remove('flip-card');
-            void card.offsetWidth; // trigger reflow
+            void card.offsetWidth;
             card.classList.add('flip-card');
-
-            // Change data mid-animation
             setTimeout(() => {
-                currentMemoirIndex++;
-                if(currentMemoirIndex >= allMissionsArray.length) currentMemoirIndex = 0; // loop back
+                currentMemoirIndex = (currentMemoirIndex + 1) % allMissionsArray.length;
                 updateMemoirCard();
-            }, 200); // 200ms is half of 0.4s animation
+            }, 200);
         };
 
         function updateMemoirCard() {
             const data = allMissionsArray[currentMemoirIndex];
-            
-            // Format Date safely
-            let relDate = "--/--/----";
-            if(data.relieveDate) {
-                try {
-                    const d = data.relieveDate.toDate ? data.relieveDate.toDate() : new Date(data.relieveDate);
-                    relDate = d.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
-                } catch(e){}
-            }
-
-            document.getElementById('m-mission').innerText = `#${data.missionID || '0000'}`;
-            document.getElementById('m-weapon').innerText = data.weaponSystem || 'UNKNOWN';
-            document.getElementById('m-vagent').innerText = data.vAgentID || data.vAgent || 'PENDING';
-            document.getElementById('m-date').innerText = relDate;
-            document.getElementById('m-expenses').innerText = `₱ ${(parseFloat((data.expenses||"0").toString().replace(/[^0-9.-]+/g,""))||0).toLocaleString(undefined, {minimumFractionDigits:2})}`;
+            document.getElementById('m-mission').innerText = `#${data.orderNumber || data.missionID || '0000'}`;
+            document.getElementById('m-weapon').innerText = data.weaponSystem || '---';
+            document.getElementById('m-vagent').innerText = data.vAgentID || data.vAgent || '---';
+            document.getElementById('m-date').innerText = data.penalizeDate || data.date || '---';
+            const exp = parseFloat((data.expenses || "0").toString().replace(/[^0-9.-]+/g,"")) || 0;
+            document.getElementById('m-expenses').innerText = `₱ ${exp.toLocaleString()}`;
         }
 
         window.onload = initBranding;

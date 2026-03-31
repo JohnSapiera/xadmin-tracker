@@ -1,152 +1,180 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>AGENCY_INTEL_SYSTEM_v13</title>
-  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
-  <style>
-    :root { --bg: #01080b; --panel: rgba(2, 12, 18, 0.95); --cyan: #00f3ff; --red: #ff003c; --green: #00ff66; --border: rgba(0, 243, 255, 0.2); --mono: 'Share Tech Mono', monospace; }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: var(--bg); color: #c8e1e5; font-family: 'Rajdhani', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; background-image: radial-gradient(circle at 50% 50%, #0a1f29 0%, var(--bg) 100%); }
-    header { padding: 12px; border-bottom: 2px solid var(--border); text-align: center; background: #000; }
-    .agent-welcome { font-family: var(--mono); color: var(--cyan); font-size: 13px; letter-spacing: 2px; text-transform: uppercase; }
-    main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-    .intel-greet { text-align: center; font-size: 24px; font-weight: bold; margin-bottom: 35px; text-shadow: 0 0 10px var(--cyan); line-height: 1.4; }
-    .report-btn { background: transparent; border: 2px solid var(--cyan); color: var(--cyan); padding: 22px 55px; font-family: var(--mono); font-size: 16px; cursor: pointer; clip-path: polygon(15% 0, 85% 0, 100% 50%, 85% 100%, 15% 100%, 0 50%); transition: 0.3s; }
-    .report-btn.locked { opacity: 0.15; cursor: not-allowed; pointer-events: none; border-color: #333; color: #333; }
-    
-    /* Modal & Layout */
-    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; backdrop-filter: blur(8px); }
-    .modal-panel { position: fixed; top: 50%; left: 50%; width: 95%; max-width: 380px; background: var(--panel); border: 2px solid var(--cyan); padding: 30px 20px; transform: translate(-50%, -50%); border-radius: 3px; }
-    .intel-input { width: 100%; background: #000; border: 1px solid #1a262b; padding: 15px; color: #fff; font-family: var(--mono); margin-bottom: 15px; outline: none; }
-    .send-btn { width: 100%; padding: 20px; background: var(--green); color: #000; border: none; font-family: var(--mono); font-weight: bold; cursor: pointer; }
-    
-    nav { position: fixed; bottom: 0; width: 100%; height: 70px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; }
-    .nav-link { display: flex; align-items: center; justify-content: center; color: #333; font-size: 10px; font-family: var(--mono); text-decoration: none; }
-    .nav-link.active { color: var(--cyan); border-top: 2px solid var(--cyan); }
-    
-    #device-info { font-size: 9px; color: #4a5a61; margin-top: 15px; font-family: var(--mono); text-align: center; max-width: 85%; line-height: 1.5; }
-    .status-ticker { color: var(--green); font-weight: bold; }
-  </style>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+    <title>AGENCY_INTEL_v12.7</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --bg: #01080b; --cyan: #00f3ff; --red: #ff003c; --green: #00ff66; 
+            --border: rgba(0, 243, 255, 0.15); --mono: 'Share Tech Mono', monospace; 
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { 
+            background: var(--bg); color: #c8e1e5; font-family: 'Rajdhani', sans-serif; 
+            height: 100vh; overflow: hidden; display: flex; flex-direction: column;
+        }
+        header { padding: 15px; border-bottom: 1px solid var(--border); text-align: center; background: #000; }
+        .intel-title { font-family: var(--mono); color: var(--cyan); font-size: 14px; letter-spacing: 5px; }
+
+        main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 25px; text-align: center; }
+        
+        .auth-zone { margin-bottom: 40px; }
+        #log-status { font-family: var(--mono); font-size: 10px; color: #555; margin-bottom: 10px; text-transform: uppercase; }
+        .agent-name { font-size: 32px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; text-shadow: 0 0 15px rgba(0, 243, 255, 0.2); }
+        .device-tag { font-size: 10px; padding: 4px 10px; border: 1px solid #333; color: #555; display: inline-block; font-family: var(--mono); }
+
+        .report-btn { 
+            background: transparent; border: 2px solid var(--cyan); color: var(--cyan); 
+            padding: 22px 55px; font-family: var(--mono); font-size: 16px; 
+            cursor: pointer; clip-path: polygon(10% 0, 90% 0, 100% 50%, 90% 100%, 10% 100%, 0 50%); 
+            transition: 0.3s; opacity: 0.1; pointer-events: none;
+        }
+        .report-btn.unlocked { opacity: 1; pointer-events: auto; background: rgba(0, 243, 255, 0.05); }
+
+        /* Modal / Form */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; backdrop-filter: blur(10px); }
+        .modal-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 360px; background: #020c12; border: 1px solid var(--cyan); padding: 30px; box-shadow: 0 0 30px rgba(0, 243, 255, 0.1); }
+        .intel-input { width: 100%; background: rgba(0,0,0,0.5); border: 1px solid var(--border); padding: 15px; color: #fff; font-family: var(--mono); margin-bottom: 15px; outline: none; border-radius: 0; }
+        .btn-transmit { width: 100%; padding: 20px; background: var(--green); color: #000; border: none; font-family: var(--mono); font-weight: bold; cursor: pointer; text-transform: uppercase; }
+
+        nav { position: fixed; bottom: 0; width: 100%; height: 70px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; }
+        .nav-link { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #333; font-size: 10px; font-family: var(--mono); text-decoration: none; }
+        .nav-link.active { color: var(--cyan); border-top: 2px solid var(--cyan); }
+    </style>
 </head>
 <body>
 
-<header><div class="agent-welcome" id="agent-display">UPLINK_SEARCHING...</div></header>
+<header><div class="intel-title">INTEL_TERMINAL</div></header>
 
 <main>
-    <div class="intel-greet" id="intel-msg">ANALYZING_HARDWARE...</div>
-    <button id="main-report-btn" class="report-btn locked" onclick="openReport()" disabled>INITIATE REPORT</button>
-    <div id="device-info">FINGERPRINTING_IN_PROGRESS...</div>
+    <div class="auth-zone">
+        <div id="log-status">>> Establishing_Secure_Link...</div>
+        <div class="agent-name" id="display-name">---</div>
+        <div class="device-tag" id="device-tag">NODE_UNRECOGNIZED</div>
+    </div>
+
+    <button id="main-btn" class="report-btn" onclick="openReport()">INITIATE REPORT</button>
 </main>
 
-<div id="report-modal" class="modal-overlay">
-    <div class="modal-panel">
-        <h3 style="color:var(--cyan); font-family:var(--mono); margin-bottom:20px;">INTEL_DATA_ENTRY</h3>
-        <input type="tel" id="vagent-num" class="intel-input" placeholder="V-AGENT NUMBER">
-        <input type="number" id="expenses-val" class="intel-input" placeholder="EXPENSES (PHP)">
-        <button id="send-btn" class="send-btn">SEND_INTEL_DATA</button>
-        <button onclick="closeReport()" style="width:100%; background:transparent; color:var(--red); border:none; margin-top:10px; cursor:pointer;">CANCEL</button>
+<div id="report-modal" class="modal">
+    <div class="modal-box">
+        <h3 style="color:var(--cyan); font-family:var(--mono); margin-bottom:20px; text-align:center;">DATA_TRANSMISSION</h3>
+        <input type="tel" id="vAgent" class="intel-input" placeholder="V-AGENT #">
+        <input type="number" id="expenses" class="intel-input" placeholder="EXPENSES (PHP)">
+        <button onclick="transmitData()" class="btn-transmit">SEND_TO_BUREAU</button>
+        <button onclick="closeReport()" style="width:100%; background:transparent; color:var(--red); border:none; margin-top:15px; font-family:var(--mono); cursor:pointer; font-size:10px;">[ ABORT_MISSION ]</button>
     </div>
 </div>
 
 <nav>
-  <a href="dashboard.html" class="nav-link">DASHBOARD</a>
-  <a href="#" class="nav-link active">INTEL</a>
+    <a href="dashboard.html" class="nav-link">DASHBOARD</a>
+    <a href="#" class="nav-link active">INTEL</a>
 </nav>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
-    authDomain: "my-admin-portal-12691.firebaseapp.com",
-    projectId: "my-admin-portal-12691",
-    storageBucket: "my-admin-portal-12691.firebasestorage.app",
-    messagingSenderId: "317015091563",
-    appId: "1:317015091563:web:baab5171d8e0a58acd442e"
-  };
+    const firebaseConfig = {
+        apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
+        authDomain: "my-admin-portal-12691.firebaseapp.com",
+        projectId: "my-admin-portal-12691",
+        storageBucket: "my-admin-portal-12691.firebasestorage.app",
+        messagingSenderId: "317015091563",
+        appId: "1:317015091563:web:baab5171d8e0a58acd442e"
+    };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-  // --- HARDWARE FINGERPRINT ENGINE ---
-  function getHardwareFingerprint() {
-      const canvas = document.createElement('canvas');
-      const gl = canvas.getContext('webgl');
-      const debugInfo = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
-      const gpu = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "GENERIC_GPU";
-      const specs = gpu + screen.width + "x" + screen.height + navigator.platform;
-      
-      let hash = 0;
-      for (let i = 0; i < specs.length; i++) {
-          hash = ((hash << 5) - hash) + specs.charCodeAt(i);
-          hash |= 0;
-      }
-      return "HW-" + Math.abs(hash).toString(16).toUpperCase();
-  }
+    // --- 4-KEY SECURITY SCANNER ---
+    async function runSecurityScan() {
+        const log = document.getElementById('log-status');
+        const nameDisplay = document.getElementById('display-name');
+        const tag = document.getElementById('device-tag');
+        const btn = document.getElementById('main-btn');
 
-  const currentFP = getHardwareFingerprint();
+        // 1. Hardware Fingerprint (Signature)
+        const hwSignature = (navigator.userAgent + screen.width + navigator.platform).replace(/\s/g, '');
+        
+        // 2. Secret Key (Stored in Memory)
+        const localSecret = localStorage.getItem("agency_node_secret");
 
-  async function silentTrace() {
-    const display = document.getElementById('agent-display');
-    const msg = document.getElementById('intel-msg');
-    const btn = document.getElementById('main-report-btn');
-    const info = document.getElementById('device-info');
+        try {
+            const snap = await getDocs(collection(db, "agents"));
+            let verifiedAgent = null;
 
-    info.innerHTML = `SCANNING_NODE: <span class="status-ticker">${currentFP}</span>`;
+            snap.forEach(doc => {
+                const data = doc.data();
+                
+                // Determinant Logic using the 4 Keys in Database:
+                // Key 1: accessKey (Direct input)
+                // Key 2: lastFingerprint (Hardware Signature)
+                // Key 3: linkedDevice (Secret ID array)
+                // Key 4: brandName (Device Identity)
+                
+                const matchSecret = data.linkedDevice && data.linkedDevice.includes(localSecret);
+                const matchHardware = data.lastFingerprint === hwSignature;
 
-    try {
-        // Step 1: Search by Hardware Fingerprint (Anti-Clear Cache)
-        const q = query(collection(db, "agents"), where("lastFingerprint", "==", currentFP));
-        const snap = await getDocs(q);
+                if (matchSecret || matchHardware) {
+                    verifiedAgent = data;
+                }
+            });
 
-        let foundAgentData = null;
-
-        if (!snap.empty) {
-            foundAgentData = snap.docs[0].data();
-        } else {
-            // Step 2: Fallback to LocalStorage (kung hindi nag-clear cache pero nag-update ng specs)
-            const localSecret = localStorage.getItem("agency_node_secret");
-            if (localSecret) {
-                const q2 = query(collection(db, "agents"), where("linkedDevice", "array-contains", localSecret));
-                const snap2 = await getDocs(q2);
-                if (!snap2.empty) foundAgentData = snap2.docs[0].data();
+            if (verifiedAgent) {
+                // Success: Recognized Device
+                nameDisplay.innerText = verifiedAgent.agentName;
+                tag.innerText = verifiedAgent.brandName.toUpperCase();
+                tag.style.color = "var(--green)";
+                tag.style.borderColor = "var(--green)";
+                log.innerText = ">> UPLINK_STABLE // ACCESS_GRANTED";
+                
+                btn.classList.add('unlocked');
+                localStorage.setItem("cia_agent", verifiedAgent.agentName);
+                
+                // Heal storage if missing (Auto-recovery)
+                if(!localSecret && verifiedAgent.linkedDevice) {
+                    localStorage.setItem("agency_node_secret", verifiedAgent.linkedDevice[0]);
+                }
+            } else {
+                // Fail: Unknown Device
+                nameDisplay.innerText = "UNAUTHORIZED";
+                nameDisplay.style.color = "var(--red)";
+                log.innerText = ">> CRITICAL_ERROR: NODE_NOT_FOUND";
             }
+        } catch (e) {
+            log.innerText = ">> CONNECTION_LOST";
         }
-
-        if (foundAgentData) {
-            const agentName = foundAgentData.agentName;
-            display.textContent = `AGENT_VERIFIED: ${agentName}`;
-            msg.innerHTML = `Welcome back, Agent ${agentName}.<br><span style="font-size:12px; color:var(--green);">UPLINK_STABLE</span>`;
-            info.innerHTML += `<br>BRAND: <span style="color:var(--cyan)">${foundAgentData.brandName || "GENERIC_NODE"}</span>`;
-            
-            btn.classList.remove('locked');
-            btn.disabled = false;
-
-            // Sync back to localStorage para sa persistence
-            localStorage.setItem("cia_agent", agentName);
-            localStorage.setItem("agency_node_secret", currentFP);
-        } else {
-            display.textContent = "ACCESS_DENIED";
-            msg.innerHTML = `<span style="color:var(--red);">UNAUTHORIZED_NODE</span>`;
-            info.innerHTML = `ERROR: Node Signature not found in Bureau database.<br>Please run <a href="update_db.html" style="color:var(--cyan)">AUTHORIZATION_PROTOCOL</a>.`;
-        }
-    } catch (e) { 
-        console.error(e);
-        display.textContent = "UPLINK_ERROR";
-        info.textContent = "DATABASE_CONNECTION_OFFLINE";
     }
-  }
 
-  window.openReport = () => document.getElementById('report-modal').style.display = 'block';
-  window.closeReport = () => document.getElementById('report-modal').style.display = 'none';
+    window.transmitData = async () => {
+        const v = document.getElementById('vAgent').value;
+        const e = document.getElementById('expenses').value;
+        const agentName = localStorage.getItem("cia_agent");
 
-  // Start the hardware scan on load
-  window.onload = () => {
-      setTimeout(silentTrace, 500);
-  };
+        if(!v || !e) return alert("DATA_INCOMPLETE");
+
+        try {
+            await addDoc(collection(db, "mission_orders"), {
+                agentName: agentName,
+                vAgent: v,
+                expenses: e,
+                timestamp: new Date(),
+                orderNumber: Math.floor(1000 + Math.random() * 9000)
+            });
+            alert("TRANSMISSION_SUCCESSFUL");
+            location.reload();
+        } catch (err) { alert("ERROR_SENDING_DATA"); }
+    };
+
+    window.openReport = () => document.getElementById('report-modal').style.display = 'block';
+    window.closeReport = () => document.getElementById('report-modal').style.display = 'none';
+
+    // Start Scan
+    window.onload = runSecurityScan;
 </script>
+
 </body>
 </html>

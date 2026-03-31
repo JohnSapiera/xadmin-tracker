@@ -3,55 +3,54 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>SECURE_GATEWAY_v6.5</title>
+  <title>INTEL_GATEWAY_v6.8</title>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
   <style>
     :root { --bg: #01080b; --panel: #051218; --cyan: #00f3ff; --red: #ff003c; --blue: #007bff; --green: #00ff66; --border: rgba(0, 243, 255, 0.15); --mono: 'Share Tech Mono', monospace; }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { background: var(--bg); color: #c8e1e5; font-family: 'Rajdhani', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
-    /* Ultra Compact Header */
     header { padding: 4px 12px; height: 35px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 12px; background: #000; font-family: var(--mono); }
-    .ticker { font-size: 9px; color: var(--cyan); padding: 3px 12px; border-bottom: 1px solid var(--border); opacity: 0.7; letter-spacing: 1px; background: rgba(0,243,255,0.02); }
+    .ticker { font-size: 9px; color: var(--cyan); padding: 3px 12px; border-bottom: 1px solid var(--border); opacity: 0.7; letter-spacing: 1px; }
 
     main { flex: 1; padding: 12px; overflow-y: auto; padding-bottom: 70px; }
-    .search-box { background: var(--panel); border: 1px solid var(--border); padding: 15px; border-radius: 4px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+    .search-box { background: var(--panel); border: 1px solid var(--border); padding: 15px; border-radius: 4px; }
     
     #mission-input { 
       width: 100%; background: #000; border: 1px solid var(--cyan); color: var(--cyan); 
       font-family: var(--mono); font-size: 28px; padding: 10px; text-align: center; 
-      letter-spacing: 5px; outline: none; margin-bottom: 15px; box-shadow: inset 0 0 10px rgba(0,243,255,0.1);
+      letter-spacing: 5px; outline: none; margin-bottom: 15px;
     }
     
     .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .btn { padding: 14px; font-family: var(--mono); font-size: 13px; font-weight: bold; border: 1px solid; background: transparent; text-transform: uppercase; cursor: pointer; transition: 0.3s; }
     
     .btn-save { color: var(--green); border-color: var(--green); }
-    .btn-retrieve { background: var(--blue) !important; border-color: var(--blue) !important; color: #fff !important; box-shadow: 0 0 15px rgba(0,123,255,0.5); }
+    .btn-retrieve { background: var(--blue) !important; border-color: var(--blue) !important; color: #fff !important; }
     .btn-terminate { color: var(--red); border-color: var(--red); }
 
-    #terminal { background: #000; border: 1px solid #111; padding: 10px; font-family: var(--mono); font-size: 10px; min-height: 120px; color: #555; margin-top: 15px; overflow-y: auto; line-height: 1.4; border-radius: 2px; }
+    #terminal { background: #000; border: 1px solid #111; padding: 10px; font-family: var(--mono); font-size: 10px; min-height: 120px; color: #555; margin-top: 15px; overflow-y: auto; line-height: 1.4; }
     
     /* Result Modal */
     #res-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
-    .modal-content { background: var(--panel); border: 1px solid var(--cyan); width: 100%; max-width: 320px; padding: 30px 15px 20px; position: relative; border-radius: 4px; }
+    .modal-content { background: var(--panel); border: 1px solid var(--cyan); width: 100%; max-width: 320px; padding: 30px 15px 20px; position: relative; }
     .modal-close { position: absolute; top: 0; right: 0; background: var(--red); color: #fff; border: none; padding: 8px 12px; font-family: var(--mono); cursor: pointer; }
     .data-row { margin-bottom: 10px; font-family: var(--mono); border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px; }
     .data-label { font-size: 10px; color: #666; text-transform: uppercase; display: block; }
     .data-val { font-size: 15px; color: var(--cyan); }
 
     nav { position: fixed; bottom: 0; left: 0; right: 0; height: 55px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; }
-    .nav-item { display: flex; align-items: center; justify-content: center; color: #333; font-size: 11px; font-family: var(--mono); letter-spacing: 1px; }
+    .nav-item { display: flex; align-items: center; justify-content: center; color: #333; font-size: 11px; font-family: var(--mono); }
     .nav-item.active { color: var(--cyan); background: rgba(0,243,255,0.05); }
   </style>
 </head>
 <body>
 
 <header>
-  <span>INTEL_SYSTEM_V6.5</span>
+  <span>GATEWAY_PROTOCOL_v6.8</span>
   <span id="clock" style="color:var(--cyan)">00:00:00</span>
 </header>
-<div class="ticker">MISSION_SCANNER // STATUS: STANDBY // AUTO_EXPIRY: 30D</div>
+<div class="ticker">PRIORITY: BLACKLIST_FIRST // AUTO_MIGRATION: ENABLED</div>
 
 <main>
   <div class="search-box">
@@ -62,15 +61,15 @@
     </div>
   </div>
 
-  <div id="terminal">> INITIALIZING_UPLINK...</div>
+  <div id="terminal">> AWAITING_ID_SCAN...</div>
 </main>
 
 <div id="res-modal">
   <div class="modal-content">
     <button class="modal-close" onclick="closeM()">X</button>
     <div class="data-row"><span class="data-label">Mission ID</span><span class="data-val" id="r-id">#00000</span></div>
-    <div class="data-row"><span class="data-label">V-Agent</span><span class="data-val" id="r-agent">--</span></div>
-    <div class="data-row"><span class="data-label">Expenses</span><span class="data-val" id="r-exp">--</span></div>
+    <div class="data-row"><span class="data-label">V-Agent Assigned</span><span class="data-val" id="r-agent">--</span></div>
+    <div class="data-row"><span class="data-label">Expenses (Total)</span><span class="data-val" id="r-exp">--</span></div>
     <div class="data-row"><span class="data-label">Deployed</span><span class="data-val" id="r-dep">--</span></div>
     <div class="data-row"><span class="data-label">Expiration</span><span class="data-val" id="r-expir" style="color:var(--red)">--</span></div>
     <div class="data-row" style="border:none; text-align:center; margin-top:15px;"><span class="data-val" id="r-stat">--</span></div>
@@ -78,8 +77,8 @@
 </div>
 
 <nav>
-  <div class="nav-item active">CONSOLE</div>
-  <div class="nav-item">ARCHIVE</div>
+  <div class="nav-item active">DASHBOARD</div>
+  <div class="nav-item">HISTORY</div>
 </nav>
 
 <script type="module">
@@ -101,30 +100,29 @@
 
   const input = document.getElementById('mission-input');
   const actionBtn = document.getElementById('action-btn');
-  const termBtn = document.getElementById('term-btn');
   const termLog = document.getElementById('terminal');
   
   let currentData = null;
-  let statusMode = "NEW"; // NEW, BLACKLISTED, AUTHORIZED, EXPIRED
+  let currentStatus = "NEW"; // NEW, BLACKLISTED, AUTHORIZED, EXPIRED
 
-  // --- AUTO SEARCH (PRIORITY LOGIC) ---
+  // --- AUTO SEARCH & AUTO MIGRATION ---
   input.addEventListener('input', async (e) => {
     const val = e.target.value.trim();
     if (val.length >= 4) {
-      log(`SCANNING: ${val}...`, 'cyan');
+      log(`SCANNING PRIORITY DATABASE...`, 'cyan');
       try {
-        // 1. Priority: Search Blacklist
+        // 1. Check Blacklist First
         const qB = query(collection(db, "blacklist"), where("targetID", "==", val));
         const sB = await getDocs(qB);
         
         if (!sB.empty) {
-          statusMode = "BLACKLISTED";
-          setRetrieveUI("blue");
-          log(`[WARNING] ID ${val} IS BLACKLISTED.`, 'red');
+          currentStatus = "BLACKLISTED";
+          setUI("blue");
+          log(`[ALERT] ID ${val} IS ON BLACKLIST.`, 'red');
           return;
         }
 
-        // 2. Secondary: Search Mission Orders
+        // 2. Check Mission Orders
         const qM = query(collection(db, "mission_orders"), where("orderNumber", "==", val));
         const sM = await getDocs(qM);
 
@@ -132,38 +130,45 @@
           const data = sM.docs[0].data();
           const expDate = data.expirationDate.toDate ? data.expirationDate.toDate() : new Date(data.expirationDate);
           
+          // --- AUTO TERMINATION TRIGGER ---
           if (new Date() > expDate) {
-            statusMode = "EXPIRED";
-            log(`[EXPIRED] MISSION ${val} REACHED LIMIT.`, 'red');
+            log(`[EXPIRATION_DETECTED] MIGRATING ${val} TO BLACKLIST...`, 'red');
+            await autoBlacklist(val, "AUTO_EXPIRY_30D");
+            currentStatus = "BLACKLISTED";
+            log(`[MIGRATION_COMPLETE] ${val} IS NOW PERMANENTLY BLACKLISTED.`, 'red');
           } else {
-            statusMode = "AUTHORIZED";
-            log(`[AUTHORIZED] DATA LOCATED.`, 'blue');
+            currentStatus = "AUTHORIZED";
+            log(`[MATCH] MISSION ${val} IS ACTIVE.`, 'blue');
           }
           currentData = data;
-          setRetrieveUI("blue");
+          setUI("blue");
         } else {
-          statusMode = "NEW";
-          setRetrieveUI("green");
-          log(`ID ${val} NOT FOUND. READY FOR ENTRY.`, 'green');
+          currentStatus = "NEW";
+          setUI("green");
+          log(`ID ${val} NOT FOUND. READY FOR UPLINK.`, 'green');
         }
-      } catch (err) { log(`SCAN_ERR: ${err.message}`, 'red'); }
+      } catch (err) { log(`DB_ERR: ${err.message}`, 'red'); }
     } else { resetUI(); }
   });
 
-  function setRetrieveUI(type) {
-    if(type === "blue") {
-      actionBtn.textContent = "RETRIEVE";
-      actionBtn.className = "btn btn-retrieve";
-    } else {
-      actionBtn.textContent = "SAVE";
-      actionBtn.className = "btn btn-save";
-    }
+  async function autoBlacklist(id, reason) {
+    try {
+      await addDoc(collection(db, "blacklist"), {
+        targetID: id,
+        reason: reason,
+        timestamp: serverTimestamp()
+      });
+    } catch (e) { console.error("AutoBlacklist Failed", e); }
+  }
+
+  function setUI(color) {
+    actionBtn.textContent = (color === "blue") ? "RETRIEVE" : "SAVE";
+    actionBtn.className = (color === "blue") ? "btn btn-retrieve" : "btn btn-save";
   }
 
   function resetUI() {
-    statusMode = "NEW";
-    actionBtn.textContent = "SAVE";
-    actionBtn.className = "btn btn-save";
+    currentStatus = "NEW";
+    setUI("green");
     currentData = null;
   }
 
@@ -175,7 +180,7 @@
     if (actionBtn.textContent === "RETRIEVE") {
       showModal();
     } else {
-      log(`GENERATING MISSION DATA...`, 'green');
+      log(`INITIATING_DEPLOYMENT...`, 'green');
       try {
         const depDate = new Date();
         const expDate = new Date();
@@ -184,61 +189,47 @@
         const newOrder = {
           orderNumber: val,
           vAgent: "V-" + Math.floor(1000 + Math.random() * 9000),
-          expenses: "₱" + (Math.floor(Math.random() * 5000) + 1500).toLocaleString(),
+          expenses: "₱" + (Math.floor(Math.random() * 8000) + 1200).toLocaleString(),
           deploymentDate: depDate,
           expirationDate: expDate,
           timestamp: serverTimestamp()
         };
 
         await addDoc(collection(db, "mission_orders"), newOrder);
-        log(`SUCCESS: ${val} ARCHIVED. EXPIRY: ${expDate.toLocaleDateString()}`, 'green');
+        log(`SUCCESS: ${val} REGISTERED. EXPIRES: ${expDate.toLocaleDateString()}`, 'green');
         input.value = ""; resetUI();
-      } catch (e) { log(`SAVE_ERR: ${e.message}`, 'red'); }
+      } catch (e) { log(`SAVE_ERR`, 'red'); }
     }
   });
 
-  // --- TERMINATE LOGIC ---
-  termBtn.addEventListener('click', async () => {
+  // --- MANUAL TERMINATE ---
+  document.getElementById('term-btn').addEventListener('click', async () => {
     const val = input.value.trim();
-    if (val.length < 4) return;
-    if (!confirm(`BLACKLIST MISSION #${val}?`)) return;
-
-    try {
-      await addDoc(collection(db, "blacklist"), {
-        targetID: val,
-        reason: "MANUAL_TERMINATION",
-        timestamp: serverTimestamp()
-      });
-      log(`ID ${val} TERMINATED & BLACKLISTED.`, 'red');
-      input.value = ""; resetUI();
-    } catch (e) { log("TERM_ERR", "red"); }
+    if (val.length < 4 || !confirm(`MANUALLY BLACKLIST #${val}?`)) return;
+    log(`TERMINATING ${val}...`, 'red');
+    await autoBlacklist(val, "MANUAL_TERMINATION");
+    log(`ID ${val} HAS BEEN BLACKLISTED.`, 'red');
+    input.value = ""; resetUI();
   });
 
   function showModal() {
     document.getElementById('r-id').textContent = `#${input.value}`;
-    if (statusMode === "BLACKLISTED") {
+    if (currentStatus === "BLACKLISTED") {
       document.getElementById('r-agent').textContent = "REDACTED";
-      document.getElementById('r-exp').textContent = "N/A";
+      document.getElementById('r-exp').textContent = "LOCKED";
       document.getElementById('r-dep').textContent = "LOCKED";
       document.getElementById('r-expir').textContent = "LOCKED";
-      document.getElementById('r-stat').textContent = "ACCESS: BLACKLISTED";
+      document.getElementById('r-stat').textContent = "STATUS: BLACKLISTED";
       document.getElementById('r-stat').style.color = "var(--red)";
     } else {
       const dep = currentData.deploymentDate.toDate ? currentData.deploymentDate.toDate() : new Date(currentData.deploymentDate);
       const exp = currentData.expirationDate.toDate ? currentData.expirationDate.toDate() : new Date(currentData.expirationDate);
-      
       document.getElementById('r-agent').textContent = currentData.vAgent;
       document.getElementById('r-exp').textContent = currentData.expenses;
       document.getElementById('r-dep').textContent = dep.toLocaleDateString();
       document.getElementById('r-expir').textContent = exp.toLocaleDateString();
-      
-      if (statusMode === "EXPIRED") {
-        document.getElementById('r-stat').textContent = "ACCESS: EXPIRED";
-        document.getElementById('r-stat').style.color = "var(--red)";
-      } else {
-        document.getElementById('r-stat').textContent = "ACCESS: AUTHORIZED";
-        document.getElementById('r-stat').style.color = "var(--green)";
-      }
+      document.getElementById('r-stat').textContent = "STATUS: AUTHORIZED";
+      document.getElementById('r-stat').style.color = "var(--green)";
     }
     document.getElementById('res-modal').style.display = 'flex';
   }

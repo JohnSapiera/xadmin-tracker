@@ -2,107 +2,64 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DEVICE_SIGNATURE_SYNC</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HARDWARE_ENROLLMENT</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;800&display=swap" rel="stylesheet">
     <style>
         :root { --cyan: #00f2ff; --bg: #050506; --red: #ff3c3c; --green: #00ff66; }
-        body { background: var(--bg); color: #fff; font-family: 'JetBrains Mono', monospace; padding: 20px; margin: 0; }
-        
-        .wrapper { max-width: 400px; margin: 20px auto; background: #0a0a0c; padding: 30px; border: 1px solid #222; position: relative; }
-        .wrapper::before { content: "TOP_SECRET"; position: absolute; top: -10px; right: 10px; background: var(--red); color: #000; font-size: 9px; padding: 2px 5px; font-weight: 800; }
-
+        body { background: var(--bg); color: #fff; font-family: 'JetBrains Mono', monospace; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .wrapper { width: 100%; max-width: 400px; background: #0a0a0c; padding: 30px; border: 1px solid #222; box-shadow: 0 0 30px rgba(0,0,0,0.5); }
         h2 { font-size: 14px; color: var(--cyan); letter-spacing: 2px; margin-bottom: 25px; border-left: 3px solid var(--cyan); padding-left: 10px; }
-
         label { font-size: 10px; color: #555; text-transform: uppercase; display: block; margin-bottom: 5px; }
-        
-        select { 
-            width: 100%; background: #000; border: 1px solid #333; color: var(--cyan); 
-            padding: 15px; margin-bottom: 20px; font-family: inherit; font-size: 16px; outline: none;
-        }
-
-        .btn-sync { 
-            width: 100%; padding: 18px; background: transparent; color: var(--green); 
-            border: 1px solid var(--green); font-weight: 800; cursor: pointer; 
-            text-transform: uppercase; letter-spacing: 2px; transition: 0.3s;
-        }
-        .btn-sync:active { background: var(--green); color: #000; transform: scale(0.98); }
-
-        #terminal { 
-            font-size: 10px; color: #444; margin-top: 20px; background: #000; 
-            padding: 10px; border: 1px solid #111; min-height: 120px; line-height: 1.6;
-        }
-        .highlight { color: var(--cyan); }
+        select { width: 100%; background: #000; border: 1px solid #333; color: var(--cyan); padding: 15px; margin-bottom: 20px; font-family: inherit; font-size: 16px; outline: none; }
+        .btn-sync { width: 100%; padding: 18px; background: transparent; color: var(--green); border: 1px solid var(--green); font-weight: 800; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; }
+        #terminal { font-size: 10px; color: #444; margin-top: 20px; background: #000; padding: 10px; border: 1px solid #111; min-height: 80px; overflow-y: auto; }
     </style>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 </head>
 <body>
-
     <div class="wrapper">
         <h2>HARDWARE_ENROLLMENT</h2>
-
-        <label>Identify Agent:</label>
+        <label>Select Agent Identity:</label>
         <select id="agentSelect">
             <option value="LZ">AGENT_LZ</option>
             <option value="JFSN">AGENT_JFSN</option>
         </select>
-
-        <button class="btn-sync" onclick="synchronizeDevice()">Synchronize This Device</button>
-
-        <div id="terminal">> AWAITING_HARDWARE_UPLINK_</div>
+        <button class="btn-sync" onclick="syncDevice()">BIND_THIS_HARDWARE</button>
+        <div id="terminal">> AWAITING_COMMAND_</div>
     </div>
 
     <script>
-        const firebaseConfig = { 
-            apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
-            authDomain: "my-admin-portal-12691.firebaseapp.com", 
-            projectId: "my-admin-portal-12691", 
-            storageBucket: "my-admin-portal-12691.firebasestorage.app", 
-            messagingSenderId: "317015091563", 
-            appId: "1:317015091563:web:baab5171d8e0a58acd442e" 
-        };
+        const firebaseConfig = { apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", authDomain: "my-admin-portal-12691.firebaseapp.com", projectId: "my-admin-portal-12691", storageBucket: "my-admin-portal-12691.firebasestorage.app", messagingSenderId: "317015091563", appId: "1:317015091563:web:baab5171d8e0a58acd442e" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        async function synchronizeDevice() {
+        async function syncDevice() {
             const agent = document.getElementById('agentSelect').value;
             const log = document.getElementById('terminal');
             
-            log.innerHTML = `> INITIATING SCAN...<br>`;
-
-            // 1. Generate / Retrieve Persistent Device UUID
+            // 1. Force Unique UUID for this specific phone/browser
             let deviceUUID = localStorage.getItem("device_uuid");
             if (!deviceUUID) {
                 deviceUUID = "SIG-" + Math.random().toString(36).substr(2, 9).toUpperCase();
                 localStorage.setItem("device_uuid", deviceUUID);
             }
 
-            // 2. Collect Phone Metadata
-            const phoneData = {
+            const data = {
                 linkedDevice: deviceUUID,
-                platform: navigator.platform, // e.g. Linux armv8l (Android)
-                brand_info: navigator.userAgent.includes("Samsung") ? "SAMSUNG_SERIES" : "GENERIC_MOBILE",
+                platform: navigator.platform,
                 screen: `${window.screen.width}x${window.screen.height}`,
-                browser: navigator.vendor,
                 lastSync: firebase.firestore.FieldValue.serverTimestamp(),
-                authStatus: "VERIFIED_HARDWARE"
+                status: "AUTHORIZED"
             };
 
             try {
-                // 3. Update Firebase Agent Document
-                await db.collection("agents").doc(agent).set(phoneData, { merge: true });
-
-                log.innerHTML += `> <span class="highlight">UUID: ${deviceUUID}</span><br>`;
-                log.innerHTML += `> <span class="highlight">PLATFORM: ${phoneData.platform}</span><br>`;
-                log.innerHTML += `> <span class="highlight">SCREEN: ${phoneData.screen}</span><br>`;
-                log.innerHTML += `> <span style="color:var(--green)">SUCCESS: AGENT_${agent} LINKED TO THIS DEVICE.</span>`;
-                
-                alert(`Device successfully linked to AGENT_${agent}`);
-
-            } catch (error) {
-                log.innerHTML += `> <span style="color:var(--red)">ERROR: UPLINK_FAILED</span><br>`;
-                console.error(error);
+                await db.collection("agents").doc(agent).set(data, { merge: true });
+                log.innerHTML = `> <span style="color:#00f2ff">UUID: ${deviceUUID}</span><br>> <span style="color:#00ff66">SUCCESS: LINKED TO AGENT_${agent}</span>`;
+                alert("Device Bound Successfully!");
+            } catch (e) {
+                log.innerHTML = `> ERROR: ${e.message}`;
             }
         }
     </script>

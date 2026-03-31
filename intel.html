@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>AGENCY_INTEL_SYSTEM_v10.0</title>
+  <title>AGENCY_INTEL_SYSTEM_v10.1</title>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
   <style>
     :root { --bg: #01080b; --panel: rgba(2, 12, 18, 0.95); --cyan: #00f3ff; --red: #ff003c; --green: #00ff66; --border: rgba(0, 243, 255, 0.2); --mono: 'Share Tech Mono', monospace; }
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: var(--bg); color: #c8e1e5; font-family: 'Rajdhani', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; background-image: radial-gradient(circle at 50% 50%, #0a1f29 0%, var(--bg) 100%); }
     header { padding: 12px; border-bottom: 2px solid var(--border); text-align: center; background: #000; }
     .agent-welcome { font-family: var(--mono); color: var(--cyan); font-size: 13px; letter-spacing: 2px; text-transform: uppercase; }
@@ -66,16 +66,15 @@
   const deviceUUID = localStorage.getItem("device_uuid");
 
   async function silentTrace() {
-    if(!deviceUUID) return document.getElementById('agent-display').textContent = "NO_UUID_FOUND";
+    if(!deviceUUID) return;
     try {
-        // Gagamit ng array-contains para sa multiple devices
         const q = query(collection(db, "agents"), where("linkedDevice", "array-contains", deviceUUID));
         const snap = await getDocs(q);
 
         if(!snap.empty) {
             const agentData = snap.docs[0].data();
             document.getElementById('agent-display').textContent = `AGENT_VERIFIED: ${agentData.agentName}`;
-            document.getElementById('intel-msg').innerHTML = `Welcome back, ${agentData.agentName}.<br><span style="font-size:12px; color:#555;">System is ready for intel.</span>`;
+            document.getElementById('intel-msg').innerHTML = `Welcome back, ${agentData.agentName}.<br><span style="font-size:12px; color:#555;">Ready for intel updates.</span>`;
             document.getElementById('main-report-btn').classList.remove('locked');
             document.getElementById('main-report-btn').disabled = false;
         } else {

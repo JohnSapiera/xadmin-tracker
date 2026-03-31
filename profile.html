@@ -3,124 +3,229 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BUREAU_REGISTRY // ARCHIVES</title>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+    <title>CIA_REGISTRY // DOSSIER</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
     <style>
         :root { 
-            --neon: #00f2ff; --bg: #0a0b0d; --red: #ff3c3c; 
-            --folder-tan: #c2b280; --glass: rgba(255, 255, 255, 0.03);
-            --border: rgba(0, 242, 255, 0.15);
-        }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { 
-            background: var(--bg); color: #fff; font-family: 'JetBrains Mono', monospace; 
-            margin: 0; padding: 15px; overflow-x: hidden;
-            background-image: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
-            background-size: 100% 4px, 3px 100%;
-        }
-        .container { max-width: 500px; margin: 0 auto; }
-
-        /* Tactical Header */
-        .header { 
-            border: 1px solid var(--border); border-left: 4px solid var(--neon); 
-            padding: 15px; margin-bottom: 25px; display: flex; 
-            justify-content: space-between; align-items: flex-start;
-            background: rgba(0, 242, 255, 0.02); backdrop-filter: blur(10px);
-        }
-
-        .btn-memoir {
-            background: var(--neon); color: #000; border: none; padding: 5px 12px;
-            font-size: 10px; font-weight: bold; cursor: pointer; text-transform: uppercase;
-            margin-top: 10px; clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
-        }
-
-        #agentName { font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700; text-transform: uppercase; color: #fff; }
-        #brandTag { font-size: 10px; color: var(--neon); font-weight: bold; letter-spacing: 1.5px; }
-
-        /* File Grid */
-        .file-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 15px; }
-        .file-item { position: relative; cursor: pointer; transition: 0.2s; }
-        .file-item:active { transform: scale(0.9); }
-        .file-folder { 
-            height: 80px; background: var(--folder-tan); border-radius: 0 8px 2px 2px;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.4); border-bottom: 3px solid rgba(0,0,0,0.2);
-        }
-        .file-folder::before {
-            content: ""; position: absolute; top: -8px; left: 0; width: 30px; height: 10px;
-            background: var(--folder-tan); border-radius: 4px 4px 0 0;
-        }
-        .file-label { font-size: 7px; color: rgba(0,0,0,0.6); font-weight: 800; }
-        .file-id { font-size: 11px; color: #1a1a1a; font-weight: 900; }
-
-        /* Overlay Styles */
-        .overlay {
-            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95);
-            z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(8px);
-        }
-
-        /* Dossier Style Document */
-        .modal-box { 
-            width: 85%; max-width: 350px; background: #fdfdfd; color: #111; 
-            padding: 25px; position: relative; border: 1px solid #000;
-            box-shadow: 10px 10px 0 var(--neon);
-            background-image: repeating-linear-gradient(#f1f1f1 0px, #f1f1f1 1px, transparent 1px, transparent 20px);
+            --neon: #00f3ff; --bg: #030a0d; --red: #ff003c; 
+            --folder-tan: #bba982; --folder-dark: #8b7d60;
+            --border: rgba(0, 243, 255, 0.2);
+            --font-mono: 'Share Tech Mono', monospace;
+            --font-main: 'Rajdhani', sans-serif;
         }
         
-        .dossier-header { 
-            text-align: center; border-bottom: 2px solid #000; 
-            margin-bottom: 20px; padding-bottom: 10px; 
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+        
+        body { 
+            background: var(--bg); color: #e1f5f9; font-family: var(--font-mono); 
+            overflow-x: hidden; padding: 15px; padding-bottom: 50px;
+            background-image: 
+                radial-gradient(circle at top, rgba(0, 243, 255, 0.05), transparent 60%),
+                linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%);
+            background-size: 100% 100%, 100% 4px;
         }
 
-        .close-btn { position: absolute; top: -10px; right: -10px; background: var(--red); color: #fff; border: 2px solid #fff; width: 30px; height: 30px; border-radius: 50%; font-weight: bold; z-index: 1001;}
+        .container { max-width: 500px; margin: 0 auto; }
+
+        /* CIA Tactical Header */
+        .header { 
+            border: 1px solid var(--border); border-left: 5px solid var(--neon); 
+            padding: 15px; margin-bottom: 15px; background: rgba(5, 15, 20, 0.85); 
+            backdrop-filter: blur(5px); position: relative;
+            box-shadow: 0 5px 20px rgba(0, 243, 255, 0.05);
+        }
+        .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
+        .header-bottom { display: flex; justify-content: space-between; border-top: 1px dashed var(--border); padding-top: 10px; font-size: 11px; }
+
+        .btn-memoir {
+            background: var(--neon); color: #000; border: none; padding: 6px 15px;
+            font-family: var(--font-main); font-size: 14px; font-weight: bold; 
+            cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
+            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+            transition: 0.2s;
+        }
+        .btn-memoir:active { transform: scale(0.95); }
+
+        #agentName { font-family: var(--font-main); font-size: 26px; font-weight: 700; color: #fff; letter-spacing: 1px; line-height: 1; margin-top: 5px; }
+        #brandTag { font-size: 10px; color: var(--neon); font-weight: bold; letter-spacing: 2px; }
+        
+        /* Navigation & Breadcrumbs */
+        .breadcrumb { font-size: 11px; color: #5c7882; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;}
+        .back-btn { background: rgba(0,0,0,0.5); border: 1px solid var(--border); color: var(--neon); padding: 5px 10px; cursor: pointer; display: none; }
+
+        /* Device Grid */
+        .device-card {
+            background: rgba(0,0,0,0.6); border: 1px solid #1a2f37; padding: 20px;
+            margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;
+            cursor: pointer; transition: 0.3s;
+        }
+        .device-card:active { background: var(--border); }
+        .device-icon { font-size: 24px; color: var(--neon); }
+        .device-info { flex: 1; margin-left: 15px; }
+        .device-name { font-family: var(--font-main); font-size: 20px; font-weight: 700; color: #fff; text-transform: uppercase; }
+        .device-count { font-size: 10px; color: #5c7882; }
+
+        /* Folder Grid (Inside Device) */
+        .folder-grid { display: none; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .file-item { position: relative; cursor: pointer; transition: 0.2s; margin-top: 10px; }
+        .file-item:active { transform: translateY(5px); }
+        
+        /* 2 Shadow Files Logic */
+        .file-folder { 
+            height: 90px; background: var(--folder-tan); border-radius: 0 5px 2px 2px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            position: relative; z-index: 3; border-bottom: 4px solid var(--folder-dark);
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+        }
+        .file-folder::before {
+            content: ""; position: absolute; top: -8px; left: 0; width: 35px; height: 10px;
+            background: var(--folder-tan); border-radius: 4px 4px 0 0;
+        }
+        /* Shadows */
+        .file-item::before, .file-item::after {
+            content: ""; position: absolute; left: 2px; right: -2px; height: 90px; 
+            border-radius: 0 5px 2px 2px; border-bottom: 4px solid rgba(0,0,0,0.3);
+        }
+        .file-item::before { top: -4px; background: #a39371; z-index: 2; transform: rotate(2deg); }
+        .file-item::after { top: -8px; background: #8b7d60; z-index: 1; transform: rotate(-2deg); }
+
+        .file-label { font-size: 8px; color: rgba(0,0,0,0.6); font-weight: bold; letter-spacing: 1px; z-index: 4; }
+        .file-id { font-size: 13px; color: #000; font-family: var(--font-main); font-weight: 900; z-index: 4; }
+
+        /* OVERLAYS */
+        .overlay { display: none; position: fixed; inset: 0; background: rgba(1, 4, 5, 0.95); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(10px); }
+        
+        /* Memoir Hand & Paper Effect */
+        #memoirContainer { position: relative; width: 320px; height: 450px; perspective: 1000px; }
+        
+        .dirty-paper {
+            width: 100%; height: 100%; background: #e8e0cc;
+            background-image: 
+                linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px),
+                radial-gradient(circle at 20% 30%, rgba(0,0,0,0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(139, 69, 19, 0.05) 0%, transparent 40%);
+            background-size: 100% 20px, 100% 100%, 100% 100%;
+            border-radius: 2px; box-shadow: 5px 10px 30px rgba(0,0,0,0.8), inset 0 0 40px rgba(100, 80, 50, 0.3);
+            padding: 30px 20px; color: #222; position: relative;
+            transform: rotate(-3deg) translateY(20px); transition: 0.3s;
+            border-left: 2px solid rgba(0,0,0,0.1); border-top: 1px solid rgba(255,255,255,0.5);
+            /* Scratches */
+            overflow: hidden;
+        }
+        .dirty-paper::before {
+            content:""; position:absolute; top:0; left:0; width:100%; height:100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><path d="M10 10 L30 30 M50 20 L40 60 M80 10 L70 90" stroke="rgba(0,0,0,0.05)" stroke-width="1" fill="none"/></svg>');
+            pointer-events: none; opacity: 0.7;
+        }
+
+        /* The thumb holding the paper */
+        #memoirContainer::after {
+            content: ""; position: absolute; bottom: -20px; left: -10px; width: 80px; height: 120px;
+            background: #0a0e11; border-radius: 40px 40px 10px 10px;
+            box-shadow: inset -5px 10px 20px rgba(255,255,255,0.05), 10px 0 20px rgba(0,0,0,0.8);
+            transform: rotate(25deg); z-index: 10;
+        }
+
+        .paper-header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+        .paper-title { font-family: var(--font-main); font-size: 24px; font-weight: 900; letter-spacing: -1px; text-transform: uppercase; }
+        .paper-data { font-size: 12px; margin-bottom: 15px; border-bottom: 1px dashed rgba(0,0,0,0.2); padding-bottom: 5px; }
+        .paper-label { font-weight: bold; color: #555; font-size: 10px; display: block; }
+        .paper-value { font-family: var(--font-main); font-size: 18px; font-weight: 700; color: #111; }
+        
+        .memoir-controls { position: absolute; bottom: -60px; left: 0; width: 100%; display: flex; justify-content: space-between; z-index: 20;}
+        .m-btn { background: var(--neon); color: #000; border: none; padding: 10px 20px; font-family: var(--font-main); font-weight: 700; font-size: 16px; cursor: pointer; }
+        .m-close { background: var(--red); color: #fff; }
+
+        /* Animation class */
+        .flip-card { animation: paperFlip 0.4s ease-in-out; }
+        @keyframes paperFlip {
+            0% { transform: rotate(-3deg) translateY(20px) scale(1); opacity: 1; }
+            50% { transform: rotate(-10deg) translateY(-50px) scale(0.9); opacity: 0; }
+            51% { transform: rotate(10deg) translateY(-50px) scale(0.9); }
+            100% { transform: rotate(-3deg) translateY(20px) scale(1); opacity: 1; }
+        }
+
+        .close-btn { position: absolute; top: -15px; right: -15px; background: var(--red); color: #fff; border: 2px solid #000; width: 35px; height: 35px; border-radius: 0; font-family: var(--font-mono); font-weight: bold; cursor: pointer; z-index: 1001; }
     </style>
 </head>
 <body>
 
     <div class="container">
         <div class="header">
-            <div>
-                <a href="dashboard.html" style="color:var(--neon); font-size:10px; text-decoration:none;">< SYSTEM_EXIT</a>
-                <h2 id="agentName">SYNCING_NODE...</h2>
+            <div class="header-top">
+                <div>
+                    <a href="dashboard.html" style="color:#5c7882; font-size:10px; text-decoration:none;">< SYSTEM_EXIT</a>
+                    <h2 id="agentName">SYNCING...</h2>
+                    <div id="brandTag">BRAND: ---</div>
+                </div>
                 <button class="btn-memoir" onclick="openMemoir()">MEMOIR</button>
             </div>
-            <div style="text-align: right;">
-                <div id="brandTag">BRAND: ---</div>
-                <div id="uplinkTag" style="font-size: 7px; color: var(--red); margin-top: 8px; border: 1px solid var(--red); padding: 2px;">ENCRYPTED_UPLINK</div>
+            
+            <div class="header-bottom">
+                <div>
+                    <span style="color:#5c7882;">DATE:</span> 
+                    <span id="currentDate" style="color:var(--neon); font-weight:bold;">--/--/----</span>
+                </div>
+                <div style="text-align: right;">
+                    <span style="color:#5c7882;">TOTAL_EXPENSES:</span><br>
+                    <span id="totalExpenses" style="color:var(--red); font-size: 14px; font-weight:bold;">₱ 0.00</span>
+                </div>
             </div>
         </div>
 
-        <div id="terminalStatus" style="font-size: 10px; color: #555; margin-bottom: 15px; border-left: 2px solid var(--neon); padding-left: 10px;">
-            >> INITIALIZING_HARDWARE_UPLINK...
+        <div id="terminalStatus" style="font-size: 10px; color: #5c7882; margin-bottom: 15px; padding-left: 10px; border-left: 2px solid var(--neon);">
+            >> SCANNING_AUTHORIZED_DEVICES...
         </div>
 
-        <div class="file-grid" id="mainFileGrid"></div>
+        <div class="breadcrumb">
+            <button class="back-btn" id="btnBack" onclick="showDevices()">< BACK</button>
+            <span id="viewTitle">SYSTEM_OVERVIEW</span>
+        </div>
+
+        <div id="deviceGrid"></div>
+
+        <div class="folder-grid" id="mainFileGrid"></div>
     </div>
 
-    <div id="memoirOverlay" class="overlay" onclick="closeMemoir()">
-        <div class="modal-box" style="background:#000; color:var(--neon); border: 1px solid var(--neon);" onclick="event.stopPropagation()">
-            <button class="close-btn" onclick="closeMemoir()">×</button>
-            <h3 style="letter-spacing:2px; text-align:center;">// MEMOIR_VAULT</h3>
-            <div style="height:100px; display:flex; align-items:center; justify-content:center; font-size:10px; opacity:0.5;">
-                [ PENDING_UPDATES_... ]
+    <div id="memoirOverlay" class="overlay">
+        <div id="memoirContainer">
+            <div class="dirty-paper" id="paperCard">
+                <div class="paper-header">
+                    <span style="font-size: 10px; color: var(--red); font-weight: bold;">CLASSIFIED // EYES ONLY</span>
+                    <div class="paper-title" id="m-mission">#00000</div>
+                </div>
+                
+                <div class="paper-data">
+                    <span class="paper-label">WEAPON_SYSTEM:</span>
+                    <span class="paper-value" id="m-weapon">UNKNOWN</span>
+                </div>
+                
+                <div class="paper-data">
+                    <span class="paper-label">V_AGENT_ID:</span>
+                    <span class="paper-value" id="m-vagent">---</span>
+                </div>
+                
+                <div class="paper-data">
+                    <span class="paper-label">PENALIZE_DATE (RELIEVE):</span>
+                    <span class="paper-value" id="m-date">--/--/----</span>
+                </div>
+                
+                <div class="paper-data" style="border:none;">
+                    <span class="paper-label">EXPENSES:</span>
+                    <span class="paper-value" id="m-expenses" style="color:#8b0000; font-size:22px;">₱ 0.00</span>
+                </div>
             </div>
-        </div>
-    </div>
-
-    <div id="missionOverlay" class="overlay">
-        <div class="modal-box">
-            <button class="close-btn" onclick="closeDoc()">×</button>
-            <div class="dossier-header">
-                <h2 style="margin: 0; font-size: 16px; font-weight: 900; letter-spacing: 1px;">CLASSIFIED DOSSIER</h2>
-                <span id="moID" style="font-size: 10px; font-weight: bold; background: #000; color: #fff; padding: 2px 5px;">--</span>
+            
+            <div class="memoir-controls">
+                <button class="m-btn m-close" onclick="closeMemoir()">CLOSE</button>
+                <button class="m-btn" onclick="nextMemoir()">NEXT_FILE ></button>
             </div>
-            <div id="docContent"></div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getFirestore, collection, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
         const firebaseConfig = { 
             apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
@@ -128,11 +233,16 @@
             projectId: "my-admin-portal-12691", 
             storageBucket: "my-admin-portal-12691.firebasestorage.app", 
             messagingSenderId: "317015091563", 
-            appId: "1:317015091563:web:d996e585751d5087cd442e" 
+            appId: "1:317015091563:web:baab5171d8e0a58acd442e" 
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+
+        // Global States
+        let deviceDataMap = {}; 
+        let allMissionsArray = [];
+        let currentMemoirIndex = 0;
 
         // --- HARDWARE FINGERPRINT LOGIC ---
         function getFingerprint() {
@@ -149,28 +259,24 @@
             return "HW-" + Math.abs(hash).toString(16).toUpperCase();
         }
 
-        // --- ANTI-CLEAR CACHE & RECOVERY SYSTEM ---
+        // --- INIT & FETCH DATA ---
         async function initBranding() {
+            // Set Date
+            const today = new Date();
+            document.getElementById('currentDate').innerText = today.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+
             const currentFP = getFingerprint();
             const terminal = document.getElementById('terminalStatus');
-            const uplink = document.getElementById('uplinkTag');
-            
-            // 1. Fallback Check: URL -> LocalStorage -> Fingerprint
             let accessKey = new URLSearchParams(window.location.search).get('key') || localStorage.getItem("agent_access_key");
-
-            terminal.innerText = ">> SCANNING_NODE_SIGNATURE...";
 
             try {
                 let agentDoc = null;
-
-                // 2. Firestore Matching via Key
                 if (accessKey) {
                     const qKey = query(collection(db, "agents"), where("accessKey", "==", accessKey));
                     const snapKey = await getDocs(qKey);
                     if (!snapKey.empty) agentDoc = snapKey.docs[0];
                 }
 
-                // 3. Automatic Recovery via Fingerprint
                 if (!agentDoc) {
                     terminal.innerText = ">> CACHE_MISS: INITIATING_HARDWARE_RECOVERY...";
                     const qFP = query(collection(db, "agents"), where("lastFingerprint", "==", currentFP));
@@ -183,76 +289,144 @@
                     document.getElementById('agentName').innerText = `AGENT_${data.agentName}`;
                     document.getElementById('brandTag').innerText = `BRAND: ${data.brandName.toUpperCase()}`;
                     
-                    // Heal LocalStorage
                     localStorage.setItem("agent_access_key", data.accessKey);
                     localStorage.setItem("cia_agent", data.agentName);
                     
-                    terminal.innerText = ">> DATABASE_MATCH_FOUND. UPLINK_STABLE.";
-                    uplink.style.color = "var(--neon)";
-                    uplink.style.borderColor = "var(--neon)";
-                    uplink.innerText = "UPLINK_STABLE";
-
+                    terminal.innerText = ">> DATABASE_MATCH_FOUND. SECURE_UPLINK.";
                     loadArchives(data.agentName);
                 } else {
-                    // Fallback Prompt
                     terminal.innerText = ">> UNAUTHORIZED_ACCESS_DETECTED.";
                     const inputKey = prompt("UNRECOGNIZED_DEVICE: ENTER AGENT_ACCESS_KEY");
                     if (inputKey) {
                         localStorage.setItem("agent_access_key", inputKey);
                         location.reload();
-                    } else {
-                        document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:50px;'>ACCESS_DENIED</h1>";
                     }
                 }
-            } catch (e) { 
-                console.error(e); 
-                terminal.innerText = ">> CRITICAL_UPLINK_FAILURE.";
-            }
+            } catch (e) { terminal.innerText = ">> CRITICAL_UPLINK_FAILURE."; }
         }
 
+        // --- PROCESS MISSIONS ---
         async function loadArchives(agentName) {
-            const grid = document.getElementById('mainFileGrid');
             const q = query(collection(db, "mission_orders"), where("agentName", "==", agentName));
             const snap = await getDocs(q);
             
-            grid.innerHTML = "";
+            let totalBountyExp = 0;
+            deviceDataMap = {};
+            allMissionsArray = [];
+
             snap.forEach(d => {
                 const data = d.data();
-                grid.innerHTML += `
-                    <div class="file-item" onclick="openDoc('${d.id}')">
-                        <div class="file-folder">
-                            <span class="file-label">VIA_AGENT</span>
-                            <span class="file-id">#${data.vAgent || '??'}</span>
+                allMissionsArray.push(data);
+
+                // Group by Device
+                const device = data.weaponSystem || "UNREGISTERED_SYSTEM";
+                if(!deviceDataMap[device]) deviceDataMap[device] = [];
+                deviceDataMap[device].push(data);
+
+                // Calculate Expenses
+                const expStr = data.expenses ? data.expenses.toString().replace(/[^0-9.-]+/g,"") : "0";
+                totalBountyExp += parseFloat(expStr) || 0;
+            });
+
+            // Update Total Header
+            document.getElementById('totalExpenses').innerText = `₱ ${totalBountyExp.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+
+            renderDevices();
+        }
+
+        // --- RENDER VIEWS ---
+        function renderDevices() {
+            const dGrid = document.getElementById('deviceGrid');
+            dGrid.innerHTML = "";
+            
+            Object.keys(deviceDataMap).forEach(deviceName => {
+                const count = deviceDataMap[deviceName].length;
+                dGrid.innerHTML += `
+                    <div class="device-card" onclick="openDevice('${deviceName}')">
+                        <div class="device-icon">✦</div>
+                        <div class="device-info">
+                            <div class="device-name">${deviceName}</div>
+                            <div class="device-count">${count} CLASSIFIED FILES</div>
                         </div>
-                    </div>`;
+                        <div style="color:var(--neon);">></div>
+                    </div>
+                `;
             });
         }
 
-        window.openMemoir = () => document.getElementById('memoirOverlay').style.display = 'flex';
-        window.closeMemoir = () => document.getElementById('memoirOverlay').style.display = 'none';
-        window.closeDoc = () => document.getElementById('missionOverlay').style.display = 'none';
+        window.openDevice = (deviceName) => {
+            document.getElementById('deviceGrid').style.display = 'none';
+            document.getElementById('mainFileGrid').style.display = 'grid';
+            document.getElementById('btnBack').style.display = 'block';
+            document.getElementById('viewTitle').innerText = `NODE: ${deviceName}`;
 
-        window.openDoc = async (id) => {
-            const snap = await getDoc(doc(db, "mission_orders", id));
-            if (snap.exists()) {
-                const data = snap.data();
-                document.getElementById('moID').innerText = `REF_ID: V-${data.vAgent}`;
-                document.getElementById('docContent').innerHTML = `
-                    <div style="margin-top: 15px; font-family: 'JetBrains Mono', monospace;">
-                        <p style="font-size:10px; color:#666; margin: 0;">SUBJECT_IDENTIFIER:</p>
-                        <p style="font-size:15px; font-weight:bold; margin: 5px 0 15px 0; color: #000;">#${data.orderNumber}</p>
-                        
-                        <p style="font-size:10px; color:#666; margin: 0;">TOTAL_EXPENSES:</p>
-                        <p style="font-size:24px; font-weight:900; color:var(--red); margin: 5px 0;">₱ ${parseFloat(data.expenses).toLocaleString()}</p>
-                        
-                        <div style="margin-top:20px; border-top:1px dashed #ccc; padding-top:10px;">
-                            <p style="font-size:9px; color:#999; font-style:italic;">Note: This document is classified under Bureau protocol. Unauthorized reproduction is prohibited.</p>
+            const fGrid = document.getElementById('mainFileGrid');
+            fGrid.innerHTML = "";
+            
+            deviceDataMap[deviceName].forEach(data => {
+                fGrid.innerHTML += `
+                    <div class="file-item">
+                        <div class="file-folder">
+                            <span class="file-label">V_AGENT</span>
+                            <span class="file-id">#${data.vAgentID || data.vAgent || '???'}</span>
                         </div>
-                    </div>
-                `;
-                document.getElementById('missionOverlay').style.display = 'flex';
-            }
+                    </div>`;
+            });
         };
+
+        window.showDevices = () => {
+            document.getElementById('deviceGrid').style.display = 'block';
+            document.getElementById('mainFileGrid').style.display = 'none';
+            document.getElementById('btnBack').style.display = 'none';
+            document.getElementById('viewTitle').innerText = 'SYSTEM_OVERVIEW';
+        };
+
+        // --- MEMOIR SYSTEM ---
+        window.openMemoir = () => {
+            if(allMissionsArray.length === 0) return alert("NO FILES FOUND IN ARCHIVE");
+            currentMemoirIndex = 0;
+            updateMemoirCard();
+            document.getElementById('memoirOverlay').style.display = 'flex';
+        };
+
+        window.closeMemoir = () => {
+            document.getElementById('memoirOverlay').style.display = 'none';
+        };
+
+        window.nextMemoir = () => {
+            const card = document.getElementById('paperCard');
+            
+            // Trigger Animation
+            card.classList.remove('flip-card');
+            void card.offsetWidth; // trigger reflow
+            card.classList.add('flip-card');
+
+            // Change data mid-animation
+            setTimeout(() => {
+                currentMemoirIndex++;
+                if(currentMemoirIndex >= allMissionsArray.length) currentMemoirIndex = 0; // loop back
+                updateMemoirCard();
+            }, 200); // 200ms is half of 0.4s animation
+        };
+
+        function updateMemoirCard() {
+            const data = allMissionsArray[currentMemoirIndex];
+            
+            // Format Date safely
+            let relDate = "--/--/----";
+            if(data.relieveDate) {
+                try {
+                    const d = data.relieveDate.toDate ? data.relieveDate.toDate() : new Date(data.relieveDate);
+                    relDate = d.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+                } catch(e){}
+            }
+
+            document.getElementById('m-mission').innerText = `#${data.missionID || '0000'}`;
+            document.getElementById('m-weapon').innerText = data.weaponSystem || 'UNKNOWN';
+            document.getElementById('m-vagent').innerText = data.vAgentID || data.vAgent || 'PENDING';
+            document.getElementById('m-date').innerText = relDate;
+            document.getElementById('m-expenses').innerText = `₱ ${(parseFloat((data.expenses||"0").toString().replace(/[^0-9.-]+/g,""))||0).toLocaleString(undefined, {minimumFractionDigits:2})}`;
+        }
 
         window.onload = initBranding;
     </script>

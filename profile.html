@@ -2,73 +2,130 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>AGENT_ARCHIVE_SYSTEM</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BUREAU_REGISTRY // PROFILE</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --neon: #00f2ff; --bg: #050506; --locked: #121214; --paper: #ffffff; }
+        :root { --neon: #00f2ff; --bg: #050506; --red: #ff3c3c; --folder: #333; }
         body { background: var(--bg); color: #fff; font-family: 'JetBrains Mono', monospace; margin: 0; padding: 20px; }
 
-        .header { border-left: 3px solid var(--neon); padding-left: 15px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
-        .breadcrumb { font-size: 10px; color: var(--neon); cursor: pointer; text-decoration: underline; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .header { border-bottom: 2px solid var(--neon); padding-bottom: 10px; margin-bottom: 30px; }
+        
+        /* Device Info */
+        .device-card { background: #0a0a0c; border: 1px solid #222; padding: 15px; margin-bottom: 20px; }
+        .device-label { font-size: 10px; color: #555; }
 
-        /* GRID SYSTEM */
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px; }
+        /* V-Agents Section */
+        .section-title { font-size: 12px; color: var(--neon); margin-bottom: 15px; letter-spacing: 2px; }
+        .vagent-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
+        
+        .folder { 
+            background: var(--folder); padding: 15px 10px; text-align: center; cursor: not-allowed; 
+            opacity: 0.2; transition: 0.3s; position: relative; border-radius: 4px 15px 4px 4px;
+        }
+        .folder.active { opacity: 1; cursor: pointer; background: #1a1a1a; border: 1px solid var(--neon); }
+        .folder.active:hover { box-shadow: 0 0 15px rgba(0, 242, 255, 0.3); transform: translateY(-3px); }
+        .folder-num { font-size: 14px; font-weight: 800; display: block; }
+        .folder-label { font-size: 8px; color: #555; }
 
-        /* WEAPON FOLDER STYLE */
-        .wpn-folder {
-            background: #1a1a1c; border: 1px solid #333; padding: 30px 10px; text-align: center;
-            cursor: pointer; transition: 0.3s; position: relative; overflow: hidden;
+        /* Mission Order Document (CIA Inspired) */
+        #missionOverlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 100; justify-content: center; align-items: center;
         }
-        .wpn-folder:hover { border-color: var(--neon); background: #222; transform: translateY(-3px); }
-        .wpn-folder::before { content: "🗃️"; font-size: 50px; display: block; margin-bottom: 10px; }
-        .wpn-label { font-size: 14px; font-weight: 800; color: var(--neon); letter-spacing: 1px; }
+        .classified-doc {
+            background: #e2dcc8; color: #1a1a1a; width: 90%; max-width: 450px; padding: 40px;
+            position: relative; box-shadow: 10px 10px 0px #000;
+            animation: folderOpen 0.5s ease-out;
+            background-image: repeating-linear-gradient(#dcd5bc 0px, #dcd5bc 1px, transparent 1px, transparent 25px);
+        }
+        @keyframes folderOpen { from { transform: scale(0.8) rotate(-2deg); opacity: 0; } to { transform: scale(1) rotate(0deg); opacity: 1; } }
 
-        /* V-AGENT FOLDER STYLE */
-        .v-folder {
-            padding: 20px 10px; text-align: center; border: 1px solid #222;
-            background: var(--locked); filter: grayscale(1) brightness(0.4);
-            cursor: not-allowed; transition: 0.3s; font-size: 11px;
+        .doc-header { border-bottom: 2px solid #1a1a1a; margin-bottom: 20px; text-align: center; }
+        .doc-header h1 { margin: 0; font-size: 24px; letter-spacing: 5px; }
+        .stamp { 
+            position: absolute; top: 20px; right: 20px; border: 3px solid var(--red); 
+            color: var(--red); padding: 5px; transform: rotate(15deg); font-weight: 800; 
+            opacity: 0.8; font-size: 12px;
         }
-        /* ACTIVE V-AGENT (Naka-Scan/Puti) */
-        .v-folder.active {
-            background: #eee; color: #000; border-color: #fff; filter: none;
-            cursor: pointer; box-shadow: 0 0 15px rgba(255,255,255,0.2);
-        }
-        .v-folder.active:hover { transform: scale(1.05); }
-        .v-folder::before { content: "📁"; font-size: 30px; display: block; margin-bottom: 5px; }
 
-        /* DOCUMENT OVERLAY */
-        .overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 99;
-        }
-        .paper {
-            background: var(--paper); color: #000; width: 90%; max-width: 400px;
-            padding: 40px; border: 1px solid #ccc; position: relative; box-shadow: 15px 15px 0px var(--neon);
-        }
-        .doc-line { border-bottom: 1px solid #000; margin: 15px 0; }
-        .close-btn { position: absolute; top: 10px; right: 10px; cursor: pointer; color: red; font-weight: bold; }
+        .field-group { margin-bottom: 15px; border-bottom: 1px dashed #999; padding-bottom: 5px; }
+        .f-label { font-size: 10px; font-weight: bold; color: #666; text-transform: uppercase; }
+        .f-value { font-size: 14px; font-family: 'Courier New', Courier, monospace; }
 
-        .hidden { display: none; }
+        .expense-box { background: rgba(0,0,0,0.05); padding: 10px; margin-top: 15px; }
+        .btn-update { 
+            background: #1a1a1a; color: #fff; border: none; padding: 5px 10px; 
+            font-size: 10px; cursor: pointer; margin-top: 5px; 
+        }
+
+        .close-doc { position: absolute; bottom: -50px; left: 50%; transform: translateX(-50%); color: #fff; cursor: pointer; }
     </style>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
-    <div class="header">
-        <div>
-            <div id="path" class="breadcrumb" onclick="showWeaponFolders()">[ ROOT_DIRECTORY ]</div>
-            <div id="agentDisplay" style="font-size: 20px; font-weight: 800;">AGENT_ACCESS</div>
+    <div class="container">
+        <div class="header">
+            <div style="font-size: 10px; color: #555;">REGISTRY_BUREAU // TOP_SECRET</div>
+            <h2 id="agentTitle">AGENT_UNKNOWN</h2>
+        </div>
+
+        <div class="device-card">
+            <div class="device-label">LINKED_DEVICE_SIGNATURE:</div>
+            <div id="deviceName" style="color: var(--neon); font-size: 14px;">-- SCANNING --</div>
+        </div>
+
+        <div class="section-title">V-AGENTS_SHADOW_FOLDERS</div>
+        <div class="vagent-grid" id="vagentGrid">
+            <script>
+                for(let i=1; i<=8; i++) {
+                    document.write(`
+                        <div class="folder" id="vagent-${i}" onclick="openMission(${i})">
+                            <span class="folder-num">${i}</span>
+                            <span class="folder-label">V-AGENT</span>
+                        </div>
+                    `);
+                }
+            </script>
         </div>
     </div>
 
-    <div id="weaponGrid" class="grid"></div>
+    <div id="missionOverlay">
+        <div class="classified-doc">
+            <div class="stamp">CLASSIFIED</div>
+            <div class="doc-header">
+                <h1>MISSION ORDER</h1>
+                <div id="moNumber" style="font-size: 12px; font-weight: bold;">#0000</div>
+            </div>
 
-    <div id="vAgentGrid" class="grid hidden"></div>
+            <div class="field-group">
+                <div class="f-label">Mission Details</div>
+                <div class="f-value" id="moDetails">NO_DATA_FOUND</div>
+            </div>
 
-    <div class="overlay" id="overlay">
-        <div class="paper" id="paper"></div>
+            <div class="field-group">
+                <div class="f-label">Operational Expenses</div>
+                <div class="f-value" style="color: #b22222; font-weight: bold;">
+                    ₱ <span id="moExpenses">0.00</span>
+                </div>
+                <button class="btn-update" onclick="updateExpense()">+ ADD_FUNDS</button>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+                <div class="field-group">
+                    <div class="f-label">Deployment Date</div>
+                    <div class="f-value" id="moDeploy" style="font-size: 11px;">--/--/--</div>
+                </div>
+                <div class="field-group">
+                    <div class="f-label">Expiration Date</div>
+                    <div class="f-value" id="moExpire" style="font-size: 11px;">--/--/--</div>
+                </div>
+            </div>
+        </div>
+        <div class="close-doc" onclick="closeMission()">[ CLOSE_FILE ]</div>
     </div>
 
     <script>
@@ -76,88 +133,57 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        const loggedInAgent = localStorage.getItem("cia_agent") || "LZ";
-        const weapons = (loggedInAgent === "LZ") ? ["R8P", "RMN14"] : ["RMN9", "TechnoCP"];
+        let currentAgent = localStorage.getItem("cia_agent") || "LZ";
+        let currentVNum = null;
 
-        document.getElementById('agentDisplay').innerText = "AGENT_" + loggedInAgent;
+        async function initProfile() {
+            document.getElementById('agentTitle').innerText = `AGENT_${currentAgent}`;
+            document.getElementById('deviceName').innerText = localStorage.getItem("device_uuid") || "UNRECOGNIZED";
 
-        // SHOW WEAPON SYSTEMS FIRST
-        function showWeaponFolders() {
-            const wGrid = document.getElementById('weaponGrid');
-            const vGrid = document.getElementById('vAgentGrid');
-            wGrid.classList.remove('hidden');
-            vGrid.classList.add('hidden');
-            document.getElementById('path').innerText = "[ ROOT_DIRECTORY ]";
-
-            wGrid.innerHTML = "";
-            weapons.forEach(wpn => {
-                wGrid.innerHTML += `
-                    <div class="wpn-folder" onclick="loadVAgents('${wpn}')">
-                        <div class="wpn-label">${wpn}</div>
-                        <div style="font-size:8px; opacity:0.5; margin-top:5px;">SYSTEM_ARMORY</div>
-                    </div>`;
-            });
+            // Check existing VAgents in Database
+            for(let i=1; i<=8; i++) {
+                const doc = await db.collection("agents").doc(currentAgent).collection("VAgents").doc(`Agent${i}`).get();
+                if(doc.exists) {
+                    document.getElementById(`vagent-${i}`).classList.add('active');
+                }
+            }
         }
 
-        // LOAD V-AGENTS INSIDE WEAPON
-        async function loadVAgents(wpn) {
-            const wGrid = document.getElementById('weaponGrid');
-            const vGrid = document.getElementById('vAgentGrid');
-            wGrid.classList.add('hidden');
-            vGrid.classList.remove('hidden');
-            document.getElementById('path').innerText = `[ ROOT ] / ${wpn}_SYSTEM`;
+        async function openMission(num) {
+            const folder = document.getElementById(`vagent-${num}`);
+            if(!folder.classList.contains('active')) return;
 
-            vGrid.innerHTML = "<div style='color:var(--neon)'>SCANNING_ARCHIVES...</div>";
+            currentVNum = num;
+            const doc = await db.collection("agents").doc(currentAgent).collection("VAgents").doc(`Agent${num}`).get();
+            const data = doc.data();
 
-            const snap = await db.collection("system_registry")
-                .where("agent", "==", loggedInAgent)
-                .where("weapon", "==", wpn)
-                .orderBy("vid", "asc").get();
+            document.getElementById('moNumber').innerText = `#VA-0${num}`;
+            document.getElementById('moDetails').innerText = data.missionDetails || "ENCRYPTED_DATA";
+            document.getElementById('moExpenses').innerText = parseFloat(data.expenses || 0).toLocaleString('en-PH', {minimumFractionDigits: 2});
+            document.getElementById('moDeploy').innerText = data.deploymentDate || "PENDING";
+            document.getElementById('moExpire').innerText = data.expirationDate || "N/A";
 
-            vGrid.innerHTML = "";
-            snap.forEach(doc => {
-                const data = doc.data();
-                const isActive = data.status === "OFFICIAL_DOCUMENT";
-                
-                const card = document.createElement('div');
-                card.className = isActive ? 'v-folder active' : 'v-folder';
-                card.innerHTML = `V-AGENT #${data.vid}<br><span style="font-size:8px;">${isActive ? 'OFFICIAL' : 'PENDING'}</span>`;
-                
-                if(isActive) card.onclick = () => openDocument(data);
-                
-                vGrid.appendChild(card);
-            });
+            document.getElementById('missionOverlay').style.display = 'flex';
         }
 
-        function openDocument(d) {
-            const date = d.timestamp.toDate();
-            const exp = new Date(date); exp.setDate(exp.getDate() + 30);
-            
-            document.getElementById('paper').innerHTML = `
-                <div class="close-btn" onclick="closeDoc()">[X]</div>
-                <center><b style="letter-spacing:2px;">OFFICIAL MISSION ORDER</b><br>
-                <small>SERIAL: ${d.missionOrder}</small></center>
-                <div class="doc-line"></div>
-                <b>AGENT:</b> ${d.agent}<br>
-                <b>SYSTEM:</b> ${d.weapon}<br>
-                <b>UNIT:</b> V-AGENT #${d.vid}
-                <div class="doc-line"></div>
-                <div style="display:flex; justify-content:space-between;">
-                    <div><b>AMOUNT:</b><br>₱ ${d.amount || "0.00"}</div>
-                    <div style="text-align:right;"><b>DATE:</b><br>${date.toLocaleDateString()}</div>
-                </div>
-                <div class="doc-line"></div>
-                <small>DEPLOYED: ${date.toLocaleString()}</small><br>
-                <small style="color:red; font-weight:bold;">EXPIRES: ${exp.toLocaleString()}</small>
-                <p style="text-align:center; font-size:9px; margin-top:20px; opacity:0.5;">*** CONFIDENTIAL RECORD ***</p>
-            `;
-            document.getElementById('overlay').style.display = "flex";
+        function closeMission() {
+            document.getElementById('missionOverlay').style.display = 'none';
         }
 
-        function closeDoc() { document.getElementById('overlay').style.display = "none"; }
+        async function updateExpense() {
+            const amount = prompt("Enter amount to add (PHP):");
+            if(amount && !isNaN(amount)) {
+                const ref = db.collection("agents").doc(currentAgent).collection("VAgents").doc(`Agent${currentVNum}`);
+                const doc = await ref.get();
+                const newTotal = parseFloat(doc.data().expenses || 0) + parseFloat(amount);
+                
+                await ref.update({ expenses: newTotal });
+                document.getElementById('moExpenses').innerText = newTotal.toLocaleString('en-PH', {minimumFractionDigits: 2});
+                alert("Database Updated.");
+            }
+        }
 
-        // Start
-        showWeaponFolders();
+        window.onload = initProfile;
     </script>
 </body>
 </html>

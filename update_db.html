@@ -3,36 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HARDWARE_ENROLLMENT_v10.1</title>
+    <title>AGENCY_DEVICE_AUTHORIZATION</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
     <style>
         :root { --cyan: #00f2ff; --bg: #01080b; --green: #00ff66; --border: rgba(0, 242, 255, 0.2); --mono: 'Share Tech Mono', monospace; }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: var(--bg); color: #fff; font-family: 'Rajdhani', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background-image: radial-gradient(circle at 50% 50%, #0a1f29 0%, var(--bg) 100%); }
-        .wrapper { width: 90%; max-width: 400px; background: rgba(2, 12, 18, 0.98); padding: 35px; border: 1px solid var(--border); box-shadow: 0 0 40px rgba(0,0,0,1); }
-        h2 { font-size: 18px; color: var(--cyan); letter-spacing: 3px; margin-bottom: 25px; border-left: 4px solid var(--cyan); padding-left: 15px; }
-        label { font-family: var(--mono); font-size: 10px; color: #555; display: block; margin-bottom: 8px; }
-        .info-display { background: #000; border: 1px dashed #1a262b; padding: 12px; color: var(--cyan); font-family: var(--mono); font-size: 13px; margin-bottom: 20px; text-align: center; }
-        select { width: 100%; background: #000; border: 1px solid #333; color: #fff; padding: 15px; margin-bottom: 25px; font-family: var(--mono); outline: none; }
-        .btn-sync { width: 100%; padding: 20px; background: transparent; color: var(--green); border: 2px solid var(--green); font-family: var(--mono); font-weight: 800; cursor: pointer; letter-spacing: 2px; transition: 0.3s; }
-        .btn-sync:hover { background: var(--green); color: #000; box-shadow: 0 0 20px rgba(0, 255, 102, 0.3); }
-        #terminal { font-family: var(--mono); font-size: 10px; color: #4a5a61; margin-top: 20px; background: #000; padding: 10px; border: 1px solid #111; min-height: 80px; }
+        body { background: var(--bg); color: #fff; font-family: 'Rajdhani', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background-image: radial-gradient(circle at 50% 50%, #0a1f29 0%, var(--bg) 100%); }
+        .card { width: 90%; max-width: 400px; background: rgba(2, 12, 18, 0.98); padding: 30px; border: 1px solid var(--border); box-shadow: 0 0 50px rgba(0,0,0,1); }
+        h2 { color: var(--cyan); font-family: var(--mono); font-size: 1.2rem; border-left: 3px solid var(--cyan); padding-left: 10px; margin-bottom: 25px; }
+        .info-box { background: #000; padding: 15px; border: 1px solid #1a262b; margin-bottom: 20px; font-family: var(--mono); font-size: 12px; color: #888; }
+        .info-box span { color: var(--green); display: block; font-size: 14px; margin-top: 5px; }
+        select { width: 100%; padding: 15px; background: #000; color: #fff; border: 1px solid #333; font-family: var(--mono); margin-bottom: 25px; outline: none; }
+        .btn-auth { width: 100%; padding: 20px; background: transparent; color: var(--green); border: 2px solid var(--green); font-family: var(--mono); font-weight: 800; cursor: pointer; transition: 0.3s; letter-spacing: 2px; }
+        .btn-auth:hover { background: var(--green); color: #000; box-shadow: 0 0 20px rgba(0, 255, 102, 0.4); }
+        #status { font-family: var(--mono); font-size: 11px; margin-top: 15px; color: #555; }
     </style>
 </head>
 <body>
-    <div class="wrapper">
-        <h2>NODE_ENROLLMENT</h2>
-        <label>Current Hardware Signature:</label>
-        <div id="device-sig" class="info-display">DETECTING...</div>
 
-        <label>Select Agent Identity:</label>
+    <div class="card">
+        <h2>DEVICE_UPLINK_v12</h2>
+        
+        <div class="info-box">
+            DETECTED_HARDWARE:
+            <span id="detected-device">ANALYZING...</span>
+        </div>
+
+        <label style="font-size: 10px; color: #555; font-family: var(--mono);">SELECT_AGENT_IDENTITY:</label>
         <select id="agentSelect">
             <option value="JFSN">AGENT_JFSN</option>
             <option value="LZ">AGENT_LZ</option>
         </select>
 
-        <button class="btn-sync" onclick="syncDevice()">BIND_HARDWARE_NODE</button>
-        <div id="terminal">> SYSTEM_READY_FOR_UPLINK</div>
+        <button class="btn-auth" onclick="authorizeAccess()">AUTHORIZE ACCESS</button>
+        
+        <div id="status">> SYSTEM_READY_FOR_HANDSHAKE</div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -50,40 +54,44 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        let deviceUUID = localStorage.getItem("device_uuid");
-        if (!deviceUUID) {
-            deviceUUID = "NODE-" + Math.random().toString(36).substr(2, 6).toUpperCase();
-            localStorage.setItem("device_uuid", deviceUUID);
+        // --- DEVICE DETECTION LOGIC ---
+        function getDeviceBrand() {
+            const ua = navigator.userAgent;
+            if (/windows/i.test(ua)) return "PC_WINDOWS";
+            if (/macintosh/i.test(ua)) return "PC_MAC";
+            if (/android/i.test(ua)) {
+                // Sinusubukan kunin ang Model sa UserAgent (minsan restricted)
+                const match = ua.match(/Android\s+([^\s;]+);?\s+([^\s;]+)/);
+                return match ? `ANDROID_${match[2]}` : "ANDROID_MOBILE";
+            }
+            if (/iphone|ipad|ipod/i.test(ua)) return "APPLE_IOS";
+            return "UNKNOWN_NODE";
         }
-        document.getElementById('device-sig').innerText = deviceUUID;
 
-        async function syncDevice() {
-            const agentName = document.getElementById('agentSelect').value;
-            const log = document.getElementById('terminal');
-            log.innerHTML += `<br>> INITIATING_SYNC: ${agentName}...`;
+        const deviceName = getDeviceBrand() + "_" + Math.random().toString(36).substr(2, 4).toUpperCase();
+        document.getElementById('detected-device').innerText = deviceName;
+
+        async function authorizeAccess() {
+            const agent = document.getElementById('agentSelect').value;
+            const log = document.getElementById('status');
+            
+            log.innerHTML = "> INITIATING_CLOUD_RESET_AND_SYNC...";
 
             try {
-                const agentQuery = await db.collection("agents").where("agentName", "==", agentName).get();
+                // Gagamit ng .doc(agent) para SIGURADONG iisang record lang per agent.
+                const agentRef = db.collection("agents").doc(agent);
 
-                if (agentQuery.empty) {
-                    await db.collection("agents").add({
-                        agentName: agentName,
-                        linkedDevice: [deviceUUID],
-                        lastSync: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                } else {
-                    const docId = agentQuery.docs[0].id;
-                    await db.collection("agents").doc(docId).update({
-                        linkedDevice: firebase.firestore.FieldValue.arrayUnion(deviceUUID),
-                        lastSync: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                }
+                await agentRef.set({
+                    agentName: agent,
+                    // Idadagdag ang pangalan ng device sa listahan (Array)
+                    linkedDevice: firebase.firestore.FieldValue.arrayUnion(deviceName),
+                    lastSync: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
 
-                log.innerHTML += `<br>> <span style="color:var(--green)">SUCCESS: ${agentName} LINKED</span>`;
-                alert("Device Bound Successfully under ID: " + agentName);
+                log.innerHTML = `> <span style="color:var(--green)">SUCCESS: ${deviceName} AUTHORIZED!</span>`;
+                alert("Device Authorization Successful!\n\nRegistered as: " + deviceName);
             } catch (e) {
-                log.innerHTML += `<br>> ERROR: ${e.message}`;
-                console.error(e);
+                log.innerHTML = "> ERROR: " + e.message;
             }
         }
     </script>

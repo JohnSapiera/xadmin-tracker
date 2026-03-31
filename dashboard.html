@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>GATEWAY_v7.0_PROHIBITED</title>
+  <title>GATEWAY_v7.5_INITIATE</title>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
   <style>
     :root { 
       --bg: #01080b; --panel: #051218; --cyan: #00f3ff; --red: #ff003c; 
-      --blue: #007bff; --green: #00ff66; --gray: #333; --border: rgba(0, 243, 255, 0.15); 
+      --blue: #007bff; --green: #00ff66; --gray: #222; --border: rgba(0, 243, 255, 0.15); 
       --mono: 'Share Tech Mono', monospace; 
     }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -29,20 +29,38 @@
     .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .btn { padding: 14px; font-family: var(--mono); font-size: 13px; font-weight: bold; border: 1px solid; background: transparent; text-transform: uppercase; cursor: pointer; transition: 0.3s; border-radius: 2px; }
     
-    /* Dynamic Button States */
     .btn-save { color: var(--green); border-color: var(--green); }
-    .btn-retrieve { background: var(--blue) !important; border-color: var(--blue) !important; color: #fff !important; box-shadow: 0 0 10px rgba(0,123,255,0.3); }
-    .btn-prohibited { background: var(--gray) !important; border-color: #444 !important; color: #777 !important; cursor: not-allowed !important; opacity: 0.8; box-shadow: none !important; }
+    .btn-retrieve { background: var(--blue) !important; border-color: var(--blue) !important; color: #fff !important; }
+    .btn-prohibited { background: var(--gray) !important; border-color: #444 !important; color: #555 !important; cursor: not-allowed !important; }
     .btn-terminate { color: var(--red); border-color: var(--red); }
+    .btn-initiate { width: 100%; margin-top: 15px; background: var(--green); color: #000; border: none; }
 
-    #terminal { background: #000; border: 1px solid #111; padding: 10px; font-family: var(--mono); font-size: 10px; min-height: 120px; color: #444; margin-top: 15px; overflow-y: auto; line-height: 1.4; border-radius: 2px; }
+    #terminal { background: #000; border: 1px solid #111; padding: 10px; font-family: var(--mono); font-size: 10px; min-height: 120px; color: #444; margin-top: 15px; overflow-y: auto; line-height: 1.4; }
     
-    #res-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
-    .modal-content { background: var(--panel); border: 1px solid var(--cyan); width: 100%; max-width: 320px; padding: 30px 15px 20px; position: relative; }
-    .modal-close { position: absolute; top: 0; right: 0; background: var(--red); color: #fff; border: none; padding: 8px 12px; font-family: var(--mono); cursor: pointer; }
-    .data-row { margin-bottom: 10px; font-family: var(--mono); border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px; }
-    .data-label { font-size: 10px; color: #666; text-transform: uppercase; display: block; }
-    .data-val { font-size: 15px; color: var(--cyan); }
+    /* MODAL SYSTEM & ANIMATION */
+    .modal-overlay { 
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); 
+      z-index: 1000; align-items: center; justify-content: center; padding: 20px;
+      backdrop-filter: blur(4px);
+    }
+    .modal-content { 
+      background: var(--panel); border: 1px solid var(--cyan); width: 100%; max-width: 320px; 
+      padding: 30px 15px 20px; position: relative; border-radius: 4px;
+      animation: popIn 0.3s cubic-bezier(0.17, 0.89, 0.32, 1.49);
+    }
+    @keyframes popIn {
+      from { transform: scale(0.8) translateY(20px); opacity: 0; }
+      to { transform: scale(1) translateY(0); opacity: 1; }
+    }
+
+    .modal-close { position: absolute; top: 0; right: 0; background: var(--red); color: #fff; border: none; padding: 10px 15px; font-family: var(--mono); cursor: pointer; font-weight: bold; }
+    
+    .form-header { text-align: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+    .form-id { font-size: 22px; color: var(--cyan); letter-spacing: 3px; font-family: var(--mono); }
+
+    .data-row { margin-bottom: 12px; font-family: var(--mono); border-bottom: 1px solid rgba(255,255,255,0.03); padding-bottom: 5px; display: flex; justify-content: space-between; }
+    .data-label { font-size: 10px; color: #666; text-transform: uppercase; }
+    .data-val { font-size: 14px; color: #ddd; text-align: right; }
 
     nav { position: fixed; bottom: 0; left: 0; right: 0; height: 55px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; }
     .nav-item { display: flex; align-items: center; justify-content: center; color: #333; font-size: 11px; font-family: var(--mono); }
@@ -52,10 +70,10 @@
 <body>
 
 <header>
-  <span>LOCKDOWN_v7.0</span>
+  <span>INITIATE_GATEWAY_v7.5</span>
   <span id="clock" style="color:var(--cyan)">00:00:00</span>
 </header>
-<div class="ticker">SECURITY: HIGH // BLACKLIST_PRIORITY: ACTIVE // STATUS: ARMED</div>
+<div class="ticker">PROTOCOLS: ACTIVE // AUTO_SCAN: ON // STATUS: SECURE</div>
 
 <main>
   <div class="search-box">
@@ -65,25 +83,31 @@
       <button id="term-btn" class="btn btn-terminate">TERMINATE</button>
     </div>
   </div>
-
-  <div id="terminal">> WAITING_FOR_UPLINK...</div>
+  <div id="terminal">> WAITING_FOR_INPUT...</div>
 </main>
 
-<div id="res-modal">
+<div id="entry-modal" class="modal-overlay">
   <div class="modal-content">
-    <button class="modal-close" onclick="closeM()">X</button>
-    <div class="data-row"><span class="data-label">Mission ID</span><span class="data-val" id="r-id">#00000</span></div>
-    <div class="data-row"><span class="data-label">V-Agent</span><span class="data-val" id="r-agent">--</span></div>
-    <div class="data-row"><span class="data-label">Expenses</span><span class="data-val" id="r-exp">--</span></div>
-    <div class="data-row"><span class="data-label">Deployed</span><span class="data-val" id="r-dep">--</span></div>
-    <div class="data-row"><span class="data-label">Expiration</span><span class="data-val" id="r-expir" style="color:var(--red)">--</span></div>
-    <div class="data-row" style="border:none; text-align:center; margin-top:15px;"><span class="data-val" id="r-stat">--</span></div>
+    <button class="modal-close" onclick="closeModal()">X</button>
+    <div class="form-header">
+      <div style="font-size: 9px; color: #555;">MISSION ORDER</div>
+      <div class="form-id" id="m-id-display">#00000</div>
+    </div>
+    
+    <div class="data-row"><span class="data-label">VAgent#</span><span class="data-val" id="m-agent">--</span></div>
+    <div class="data-row"><span class="data-label">Expenses</span><span class="data-val" id="m-exp">0.00</span></div>
+    <div class="data-row"><span class="data-label">Deployment</span><span class="data-val" id="m-dep">--</span></div>
+    <div class="data-row"><span class="data-label">Expiration</span><span class="data-val" id="m-expir" style="color:var(--red)">--</span></div>
+    
+    <div id="status-box" style="text-align: center; font-size: 12px; margin-top: 10px; font-family: var(--mono);"></div>
+    
+    <button id="initiate-btn" class="btn btn-initiate">INITIATE SAVE</button>
   </div>
 </div>
 
 <nav>
-  <div class="nav-item active">GATEWAY</div>
-  <div class="nav-item">SECURITY</div>
+  <div class="nav-item active">DASHBOARD</div>
+  <div class="nav-item">LOGS</div>
 </nav>
 
 <script type="module">
@@ -106,55 +130,50 @@
   const input = document.getElementById('mission-input');
   const actionBtn = document.getElementById('action-btn');
   const termBtn = document.getElementById('term-btn');
+  const initiateBtn = document.getElementById('initiate-btn');
   const termLog = document.getElementById('terminal');
   
   let currentData = null;
-  let accessStatus = "NEW"; // NEW, PROHIBITED, AUTHORIZED
+  let accessStatus = "NEW";
 
-  // --- AUTO SEARCH LOGIC ---
+  // --- AUTO SEARCH ---
   input.addEventListener('input', async (e) => {
     const val = e.target.value.trim();
     if (val.length >= 4) {
-      log(`SCANNING DATABASE: ${val}...`, 'cyan');
+      log(`SCANNING: ${val}...`, 'cyan');
       try {
-        // 1. PRIORITY SEARCH: BLACKLIST
         const qB = query(collection(db, "blacklist"), where("targetID", "==", val));
         const sB = await getDocs(qB);
-        
         if (!sB.empty) {
           accessStatus = "PROHIBITED";
           updateButton("PROHIBITED", "btn-prohibited");
-          log(`[ACCESS DENIED] ID ${val} IS PROHIBITED.`, 'red');
+          log(`ID ${val} BLOCKED.`, 'red');
           return;
         }
 
-        // 2. SECONDARY SEARCH: MISSION ORDERS
         const qM = query(collection(db, "mission_orders"), where("orderNumber", "==", val));
         const sM = await getDocs(qM);
-
         if (!sM.empty) {
           const data = sM.docs[0].data();
           const expDate = data.expirationDate.toDate ? data.expirationDate.toDate() : new Date(data.expirationDate);
           
-          // AUTO-MIGRATION IF EXPIRED
           if (new Date() > expDate) {
-            log(`[EXPIRATION DETECTED] MIGRATING ${val}...`, 'red');
-            await addDoc(collection(db, "blacklist"), { targetID: val, reason: "AUTO_EXPIRY", timestamp: serverTimestamp() });
+            log(`ID ${val} EXPIRED. AUTO-TERMINATING...`, 'red');
+            await addDoc(collection(db, "blacklist"), { targetID: val, reason: "EXPIRED", timestamp: serverTimestamp() });
             accessStatus = "PROHIBITED";
             updateButton("PROHIBITED", "btn-prohibited");
-            log(`[LOCKED] ${val} HAS BEEN MOVED TO BLACKLIST.`, 'red');
           } else {
             accessStatus = "AUTHORIZED";
             currentData = data;
             updateButton("RETRIEVE", "btn-retrieve");
-            log(`[MATCH FOUND] MISSION ${val} IS ACTIVE.`, 'blue');
+            log(`ID ${val} ACTIVE.`, 'blue');
           }
         } else {
           accessStatus = "NEW";
           updateButton("SAVE", "btn-save");
-          log(`ID ${val} CLEAR. READY FOR ARCHIVE.`, 'green');
+          log(`ID ${val} CLEAR.`, 'green');
         }
-      } catch (err) { log(`SCAN_ERR: ${err.message}`, 'red'); }
+      } catch (err) { log("DB_ERR", "red"); }
     } else { resetUI(); }
   });
 
@@ -169,63 +188,88 @@
     currentData = null;
   }
 
-  // --- ACTION HANDLER ---
-  actionBtn.addEventListener('click', async () => {
-    if (accessStatus === "PROHIBITED") return; // Block any action if prohibited
-
+  // --- OPEN MODAL (SAVE OR RETRIEVE) ---
+  actionBtn.addEventListener('click', () => {
+    if (accessStatus === "PROHIBITED" || input.value.length < 4) return;
+    
     const val = input.value.trim();
-    if (val.length < 4) return;
-
-    if (accessStatus === "AUTHORIZED") {
-      showModal();
+    document.getElementById('m-id-display').textContent = `#${val}`;
+    
+    if (accessStatus === "NEW") {
+      // GENERATE TEMPORARY DATA (Not saved yet)
+      const depDate = new Date();
+      const expDate = new Date();
+      expDate.setDate(depDate.getDate() + 30);
+      
+      document.getElementById('m-agent').textContent = Math.floor(1000 + Math.random() * 9000);
+      document.getElementById('m-exp').textContent = "0.00";
+      document.getElementById('m-dep').textContent = depDate.toLocaleDateString();
+      document.getElementById('m-expir').textContent = expDate.toLocaleDateString();
+      
+      initiateBtn.style.display = "block";
+      document.getElementById('status-box').textContent = "STATUS: PENDING INITIATION";
+      document.getElementById('status-box').style.color = "var(--green)";
     } else {
-      // SAVE LOGIC
-      log(`SAVING MISSION DATA...`, 'green');
-      try {
-        const depDate = new Date();
-        const expDate = new Date();
-        expDate.setDate(depDate.getDate() + 30);
+      // SHOW RETRIEVED DATA
+      const dep = currentData.deploymentDate.toDate ? currentData.deploymentDate.toDate() : new Date(currentData.deploymentDate);
+      const exp = currentData.expirationDate.toDate ? currentData.expirationDate.toDate() : new Date(currentData.expirationDate);
+      
+      document.getElementById('m-agent').textContent = currentData.vAgent;
+      document.getElementById('m-exp').textContent = currentData.expenses;
+      document.getElementById('m-dep').textContent = dep.toLocaleDateString();
+      document.getElementById('m-expir').textContent = exp.toLocaleDateString();
+      
+      initiateBtn.style.display = "none"; // Hide button if just retrieving
+      document.getElementById('status-box').textContent = "STATUS: AUTHORIZED";
+      document.getElementById('status-box').style.color = "var(--blue)";
+    }
+    
+    document.getElementById('entry-modal').style.display = 'flex';
+  });
 
-        await addDoc(collection(db, "mission_orders"), {
-          orderNumber: val,
-          vAgent: "V-" + Math.floor(1000 + Math.random() * 9000),
-          expenses: "₱" + (Math.floor(Math.random() * 6000) + 2000).toLocaleString(),
-          deploymentDate: depDate,
-          expirationDate: expDate,
-          timestamp: serverTimestamp()
-        });
-        log(`SUCCESS: ${val} REGISTERED.`, 'green');
-        input.value = ""; resetUI();
-      } catch (e) { log(`SAVE_ERR`, 'red'); }
+  // --- INITIATE SAVE (The Actual Database Write) ---
+  initiateBtn.addEventListener('click', async () => {
+    const val = input.value.trim();
+    const vAgent = document.getElementById('m-agent').textContent;
+    const expenses = document.getElementById('m-exp').textContent;
+    const depStr = document.getElementById('m-dep').textContent;
+    const expStr = document.getElementById('m-expir').textContent;
+
+    log(`INITIATING UPLINK FOR ${val}...`, 'green');
+    initiateBtn.disabled = true;
+    initiateBtn.textContent = "UPLINKING...";
+
+    try {
+      await addDoc(collection(db, "mission_orders"), {
+        orderNumber: val,
+        vAgent: vAgent,
+        expenses: expenses,
+        deploymentDate: new Date(depStr),
+        expirationDate: new Date(expStr),
+        timestamp: serverTimestamp()
+      });
+      log(`MISSION ${val} SUCCESSFULLY INITIATED.`, 'green');
+      closeModal();
+      input.value = ""; resetUI();
+    } catch (e) {
+      log(`INITIATE_FAILED`, 'red');
+    } finally {
+      initiateBtn.disabled = false;
+      initiateBtn.textContent = "INITIATE SAVE";
     }
   });
 
-  // --- TERMINATE BUTTON ---
+  // --- TERMINATE ---
   termBtn.addEventListener('click', async () => {
     const val = input.value.trim();
     if (val.length < 4 || !confirm(`BLACKLIST MISSION #${val}?`)) return;
-    try {
-      await addDoc(collection(db, "blacklist"), { targetID: val, reason: "MANUAL", timestamp: serverTimestamp() });
-      log(`ID ${val} BLACKLISTED.`, 'red');
-      input.value = ""; resetUI();
-    } catch (e) { log("TERM_ERR", "red"); }
+    await addDoc(collection(db, "blacklist"), { targetID: val, reason: "MANUAL", timestamp: serverTimestamp() });
+    log(`ID ${val} TERMINATED.`, 'red');
+    input.value = ""; resetUI();
   });
 
-  function showModal() {
-    document.getElementById('r-id').textContent = `#${input.value}`;
-    const dep = currentData.deploymentDate.toDate ? currentData.deploymentDate.toDate() : new Date(currentData.deploymentDate);
-    const exp = currentData.expirationDate.toDate ? currentData.expirationDate.toDate() : new Date(currentData.expirationDate);
-    
-    document.getElementById('r-agent').textContent = currentData.vAgent;
-    document.getElementById('r-exp').textContent = currentData.expenses;
-    document.getElementById('r-dep').textContent = dep.toLocaleDateString();
-    document.getElementById('r-expir').textContent = exp.toLocaleDateString();
-    document.getElementById('r-stat').textContent = "ACCESS: AUTHORIZED";
-    document.getElementById('r-stat').style.color = "var(--green)";
-    document.getElementById('res-modal').style.display = 'flex';
-  }
-
-  window.closeM = () => document.getElementById('res-modal').style.display = 'none';
+  window.closeModal = () => document.getElementById('entry-modal').style.display = 'none';
+  
   function log(m, c) {
     const d = document.createElement('div'); d.style.color = `var(--${c})`;
     d.textContent = `[${new Date().toLocaleTimeString('en-GB')}] > ${m}`;

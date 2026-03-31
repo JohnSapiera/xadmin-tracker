@@ -3,70 +3,49 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-    <title>AGENCY_INTEL_v12.7</title>
+    <title>INTEL_GATEKEEPER</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
     <style>
-        :root { 
-            --bg: #01080b; --cyan: #00f3ff; --red: #ff003c; --green: #00ff66; 
-            --border: rgba(0, 243, 255, 0.15); --mono: 'Share Tech Mono', monospace; 
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        body { 
-            background: var(--bg); color: #c8e1e5; font-family: 'Rajdhani', sans-serif; 
-            height: 100vh; overflow: hidden; display: flex; flex-direction: column;
-        }
-        header { padding: 15px; border-bottom: 1px solid var(--border); text-align: center; background: #000; }
-        .intel-title { font-family: var(--mono); color: var(--cyan); font-size: 14px; letter-spacing: 5px; }
-
-        main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 25px; text-align: center; }
+        :root { --bg: #01080b; --cyan: #00f3ff; --red: #ff003c; --green: #00ff66; --border: rgba(0, 243, 255, 0.15); --mono: 'Share Tech Mono', monospace; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: #c8e1e5; font-family: 'Rajdhani', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
         
-        .auth-zone { margin-bottom: 40px; }
-        #log-status { font-family: var(--mono); font-size: 10px; color: #555; margin-bottom: 10px; text-transform: uppercase; }
-        .agent-name { font-size: 32px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; text-shadow: 0 0 15px rgba(0, 243, 255, 0.2); }
-        .device-tag { font-size: 10px; padding: 4px 10px; border: 1px solid #333; color: #555; display: inline-block; font-family: var(--mono); }
+        header { padding: 15px; border-bottom: 1px solid var(--border); text-align: center; background: #000; }
+        .header-title { font-family: var(--mono); color: var(--cyan); font-size: 14px; letter-spacing: 4px; }
+
+        main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; text-align: center; }
+        
+        .scanner-unit { margin-bottom: 40px; }
+        #status-msg { font-family: var(--mono); font-size: 11px; color: var(--cyan); margin-bottom: 8px; text-transform: uppercase; }
+        .identity-slot { font-size: 32px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; min-height: 40px; }
+        #link-indicator { font-size: 10px; padding: 4px 12px; border: 1px solid #333; color: #333; display: inline-block; font-family: var(--mono); }
 
         .report-btn { 
-            background: transparent; border: 2px solid var(--cyan); color: var(--cyan); 
-            padding: 22px 55px; font-family: var(--mono); font-size: 16px; 
+            background: transparent; border: 2px solid #333; color: #333; 
+            padding: 22px 50px; font-family: var(--mono); font-size: 15px; 
             cursor: pointer; clip-path: polygon(10% 0, 90% 0, 100% 50%, 90% 100%, 10% 100%, 0 50%); 
-            transition: 0.3s; opacity: 0.1; pointer-events: none;
+            transition: 0.4s; pointer-events: none;
         }
-        .report-btn.unlocked { opacity: 1; pointer-events: auto; background: rgba(0, 243, 255, 0.05); }
-
-        /* Modal / Form */
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; backdrop-filter: blur(10px); }
-        .modal-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 360px; background: #020c12; border: 1px solid var(--cyan); padding: 30px; box-shadow: 0 0 30px rgba(0, 243, 255, 0.1); }
-        .intel-input { width: 100%; background: rgba(0,0,0,0.5); border: 1px solid var(--border); padding: 15px; color: #fff; font-family: var(--mono); margin-bottom: 15px; outline: none; border-radius: 0; }
-        .btn-transmit { width: 100%; padding: 20px; background: var(--green); color: #000; border: none; font-family: var(--mono); font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        .report-btn.unlocked { border-color: var(--cyan); color: var(--cyan); pointer-events: auto; box-shadow: 0 0 20px rgba(0, 243, 255, 0.2); }
 
         nav { position: fixed; bottom: 0; width: 100%; height: 70px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; }
-        .nav-link { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #333; font-size: 10px; font-family: var(--mono); text-decoration: none; }
+        .nav-link { display: flex; align-items: center; justify-content: center; color: #222; font-size: 11px; font-family: var(--mono); text-decoration: none; }
         .nav-link.active { color: var(--cyan); border-top: 2px solid var(--cyan); }
     </style>
 </head>
 <body>
 
-<header><div class="intel-title">INTEL_TERMINAL</div></header>
+<header><div class="header-title">INTEL_TERMINAL</div></header>
 
 <main>
-    <div class="auth-zone">
-        <div id="log-status">>> Establishing_Secure_Link...</div>
-        <div class="agent-name" id="display-name">---</div>
-        <div class="device-tag" id="device-tag">NODE_UNRECOGNIZED</div>
+    <div class="scanner-unit">
+        <div id="status-msg">Initializing_Scan...</div>
+        <div class="identity-slot" id="agent-name">PROTECTED</div>
+        <div id="link-indicator">UPLINK_OFFLINE</div>
     </div>
 
-    <button id="main-btn" class="report-btn" onclick="openReport()">INITIATE REPORT</button>
+    <button id="main-btn" class="report-btn">LOCKED</button>
 </main>
-
-<div id="report-modal" class="modal">
-    <div class="modal-box">
-        <h3 style="color:var(--cyan); font-family:var(--mono); margin-bottom:20px; text-align:center;">DATA_TRANSMISSION</h3>
-        <input type="tel" id="vAgent" class="intel-input" placeholder="V-AGENT #">
-        <input type="number" id="expenses" class="intel-input" placeholder="EXPENSES (PHP)">
-        <button onclick="transmitData()" class="btn-transmit">SEND_TO_BUREAU</button>
-        <button onclick="closeReport()" style="width:100%; background:transparent; color:var(--red); border:none; margin-top:15px; font-family:var(--mono); cursor:pointer; font-size:10px;">[ ABORT_MISSION ]</button>
-    </div>
-</div>
 
 <nav>
     <a href="dashboard.html" class="nav-link">DASHBOARD</a>
@@ -75,7 +54,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
@@ -89,91 +68,53 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // --- 4-KEY SECURITY SCANNER ---
-    async function runSecurityScan() {
-        const log = document.getElementById('log-status');
-        const nameDisplay = document.getElementById('display-name');
-        const tag = document.getElementById('device-tag');
+    async function runDeviceAudit() {
+        const nameDisplay = document.getElementById('agent-name');
+        const statusDisplay = document.getElementById('status-msg');
+        const linkDisplay = document.getElementById('link-indicator');
         const btn = document.getElementById('main-btn');
 
-        // 1. Hardware Fingerprint (Signature)
-        const hwSignature = (navigator.userAgent + screen.width + navigator.platform).replace(/\s/g, '');
+        // Fingerprint Generation (Permanent ID)
+        const signature = (navigator.userAgent + screen.width + navigator.platform).replace(/\s/g, '');
         
-        // 2. Secret Key (Stored in Memory)
-        const localSecret = localStorage.getItem("agency_node_secret");
+        statusDisplay.innerText = "Scanning_Hardware_Profile...";
 
         try {
             const snap = await getDocs(collection(db, "agents"));
-            let verifiedAgent = null;
+            let verified = false;
 
             snap.forEach(doc => {
                 const data = doc.data();
-                
-                // Determinant Logic using the 4 Keys in Database:
-                // Key 1: accessKey (Direct input)
-                // Key 2: lastFingerprint (Hardware Signature)
-                // Key 3: linkedDevice (Secret ID array)
-                // Key 4: brandName (Device Identity)
-                
-                const matchSecret = data.linkedDevice && data.linkedDevice.includes(localSecret);
-                const matchHardware = data.lastFingerprint === hwSignature;
-
-                if (matchSecret || matchHardware) {
-                    verifiedAgent = data;
+                // I-scan kung ang device na ito ay linked sa agent sa Firebase
+                if (data.lastFingerprint === signature || (data.linkedDevice && data.linkedDevice.includes(localStorage.getItem("agency_node_secret")))) {
+                    verified = true;
+                    nameDisplay.innerText = data.agentName;
+                    statusDisplay.innerText = "Access_Granted";
+                    linkDisplay.innerText = "LINK_ACTIVE";
+                    linkDisplay.style.color = "var(--green)";
+                    linkDisplay.style.borderColor = "var(--green)";
+                    
+                    btn.innerText = "INITIATE REPORT";
+                    btn.classList.add('unlocked');
+                    btn.onclick = () => window.location.href = 'report.html';
+                    
+                    localStorage.setItem("cia_agent", data.agentName);
                 }
             });
 
-            if (verifiedAgent) {
-                // Success: Recognized Device
-                nameDisplay.innerText = verifiedAgent.agentName;
-                tag.innerText = verifiedAgent.brandName.toUpperCase();
-                tag.style.color = "var(--green)";
-                tag.style.borderColor = "var(--green)";
-                log.innerText = ">> UPLINK_STABLE // ACCESS_GRANTED";
-                
-                btn.classList.add('unlocked');
-                localStorage.setItem("cia_agent", verifiedAgent.agentName);
-                
-                // Heal storage if missing (Auto-recovery)
-                if(!localSecret && verifiedAgent.linkedDevice) {
-                    localStorage.setItem("agency_node_secret", verifiedAgent.linkedDevice[0]);
-                }
-            } else {
-                // Fail: Unknown Device
+            if (!verified) {
                 nameDisplay.innerText = "UNAUTHORIZED";
                 nameDisplay.style.color = "var(--red)";
-                log.innerText = ">> CRITICAL_ERROR: NODE_NOT_FOUND";
+                statusDisplay.innerText = "Device_Not_Registered";
+                linkDisplay.innerText = "ID: " + signature.substring(0, 12); // Ipakita ang snippet ng ID para sa admin
             }
+
         } catch (e) {
-            log.innerText = ">> CONNECTION_LOST";
+            statusDisplay.innerText = "Connection_Error";
         }
     }
 
-    window.transmitData = async () => {
-        const v = document.getElementById('vAgent').value;
-        const e = document.getElementById('expenses').value;
-        const agentName = localStorage.getItem("cia_agent");
-
-        if(!v || !e) return alert("DATA_INCOMPLETE");
-
-        try {
-            await addDoc(collection(db, "mission_orders"), {
-                agentName: agentName,
-                vAgent: v,
-                expenses: e,
-                timestamp: new Date(),
-                orderNumber: Math.floor(1000 + Math.random() * 9000)
-            });
-            alert("TRANSMISSION_SUCCESSFUL");
-            location.reload();
-        } catch (err) { alert("ERROR_SENDING_DATA"); }
-    };
-
-    window.openReport = () => document.getElementById('report-modal').style.display = 'block';
-    window.closeReport = () => document.getElementById('report-modal').style.display = 'none';
-
-    // Start Scan
-    window.onload = runSecurityScan;
+    window.onload = runDeviceAudit;
 </script>
 
 </body>

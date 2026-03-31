@@ -8,60 +8,92 @@
     <style>
         :root { --neon: #00f2ff; --bg: #050506; --error: #ff3c3c; --success: #00ff66; }
         body { background: var(--bg); color: #fff; font-family: 'JetBrains Mono', monospace; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .gate-card { width: 100%; max-width: 350px; padding: 40px; background: #0a0a0c; border: 1px solid #222; text-align: center; }
-        h2 { font-size: 15px; letter-spacing: 5px; color: var(--neon); margin-bottom: 30px; }
-        .btn-auth { width: 100%; padding: 20px; background: transparent; color: var(--neon); border: 1px solid var(--neon); font-weight: 800; cursor: pointer; letter-spacing: 2px; transition: 0.3s; }
-        .btn-auth:hover { background: rgba(0, 242, 255, 0.1); }
-        #status { font-size: 10px; color: #444; margin-top: 25px; min-height: 40px; line-height: 1.5; text-align: left; background: #000; padding: 10px; border: 1px solid #111; }
+        .gate-card { width: 100%; max-width: 350px; padding: 40px; background: #0a0a0c; border: 1px solid #222; text-align: center; box-shadow: 0 0 30px rgba(0,0,0,0.5); }
+        h2 { font-size: 15px; letter-spacing: 5px; color: var(--neon); margin-bottom: 30px; text-transform: uppercase; }
+        .btn-auth { width: 100%; padding: 20px; background: transparent; color: var(--neon); border: 1px solid var(--neon); font-weight: 800; cursor: pointer; letter-spacing: 2px; transition: 0.3s; text-transform: uppercase; }
+        .btn-auth:hover { background: rgba(0, 242, 255, 0.1); box-shadow: 0 0 15px rgba(0, 242, 255, 0.2); }
+        .btn-auth:disabled { opacity: 0.3; cursor: not-allowed; border-color: #333; color: #333; }
+        #status { font-size: 10px; color: #444; margin-top: 25px; min-height: 80px; line-height: 1.6; text-align: left; background: #000; padding: 12px; border: 1px solid #111; word-break: break-all; }
+        .glitch-text { animation: glitch 2s infinite; }
+        @keyframes glitch { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
     </style>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 </head>
 <body>
+
     <div class="gate-card">
-        <h2>CENTRAL_UPLINK</h2>
+        <h2 class="glitch-text">CENTRAL_UPLINK</h2>
         <button class="btn-auth" id="authBtn" onclick="verifyDevice()">INITIALIZE_HANDSHAKE</button>
         <div id="status">> SYSTEM_READY_</div>
     </div>
 
     <script>
-        const firebaseConfig = { apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", authDomain: "my-admin-portal-12691.firebaseapp.com", projectId: "my-admin-portal-12691", storageBucket: "my-admin-portal-12691.firebasestorage.app", messagingSenderId: "317015091563", appId: "1:317015091563:web:baab5171d8e0a58acd442e" };
+        // --- FIREBASE CONFIGURATION ---
+        const firebaseConfig = { 
+            apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
+            authDomain: "my-admin-portal-12691.firebaseapp.com", 
+            projectId: "my-admin-portal-12691", 
+            storageBucket: "my-admin-portal-12691.firebasestorage.app", 
+            messagingSenderId: "317015091563", 
+            appId: "1:317015091563:web:baab5171d8e0a58acd442e" 
+        };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+
+        // 1. Kuhanin ang PERMANENT ID na ginawa sa update_db.html
+        const nodeID = localStorage.getItem("agency_node_secret");
 
         async function verifyDevice() {
             const status = document.getElementById('status');
             const btn = document.getElementById('authBtn');
-            const localUUID = localStorage.getItem("device_uuid");
 
             btn.disabled = true;
-            status.innerHTML = `> SCANNING_LOCAL_HARDWARE...<br>> KEY: ${localUUID || "NOT_FOUND"}`;
+            status.innerHTML = `> SCANNING_LOCAL_NODE...<br>> ID: ${nodeID || "NULL"}`;
 
-            if (!localUUID) {
-                status.innerHTML += `<br>> <span style="color:var(--error)">[!] ACCESS_DENIED: UNREGISTERED_DEVICE</span>`;
+            // Kung walang ID, ibig sabihin hindi pa nabubuksan ang update_db.html sa device na ito
+            if (!nodeID) {
+                status.innerHTML += `<br>> <span style="color:var(--error)">[!] ACCESS_DENIED: NO_NODE_SECRET</span>`;
+                status.innerHTML += `<br>> STATUS: RUN_AUTHORIZATION_FIRST`;
                 btn.disabled = false;
                 return;
             }
 
             try {
-                // Search sa database: "Sino ang may-ari ng ID na ito?"
-                const snap = await db.collection("agents").where("linkedDevice", "==", localUUID).get();
+                // 2. Hanapin sa Firebase collection "agents" kung ang nodeID ay nasa listahan ng kahit sinong Agent
+                const snap = await db.collection("agents")
+                                   .where("linkedDevice", "array-contains", nodeID)
+                                   .get();
 
                 if (snap.empty) {
-                    status.innerHTML += `<br>> <span style="color:var(--error)">[!] ACCESS_DENIED: SIGNATURE_MISMATCH</span>`;
+                    // Walang nahanap na agent na may ganitong device ID
+                    status.innerHTML += `<br>> <span style="color:var(--error)">[!] ACCESS_DENIED: UNKNOWN_SIGNATURE</span>`;
+                    status.innerHTML += `<br>> STATUS: NODE_NOT_LINKED_TO_CLOUD`;
                     btn.disabled = false;
                 } else {
-                    const agentName = snap.docs[0].id;
+                    // SUCCESS! Nahanap ang Agent (JFSN or LZ)
+                    const agentData = snap.docs[0].data();
+                    const agentName = agentData.agentName;
+
                     status.innerHTML += `<br>> <span style="color:var(--success)">[+] MATCH_FOUND: AGENT_${agentName}</span>`;
-                    status.innerHTML += `<br>> REDIRECTING_TO_DASHBOARD...`;
+                    status.innerHTML += `<br>> STATUS: ESTABLISHING_SECURE_TUNNEL...`;
                     
+                    // I-save ang verified agent para sa Dashboard
                     localStorage.setItem("cia_agent", agentName);
-                    setTimeout(() => { window.location.href = "dashboard.html"; }, 1500);
+                    
+                    setTimeout(() => { 
+                        window.location.href = "dashboard.html"; 
+                    }, 1500);
                 }
             } catch (e) {
-                status.innerHTML += `<br>> ERROR: ${e.message}`;
+                status.innerHTML += `<br>> <span style="color:var(--error)">[!] UPLINK_ERROR: ${e.message}</span>`;
                 btn.disabled = false;
             }
+        }
+
+        // AUTO-INITIATE: Kung kilala na ang ID, mag-scan agad pag-load
+        if(nodeID) {
+            setTimeout(verifyDevice, 800);
         }
     </script>
 </body>

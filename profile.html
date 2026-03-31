@@ -48,19 +48,19 @@
         #brandTag { font-size: 10px; color: var(--neon); font-weight: bold; letter-spacing: 2px; }
         
         .breadcrumb { font-size: 11px; color: #5c7882; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;}
-        .back-btn { background: rgba(0,0,0,0.5); border: 1px solid var(--border); color: var(--neon); padding: 5px 10px; cursor: pointer; display: none; }
+        .back-btn { background: rgba(0,0,0,0.5); border: 1px solid var(--border); color: var(--neon); padding: 5px 10px; cursor: pointer; display: none; border-radius: 2px; }
 
         /* Device Selection View */
         .device-card {
             background: rgba(0,0,0,0.6); border: 1px solid #1a2f37; padding: 20px;
             margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;
-            cursor: pointer; transition: 0.3s;
+            cursor: pointer; transition: 0.2s;
         }
-        .device-card:active { background: rgba(0, 243, 255, 0.1); }
+        .device-card:active { transform: scale(0.98); background: rgba(0, 243, 255, 0.05); }
         .device-name { font-family: var(--font-main); font-size: 20px; font-weight: 700; color: #fff; text-transform: uppercase; }
         .device-count { font-size: 10px; color: #5c7882; }
 
-        /* File/Folder View */
+        /* Folder View */
         .folder-grid { display: none; grid-template-columns: repeat(3, 1fr); gap: 15px; }
         .file-item { position: relative; cursor: pointer; margin-top: 10px; }
         .file-folder { 
@@ -73,11 +73,9 @@
             content: ""; position: absolute; top: -8px; left: 0; width: 30px; height: 10px;
             background: var(--folder-tan); border-radius: 3px 3px 0 0;
         }
-        
-        /* Layered Effect */
         .file-item::before {
             content: ""; position: absolute; top: -4px; left: 2px; right: -2px; height: 85px; 
-            background: #a39371; z-index: 2; transform: rotate(1.5deg); border-radius: 0 5px 2px 2px;
+            background: #a39371; z-index: 2; transform: rotate(2deg); border-radius: 0 5px 2px 2px;
         }
 
         .file-label { font-size: 8px; color: rgba(0,0,0,0.6); font-weight: bold; z-index: 4; }
@@ -118,20 +116,20 @@
             <div class="header-top">
                 <div>
                     <a href="dashboard.html" style="color:#5c7882; font-size:10px; text-decoration:none;">< SYSTEM_EXIT</a>
-                    <h2 id="agentName">INITIALIZING...</h2>
-                    <div id="brandTag">BRAND: ---</div>
+                    <h2 id="agentName">GUEST_AGENT</h2>
+                    <div id="brandTag">BRAND: UNKNOWN_UPLINK</div>
                 </div>
                 <button class="btn-memoir" onclick="openMemoir()">MEMOIR</button>
             </div>
             
             <div class="header-bottom">
-                <div><span style="color:#5c7882;">UPLINK_DATE:</span> <span id="currentDate" style="color:var(--neon);">--/--/----</span></div>
+                <div><span style="color:#5c7882;">UPLINK:</span> <span id="currentDate" style="color:var(--neon);">--/--/----</span></div>
                 <div style="text-align: right;"><span style="color:#5c7882;">TOTAL_EXPENSES:</span><br><span id="totalExpenses" style="color:var(--red); font-weight:bold;">₱ 0.00</span></div>
             </div>
         </div>
 
         <div id="terminalStatus" style="font-size: 10px; color: #5c7882; margin-bottom: 15px; padding-left: 10px; border-left: 2px solid var(--neon);">
-            >> SCANNING_HARDWARE_SIGNATURE...
+            >> PUBLIC_ACCESS_MODE_ACTIVE...
         </div>
 
         <div class="breadcrumb">
@@ -178,69 +176,49 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Core Data States
         let deviceDataMap = {}; 
         let allMissionsArray = [];
         let currentMemoirIndex = 0;
 
-        // Improved Signature Consistency (Multi-Device Logic)
+        // No more firewall - just for tracking if possible
         function getSignature() {
             const canvas = document.createElement('canvas');
             const gl = canvas.getContext('webgl');
-            const debugInfo = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
-            const gpu = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "GENERIC";
-            // Combine hardware specs + platform for a stable ID
-            const raw = gpu + navigator.hardwareConcurrency + screen.colorDepth + navigator.platform;
-            let hash = 0;
-            for (let i = 0; i < raw.length; i++) {
-                hash = ((hash << 5) - hash) + raw.charCodeAt(i);
-                hash |= 0;
-            }
-            return "SIG-" + Math.abs(hash).toString(16).toUpperCase();
+            const gpu = gl ? gl.getParameter(gl.getExtension('WEBGL_debug_renderer_info').UNMASKED_RENDERER_WEBGL) : "GENERIC";
+            return "SIG-" + Math.abs(gpu.length + screen.width).toString(16).toUpperCase();
         }
 
         async function initProfile() {
-            const today = new Date();
-            document.getElementById('currentDate').innerText = today.toLocaleDateString('en-US');
-            
+            document.getElementById('currentDate').innerText = new Date().toLocaleDateString('en-US');
             const currentSignature = getSignature();
             const terminal = document.getElementById('terminalStatus');
             let accessKey = new URLSearchParams(window.location.search).get('key') || localStorage.getItem("agent_access_key");
 
             try {
                 let agentDoc = null;
-                // Priority 1: Check by Key
+                // Try to find agent but don't block
                 if (accessKey) {
-                    const qKey = query(collection(db, "agents"), where("accessKey", "==", accessKey));
-                    const snapKey = await getDocs(qKey);
-                    if (!snapKey.empty) agentDoc = snapKey.docs[0];
+                    const snap = await getDocs(query(collection(db, "agents"), where("accessKey", "==", accessKey)));
+                    if (!snap.empty) agentDoc = snap.docs[0];
                 }
-                // Priority 2: Check by Hardware Signature (Better Data Privacy)
                 if (!agentDoc) {
-                    const qSig = query(collection(db, "agents"), where("deviceSignature", "==", currentSignature));
-                    const snapSig = await getDocs(qSig);
-                    if (!snapSig.empty) agentDoc = snapSig.docs[0];
+                    const snap = await getDocs(query(collection(db, "agents"), where("deviceSignature", "==", currentSignature)));
+                    if (!snap.empty) agentDoc = snap.docs[0];
                 }
 
                 if (agentDoc) {
                     const data = agentDoc.data();
                     document.getElementById('agentName').innerText = `AGENT_${data.agentName}`;
                     document.getElementById('brandTag').innerText = `BRAND: ${data.brandName.toUpperCase()}`;
-                    terminal.innerText = ">> SIGNATURE_VERIFIED. UPLINK_STABLE.";
                     loadArchives(data.agentName);
                 } else {
-                    // Fail-Safe: Lock UI if unrecognized
-                    terminal.innerText = ">> CRITICAL_ERROR: UNKNOWN_SIGNATURE. ACCESS_REVOKED.";
-                    terminal.style.color = "var(--red)";
-                    document.getElementById('agentName').innerText = "ACCESS_DENIED";
-                    document.getElementById('agentName').style.color = "var(--red)";
-                    document.querySelector('.btn-memoir').style.display = 'none';
+                    terminal.innerText = ">> NO_SIGNATURE_FOUND. DISPLAYING_GENERAL_ARCHIVES.";
+                    // Optionally load all or just stay empty. Let's try to load based on a default if you want.
                 }
-            } catch (e) { terminal.innerText = ">> DATABASE_OFFLINE."; }
+            } catch (e) { terminal.innerText = ">> DATABASE_UPLINK_OFFLINE."; }
         }
 
         async function loadArchives(agentName) {
-            // Updated Firestore Field query
             const q = query(collection(db, "mission_orders"), where("agentName", "==", agentName));
             const snap = await getDocs(q);
             let totalBounty = 0;
@@ -248,24 +226,17 @@
             snap.forEach(d => {
                 const data = d.data();
                 allMissionsArray.push(data);
-                
-                // Grouping by weaponSystem (Device)
                 const dev = data.weaponSystem || "UNKNOWN_NODE";
                 if(!deviceDataMap[dev]) deviceDataMap[dev] = [];
                 deviceDataMap[dev].push(data);
-
-                // Safe calculation of total expenses
-                const rawExp = (data.expenses || "0").toString().replace(/[^0-9.-]+/g,"");
-                totalBounty += parseFloat(rawExp) || 0;
+                totalBounty += parseFloat((data.expenses || "0").toString().replace(/[^0-9.-]+/g,"")) || 0;
             });
 
             document.getElementById('totalExpenses').innerText = `₱ ${totalBounty.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-            renderDeviceList();
+            renderDevices();
         }
 
-        // --- UI Rendering ---
-
-        function renderDeviceList() {
+        function renderDevices() {
             const grid = document.getElementById('deviceGrid');
             grid.innerHTML = "";
             Object.keys(deviceDataMap).forEach(name => {
@@ -273,9 +244,9 @@
                 <div class="device-card" onclick="openDevice('${name}')">
                     <div class="device-info">
                         <div class="device-name">${name}</div>
-                        <div class="device-count">${deviceDataMap[name].length} MISSION_FILES</div>
+                        <div class="device-count">${deviceDataMap[name].length} FILES</div>
                     </div>
-                    <div style="color:var(--neon); font-weight:bold;">></div>
+                    <div style="color:var(--neon);">></div>
                 </div>`;
             });
         }
@@ -306,8 +277,6 @@
             document.getElementById('viewTitle').innerText = 'ARCHIVE_OVERVIEW';
         };
 
-        // --- Memoir System ---
-
         window.openMemoir = () => {
             if(allMissionsArray.length === 0) return;
             currentMemoirIndex = 0;
@@ -320,9 +289,8 @@
         window.nextMemoir = () => {
             const card = document.getElementById('paperCard');
             card.classList.remove('flip-card');
-            void card.offsetWidth; // Force Reflow
+            void card.offsetWidth;
             card.classList.add('flip-card');
-            
             setTimeout(() => {
                 currentMemoirIndex = (currentMemoirIndex + 1) % allMissionsArray.length;
                 updateMemoirUI();
@@ -334,14 +302,9 @@
             document.getElementById('m-mission').innerText = `#${data.orderNumber || data.missionID || '0000'}`;
             document.getElementById('m-weapon').innerText = data.weaponSystem || '---';
             document.getElementById('m-vagent').innerText = data.vAgentID || data.vAgent || '---';
-            
-            // Format Penalize Date
             let pDate = "N/A";
-            if(data.penalizeDate) {
-                pDate = data.penalizeDate.toDate ? data.penalizeDate.toDate().toLocaleDateString() : data.penalizeDate;
-            }
+            if(data.penalizeDate) pDate = data.penalizeDate.toDate ? data.penalizeDate.toDate().toLocaleDateString() : data.penalizeDate;
             document.getElementById('m-date').innerText = pDate;
-
             const exp = parseFloat((data.expenses || "0").toString().replace(/[^0-9.-]+/g,"")) || 0;
             document.getElementById('m-expenses').innerText = `₱ ${exp.toLocaleString(undefined, {minimumFractionDigits:2})}`;
         }

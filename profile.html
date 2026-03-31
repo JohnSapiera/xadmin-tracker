@@ -50,74 +50,64 @@
         .breadcrumb { font-size: 11px; color: #5c7882; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;}
         .back-btn { background: rgba(0,0,0,0.5); border: 1px solid var(--border); color: var(--neon); padding: 5px 10px; cursor: pointer; display: none; }
 
-        /* Device Cards */
+        /* Device Selection View */
         .device-card {
             background: rgba(0,0,0,0.6); border: 1px solid #1a2f37; padding: 20px;
             margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;
             cursor: pointer; transition: 0.3s;
         }
+        .device-card:active { background: rgba(0, 243, 255, 0.1); }
         .device-name { font-family: var(--font-main); font-size: 20px; font-weight: 700; color: #fff; text-transform: uppercase; }
         .device-count { font-size: 10px; color: #5c7882; }
 
-        /* Folder Design with 2 Shadows */
+        /* File/Folder View */
         .folder-grid { display: none; grid-template-columns: repeat(3, 1fr); gap: 15px; }
         .file-item { position: relative; cursor: pointer; margin-top: 10px; }
         .file-folder { 
-            height: 90px; background: var(--folder-tan); border-radius: 0 5px 2px 2px;
+            height: 85px; background: var(--folder-tan); border-radius: 0 5px 2px 2px;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             position: relative; z-index: 3; border-bottom: 4px solid var(--folder-dark);
             box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
         }
         .file-folder::before {
-            content: ""; position: absolute; top: -8px; left: 0; width: 35px; height: 10px;
-            background: var(--folder-tan); border-radius: 4px 4px 0 0;
+            content: ""; position: absolute; top: -8px; left: 0; width: 30px; height: 10px;
+            background: var(--folder-tan); border-radius: 3px 3px 0 0;
         }
-        /* Shadow Folder Layers */
-        .file-item::before, .file-item::after {
-            content: ""; position: absolute; left: 2px; right: -2px; height: 90px; 
-            border-radius: 0 5px 2px 2px; border-bottom: 4px solid rgba(0,0,0,0.3);
+        
+        /* Layered Effect */
+        .file-item::before {
+            content: ""; position: absolute; top: -4px; left: 2px; right: -2px; height: 85px; 
+            background: #a39371; z-index: 2; transform: rotate(1.5deg); border-radius: 0 5px 2px 2px;
         }
-        .file-item::before { top: -4px; background: #a39371; z-index: 2; transform: rotate(2deg); }
-        .file-item::after { top: -8px; background: #8b7d60; z-index: 1; transform: rotate(-2deg); }
 
         .file-label { font-size: 8px; color: rgba(0,0,0,0.6); font-weight: bold; z-index: 4; }
         .file-id { font-size: 13px; color: #000; font-family: var(--font-main); font-weight: 900; z-index: 4; }
 
-        /* Memoir Vault UI */
-        .overlay { display: none; position: fixed; inset: 0; background: rgba(1, 4, 5, 0.95); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(10px); }
-        #memoirContainer { position: relative; width: 320px; height: 450px; perspective: 1000px; }
+        /* Memoir Vault */
+        .overlay { display: none; position: fixed; inset: 0; background: rgba(1, 4, 5, 0.98); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(10px); }
+        #memoirContainer { position: relative; width: 320px; height: 460px; perspective: 1000px; }
         
         .dirty-paper {
             width: 100%; height: 100%; background: #e8e0cc;
-            background-image: linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px), radial-gradient(circle at 20% 30%, rgba(0,0,0,0.1) 0%, transparent 50%);
-            background-size: 100% 20px, 100% 100%;
-            border-radius: 2px; box-shadow: 5px 10px 30px rgba(0,0,0,0.8);
-            padding: 30px 20px; color: #222; position: relative;
-            transform: rotate(-3deg) translateY(20px); border-left: 2px solid rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-        /* Thumb Holding Paper */
-        #memoirContainer::after {
-            content: ""; position: absolute; bottom: -20px; left: -10px; width: 80px; height: 120px;
-            background: #0a0e11; border-radius: 40px 40px 10px 10px;
-            box-shadow: inset -5px 10px 20px rgba(255,255,255,0.05), 10px 0 20px rgba(0,0,0,0.8);
-            transform: rotate(25deg); z-index: 10;
+            background-image: linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px);
+            background-size: 100% 20px; border-radius: 2px; box-shadow: 5px 10px 40px rgba(0,0,0,0.9);
+            padding: 30px 20px; color: #222; position: relative; transform: rotate(-2deg);
         }
 
         .paper-header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
         .paper-data { font-size: 12px; margin-bottom: 15px; border-bottom: 1px dashed rgba(0,0,0,0.2); padding-bottom: 5px; }
-        .paper-label { font-weight: bold; color: #555; font-size: 10px; display: block; }
-        .paper-value { font-family: var(--font-main); font-size: 18px; font-weight: 700; color: #111; }
+        .paper-label { font-weight: bold; color: #666; font-size: 10px; display: block; }
+        .paper-value { font-family: var(--font-main); font-size: 19px; font-weight: 700; color: #111; }
         
-        .memoir-controls { position: absolute; bottom: -60px; left: 0; width: 100%; display: flex; justify-content: space-between; z-index: 20;}
-        .m-btn { background: var(--neon); color: #000; border: none; padding: 10px 20px; font-family: var(--font-main); font-weight: 700; cursor: pointer; }
+        .memoir-controls { position: absolute; bottom: -70px; left: 0; width: 100%; display: flex; justify-content: space-between; }
+        .m-btn { background: var(--neon); color: #000; border: none; padding: 12px 20px; font-family: var(--font-main); font-weight: 700; cursor: pointer; }
         .m-close { background: var(--red); color: #fff; }
 
         .flip-card { animation: paperFlip 0.4s ease-in-out; }
         @keyframes paperFlip {
-            0% { transform: rotate(-3deg) translateY(20px); opacity: 1; }
-            50% { transform: rotate(-10deg) translateY(-50px); opacity: 0; }
-            100% { transform: rotate(-3deg) translateY(20px); opacity: 1; }
+            0% { transform: rotate(-2deg) scale(1); opacity: 1; }
+            50% { transform: rotate(-5deg) scale(0.9); opacity: 0.5; }
+            100% { transform: rotate(-2deg) scale(1); opacity: 1; }
         }
     </style>
 </head>
@@ -128,25 +118,25 @@
             <div class="header-top">
                 <div>
                     <a href="dashboard.html" style="color:#5c7882; font-size:10px; text-decoration:none;">< SYSTEM_EXIT</a>
-                    <h2 id="agentName">SYNCING...</h2>
+                    <h2 id="agentName">INITIALIZING...</h2>
                     <div id="brandTag">BRAND: ---</div>
                 </div>
                 <button class="btn-memoir" onclick="openMemoir()">MEMOIR</button>
             </div>
             
             <div class="header-bottom">
-                <div><span style="color:#5c7882;">CURRENT DATE:</span> <span id="currentDate" style="color:var(--neon);">--/--/----</span></div>
-                <div style="text-align: right;"><span style="color:#5c7882;">TOTAL EXPENSES:</span><br><span id="totalExpenses" style="color:var(--red); font-weight:bold;">₱ 0.00</span></div>
+                <div><span style="color:#5c7882;">UPLINK_DATE:</span> <span id="currentDate" style="color:var(--neon);">--/--/----</span></div>
+                <div style="text-align: right;"><span style="color:#5c7882;">TOTAL_EXPENSES:</span><br><span id="totalExpenses" style="color:var(--red); font-weight:bold;">₱ 0.00</span></div>
             </div>
         </div>
 
         <div id="terminalStatus" style="font-size: 10px; color: #5c7882; margin-bottom: 15px; padding-left: 10px; border-left: 2px solid var(--neon);">
-            >> SCANNING_AUTHORIZED_DEVICES...
+            >> SCANNING_HARDWARE_SIGNATURE...
         </div>
 
         <div class="breadcrumb">
             <button class="back-btn" id="btnBack" onclick="showDevices()">< BACK</button>
-            <span id="viewTitle">SYSTEM_OVERVIEW</span>
+            <span id="viewTitle">ARCHIVE_OVERVIEW</span>
         </div>
 
         <div id="deviceGrid"></div>
@@ -157,17 +147,17 @@
         <div id="memoirContainer">
             <div class="dirty-paper" id="paperCard">
                 <div class="paper-header">
-                    <span style="font-size: 10px; color: var(--red); font-weight: bold;">CLASSIFIED // EYES ONLY</span>
-                    <div id="m-mission" style="font-family: var(--font-main); font-size: 24px; font-weight: 900;">#00000</div>
+                    <span style="font-size: 9px; color: var(--red); font-weight: bold; letter-spacing: 2px;">SECRET // EYES ONLY</span>
+                    <div id="m-mission" style="font-family: var(--font-main); font-size: 26px; font-weight: 900;">#00000</div>
                 </div>
-                <div class="paper-data"><span class="paper-label">WEAPON SYSTEM:</span><span class="paper-value" id="m-weapon">---</span></div>
+                <div class="paper-data"><span class="paper-label">HARDWARE_NODE:</span><span class="paper-value" id="m-weapon">---</span></div>
                 <div class="paper-data"><span class="paper-label">V_AGENT_ID:</span><span class="paper-value" id="m-vagent">---</span></div>
-                <div class="paper-data"><span class="paper-label">PENALIZE DATE:</span><span class="paper-value" id="m-date">--/--/----</span></div>
-                <div class="paper-data" style="border:none;"><span class="paper-label">EXPENSES:</span><span class="paper-value" id="m-expenses" style="color:#8b0000; font-size:22px;">₱ 0.00</span></div>
+                <div class="paper-data"><span class="paper-label">PENALIZE_DATE:</span><span class="paper-value" id="m-date">--/--/----</span></div>
+                <div class="paper-data" style="border:none;"><span class="paper-label">EXPENSES_CLAIM:</span><span class="paper-value" id="m-expenses" style="color:#8b0000; font-size:24px;">₱ 0.00</span></div>
             </div>
             <div class="memoir-controls">
-                <button class="m-btn m-close" onclick="closeMemoir()">CLOSE</button>
-                <button class="m-btn" onclick="nextMemoir()">NEXT_FILE ></button>
+                <button class="m-btn m-close" onclick="closeMemoir()">EXIT</button>
+                <button class="m-btn" onclick="nextMemoir()">NEXT_DATA ></button>
             </div>
         </div>
     </div>
@@ -188,77 +178,103 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        // Core Data States
         let deviceDataMap = {}; 
         let allMissionsArray = [];
         let currentMemoirIndex = 0;
 
-        function getFingerprint() {
+        // Improved Signature Consistency (Multi-Device Logic)
+        function getSignature() {
             const canvas = document.createElement('canvas');
             const gl = canvas.getContext('webgl');
             const debugInfo = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
             const gpu = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "GENERIC";
-            return "HW-" + Math.abs(gpu.length + screen.width).toString(16).toUpperCase();
+            // Combine hardware specs + platform for a stable ID
+            const raw = gpu + navigator.hardwareConcurrency + screen.colorDepth + navigator.platform;
+            let hash = 0;
+            for (let i = 0; i < raw.length; i++) {
+                hash = ((hash << 5) - hash) + raw.charCodeAt(i);
+                hash |= 0;
+            }
+            return "SIG-" + Math.abs(hash).toString(16).toUpperCase();
         }
 
-        async function initBranding() {
+        async function initProfile() {
             const today = new Date();
             document.getElementById('currentDate').innerText = today.toLocaleDateString('en-US');
             
-            const currentFP = getFingerprint();
+            const currentSignature = getSignature();
             const terminal = document.getElementById('terminalStatus');
             let accessKey = new URLSearchParams(window.location.search).get('key') || localStorage.getItem("agent_access_key");
 
             try {
                 let agentDoc = null;
+                // Priority 1: Check by Key
                 if (accessKey) {
                     const qKey = query(collection(db, "agents"), where("accessKey", "==", accessKey));
                     const snapKey = await getDocs(qKey);
                     if (!snapKey.empty) agentDoc = snapKey.docs[0];
                 }
+                // Priority 2: Check by Hardware Signature (Better Data Privacy)
                 if (!agentDoc) {
-                    const qFP = query(collection(db, "agents"), where("lastFingerprint", "==", currentFP));
-                    const snapFP = await getDocs(qFP);
-                    if (!snapFP.empty) agentDoc = snapFP.docs[0];
+                    const qSig = query(collection(db, "agents"), where("deviceSignature", "==", currentSignature));
+                    const snapSig = await getDocs(qSig);
+                    if (!snapSig.empty) agentDoc = snapSig.docs[0];
                 }
 
                 if (agentDoc) {
                     const data = agentDoc.data();
                     document.getElementById('agentName').innerText = `AGENT_${data.agentName}`;
                     document.getElementById('brandTag').innerText = `BRAND: ${data.brandName.toUpperCase()}`;
+                    terminal.innerText = ">> SIGNATURE_VERIFIED. UPLINK_STABLE.";
                     loadArchives(data.agentName);
                 } else {
-                    terminal.innerText = ">> UNAUTHORIZED_ACCESS_DETECTED. SYSTEM_LOCKED.";
+                    // Fail-Safe: Lock UI if unrecognized
+                    terminal.innerText = ">> CRITICAL_ERROR: UNKNOWN_SIGNATURE. ACCESS_REVOKED.";
+                    terminal.style.color = "var(--red)";
                     document.getElementById('agentName').innerText = "ACCESS_DENIED";
                     document.getElementById('agentName').style.color = "var(--red)";
                     document.querySelector('.btn-memoir').style.display = 'none';
                 }
-            } catch (e) { terminal.innerText = ">> UPLINK_ERROR."; }
+            } catch (e) { terminal.innerText = ">> DATABASE_OFFLINE."; }
         }
 
         async function loadArchives(agentName) {
+            // Updated Firestore Field query
             const q = query(collection(db, "mission_orders"), where("agentName", "==", agentName));
             const snap = await getDocs(q);
-            let total = 0;
+            let totalBounty = 0;
             
             snap.forEach(d => {
                 const data = d.data();
                 allMissionsArray.push(data);
+                
+                // Grouping by weaponSystem (Device)
                 const dev = data.weaponSystem || "UNKNOWN_NODE";
                 if(!deviceDataMap[dev]) deviceDataMap[dev] = [];
                 deviceDataMap[dev].push(data);
-                total += parseFloat((data.expenses || "0").toString().replace(/[^0-9.-]+/g,"")) || 0;
+
+                // Safe calculation of total expenses
+                const rawExp = (data.expenses || "0").toString().replace(/[^0-9.-]+/g,"");
+                totalBounty += parseFloat(rawExp) || 0;
             });
 
-            document.getElementById('totalExpenses').innerText = `₱ ${total.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-            renderDevices();
+            document.getElementById('totalExpenses').innerText = `₱ ${totalBounty.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+            renderDeviceList();
         }
 
-        function renderDevices() {
+        // --- UI Rendering ---
+
+        function renderDeviceList() {
             const grid = document.getElementById('deviceGrid');
             grid.innerHTML = "";
             Object.keys(deviceDataMap).forEach(name => {
-                grid.innerHTML += `<div class="device-card" onclick="openDevice('${name}')">
-                    <div class="device-info"><div class="device-name">${name}</div><div class="device-count">${deviceDataMap[name].length} FILES</div></div>
+                grid.innerHTML += `
+                <div class="device-card" onclick="openDevice('${name}')">
+                    <div class="device-info">
+                        <div class="device-name">${name}</div>
+                        <div class="device-count">${deviceDataMap[name].length} MISSION_FILES</div>
+                    </div>
                     <div style="color:var(--neon); font-weight:bold;">></div>
                 </div>`;
             });
@@ -269,10 +285,17 @@
             document.getElementById('mainFileGrid').style.display = 'grid';
             document.getElementById('btnBack').style.display = 'block';
             document.getElementById('viewTitle').innerText = `NODE: ${name}`;
+
             const fGrid = document.getElementById('mainFileGrid');
             fGrid.innerHTML = "";
             deviceDataMap[name].forEach(data => {
-                fGrid.innerHTML += `<div class="file-item"><div class="file-folder"><span class="file-label">V_AGENT</span><span class="file-id">#${data.vAgentID || data.vAgent || '??'}</span></div></div>`;
+                fGrid.innerHTML += `
+                <div class="file-item">
+                    <div class="file-folder">
+                        <span class="file-label">V_AGENT</span>
+                        <span class="file-id">#${data.vAgentID || data.vAgent || '??'}</span>
+                    </div>
+                </div>`;
             });
         };
 
@@ -280,13 +303,15 @@
             document.getElementById('deviceGrid').style.display = 'block';
             document.getElementById('mainFileGrid').style.display = 'none';
             document.getElementById('btnBack').style.display = 'none';
-            document.getElementById('viewTitle').innerText = 'SYSTEM_OVERVIEW';
+            document.getElementById('viewTitle').innerText = 'ARCHIVE_OVERVIEW';
         };
+
+        // --- Memoir System ---
 
         window.openMemoir = () => {
             if(allMissionsArray.length === 0) return;
             currentMemoirIndex = 0;
-            updateMemoirCard();
+            updateMemoirUI();
             document.getElementById('memoirOverlay').style.display = 'flex';
         };
 
@@ -295,25 +320,33 @@
         window.nextMemoir = () => {
             const card = document.getElementById('paperCard');
             card.classList.remove('flip-card');
-            void card.offsetWidth;
+            void card.offsetWidth; // Force Reflow
             card.classList.add('flip-card');
+            
             setTimeout(() => {
                 currentMemoirIndex = (currentMemoirIndex + 1) % allMissionsArray.length;
-                updateMemoirCard();
+                updateMemoirUI();
             }, 200);
         };
 
-        function updateMemoirCard() {
+        function updateMemoirUI() {
             const data = allMissionsArray[currentMemoirIndex];
             document.getElementById('m-mission').innerText = `#${data.orderNumber || data.missionID || '0000'}`;
             document.getElementById('m-weapon').innerText = data.weaponSystem || '---';
             document.getElementById('m-vagent').innerText = data.vAgentID || data.vAgent || '---';
-            document.getElementById('m-date').innerText = data.penalizeDate || data.date || '---';
+            
+            // Format Penalize Date
+            let pDate = "N/A";
+            if(data.penalizeDate) {
+                pDate = data.penalizeDate.toDate ? data.penalizeDate.toDate().toLocaleDateString() : data.penalizeDate;
+            }
+            document.getElementById('m-date').innerText = pDate;
+
             const exp = parseFloat((data.expenses || "0").toString().replace(/[^0-9.-]+/g,"")) || 0;
-            document.getElementById('m-expenses').innerText = `₱ ${exp.toLocaleString()}`;
+            document.getElementById('m-expenses').innerText = `₱ ${exp.toLocaleString(undefined, {minimumFractionDigits:2})}`;
         }
 
-        window.onload = initBranding;
+        window.onload = initProfile;
     </script>
 </body>
 </html>

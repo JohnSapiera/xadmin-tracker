@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>INTEL_REPORT_v9.0</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { 
+      --bg: #000508; 
+      --panel: rgba(2, 12, 18, 0.98); 
+      --cyan: #00f3ff; 
+      --red: #ff003c; 
+      --green: #00ff66; 
+      --border: rgba(0, 243, 255, 0.3); 
+      --mono: 'Share Tech Mono', monospace; 
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    
+    @keyframes pulse-border { 0% { border-color: var(--border); } 50% { border-color: var(--cyan); } 100% { border-color: var(--border); } }
+    @keyframes slide-up { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    body { 
+        background: var(--bg); 
+        color: #c8e1e5; 
+        font-family: 'Rajdhani', sans-serif; 
+        height: 100vh; overflow: hidden; display: flex; flex-direction: column;
+    }
+
+    header { 
+        padding: 15px; border-bottom: 1px solid var(--border); 
+        text-align: center; background: #000;
+    }
+
+    .agent-welcome {
+        font-family: var(--mono); color: var(--cyan); font-size: 14px;
+        letter-spacing: 2px; text-transform: uppercase;
+    }
+
+    main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+
+    .intel-greet {
+        text-align: center; font-size: 24px; font-weight: bold; margin-bottom: 30px;
+        text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+    }
+
+    /* Report Trigger Button */
+    .report-btn {
+        background: transparent; border: 2px solid var(--cyan); color: var(--cyan);
+        padding: 20px 60px; font-family: var(--mono); font-size: 18px;
+        cursor: pointer; position: relative; overflow: hidden;
+        transition: 0.3s; animation: pulse-border 2s infinite;
+    }
+    .report-btn:active { background: var(--cyan); color: #000; }
+
+    /* Modal Styling */
+    .modal-overlay { 
+        display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); 
+        z-index: 1000; flex-direction: column; padding: 20px;
+        animation: slide-up 0.4s cubic-bezier(0.1, 0.7, 1.0, 0.1);
+    }
+
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .close-x { font-size: 30px; color: var(--red); cursor: pointer; font-family: var(--mono); }
+
+    /* Device Selector */
+    .device-section { text-align: center; margin-bottom: 25px; }
+    .section-title { font-family: var(--mono); font-size: 10px; color: #555; margin-bottom: 10px; letter-spacing: 3px; }
+    
+    .device-grid { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+    .dev-btn {
+        background: #051218; border: 1px solid var(--border); color: #4a5a61;
+        padding: 10px 15px; font-family: var(--mono); font-size: 11px;
+        cursor: pointer; transition: 0.3s;
+    }
+    .dev-btn.selected { 
+        border-color: var(--cyan); color: var(--cyan); 
+        box-shadow: 0 0 15px var(--cyan); transform: scale(1.05);
+    }
+    .dev-btn.disabled { opacity: 0.2; cursor: not-allowed; pointer-events: none; filter: grayscale(1); }
+
+    /* Form Styling */
+    .form-group { margin-bottom: 15px; }
+    .form-label { display: block; font-family: var(--mono); font-size: 11px; color: var(--cyan); margin-bottom: 5px; }
+    .intel-input {
+        width: 100%; background: rgba(0,243,255,0.05); border: 1px solid #222;
+        padding: 12px; color: #fff; font-family: var(--mono); outline: none;
+    }
+    .intel-input:focus { border-color: var(--cyan); }
+    
+    .va-notice { font-size: 10px; font-family: var(--mono); margin-top: 4px; color: var(--red); }
+
+    .upload-area {
+        border: 1px dashed #333; padding: 20px; text-align: center;
+        font-family: var(--mono); font-size: 11px; color: #555; margin-bottom: 20px;
+    }
+
+    /* Send Button */
+    .send-btn {
+        width: 100%; padding: 20px; background: var(--green); color: #000;
+        border: none; font-family: var(--mono); font-weight: bold;
+        letter-spacing: 4px; cursor: pointer; transition: 0.3s;
+    }
+    .send-btn:active { transform: translateY(5px); filter: brightness(1.2); }
+
+    nav { 
+        position: fixed; bottom: 0; width: 100%; height: 70px; 
+        background: #000; border-top: 1px solid var(--border); 
+        display: grid; grid-template-columns: 1fr 1fr;
+    }
+    .nav-link { 
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        color: #333; font-size: 10px; font-family: var(--mono); text-decoration: none;
+    }
+    .nav-link.active { color: var(--cyan); }
+  </style>
+</head>
+<body>
+
+<header>
+    <div class="agent-welcome" id="agent-display">TRACE_INITIALIZING...</div>
+</header>
+
+<main>
+    <div class="intel-greet" id="intel-msg">
+        AWAITING_AGENT_TRACE...
+    </div>
+    <button class="report-btn" onclick="openReport()">INITIATE REPORT</button>
+</main>
+
+<div id="report-modal" class="modal-overlay">
+    <div class="modal-header">
+        <span class="agent-welcome">INTEL_ENTRY_FORM</span>
+        <span class="close-x" onclick="closeReport()">X</span>
+    </div>
+
+    <div class="device-section">
+        <div class="section-title">SELECT_ACTIVE_DEVICE</div>
+        <div id="device-container" class="device-grid">
+            </div>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label">V-AGENT_IDENTIFIER:</label>
+        <input type="tel" id="vagent-num" class="intel-input" placeholder="00000">
+        <div id="va-status" class="va-notice"></div>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label">EXPENSES_CLAIM (PHP):</label>
+        <input type="number" id="expenses-val" class="intel-input" placeholder="0.00">
+    </div>
+
+    <div class="upload-area" id="drop-zone">
+        <input type="file" id="photo-up" hidden>
+        <div onclick="document.getElementById('photo-up').click()">[ UPLOAD_INTEL_PHOTO ]</div>
+    </div>
+
+    <button id="send-btn" class="send-btn">SEND_INTEL_DATA</button>
+</div>
+
+<nav>
+  <a href="dashboard.html" class="nav-link"><span>◈</span>DASHBOARD</a>
+  <a href="#" class="nav-link active"><span>◰</span>INTEL</a>
+</nav>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, query, where, getDocs, addDoc, updateDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
+    authDomain: "my-admin-portal-12691.firebaseapp.com",
+    projectId: "my-admin-portal-12691",
+    storageBucket: "my-admin-portal-12691.firebasestorage.app",
+    messagingSenderId: "317015091563",
+    appId: "1:317015091563:web:d996e585751d5087cd442e"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const deviceUUID = localStorage.getItem("device_uuid") || "UNKNOWN_NODE";
+  let activeAgent = "UNKNOWN_AGENT";
+  let selectedDevice = null;
+
+  // 1. TRACE AGENT BY DEVICE
+  async function traceAgent() {
+    const q = query(collection(db, "mission_orders"), where("linkedDevice", "==", deviceUUID));
+    const snap = await getDocs(q);
+    
+    if(!snap.empty) {
+        activeAgent = snap.docs[0].data().agentName;
+        document.getElementById('agent-display').textContent = `AGENT_VERIFIED: ${activeAgent}`;
+        document.getElementById('intel-msg').innerHTML = `Hello Agent ${activeAgent}!<br><span style="font-size:12px; color:#555;">What is your INTEL INFO Today?</span>`;
+        loadDevices(activeAgent);
+    } else {
+        document.getElementById('agent-display').textContent = "UNAUTHORIZED_NODE";
+        document.getElementById('intel-msg').textContent = "AGENT_NOT_FOUND_IN_NODE";
+    }
+  }
+
+  // 2. LOAD DEVICES UNDER AGENT
+  async function loadDevices(name) {
+    const q = query(collection(db, "mission_orders"), where("agentName", "==", name));
+    const snap = await getDocs(q);
+    const container = document.getElementById('device-container');
+    container.innerHTML = "";
+
+    const devices = [...new Set(snap.docs.map(d => d.data().linkedDevice))];
+    
+    devices.forEach(dev => {
+        const btn = document.createElement('button');
+        btn.className = 'dev-btn';
+        btn.textContent = dev;
+        
+        btn.onclick = () => handleDeviceSelect(btn, dev);
+        btn.ondblclick = () => resetDevices();
+        
+        container.appendChild(btn);
+    });
+  }
+
+  function handleDeviceSelect(btn, devName) {
+    const allBtns = document.querySelectorAll('.dev-btn');
+    allBtns.forEach(b => {
+        b.classList.add('disabled');
+        b.classList.remove('selected');
+    });
+    btn.classList.remove('disabled');
+    btn.classList.add('selected');
+    selectedDevice = devName;
+    checkVAgentStatus();
+  }
+
+  function resetDevices() {
+    const allBtns = document.querySelectorAll('.dev-btn');
+    allBtns.forEach(b => {
+        b.classList.remove('disabled', 'selected');
+    });
+    selectedDevice = null;
+    document.getElementById('va-status').textContent = "";
+  }
+
+  // 3. SEARCH VAGENT LOGIC
+  async function checkVAgentStatus() {
+    const vaNum = document.getElementById('vagent-num').value.trim();
+    if(!vaNum || !selectedDevice) return;
+
+    const q = query(collection(db, "mission_orders"), 
+              where("vAgent", "==", vaNum), 
+              where("linkedDevice", "==", selectedDevice));
+    const snap = await getDocs(q);
+
+    if(snap.empty) {
+        document.getElementById('va-status').textContent = "NOTICE: NO DESIGNATED V-AGENT IN THIS DEVICE";
+    } else {
+        document.getElementById('va-status').textContent = "V-AGENT_VERIFIED_IN_NODE";
+        document.getElementById('va-status').style.color = "var(--green)";
+    }
+  }
+
+  document.getElementById('vagent-num').addEventListener('input', checkVAgentStatus);
+
+  // 4. SEND INTEL REPORT
+  document.getElementById('send-btn').onclick = async () => {
+    const vaNum = document.getElementById('vagent-num').value.trim();
+    const expense = document.getElementById('expenses-val').value;
+    
+    if(!selectedDevice || !vaNum) { alert("SELECT DEVICE & ENTER V-AGENT"); return; }
+
+    const sendBtn = document.getElementById('send-btn');
+    sendBtn.disabled = true; sendBtn.textContent = "UPLINKING...";
+
+    try {
+        // Find existing Mission Order to update expenses
+        const q = query(collection(db, "mission_orders"), where("vAgent", "==", vaNum));
+        const snap = await getDocs(q);
+        
+        if(!snap.empty) {
+            const missionDoc = snap.docs[0];
+            const currentExp = Number(missionDoc.data().expenses || 0);
+            await updateDoc(doc(db, "mission_orders", missionDoc.id), {
+                expenses: currentExp + Number(expense)
+            });
+        }
+
+        // Store to ExpensesReport collection
+        await addDoc(collection(db, "ExpensesReport"), {
+            deviceName: selectedDevice,
+            vAgentNum: vaNum,
+            expensesAmount: expense,
+            agentName: activeAgent,
+            timestamp: serverTimestamp(),
+            status: "REPORTED"
+        });
+
+        alert("INTEL_REPORT_TRANSMITTED");
+        closeReport();
+        location.reload();
+    } catch (e) { alert("UPLINK_CRASH: " + e.message); }
+  };
+
+  window.openReport = () => document.getElementById('report-modal').style.display = 'flex';
+  window.closeReport = () => document.getElementById('report-modal').style.display = 'none';
+
+  traceAgent();
+</script>
+</body>
+</html>

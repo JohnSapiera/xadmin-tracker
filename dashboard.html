@@ -1,183 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>INTEL_GATEWAY_v5.5</title>
-  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg: #01080b; --panel: #051218; --cyan: #00f3ff; --red: #ff003c;
-      --blue: #007bff; --green: #00ff66; --border: rgba(0, 243, 255, 0.15);
-      --font-mono: 'Share Tech Mono', monospace;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    body { background: var(--bg); color: #c8e1e5; font-family: 'Rajdhani', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-
-    /* Compact Mobile Header */
-    header { padding: 4px 10px; height: 32px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 11px; background: #000; }
-    .ticker { font-size: 9px; color: var(--cyan); padding: 2px 10px; border-bottom: 1px solid var(--border); opacity: 0.7; letter-spacing: 1px; }
-
-    main { flex: 1; padding: 10px; overflow-y: auto; padding-bottom: 70px; }
-    .search-box { background: var(--panel); border: 1px solid var(--border); padding: 12px; border-radius: 2px; box-shadow: 0 0 15px rgba(0,0,0,0.5); }
-    
-    #mission-input { 
-      width: 100%; background: #000; border: 1px solid var(--cyan); color: var(--cyan); 
-      font-family: var(--font-mono); font-size: 24px; padding: 8px; text-align: center; 
-      letter-spacing: 4px; outline: none; margin-bottom: 12px; 
-    }
-    
-    .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .btn { padding: 12px; font-family: var(--font-mono); font-size: 12px; font-weight: bold; border: 1px solid; background: transparent; text-transform: uppercase; cursor: pointer; transition: 0.2s; }
-    
-    .btn-save { color: var(--green); border-color: var(--green); }
-    .btn-retrieve { background: var(--blue) !important; border-color: var(--blue) !important; color: #fff !important; box-shadow: 0 0 10px rgba(0,123,255,0.4); }
-    .btn-terminate { color: var(--red); border-color: var(--red); }
-
-    #terminal { background: #000; border: 1px solid #111; padding: 8px; font-family: var(--font-mono); font-size: 10px; min-height: 100px; color: #555; margin-top: 12px; overflow-y: auto; line-height: 1.3; }
-    
-    /* Modal */
-    #weapon-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
-    .modal-content { background: var(--panel); border: 1px solid var(--red); width: 100%; max-width: 300px; padding: 30px 15px 15px; position: relative; }
-    .modal-close { position: absolute; top: 0; right: 0; background: var(--red); color: #fff; border: none; padding: 5px 10px; font-family: var(--font-mono); }
-
-    nav { position: fixed; bottom: 0; left: 0; right: 0; height: 55px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; }
-    .nav-item { display: flex; align-items: center; justify-content: center; color: #333; font-size: 11px; font-family: var(--font-mono); letter-spacing: 1px; }
-    .nav-item.active { color: var(--cyan); background: rgba(0,243,255,0.05); }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DEBUG SCANNER</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        body { background: #01080b; color: #00f3ff; font-family: 'Share Tech Mono', monospace; padding: 20px; }
+        .box { border: 1px solid #00f3ff; padding: 15px; background: #051218; }
+        input { width: 100%; background: #000; border: 1px solid #00f3ff; color: #00f3ff; font-size: 24px; padding: 10px; text-align: center; outline: none; }
+        #main-btn { width: 100%; margin-top: 10px; padding: 15px; border: 1px solid #00ff66; color: #00ff66; background: transparent; font-weight: bold; }
+        .btn-blue { background: #007bff !important; color: white !important; border-color: #007bff !important; }
+        #terminal { margin-top: 15px; font-size: 11px; color: #666; height: 150px; overflow-y: auto; border: 1px solid #111; padding: 5px; }
+    </style>
 </head>
 <body>
 
-<header>
-  <div>INTEL_GATEWAY_v5.5</div>
-  <div id="clock" style="color:var(--cyan)">00:00:00</div>
-</header>
-<div class="ticker">UPLINK: ACTIVE // DATABASE: BLACKLIST_COLLECTION</div>
-
-<main>
-  <div class="search-box">
-    <label style="font-size:10px; color:var(--cyan); display:block; margin-bottom:5px; font-family:var(--font-mono)">MISSION ORDER ID SCANNER</label>
-    <input type="tel" id="mission-input" placeholder="00000" maxlength="5" autocomplete="off">
-    <div class="btn-row">
-      <button id="action-btn" class="btn btn-save">SAVE</button>
-      <button id="term-btn" class="btn btn-terminate">TERMINATE</button>
+    <div class="box">
+        <div style="font-size: 10px; margin-bottom: 5px;">MISSION_ID AUTO-SCAN</div>
+        <input type="tel" id="mission-input" placeholder="00000" maxlength="5">
+        <button id="main-btn">SAVE</button>
     </div>
-  </div>
 
-  <div id="terminal">
-    <div>> WAITING_FOR_INPUT...</div>
-  </div>
-</main>
-
-<div id="weapon-modal">
-  <div class="modal-content">
-    <button class="modal-close" onclick="closeM()">X</button>
-    <div style="font-family:var(--font-mono); font-size:12px; margin-bottom:10px; color:var(--red)" id="m-id">ORDER: #00000</div>
-    <div style="font-size:14px; line-height:1.8; font-family: var(--font-mono);">
-      SYSTEM: <span id="m-weap" style="color:var(--cyan)">--</span><br>
-      AGENT: <span id="m-age" style="color:var(--cyan)">--</span><br>
-      STATUS: <span id="m-stat" style="color:var(--red)">BLACKLISTED</span>
-    </div>
-  </div>
-</div>
-
-<nav>
-  <div class="nav-item active">CONSOLE</div>
-  <div class="nav-item">LOGS</div>
-</nav>
+    <div id="terminal">> SYSTEM STANDBY...</div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, query, where, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
-    authDomain: "my-admin-portal-12691.firebaseapp.com",
-    projectId: "my-admin-portal-12691",
-    storageBucket: "my-admin-portal-12691.firebasestorage.app",
-    messagingSenderId: "317015091563",
-    appId: "1:317015091563:web:baab5171d8e0a58acd442e",
-    measurementId: "G-150YYLS5FP"
-  };
+    const firebaseConfig = {
+        apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
+        authDomain: "my-admin-portal-12691.firebaseapp.com",
+        projectId: "my-admin-portal-12691",
+        storageBucket: "my-admin-portal-12691.firebasestorage.app",
+        messagingSenderId: "317015091563",
+        appId: "1:317015091563:web:baab5171d8e0a58acd442e"
+    };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-  const input = document.getElementById('mission-input');
-  const actionBtn = document.getElementById('action-btn');
-  const term = document.getElementById('terminal');
-  
-  let currentData = null;
+    const input = document.getElementById('mission-input');
+    const btn = document.getElementById('main-btn');
+    const term = document.getElementById('terminal');
 
-  // --- AUTO SEARCH (SINGLE COLLECTION: blacklist) ---
-  input.addEventListener('input', async (e) => {
-    const val = e.target.value.trim();
-    if (val.length >= 4) {
-      log(`SCANNING BLACKLIST: ${val}`, 'cyan');
-      try {
-        // Hahanapin natin ang 'targetID' as String at Number
-        const qStr = query(collection(db, "blacklist"), where("targetID", "==", val));
-        const qNum = query(collection(db, "blacklist"), where("targetID", "==", Number(val)));
+    input.addEventListener('input', async (e) => {
+        const val = e.target.value.trim();
         
-        const [sStr, sNum] = await Promise.all([getDocs(qStr), getDocs(qNum)]);
+        if (val.length >= 4) {
+            writeLog(`SCANNING DATA: ${val}...`, 'cyan');
+            
+            try {
+                // TEST 1: Simple query sa 'blacklist' collection
+                // Gagamitin natin ang 'targetID' na field name
+                const colRef = collection(db, "blacklist");
+                const q = query(colRef, where("targetID", "==", val));
+                
+                const snapshot = await getDocs(q);
 
-        if (!sStr.empty || !sNum.empty) {
-          const doc = !sStr.empty ? sStr.docs[0] : sNum.docs[0];
-          currentData = doc.data();
-          actionBtn.textContent = "RETRIEVE";
-          actionBtn.className = "btn btn-retrieve";
-          log(`MATCH FOUND IN BLACKLIST.`, 'blue');
+                if (!snapshot.empty) {
+                    btn.textContent = "RETRIEVE";
+                    btn.className = "btn-blue";
+                    writeLog(`[MATCH FOUND] ID: ${val}`, 'blue');
+                } else {
+                    // Try searching as Number if String fails
+                    const qNum = query(colRef, where("targetID", "==", Number(val)));
+                    const snapNum = await getDocs(qNum);
+                    
+                    if(!snapNum.empty) {
+                        btn.textContent = "RETRIEVE";
+                        btn.className = "btn-blue";
+                        writeLog(`[MATCH FOUND AS NUMBER] ID: ${val}`, 'blue');
+                    } else {
+                        btn.textContent = "SAVE";
+                        btn.className = "";
+                        writeLog(`NO RECORD FOR: ${val}`, 'gray');
+                    }
+                }
+            } catch (err) {
+                // DITO NATIN MAKIKITA ANG TUNAY NA SAKIT
+                writeLog(`CRITICAL ERROR: ${err.code}`, 'red');
+                console.error("FULL ERROR DETAILS:", err);
+            }
         } else {
-          reset();
-          log(`ID ${val} IS CLEAR.`, 'green');
+            btn.textContent = "SAVE";
+            btn.className = "";
         }
-      } catch (err) { log(`DB_ERR: ${err.message}`, 'red'); }
-    } else { reset(); }
-  });
+    });
 
-  function reset() {
-    currentData = null;
-    actionBtn.textContent = "SAVE";
-    actionBtn.className = "btn btn-save";
-  }
-
-  // --- ACTIONS ---
-  actionBtn.addEventListener('click', async () => {
-    const val = input.value;
-    if (val.length < 4) return;
-
-    if (actionBtn.textContent === "RETRIEVE") {
-      document.getElementById('m-id').textContent = `ORDER: #${val}`;
-      document.getElementById('m-weap').textContent = currentData.weaponSystem || "TACTICAL_V1";
-      document.getElementById('m-age').textContent = currentData.agent || "V-AGENT";
-      document.getElementById('weapon-modal').style.display = 'flex';
-    } else {
-      // SAVE DIRECT TO BLACKLIST
-      log(`RECORDING TO BLACKLIST: ${val}`, 'green');
-      try {
-        await addDoc(collection(db, "blacklist"), {
-          targetID: val,
-          weaponSystem: "ARC_GEN_1",
-          agent: "V"+Math.floor(100+Math.random()*900),
-          timestamp: serverTimestamp()
-        });
-        log(`SUCCESS: ${val} BLACKLISTED.`, 'green');
-        input.value = ""; reset();
-      } catch (e) { log("SAVE_ERROR", "red"); }
+    function writeLog(msg, color) {
+        const time = new Date().toLocaleTimeString();
+        const colorHex = color === 'cyan' ? '#00f3ff' : color === 'blue' ? '#007bff' : color === 'red' ? '#ff003c' : '#666';
+        term.innerHTML = `<div style="color:${colorHex}">[${time}] > ${msg}</div>` + term.innerHTML;
     }
-  });
-
-  // TERMINATE Button (Same as Save to Blacklist)
-  document.getElementById('term-btn').onclick = () => actionBtn.click();
-
-  window.closeM = () => document.getElementById('weapon-modal').style.display = 'none';
-  
-  function log(m, c) {
-    const d = document.createElement('div'); d.style.color = `var(--${c})`;
-    d.textContent = `> ${m}`; term.prepend(d);
-  }
-  
-  setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB'); }, 1000);
 </script>
 </body>
 </html>

@@ -11,7 +11,7 @@
         .card { width: 90%; max-width: 400px; background: rgba(2, 12, 18, 0.98); padding: 30px; border: 1px solid var(--border); box-shadow: 0 0 50px rgba(0,0,0,1); }
         h2 { color: var(--cyan); font-family: var(--mono); font-size: 1.2rem; border-left: 3px solid var(--cyan); padding-left: 10px; margin-bottom: 25px; }
         .info-box { background: #000; padding: 15px; border: 1px solid #1a262b; margin-bottom: 20px; font-family: var(--mono); font-size: 12px; color: #888; }
-        .info-box span { color: var(--green); display: block; font-size: 14px; margin-top: 5px; }
+        .info-box span { color: var(--green); display: block; font-size: 14px; margin-top: 5px; word-break: break-all; }
         select { width: 100%; padding: 15px; background: #000; color: #fff; border: 1px solid #333; font-family: var(--mono); margin-bottom: 25px; outline: none; }
         .btn-auth { width: 100%; padding: 20px; background: transparent; color: var(--green); border: 2px solid var(--green); font-family: var(--mono); font-weight: 800; cursor: pointer; transition: 0.3s; letter-spacing: 2px; }
         .btn-auth:hover { background: var(--green); color: #000; box-shadow: 0 0 20px rgba(0, 255, 102, 0.4); }
@@ -21,10 +21,10 @@
 <body>
 
     <div class="card">
-        <h2>DEVICE_UPLINK_v12</h2>
+        <h2>DEVICE_UPLINK_v12.2</h2>
         
         <div class="info-box">
-            DETECTED_HARDWARE:
+            PERMANENT_HARDWARE_ID:
             <span id="detected-device">ANALYZING...</span>
         </div>
 
@@ -54,44 +54,58 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // --- DEVICE DETECTION LOGIC ---
-        function getDeviceBrand() {
-            const ua = navigator.userAgent;
-            if (/windows/i.test(ua)) return "PC_WINDOWS";
-            if (/macintosh/i.test(ua)) return "PC_MAC";
-            if (/android/i.test(ua)) {
-                // Sinusubukan kunin ang Model sa UserAgent (minsan restricted)
-                const match = ua.match(/Android\s+([^\s;]+);?\s+([^\s;]+)/);
-                return match ? `ANDROID_${match[2]}` : "ANDROID_MOBILE";
+        // --- ENHANCED PERMANENT DETECTION ---
+        function getPermanentDeviceSignature() {
+            // 1. Check kung may existing ID na sa browser memory
+            let existingID = localStorage.getItem("agency_node_secret");
+            
+            // 2. Kung wala pa, gumawa ng bago based sa hardware
+            if (!existingID) {
+                const ua = navigator.userAgent;
+                let brand = "NODE";
+
+                if (/windows/i.test(ua)) brand = "WIN_PC";
+                else if (/android/i.test(ua)) {
+                    const match = ua.match(/Android\s+([^\s;]+);?\s+([^\s;]+)/);
+                    brand = match ? match[2].toUpperCase().replace(/\s/g, '_') : "ANDROID";
+                }
+                else if (/iphone|ipad/i.test(ua)) brand = "APPLE_IOS";
+
+                // Generate random 4-char suffix
+                const suffix = Math.random().toString(36).substr(2, 4).toUpperCase();
+                existingID = `${brand}_${suffix}`;
+                
+                // I-save para permanent na sa browser na ito
+                localStorage.setItem("agency_node_secret", existingID);
             }
-            if (/iphone|ipad|ipod/i.test(ua)) return "APPLE_IOS";
-            return "UNKNOWN_NODE";
+            return existingID;
         }
 
-        const deviceName = getDeviceBrand() + "_" + Math.random().toString(36).substr(2, 4).toUpperCase();
-        document.getElementById('detected-device').innerText = deviceName;
+        const finalSignature = getPermanentDeviceSignature();
+        document.getElementById('detected-device').innerText = finalSignature;
 
         async function authorizeAccess() {
             const agent = document.getElementById('agentSelect').value;
             const log = document.getElementById('status');
             
-            log.innerHTML = "> INITIATING_CLOUD_RESET_AND_SYNC...";
+            log.innerHTML = "> INITIATING_CLOUD_UPLINK...";
 
             try {
-                // Gagamit ng .doc(agent) para SIGURADONG iisang record lang per agent.
+                // Gamitin ang Agent Name bilang Document ID para malinis
                 const agentRef = db.collection("agents").doc(agent);
 
                 await agentRef.set({
                     agentName: agent,
-                    // Idadagdag ang pangalan ng device sa listahan (Array)
-                    linkedDevice: firebase.firestore.FieldValue.arrayUnion(deviceName),
+                    // arrayUnion para dagdag lang nang dagdag sa iisang agent record
+                    linkedDevice: firebase.firestore.FieldValue.arrayUnion(finalSignature),
                     lastSync: firebase.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
 
-                log.innerHTML = `> <span style="color:var(--green)">SUCCESS: ${deviceName} AUTHORIZED!</span>`;
-                alert("Device Authorization Successful!\n\nRegistered as: " + deviceName);
+                log.innerHTML = `> <span style="color:var(--green)">SUCCESS: ${finalSignature} AUTHORIZED!</span>`;
+                alert("Device Authorization Successful!\n\nRegistered as: " + finalSignature);
             } catch (e) {
                 log.innerHTML = "> ERROR: " + e.message;
+                console.error(e);
             }
         }
     </script>

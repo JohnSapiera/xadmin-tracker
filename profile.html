@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BUREAU_REGISTRY // ARCHIVES</title>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
     <style>
         :root { 
             --neon: #00f2ff; 
@@ -12,155 +12,125 @@
             --red: #ff3c3c; 
             --folder-tan: #c2b280; 
             --glass: rgba(255, 255, 255, 0.03);
-            --border: rgba(0, 242, 255, 0.2);
+            --border: rgba(0, 242, 255, 0.15);
         }
 
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body { 
             background: var(--bg); 
             color: #fff; 
             font-family: 'JetBrains Mono', monospace; 
             margin: 0; 
-            padding: 20px;
+            padding: 15px;
             overflow-x: hidden;
-            /* Scanline Effect */
-            background-image: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-image: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
             background-size: 100% 4px, 3px 100%;
         }
 
-        .container { max-width: 600px; margin: 0 auto; position: relative; }
+        .container { max-width: 500px; margin: 0 auto; position: relative; }
 
-        /* Header Enhancement */
+        /* Tactical Header */
         .header { 
+            border: 1px solid var(--border);
             border-left: 4px solid var(--neon); 
             padding: 15px; 
-            margin-bottom: 30px; 
+            margin-bottom: 25px; 
             display: flex; 
             justify-content: space-between; 
-            align-items: center;
-            background: var(--glass);
-            backdrop-filter: blur(5px);
-            border-radius: 0 10px 10px 0;
-            box-shadow: 10px 0 20px rgba(0, 242, 255, 0.05);
+            align-items: flex-start;
+            background: rgba(0, 242, 255, 0.02);
+            backdrop-filter: blur(10px);
         }
 
-        .btn-dashboard {
+        .btn-system {
             background: transparent;
             color: var(--neon);
             border: 1px solid var(--neon);
-            padding: 6px 12px;
-            font-size: 10px;
+            padding: 5px 10px;
+            font-size: 9px;
             text-decoration: none;
             text-transform: uppercase;
             letter-spacing: 1px;
-            transition: all 0.3s ease;
             display: inline-block;
-            margin-bottom: 8px;
-            position: relative;
-            overflow: hidden;
+            margin-bottom: 10px;
         }
 
-        .btn-dashboard:hover {
+        /* NEW: Memoir Button */
+        .btn-memoir {
             background: var(--neon);
             color: #000;
-            box-shadow: 0 0 15px var(--neon);
+            border: none;
+            padding: 5px 12px;
+            font-size: 9px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            margin-top: 8px;
+            clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
         }
 
-        /* File Grid Enhancement */
+        #agentName { font-family: 'Rajdhani', sans-serif; font-size: 20px; font-weight: 700; text-shadow: 0 0 10px rgba(0,242,255,0.3); }
+
+        /* File Grid */
         .file-grid { 
             display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); 
-            gap: 20px; 
-            margin-top: 20px; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 12px; 
+            margin-top: 15px; 
         }
 
-        .file-item { 
-            position: relative; 
-            cursor: pointer; 
-            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-        }
-
-        .file-item:hover { transform: scale(1.05) translateY(-5px); }
+        .file-item { position: relative; cursor: pointer; transition: 0.2s; }
+        .file-item:active { transform: scale(0.9); }
 
         .file-folder { 
-            height: 90px; width: 100%; 
+            height: 85px; width: 100%; 
             background: var(--folder-tan); 
-            border-radius: 2px 12px 2px 2px;
+            border-radius: 0 8px 2px 2px;
             position: relative; 
-            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            border-bottom: 3px solid rgba(0,0,0,0.2);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
 
         .file-folder::before {
-            content: ""; position: absolute; top: -10px; left: 0; width: 45px; height: 12px;
-            background: var(--folder-tan); border-radius: 5px 5px 0 0;
+            content: ""; position: absolute; top: -8px; left: 0; width: 35px; height: 10px;
+            background: var(--folder-tan); border-radius: 4px 4px 0 0;
         }
 
-        .file-label { font-size: 8px; color: rgba(0,0,0,0.6); font-weight: 800; text-align: center; margin-bottom: 2px; }
-        .file-id { font-size: 13px; color: #1a1a1a; font-weight: 900; }
+        .file-label { font-size: 7px; color: rgba(0,0,0,0.5); font-weight: 800; text-transform: uppercase; }
+        .file-id { font-size: 12px; color: #1a1a1a; font-weight: 900; }
 
-        .silhouette { opacity: 0.1; filter: blur(1px); }
-
-        /* CLASSIFIED DOCUMENT MODAL - Tactical Look */
-        #missionOverlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(5, 5, 6, 0.95); z-index: 100; justify-content: center; align-items: center;
-            backdrop-filter: blur(12px);
+        /* Modal / Memoir Overlay */
+        .overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.9); z-index: 1000;
+            justify-content: center; align-items: center; backdrop-filter: blur(5px);
         }
 
+        .memoir-box {
+            width: 85%; max-width: 350px; background: #000; border: 1px solid var(--neon);
+            padding: 30px; position: relative; text-align: center;
+        }
+
+        /* Classified Doc Style */
         .classified-doc {
-            background: #fdfaf0; color: #1a1a1a; width: 90%; max-width: 420px; padding: 30px;
-            box-shadow: 0 0 50px rgba(0,0,0,0.8), inset 0 0 100px rgba(0,0,0,0.05);
-            border: 1px solid #000;
-            position: relative; 
-            animation: folderOpen 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-            background-image: 
-                linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
-            background-size: 20px 20px;
+            background: #eee; color: #111; width: 92%; max-width: 400px;
+            padding: 25px; border: 1px solid #000; position: relative;
+            box-shadow: 15px 15px 0 rgba(0,0,0,0.5);
         }
 
-        @keyframes folderOpen {
-            from { transform: scale(0.8) rotateX(-20deg); opacity: 0; }
-            to { transform: scale(1) rotateX(0); opacity: 1; }
-        }
+        .data-row { border-bottom: 1px solid rgba(0,0,0,0.1); padding: 10px 0; }
+        .data-label { font-size: 9px; color: #666; font-weight: bold; text-transform: uppercase; }
+        .data-value { font-size: 14px; font-weight: 800; }
 
-        .doc-close-x {
-            position: absolute; top: -15px; right: -15px; 
-            background: var(--red); color: #fff;
-            border: 2px solid #fff; width: 35px; height: 35px; 
-            font-weight: bold; cursor: pointer; border-radius: 50%;
-            box-shadow: 0 5px 15px rgba(255, 60, 60, 0.4);
-        }
-
-        .doc-title { text-align: center; border-bottom: 2px solid #1a1a1a; margin-bottom: 20px; padding-bottom: 10px; }
-        .doc-title h1 { margin: 0; font-size: 22px; letter-spacing: 3px; font-weight: 900; }
+        .expense-tag { font-size: 22px; color: var(--red); font-weight: 900; }
         
-        .data-row { margin-bottom: 18px; padding-bottom: 8px; border-bottom: 1px solid rgba(0,0,0,0.08); }
-        .data-label { font-size: 10px; color: #888; font-weight: 700; letter-spacing: 1px; }
-        .data-value { font-size: 16px; color: #000; font-weight: 800; margin-top: 2px; }
-
-        .expense-tag { font-size: 26px; color: #d00; font-weight: 900; text-shadow: 1px 1px 0px rgba(0,0,0,0.1); }
-        .btn-edit { background: #1a1a1a; color: #fff; border: none; padding: 6px 12px; font-size: 10px; cursor: pointer; border-radius: 4px; }
-
-        .btn-terminate { 
-            width: 100%; background: #000; color: var(--red); border: 2px solid var(--red); 
-            padding: 15px; font-weight: 900; cursor: pointer; font-family: 'JetBrains Mono';
-            letter-spacing: 2px; position: relative; transition: 0.2s;
-        }
-        .btn-terminate:hover { background: var(--red); color: #fff; box-shadow: 0 0 20px rgba(255, 60, 60, 0.4); }
-
-        /* Status Badges */
-        .badge-top-secret {
-            background: #000; color: #fff; padding: 4px 8px; font-size: 9px;
-            font-weight: 900; position: absolute; top: 10px; left: 10px;
-            transform: rotate(-2deg);
+        .btn-terminate {
+            width: 100%; background: #000; color: var(--red); border: 2px solid var(--red);
+            padding: 12px; font-weight: 900; margin-top: 15px; cursor: pointer;
         }
 
-        .footer-close { text-align: center; margin-top: 20px; font-size: 10px; color: #999; cursor: pointer; text-transform: uppercase; font-weight: bold; }
-
+        .close-btn { position: absolute; top: -10px; right: -10px; background: var(--red); color: #fff; border: none; width: 30px; height: 30px; border-radius: 50%; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -168,70 +138,69 @@
     <div class="container">
         <div class="header">
             <div>
-                <a href="dashboard.html" class="btn-dashboard"><< SYSTEM_BACK</a>
-                <div style="font-size: 10px; color: var(--neon); opacity: 0.7; margin-top: 5px;">ACCESSING_DATABASE...</div>
-                <h2 id="agentName" style="margin:0; color: #fff; letter-spacing: 1px;">AGENT_--</h2>
+                <a href="dashboard.html" class="btn-system">< SYSTEM_BACK</a>
+                <h2 id="agentName">AGENT_--</h2>
+                <button class="btn-memoir" onclick="openMemoir()">MEMOIR</button>
             </div>
             <div style="text-align: right;">
-                <div id="deviceTag" style="font-size: 10px; color: var(--neon);">UUID: UNKNOWN</div>
-                <div style="font-size: 8px; color: var(--red); font-weight: bold; border: 1px solid var(--red); padding: 2px 5px; margin-top: 8px;">SECURE_LINE</div>
+                <div id="deviceTag" style="font-size: 9px; color: var(--neon); font-weight: bold;">NODE: SYNCING...</div>
+                <div style="font-size: 7px; color: var(--red); margin-top: 10px; border: 1px solid var(--red); padding: 2px;">SECURE_ARCHIVE</div>
             </div>
         </div>
 
-        <div style="font-size: 12px; color: #888; margin-bottom: 15px; border-left: 2px solid var(--neon); padding-left: 10px;">
-            >> RETRIEVING_ACTIVE_DOSSIERS...
+        <div style="font-size: 10px; color: #555; margin-bottom: 15px; letter-spacing: 1px;">
+            >> ACCESSING_VIA_AGENT_RECORDS...
         </div>
 
         <div class="file-grid" id="mainFileGrid">
             </div>
     </div>
 
-    <div id="missionOverlay">
+    <div id="memoirOverlay" class="overlay" onclick="closeMemoir()">
+        <div class="memoir-box" onclick="event.stopPropagation()">
+            <button class="close-btn" onclick="closeMemoir()">×</button>
+            <h3 style="color: var(--neon); font-family: 'Rajdhani'; letter-spacing: 2px;">MEMOIR_LOGS</h3>
+            <p style="font-size: 11px; color: #444; margin-top: 20px;">[ NO_DATA_AVAILABLE ]</p>
+        </div>
+    </div>
+
+    <div id="missionOverlay" class="overlay">
         <div class="classified-doc">
-            <div class="badge-top-secret">EYES_ONLY</div>
-            <button class="doc-close-x" onclick="closeDoc()">×</button>
-            
-            <div class="doc-title">
-                <h1>MISSION ORDER</h1>
-                <div id="moID" style="font-size: 11px; letter-spacing: 2px; color: #777; font-weight: bold;">REF_ID: --</div>
+            <button class="close-btn" onclick="closeDoc()">×</button>
+            <div style="text-align: center; border-bottom: 2px solid #000; margin-bottom: 15px;">
+                <h2 style="margin: 0; font-size: 18px;">MISSION ORDER</h2>
+                <span id="moID" style="font-size: 10px; font-weight: bold;">--</span>
             </div>
 
             <div class="data-row">
-                <div class="data-label">SUBJECT_IDENTIFIER:</div>
+                <div class="data-label">IDENTIFIER:</div>
                 <div class="data-value" id="moObj">---</div>
             </div>
 
             <div class="data-row">
-                <div class="data-label">ACCUMULATED_EXPENSES (PHP):</div>
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 5px;">
+                <div class="data-label">EXPENSES:</div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
                     <span class="expense-tag" id="moPrice">₱ 0.00</span>
-                    <button class="btn-edit" onclick="editExpenses()">MOD_DATA</button>
+                    <button style="font-size: 9px; background: #000; color: #fff; padding: 4px 8px;" onclick="editExpenses()">EDIT</button>
                 </div>
             </div>
 
-            <div style="display: flex; gap: 15px; margin-top: 10px;">
-                <div class="data-row" style="flex: 1;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="data-row">
                     <div class="data-label">DEPLOYED:</div>
-                    <div class="data-value" id="moStart" style="font-size: 12px;">--/--/--</div>
+                    <div class="data-value" id="moStart" style="font-size: 11px;">--</div>
                 </div>
-                <div class="data-row" style="flex: 1;">
+                <div class="data-row">
                     <div class="data-label">EXPIRES:</div>
-                    <div class="data-value" id="moEnd" style="font-size: 12px; color: #d00;">--/--/--</div>
+                    <div class="data-value" id="moEnd" style="font-size: 11px; color: var(--red);">--</div>
                 </div>
             </div>
 
-            <div style="margin-top: 20px;">
-                <button class="btn-terminate" onclick="terminateMission()">
-                    [ TERMINATE_RECORD ]
-                </button>
-            </div>
-            
-            <div class="footer-close" onclick="closeDoc()">>> CLOSE_SECURE_VIEW</div>
+            <button class="btn-terminate" onclick="terminateMission()">TERMINATE_RECORD</button>
         </div>
     </div>
 
     <script type="module">
-        // Logic remains exactly as provided
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getFirestore, collection, query, where, getDocs, doc, updateDoc, getDoc, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -248,11 +217,32 @@
         const db = getFirestore(app);
 
         const agent = localStorage.getItem("cia_agent") || "LZ";
+        const nodeSecret = localStorage.getItem("agency_node_secret");
         let activeDocID = null;
+
+        // --- NEW DEVICE SYNC LOGIC ---
+        async function syncDevice() {
+            const deviceEl = document.getElementById('deviceTag');
+            if (!nodeSecret) {
+                deviceEl.textContent = "NODE: UNREGISTERED";
+                return;
+            }
+            try {
+                const snap = await getDocs(collection(db, "agents"));
+                let foundBrand = "UNKNOWN";
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    if (data.linkedDevice && data.linkedDevice.includes(nodeSecret)) {
+                        const detail = data.deviceDetails?.find(d => d.signature === nodeSecret);
+                        if (detail) foundBrand = detail.brandName || detail.brand;
+                    }
+                });
+                deviceEl.textContent = `NODE: ${foundBrand.toUpperCase()}`;
+            } catch (e) { deviceEl.textContent = "NODE: OFFLINE"; }
+        }
 
         async function loadArchives() {
             document.getElementById('agentName').innerText = `AGENT_${agent}`;
-            document.getElementById('deviceTag').innerText = `UUID: ${localStorage.getItem("device_uuid")?.substring(0,8) || "---"}`;
             const grid = document.getElementById('mainFileGrid');
             grid.innerHTML = ""; 
 
@@ -262,82 +252,57 @@
                 
                 snap.forEach(documentSnap => {
                     const data = documentSnap.data();
-                    const vNum = data.vAgent || "??";
-                    const docID = documentSnap.id;
                     grid.innerHTML += `
-                        <div class="file-item" onclick="openDoc('${docID}')">
+                        <div class="file-item" onclick="openDoc('${documentSnap.id}')">
                             <div class="file-folder">
-                                <span class="file-label">DOSSIER</span>
-                                <span class="file-id">#${vNum}</span>
+                                <span class="file-label">Via_Agent</span>
+                                <span class="file-id">#${data.vAgent || '??'}</span>
                             </div>
                         </div>`;
                 });
-
-                for(let i=0; i<2; i++) {
-                    grid.innerHTML += `
-                        <div class="file-item silhouette">
-                            <div class="file-folder"><span class="file-label">ENCRYPTED</span><span class="file-id">??</span></div>
-                        </div>`;
-                }
             } catch (e) { console.error(e); }
         }
 
-        window.openDoc = async (docID) => {
-            activeDocID = docID;
-            const docRef = doc(db, "mission_orders", docID);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                document.getElementById('moID').innerText = `REF_ID: V-${data.vAgent}`;
+        window.openMemoir = () => document.getElementById('memoirOverlay').style.display = 'flex';
+        window.closeMemoir = () => document.getElementById('memoirOverlay').style.display = 'none';
+
+        window.openDoc = async (id) => {
+            activeDocID = id;
+            const snap = await getDoc(doc(db, "mission_orders", id));
+            if (snap.exists()) {
+                const data = snap.data();
+                document.getElementById('moID').innerText = `REF: V-${data.vAgent}`;
                 document.getElementById('moObj').innerText = `#${data.orderNumber}`;
-                const exp = parseFloat(data.expenses || 0);
-                document.getElementById('moPrice').innerText = `₱ ${exp.toLocaleString('en-PH', {minimumFractionDigits: 2})}`;
-                
-                const dDate = data.deploymentDate?.toDate ? data.deploymentDate.toDate().toLocaleDateString() : data.deploymentDate;
-                const eDate = data.expirationDate?.toDate ? data.expirationDate.toDate().toLocaleDateString() : data.expirationDate;
-                
-                document.getElementById('moStart').innerText = dDate || "--";
-                document.getElementById('moEnd').innerText = eDate || "--";
+                document.getElementById('moPrice').innerText = `₱ ${parseFloat(data.expenses || 0).toLocaleString()}`;
+                document.getElementById('moStart').innerText = data.deploymentDate?.toDate ? data.deploymentDate.toDate().toLocaleDateString() : '--';
+                document.getElementById('moEnd').innerText = data.expirationDate?.toDate ? data.expirationDate.toDate().toLocaleDateString() : '--';
                 document.getElementById('missionOverlay').style.display = 'flex';
             }
         };
 
+        window.closeDoc = () => document.getElementById('missionOverlay').style.display = 'none';
+        
         window.editExpenses = async () => {
-            const currentStr = document.getElementById('moPrice').innerText.replace('₱ ', '').replace(/,/g, '');
-            const newAmount = prompt("INPUT NEW FINANCIAL DATA (PHP):", currentStr);
-            if(newAmount !== null && !isNaN(newAmount) && newAmount.trim() !== "") {
-                const docRef = doc(db, "mission_orders", activeDocID);
-                await updateDoc(docRef, { expenses: parseFloat(newAmount) });
-                document.getElementById('moPrice').innerText = `₱ ${parseFloat(newAmount).toLocaleString('en-PH', {minimumFractionDigits: 2})}`;
+            const current = document.getElementById('moPrice').innerText.replace('₱ ', '').replace(/,/g, '');
+            const val = prompt("NEW EXPENSE DATA:", current);
+            if (val && !isNaN(val)) {
+                await updateDoc(doc(db, "mission_orders", activeDocID), { expenses: parseFloat(val) });
+                openDoc(activeDocID);
             }
         };
 
         window.terminateMission = async () => {
-            if (!activeDocID) return;
-            const proceed = confirm("⚠️ AUTHORIZATION_REQUIRED: Terminate mission and blacklist record?");
-            if (proceed) {
-                try {
-                    const docRef = doc(db, "mission_orders", activeDocID);
-                    const docSnap = await getDoc(docRef);
-                    if (docSnap.exists()) {
-                        const data = docSnap.data();
-                        await addDoc(collection(db, "blacklist"), {
-                            ...data,
-                            terminatedAt: new Date().toISOString(),
-                            status: "TERMINATED",
-                            handledBy: agent
-                        });
-                        await deleteDoc(docRef);
-                        alert("PROTOCOL_EXECUTED: Record Blacklisted.");
-                        closeDoc();
-                        loadArchives();
-                    }
-                } catch (e) { console.error(e); }
+            if (confirm("PROTOCOL_TERMINATE: Blacklist record?")) {
+                const docRef = doc(db, "mission_orders", activeDocID);
+                const snap = await getDoc(docRef);
+                await addDoc(collection(db, "blacklist"), { ...snap.data(), status: "TERMINATED" });
+                await deleteDoc(docRef);
+                closeDoc();
+                loadArchives();
             }
         };
 
-        window.closeDoc = () => { document.getElementById('missionOverlay').style.display = 'none'; };
-        window.onload = loadArchives;
+        window.onload = () => { syncDevice(); loadArchives(); };
     </script>
 </body>
 </html>

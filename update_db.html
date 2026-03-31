@@ -3,56 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AGENCY_DEVICE_AUTHORIZATION_v15</title>
+    <title>TERMINAL_UPLINK_v16</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --cyan: #00f2ff; --bg: #01080b; --green: #00ff66; --border: rgba(0, 242, 255, 0.2); --mono: 'Share Tech Mono', monospace; }
-        body { background: var(--bg); color: #fff; font-family: 'Rajdhani', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background-image: radial-gradient(circle at 50% 50%, #0a1f29 0%, var(--bg) 100%); }
-        .card { width: 92%; max-width: 420px; background: rgba(2, 12, 18, 0.98); padding: 25px; border: 1px solid var(--border); box-shadow: 0 0 50px rgba(0,0,0,1); position: relative; }
-        h2 { color: var(--cyan); font-family: var(--mono); font-size: 1.1rem; border-left: 3px solid var(--cyan); padding-left: 10px; margin-bottom: 20px; letter-spacing: 2px; }
-        
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .stat-box { background: #000; padding: 10px; border: 1px solid #1a262b; font-family: var(--mono); font-size: 9px; color: #555; }
-        .stat-box span { color: var(--cyan); display: block; font-size: 11px; margin-top: 3px; font-weight: bold; overflow: hidden; text-overflow: ellipsis; }
+        :root { --cyan: #00f2ff; --bg: #020a0d; --green: #00ff66; --glass: rgba(0, 242, 255, 0.05); --border: rgba(0, 242, 255, 0.2); }
+        body { 
+            background: var(--bg); color: #fff; font-family: 'Share Tech Mono', monospace; 
+            display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0;
+            background-image: 
+                linear-gradient(rgba(0, 242, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 242, 255, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
 
-        label { font-size: 10px; color: #555; font-family: var(--mono); display: block; margin-bottom: 5px; }
-        input, select { width: 100%; padding: 12px; background: #000; color: #fff; border: 1px solid #333; font-family: var(--mono); margin-bottom: 15px; outline: none; }
+        /* Compact Tactical Card */
+        .card { 
+            width: 320px; background: rgba(1, 15, 20, 0.8); padding: 20px; 
+            border: 1px solid var(--border); backdrop-filter: blur(10px);
+            box-shadow: 0 0 30px rgba(0,0,0,0.8), inset 0 0 15px rgba(0, 242, 255, 0.05);
+        }
+
+        h2 { 
+            font-size: 14px; margin: 0 0 15px 0; color: var(--cyan); 
+            text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid var(--border); padding-bottom: 10px;
+        }
+
+        /* Hologram Specs Display */
+        .hologram-box {
+            background: var(--glass); border: 1px dashed var(--border);
+            padding: 12px; margin-bottom: 20px; position: relative;
+            font-size: 9px; line-height: 1.5; color: #889ba3;
+        }
+        .hologram-box::before {
+            content: "SCANNING_HARDWARE..."; position: absolute; top: -7px; right: 10px;
+            background: var(--bg); padding: 0 5px; color: var(--cyan); font-size: 8px;
+        }
+        .spec-item { display: flex; justify-content: space-between; border-bottom: 1px solid rgba(0, 242, 255, 0.05); padding: 2px 0; }
+        .spec-val { color: var(--cyan); font-weight: bold; text-transform: uppercase; }
+
+        /* Unified Form Layout */
+        .form-group { margin-bottom: 12px; }
+        label { font-size: 9px; color: var(--cyan); text-transform: uppercase; margin-bottom: 5px; display: block; opacity: 0.7; }
         
-        .btn-auth { width: 100%; padding: 18px; background: transparent; color: var(--green); border: 2px solid var(--green); font-family: var(--mono); font-weight: 800; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
-        .btn-auth:hover { background: var(--green); color: #000; box-shadow: 0 0 20px rgba(0, 255, 102, 0.3); }
-        
-        #status { font-family: var(--mono); font-size: 9px; margin-top: 15px; color: #4a5a61; background: #000; padding: 10px; border: 1px solid #111; max-height: 80px; overflow-y: auto; }
+        .input-field {
+            width: 100%; box-sizing: border-box; padding: 10px; 
+            background: rgba(0,0,0,0.5); border: 1px solid var(--border);
+            color: var(--green); font-family: 'Share Tech Mono'; font-size: 11px;
+            outline: none; transition: 0.3s;
+        }
+        .input-field:focus { border-color: var(--green); background: rgba(0, 255, 102, 0.05); }
+
+        select.input-field { cursor: pointer; appearance: none; }
+
+        .btn-auth {
+            width: 100%; padding: 15px; background: transparent; 
+            color: var(--green); border: 1px solid var(--green);
+            font-family: 'Share Tech Mono'; font-weight: bold; cursor: pointer;
+            text-transform: uppercase; letter-spacing: 1px; font-size: 12px; margin-top: 10px;
+        }
+        .btn-auth:hover { background: var(--green); color: #000; box-shadow: 0 0 15px rgba(0, 255, 102, 0.4); }
+
+        #status { font-size: 8px; margin-top: 15px; color: #4a5a61; font-style: italic; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h2>UPLINK_REGISTRY_v15</h2>
-        
-        <div class="info-grid">
-            <div class="stat-box">MODEL/BRAND: <span id="val-brand">DETECTING...</span></div>
-            <div class="stat-box">GPU_CHIPSET: <span id="val-gpu">DETECTING...</span></div>
-            <div class="stat-box">SCREEN_RES: <span id="val-res">0x0</span></div>
-            <div class="stat-box">PLATFORM: <span id="val-plt">--</span></div>
+        <h2>UPLINK_REGISTRY</h2>
+
+        <div class="hologram-box">
+            <div class="spec-item">MODEL/BRAND: <span class="spec-val" id="val-brand">...</span></div>
+            <div class="spec-item">GPU_CHIPSET: <span class="spec-val" id="val-gpu">...</span></div>
+            <div class="spec-item">SCREEN_RES: <span class="spec-val" id="val-res">...</span></div>
+            <div class="spec-item">PLATFORM: <span class="spec-val" id="val-plt">...</span></div>
         </div>
 
-        <div class="stat-box" style="margin-bottom: 20px; border-color: var(--cyan);">
-            HARDWARE_FINGERPRINT (UNIQUE_ID):
-            <span id="val-fp" style="color: var(--green); font-size: 13px;">GENERATING_HASH...</span>
+        <div class="form-group">
+            <label>Hardware_Fingerprint (Unique_ID):</label>
+            <input type="text" id="val-fp" class="input-field" readonly>
         </div>
 
-        <label>ASSIGN_ACCESS_KEY (PERMANENT_PASS):</label>
-        <input type="text" id="accessKey" placeholder="e.g. AGENT-777-VIP" autocomplete="off">
+        <div class="form-group">
+            <label>Select_Agent_Profile:</label>
+            <select id="agentSelect" class="input-field">
+                <option value="JFSN">AGENT_JFSN</option>
+                <option value="LZ">AGENT_LZ</option>
+            </select>
+        </div>
 
-        <label>SELECT_AGENT_PROFILE:</label>
-        <select id="agentSelect">
-            <option value="JFSN">AGENT_JFSN</option>
-            <option value="LZ">AGENT_LZ</option>
-        </select>
-
-        <button class="btn-auth" onclick="authorizeAccess()">AUTHORIZE & STORE DATA</button>
+        <button class="btn-auth" onclick="authorizeAccess()">Authorize Device</button>
         
-        <div id="status">> SYSTEM_READY...</div>
+        <div id="status">> SYSTEM_AWAITING_LINK...</div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -70,26 +111,23 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // --- DEEP DEVICE IDENTIFIER ENGINE ---
-        function getHardwareSpecs() {
+        // --- HARDWARE DETECTION ---
+        function getSpecs() {
             const canvas = document.createElement('canvas');
-            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+            const gl = canvas.getContext('webgl');
             const debugInfo = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
+            const gpu = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "GENERIC_GPU";
             
             return {
-                brand: navigator.userAgent.match(/Android\s+([^\s;]+);?\s+([^\s;]+)/)?.[2] || "UNKNOWN_DEVICE",
-                gpu: debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "SOFTWARE_RENDERER",
+                brand: navigator.userAgent.match(/Android\s+([^\s;]+);?\s+([^\s;]+)/)?.[2] || "WEB_NODE",
+                gpu: gpu.split('/').pop().trim(),
                 res: `${window.screen.width}x${window.screen.height}`,
-                plt: navigator.platform,
-                mem: navigator.deviceMemory || "N/A",
-                cores: navigator.hardwareConcurrency || "N/A"
+                plt: navigator.platform
             };
         }
 
-        // --- FINGERPRINT GENERATOR (Static Hash) ---
-        function generateFingerprint(specs) {
-            // Pinagsasama ang mga hardware specs para gumawa ng ID na hindi nagbabago kahit i-clear cache
-            const raw = specs.gpu + specs.res + specs.plt + specs.mem + specs.cores;
+        function generateFP(s) {
+            const raw = s.gpu + s.res + s.plt;
             let hash = 0;
             for (let i = 0; i < raw.length; i++) {
                 hash = ((hash << 5) - hash) + raw.charCodeAt(i);
@@ -98,50 +136,37 @@
             return "HW-" + Math.abs(hash).toString(16).toUpperCase();
         }
 
-        const specs = getHardwareSpecs();
-        const fingerprint = generateFingerprint(specs);
+        const specs = getSpecs();
+        const fingerprint = generateFP(specs);
 
         // Update UI
         document.getElementById('val-brand').innerText = specs.brand.replace(/_/g, ' ');
-        document.getElementById('val-gpu').innerText = specs.gpu.split('/')[0];
+        document.getElementById('val-gpu').innerText = specs.gpu;
         document.getElementById('val-res').innerText = specs.res;
         document.getElementById('val-plt').innerText = specs.plt;
-        document.getElementById('val-fp').innerText = fingerprint;
+        document.getElementById('val-fp').value = fingerprint;
 
         async function authorizeAccess() {
-            const key = document.getElementById('accessKey').value.trim();
             const agent = document.getElementById('agentSelect').value;
             const log = document.getElementById('status');
 
-            if(!key) { alert("Please set an ACCESS_KEY"); return; }
-
-            log.innerHTML = `> INIT_UPLINK...<br>> HASH: ${fingerprint}`;
+            log.innerHTML = `> ESTABLISHING_HANDSHAKE...`;
 
             try {
-                // I-save ang lahat ng details sa Firebase
+                // I-save ang unique fingerprint at hardware details
                 await db.collection("agents").doc(agent).set({
                     agentName: agent,
-                    accessKey: key, // Ito ang backup mo kapag na-clear ang cache
                     lastFingerprint: fingerprint,
-                    deviceDetails: firebase.firestore.FieldValue.arrayUnion({
-                        fingerprint: fingerprint,
-                        brand: specs.brand,
-                        gpu: specs.gpu,
-                        resolution: specs.res,
-                        platform: specs.plt,
-                        timestamp: new Date().toISOString()
-                    }),
+                    linkedDevice: firebase.firestore.FieldValue.arrayUnion(fingerprint),
+                    brandName: specs.brand,
                     lastSync: firebase.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
 
-                // I-save din sa local para sa dashboard auto-login
-                localStorage.setItem("agent_access_key", key);
                 localStorage.setItem("agency_node_secret", fingerprint);
-
-                log.innerHTML += `<br>> <span style="color:var(--green)">[+] DATABASE_SYNC_COMPLETE</span>`;
-                alert("DEVICE AUTHORIZED!\n\nAccess Key saved: " + key);
+                log.innerHTML = `> <span style="color:var(--green)">[+] UPLINK_SUCCESSFUL</span>`;
+                alert(`AUTHORIZED!\n\nAgent: ${agent}\nDevice ID: ${fingerprint}`);
             } catch (e) {
-                log.innerHTML += `<br>> <span style="color:red">[!] FAILED: ${e.message}</span>`;
+                log.innerHTML = `> <span style="color:red">[!] ERROR: ${e.message}</span>`;
             }
         }
     </script>

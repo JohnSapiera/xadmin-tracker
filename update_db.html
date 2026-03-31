@@ -3,97 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TERMINAL_UPLINK_v16</title>
+    <title>TERMINAL_UPLINK_v17</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --cyan: #00f2ff; --bg: #020a0d; --green: #00ff66; --glass: rgba(0, 242, 255, 0.05); --border: rgba(0, 242, 255, 0.2); }
+        :root { --cyan: #00f2ff; --bg: #020a0d; --green: #00ff66; --border: rgba(0, 242, 255, 0.2); }
+        
         body { 
             background: var(--bg); color: #fff; font-family: 'Share Tech Mono', monospace; 
             display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0;
-            background-image: 
-                linear-gradient(rgba(0, 242, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 242, 255, 0.03) 1px, transparent 1px);
-            background-size: 20px 20px;
+            background-image: radial-gradient(circle at center, #0a1f29 0%, #020a0d 100%);
         }
 
-        /* Compact Tactical Card */
+        /* Compact & Balanced Card */
         .card { 
-            width: 320px; background: rgba(1, 15, 20, 0.8); padding: 20px; 
+            width: 300px; background: rgba(1, 15, 20, 0.9); padding: 25px; 
             border: 1px solid var(--border); backdrop-filter: blur(10px);
-            box-shadow: 0 0 30px rgba(0,0,0,0.8), inset 0 0 15px rgba(0, 242, 255, 0.05);
+            box-shadow: 0 0 40px rgba(0,0,0,0.9); position: relative; overflow: hidden;
         }
 
         h2 { 
-            font-size: 14px; margin: 0 0 15px 0; color: var(--cyan); 
-            text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid var(--border); padding-bottom: 10px;
+            font-size: 12px; margin: 0 0 20px 0; color: var(--cyan); 
+            text-align: center; letter-spacing: 3px; text-transform: uppercase;
+            border-bottom: 1px solid var(--border); padding-bottom: 10px;
         }
 
-        /* Hologram Specs Display */
-        .hologram-box {
-            background: var(--glass); border: 1px dashed var(--border);
-            padding: 12px; margin-bottom: 20px; position: relative;
-            font-size: 9px; line-height: 1.5; color: #889ba3;
-        }
-        .hologram-box::before {
-            content: "SCANNING_HARDWARE..."; position: absolute; top: -7px; right: 10px;
-            background: var(--bg); padding: 0 5px; color: var(--cyan); font-size: 8px;
-        }
-        .spec-item { display: flex; justify-content: space-between; border-bottom: 1px solid rgba(0, 242, 255, 0.05); padding: 2px 0; }
-        .spec-val { color: var(--cyan); font-weight: bold; text-transform: uppercase; }
-
-        /* Unified Form Layout */
-        .form-group { margin-bottom: 12px; }
-        label { font-size: 9px; color: var(--cyan); text-transform: uppercase; margin-bottom: 5px; display: block; opacity: 0.7; }
+        /* Forms on Top - Perfectly Aligned */
+        .form-container { display: flex; flex-direction: column; gap: 15px; }
+        
+        .field-group { width: 100%; }
+        label { font-size: 9px; color: var(--cyan); text-transform: uppercase; margin-bottom: 6px; display: block; }
         
         .input-field {
-            width: 100%; box-sizing: border-box; padding: 10px; 
-            background: rgba(0,0,0,0.5); border: 1px solid var(--border);
+            width: 100%; box-sizing: border-box; padding: 12px; 
+            background: rgba(0,0,0,0.8); border: 1px solid var(--border);
             color: var(--green); font-family: 'Share Tech Mono'; font-size: 11px;
-            outline: none; transition: 0.3s;
+            outline: none; border-radius: 0;
         }
-        .input-field:focus { border-color: var(--green); background: rgba(0, 255, 102, 0.05); }
 
-        select.input-field { cursor: pointer; appearance: none; }
+        select.input-field { cursor: pointer; }
 
         .btn-auth {
-            width: 100%; padding: 15px; background: transparent; 
+            width: 100%; padding: 16px; background: transparent; 
             color: var(--green); border: 1px solid var(--green);
             font-family: 'Share Tech Mono'; font-weight: bold; cursor: pointer;
-            text-transform: uppercase; letter-spacing: 1px; font-size: 12px; margin-top: 10px;
+            text-transform: uppercase; letter-spacing: 1px; font-size: 11px;
+            margin-top: 5px; transition: 0.2s;
         }
-        .btn-auth:hover { background: var(--green); color: #000; box-shadow: 0 0 15px rgba(0, 255, 102, 0.4); }
+        .btn-auth:hover { background: var(--green); color: #000; box-shadow: 0 0 20px rgba(0, 255, 102, 0.3); }
 
-        #status { font-size: 8px; margin-top: 15px; color: #4a5a61; font-style: italic; }
+        /* Marquee Ticker at the Bottom */
+        .ticker-wrap {
+            margin-top: 25px; background: rgba(0, 242, 255, 0.05);
+            border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+            overflow: hidden; white-space: nowrap; padding: 5px 0;
+        }
+
+        .ticker-move {
+            display: inline-block; animation: marquee 15s linear infinite;
+            font-size: 9px; color: #556b73; text-transform: uppercase;
+        }
+
+        @keyframes marquee {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .ticker-item { display: inline-block; margin-right: 30px; }
+        .ticker-item span { color: var(--cyan); font-weight: bold; }
+
+        #status { font-size: 8px; text-align: center; margin-top: 10px; color: #3d4d54; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h2>UPLINK_REGISTRY</h2>
+        <h2>UPLINK_SYSTEM</h2>
 
-        <div class="hologram-box">
-            <div class="spec-item">MODEL/BRAND: <span class="spec-val" id="val-brand">...</span></div>
-            <div class="spec-item">GPU_CHIPSET: <span class="spec-val" id="val-gpu">...</span></div>
-            <div class="spec-item">SCREEN_RES: <span class="spec-val" id="val-res">...</span></div>
-            <div class="spec-item">PLATFORM: <span class="spec-val" id="val-plt">...</span></div>
+        <div class="form-container">
+            <div class="field-group">
+                <label>Node_Signature (Auto):</label>
+                <input type="text" id="val-fp" class="input-field" readonly>
+            </div>
+
+            <div class="field-group">
+                <label>Agent_Assignment:</label>
+                <select id="agentSelect" class="input-field">
+                    <option value="JFSN">AGENT_JFSN</option>
+                    <option value="LZ">AGENT_LZ</option>
+                </select>
+            </div>
+
+            <button class="btn-auth" onclick="authorizeAccess()">Push to Database</button>
         </div>
 
-        <div class="form-group">
-            <label>Hardware_Fingerprint (Unique_ID):</label>
-            <input type="text" id="val-fp" class="input-field" readonly>
-        </div>
+        <div id="status">> WAITING_FOR_COMMAND...</div>
 
-        <div class="form-group">
-            <label>Select_Agent_Profile:</label>
-            <select id="agentSelect" class="input-field">
-                <option value="JFSN">AGENT_JFSN</option>
-                <option value="LZ">AGENT_LZ</option>
-            </select>
+        <div class="ticker-wrap">
+            <div class="ticker-move">
+                <div class="ticker-item">MODEL: <span id="m-brand">...</span></div>
+                <div class="ticker-item">GPU: <span id="m-gpu">...</span></div>
+                <div class="ticker-item">SCREEN: <span id="m-res">...</span></div>
+                <div class="ticker-item">PLATFORM: <span id="m-plt">...</span></div>
+                <div class="ticker-item">STATUS: <span style="color:var(--green)">ENCRYPTED</span></div>
+            </div>
         </div>
-
-        <button class="btn-auth" onclick="authorizeAccess()">Authorize Device</button>
-        
-        <div id="status">> SYSTEM_AWAITING_LINK...</div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -111,7 +124,6 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // --- HARDWARE DETECTION ---
         function getSpecs() {
             const canvas = document.createElement('canvas');
             const gl = canvas.getContext('webgl');
@@ -119,7 +131,7 @@
             const gpu = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "GENERIC_GPU";
             
             return {
-                brand: navigator.userAgent.match(/Android\s+([^\s;]+);?\s+([^\s;]+)/)?.[2] || "WEB_NODE",
+                brand: navigator.userAgent.match(/Android\s+([^\s;]+);?\s+([^\s;]+)/)?.[2] || "MOBILE_NODE",
                 gpu: gpu.split('/').pop().trim(),
                 res: `${window.screen.width}x${window.screen.height}`,
                 plt: navigator.platform
@@ -139,21 +151,19 @@
         const specs = getSpecs();
         const fingerprint = generateFP(specs);
 
-        // Update UI
-        document.getElementById('val-brand').innerText = specs.brand.replace(/_/g, ' ');
-        document.getElementById('val-gpu').innerText = specs.gpu;
-        document.getElementById('val-res').innerText = specs.res;
-        document.getElementById('val-plt').innerText = specs.plt;
+        // Update Inputs & Marquee
         document.getElementById('val-fp').value = fingerprint;
+        document.getElementById('m-brand').innerText = specs.brand.replace(/_/g, ' ');
+        document.getElementById('m-gpu').innerText = specs.gpu;
+        document.getElementById('m-res').innerText = specs.res;
+        document.getElementById('m-plt').innerText = specs.plt;
 
         async function authorizeAccess() {
             const agent = document.getElementById('agentSelect').value;
             const log = document.getElementById('status');
-
-            log.innerHTML = `> ESTABLISHING_HANDSHAKE...`;
+            log.innerHTML = `> SYNCING_WITH_FIREBASE...`;
 
             try {
-                // I-save ang unique fingerprint at hardware details
                 await db.collection("agents").doc(agent).set({
                     agentName: agent,
                     lastFingerprint: fingerprint,
@@ -163,10 +173,10 @@
                 }, { merge: true });
 
                 localStorage.setItem("agency_node_secret", fingerprint);
-                log.innerHTML = `> <span style="color:var(--green)">[+] UPLINK_SUCCESSFUL</span>`;
-                alert(`AUTHORIZED!\n\nAgent: ${agent}\nDevice ID: ${fingerprint}`);
+                log.innerHTML = `> <span style="color:var(--green)">SUCCESS: DEVICE_LINKED</span>`;
+                alert(`SUCCESS: Agent ${agent} Authorized.`);
             } catch (e) {
-                log.innerHTML = `> <span style="color:red">[!] ERROR: ${e.message}</span>`;
+                log.innerHTML = `> ERROR: ${e.message}`;
             }
         }
     </script>

@@ -3,901 +3,318 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>Operations Registry</title>
+  <title>Global Intelligence Network | Level 9</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:        #f2f0eb;
-      --bg2:       #eceae4;
-      --bg3:       #e4e2db;
-      --ink:       #1a1a18;
-      --ink2:      #3a3a36;
-      --ink3:      #6b6b64;
-      --ink4:      #9a9a90;
-      --rule:      #c8c5bc;
-      --red:       #8b1a1a;
-      --red-bg:    #f5eeee;
-      --amber:     #7a5c1e;
-      --amber-bg:  #f5f0e8;
-      --blue:      #1a3a5c;
-      --blue-bg:   #edf2f7;
-      --sans:      'IBM Plex Sans', sans-serif;
-      --mono:      'IBM Plex Mono', monospace;
+      --bg-dark: #03070a;
+      --bg-panel: rgba(4, 15, 22, 0.85);
+      --cyan: #00f3ff;
+      --cyan-dim: rgba(0, 243, 255, 0.2);
+      --red: #ff003c;
+      --red-dim: rgba(255, 0, 60, 0.2);
+      --green: #00ff66;
+      --yellow: #ffeb3b;
+      --text-main: #c8e1e5;
+      --font-mono: 'Share Tech Mono', monospace;
+      --font-ui: 'Rajdhani', sans-serif;
     }
 
-    html, body {
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-ui);
+      font-size: 16px;
       min-height: 100vh;
-      background: var(--bg);
-      color: var(--ink);
-      font-family: var(--sans);
-      font-size: 14px;
-      line-height: 1.5;
+      overflow-x: hidden;
+      background-image: 
+        linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+      background-size: 30px 30px;
     }
 
-    /* subtle paper texture */
-    body::before {
-      content: '';
-      position: fixed; inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-      pointer-events: none; z-index: 0; opacity: 0.6;
+    /* CRT Scanline Effect */
+    body::after {
+      content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+      z-index: 2; background-size: 100% 2px, 3px 100%; pointer-events: none;
     }
 
-    /* ── TOPBAR ── */
+    /* ── TOP NAV / DASHBOARD ── */
     #topbar {
-      position: sticky; top: 0; z-index: 100;
-      background: var(--ink);
-      color: #d4d0c8;
-      padding: 0 32px;
-      height: 48px;
+      border-bottom: 2px solid var(--cyan);
+      background: rgba(0, 0, 0, 0.9);
+      padding: 10px 30px;
       display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 0 15px var(--cyan-dim);
+      position: relative; z-index: 10;
     }
-    .topbar-left { display: flex; align-items: center; gap: 24px; }
-    .topbar-org {
-      font-family: var(--mono);
-      font-size: 11px; letter-spacing: 3px;
-      color: #d4d0c8; text-transform: uppercase;
+    .sys-title { font-family: var(--font-mono); color: var(--cyan); font-size: 20px; letter-spacing: 2px; text-shadow: 0 0 5px var(--cyan); }
+    
+    .live-updates {
+      flex: 1; margin: 0 40px; border: 1px solid var(--cyan-dim);
+      background: rgba(0,0,0,0.5); padding: 5px 15px; display: flex; align-items: center;
+      font-family: var(--font-mono); font-size: 13px; color: var(--yellow);
     }
-    .topbar-divider { width: 1px; height: 18px; background: #3a3a36; }
-    .topbar-sub { font-size: 11px; color: #6b6b64; letter-spacing: 0.5px; }
-    .topbar-right {
-      font-family: var(--mono);
-      font-size: 10px; color: #4a4a44; letter-spacing: 1px;
-      display: flex; align-items: center; gap: 16px;
-    }
-    .topbar-enc {
-      color: #8b6b6b; font-size: 10px; letter-spacing: 1px;
-    }
-    .topbar-enc::before { content: '● '; }
+    .live-label { color: var(--red); font-weight: bold; margin-right: 15px; animation: blink 1s infinite; }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+    #clock { font-family: var(--font-mono); color: var(--text-main); letter-spacing: 1px; }
 
     /* ── LAYOUT ── */
-    #layout {
-      display: flex;
-      min-height: calc(100vh - 48px);
-      position: relative; z-index: 1;
-    }
+    #layout { display: flex; min-height: calc(100vh - 55px); position: relative; z-index: 10; padding: 20px; gap: 20px; }
 
-    /* ── SIDEBAR ── */
+    /* ── PORTAL NAV ── */
     #sidebar {
-      width: 240px; flex-shrink: 0;
-      border-right: 1px solid var(--rule);
-      background: var(--bg2);
-      padding: 28px 0;
-      display: flex; flex-direction: column;
-    }
-    .sidebar-section-label {
-      padding: 0 24px 10px;
-      font-family: var(--mono);
-      font-size: 9px; letter-spacing: 3px;
-      color: var(--ink4); text-transform: uppercase;
-      border-bottom: 1px solid var(--rule);
-      margin-bottom: 4px;
+      width: 280px; background: var(--bg-panel); border: 1px solid var(--cyan-dim);
+      padding: 20px; display: flex; flex-direction: column; gap: 15px;
+      box-shadow: inset 0 0 20px rgba(0,243,255,0.05);
     }
     .nav-btn {
-      width: 100%; text-align: left;
-      padding: 10px 24px;
-      background: transparent; border: none;
-      color: var(--ink3);
-      font-family: var(--sans); font-size: 13px;
-      cursor: pointer;
-      display: flex; align-items: center; gap: 10px;
-      border-left: 2px solid transparent;
-      transition: all 0.15s;
+      background: transparent; border: 1px solid var(--cyan-dim); color: var(--text-main);
+      padding: 15px; text-align: left; font-family: var(--font-mono); font-size: 16px;
+      letter-spacing: 2px; cursor: pointer; transition: all 0.3s; position: relative;
+      overflow: hidden; text-transform: uppercase;
     }
-    .nav-btn:hover { background: var(--bg3); color: var(--ink2); }
+    .nav-btn:hover { background: var(--cyan-dim); border-color: var(--cyan); box-shadow: 0 0 10px var(--cyan-dim); }
     .nav-btn.active {
-      background: var(--bg);
-      color: var(--ink);
-      border-left: 2px solid var(--ink);
-      font-weight: 500;
-    }
-    .nav-dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: var(--ink4); flex-shrink: 0;
-      transition: background 0.15s;
-    }
-    .nav-btn.active .nav-dot { background: var(--red); }
-
-    .sidebar-footer {
-      margin-top: auto;
-      padding: 20px 24px 0;
-      border-top: 1px solid var(--rule);
-    }
-    .sidebar-stat-label {
-      font-family: var(--mono); font-size: 9px;
-      letter-spacing: 2px; color: var(--ink4);
-      text-transform: uppercase; margin-bottom: 6px;
-    }
-    .sidebar-stat-val {
-      font-family: var(--mono); font-size: 28px;
-      color: var(--ink); font-weight: 300; letter-spacing: -1px;
-    }
-    .sidebar-stat-note {
-      font-size: 11px; color: var(--amber);
-      margin-top: 4px; font-style: italic;
+      background: rgba(0, 243, 255, 0.1); border-left: 4px solid var(--cyan);
+      color: var(--cyan); font-weight: bold; box-shadow: 0 0 15px var(--cyan-dim);
     }
 
-    /* ── MAIN ── */
-    #main { flex: 1; padding: 36px 40px; overflow-y: auto; max-width: 960px; }
-
-    /* ── PAGE HEADER ── */
-    .page-header {
-      padding-bottom: 18px;
-      border-bottom: 1px solid var(--rule);
-      margin-bottom: 28px;
-      display: flex; justify-content: space-between; align-items: flex-end;
-    }
-    .page-eyebrow {
-      font-family: var(--mono); font-size: 10px;
-      letter-spacing: 2px; color: var(--ink4);
-      margin-bottom: 5px; text-transform: uppercase;
-    }
-    .page-title {
-      font-size: 20px; font-weight: 600;
-      color: var(--ink); letter-spacing: -0.3px;
-    }
-    .page-meta {
-      font-family: var(--mono); font-size: 10px;
-      color: var(--ink4); text-align: right;
-    }
+    /* ── MAIN CONTENT ── */
+    #main { flex: 1; background: var(--bg-panel); border: 1px solid var(--cyan-dim); padding: 30px; overflow-y: auto; }
+    
+    .portal-header { border-bottom: 1px dashed var(--cyan-dim); padding-bottom: 15px; margin-bottom: 30px; }
+    .portal-title { font-size: 32px; color: var(--cyan); letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 0 8px var(--cyan-dim); }
+    .portal-sub { font-family: var(--font-mono); color: var(--red); font-size: 14px; letter-spacing: 2px; }
 
     /* ── SEARCH PANEL ── */
-    .search-panel {
-      background: var(--bg2);
-      border: 1px solid var(--rule);
-      padding: 22px 26px;
-      margin-bottom: 28px;
-    }
-    .field-label {
-      font-family: var(--mono); font-size: 10px;
-      letter-spacing: 2px; color: var(--ink4);
-      text-transform: uppercase; margin-bottom: 10px;
-      display: block;
-    }
-    .search-row { display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap; }
-
+    .target-panel { background: rgba(0,0,0,0.4); border: 1px solid var(--cyan-dim); padding: 25px; margin-bottom: 30px; }
+    .input-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+    .input-label { font-family: var(--font-mono); color: var(--text-main); letter-spacing: 2px; font-size: 14px; }
+    
     #mission-input {
-      width: 180px;
-      padding: 9px 14px;
-      background: var(--bg);
-      border: 1px solid var(--rule);
-      border-bottom: 2px solid var(--ink);
-      color: var(--ink);
-      font-family: var(--mono); font-size: 16px;
-      letter-spacing: 6px; outline: none;
-      transition: border-bottom-color 0.15s;
+      background: rgba(0, 20, 30, 0.8); border: 1px solid var(--cyan); color: var(--cyan);
+      font-family: var(--font-mono); font-size: 24px; letter-spacing: 10px; padding: 15px;
+      width: 300px; outline: none; transition: box-shadow 0.3s; text-shadow: 0 0 5px var(--cyan);
     }
-    #mission-input:focus { border-bottom-color: var(--red); }
-    #mission-input::placeholder { color: var(--ink4); letter-spacing: 4px; font-size: 14px; }
+    #mission-input:focus { box-shadow: 0 0 15px var(--cyan-dim); }
+    #mission-input::placeholder { color: rgba(0, 243, 255, 0.2); }
 
-    .btn {
-      padding: 9px 20px;
-      font-family: var(--mono); font-size: 11px;
-      letter-spacing: 1.5px; cursor: pointer;
-      border: 1px solid transparent;
-      transition: all 0.15s; white-space: nowrap;
+    .action-row { display: flex; gap: 15px; }
+    .btn-cyber {
+      font-family: var(--font-mono); font-size: 16px; letter-spacing: 2px;
+      padding: 10px 25px; cursor: pointer; background: transparent; transition: all 0.2s;
+      text-transform: uppercase; font-weight: bold;
     }
-    .btn-primary {
-      background: var(--ink); color: var(--bg);
-      border-color: var(--ink);
-    }
-    .btn-primary:hover { background: var(--ink2); }
-    .btn-special {
-      background: transparent; color: var(--red);
-      border-color: var(--red);
-      display: flex; align-items: center; gap: 7px;
-    }
-    .btn-special:hover { background: var(--red-bg); }
+    .btn-save { border: 1px solid var(--green); color: var(--green); box-shadow: 0 0 5px rgba(0,255,102,0.2); }
+    .btn-save:hover { background: var(--green); color: #000; box-shadow: 0 0 15px var(--green); }
+    
+    .btn-terminate { border: 1px solid var(--red); color: var(--red); box-shadow: 0 0 5px var(--red-dim); }
+    .btn-terminate:hover { background: var(--red); color: #fff; box-shadow: 0 0 15px var(--red); }
 
-    /* ── RESULTS ── */
-    .results-header {
-      font-family: var(--mono); font-size: 10px;
-      letter-spacing: 2px; color: var(--ink4);
-      text-transform: uppercase;
-      margin-bottom: 12px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid var(--rule);
+    /* ── TERMINAL RESULTS ── */
+    #terminal-output {
+      font-family: var(--font-mono); background: #000; border: 1px solid #333;
+      padding: 20px; min-height: 200px; color: #a5c3c7; font-size: 14px;
+      line-height: 1.6;
     }
-    .result-card {
-      border: 1px solid var(--rule);
-      background: var(--bg);
-      padding: 14px 20px;
-      margin-bottom: 8px;
-      display: grid;
-      grid-template-columns: 100px 1fr auto auto auto;
-      gap: 14px; align-items: center;
-      transition: border-color 0.15s;
-    }
-    .result-card:hover { border-color: var(--ink3); }
-    .result-order-num {
-      font-family: var(--mono); font-size: 13px;
-      color: var(--ink4);
-    }
-    .result-title { font-size: 14px; font-weight: 500; color: var(--ink); }
-    .result-meta { font-size: 11px; color: var(--ink4); margin-top: 2px; }
-    .btn-view {
-      padding: 5px 14px;
-      background: transparent; border: 1px solid var(--rule);
-      color: var(--ink3); font-family: var(--mono);
-      font-size: 10px; letter-spacing: 1px; cursor: pointer;
-      transition: all 0.15s;
-    }
-    .btn-view:hover { border-color: var(--ink); color: var(--ink); }
-    .no-result {
-      padding: 20px;
-      border: 1px solid #d4c4c4;
-      background: var(--red-bg);
-      font-size: 12px; color: var(--red);
-      font-family: var(--mono); letter-spacing: 0.5px;
-    }
+    .log-line { border-bottom: 1px dashed #222; padding: 8px 0; }
+    .log-cyan { color: var(--cyan); }
+    .log-red { color: var(--red); }
+    .log-green { color: var(--green); }
 
-    /* ── BADGES ── */
-    .badge {
-      display: inline-block;
-      font-family: var(--mono); font-size: 9px;
-      letter-spacing: 1.5px; text-transform: uppercase;
-      padding: 2px 8px; border: 1px solid;
+    /* ── CLASSIFIED GRID ── */
+    .dossier-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+    .dossier-card {
+      border: 1px solid var(--red-dim); background: rgba(255,0,60,0.05);
+      padding: 20px; transition: transform 0.2s; position: relative; overflow: hidden;
     }
-    .badge-active    { color: #1a5c2a; border-color: #1a5c2a; background: #f0f5f1; }
-    .badge-pending   { color: var(--amber); border-color: #c8a84a; background: var(--amber-bg); }
-    .badge-completed { color: var(--blue); border-color: #4a7aaa; background: var(--blue-bg); }
-    .badge-classified{ color: var(--red); border-color: var(--red); background: var(--red-bg); }
-    .badge-unverified{ color: var(--ink4); border-color: var(--rule); background: var(--bg2); }
+    .dossier-card:hover { transform: translateY(-5px); border-color: var(--red); box-shadow: 0 5px 15px var(--red-dim); }
+    .dossier-stamp {
+      position: absolute; right: 10px; top: 10px; border: 2px solid var(--red);
+      color: var(--red); font-family: var(--font-mono); font-size: 18px;
+      transform: rotate(15deg); padding: 5px 10px; opacity: 0.7; font-weight: bold;
+    }
+    .dossier-title { font-size: 22px; color: #fff; margin-bottom: 10px; font-weight: bold; }
+    .dossier-desc { font-family: var(--font-mono); font-size: 13px; color: #aaa; margin-bottom: 15px; }
 
-    .clearance-tag {
-      font-family: var(--mono); font-size: 9px;
-      color: var(--red); letter-spacing: 1px;
-      border-bottom: 1px solid currentColor;
-      padding-bottom: 1px;
-    }
-
-    /* ── TABLE ── */
-    .table-wrap { border: 1px solid var(--rule); overflow: hidden; }
-    .table-head {
-      display: grid;
-      grid-template-columns: 100px 1fr 160px 130px 110px;
-      padding: 8px 20px;
-      background: var(--bg3);
-      border-bottom: 1px solid var(--rule);
-      font-family: var(--mono); font-size: 9px;
-      letter-spacing: 2px; color: var(--ink4); text-transform: uppercase;
-    }
-    .table-row {
-      display: grid;
-      grid-template-columns: 100px 1fr 160px 130px 110px;
-      padding: 11px 20px;
-      border-bottom: 1px solid var(--rule);
-      font-size: 12px; align-items: center;
-      transition: background 0.1s;
-    }
-    .table-row:last-child { border-bottom: none; }
-    .table-row:hover { background: var(--bg2); }
-
-    /* ── CLASSIFIED ── */
-    .restricted-stamp {
-      display: inline-block;
-      font-family: var(--mono); font-size: 10px;
-      letter-spacing: 3px; color: var(--red);
-      border: 2px solid var(--red);
-      padding: 3px 12px; transform: rotate(-1.5deg);
-      opacity: 0.65; margin-bottom: 20px;
-    }
-    .alert-bar {
-      padding: 10px 16px;
-      background: var(--red-bg); border: 1px solid #d4c4c4;
-      border-left: 3px solid var(--red);
-      display: flex; gap: 10px; align-items: center;
-      margin-bottom: 24px;
-    }
-    .alert-bar p {
-      font-size: 11px; color: var(--red);
-      font-family: var(--mono); letter-spacing: 0.5px;
-    }
-    .info-card {
-      border: 1px solid var(--rule);
-      background: var(--bg);
-      margin-bottom: 10px; overflow: hidden;
-    }
-    .info-card-header {
-      padding: 12px 20px;
-      border-bottom: 1px solid var(--rule);
-      background: var(--bg2);
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .info-card-code {
-      font-family: var(--mono); font-size: 12px;
-      font-weight: 500; color: var(--ink); letter-spacing: 2px;
-    }
-    .info-card-body {
-      padding: 14px 20px;
-      display: flex; justify-content: space-between;
-      align-items: flex-start; gap: 20px;
-    }
-    .info-card-desc {
-      font-size: 13px; color: var(--ink2); line-height: 1.6; flex: 1;
-    }
-    .info-card-meta { text-align: right; flex-shrink: 0; }
-    .info-card-date {
-      font-family: var(--mono); font-size: 10px;
-      color: var(--ink4); letter-spacing: 1px; margin-top: 6px;
-    }
-
-    /* ── MODAL ── */
-    #modal-overlay {
-      display: none; position: fixed; inset: 0;
-      background: rgba(20,20,18,0.55);
-      z-index: 500;
-      align-items: center; justify-content: center;
-    }
-    #modal-overlay.open { display: flex; }
-    #modal {
-      background: var(--bg);
-      border: 1px solid var(--rule);
-      width: 480px; max-width: 95vw;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.18);
-    }
-    .modal-header {
-      padding: 16px 22px;
-      border-bottom: 1px solid var(--rule);
-      background: var(--ink);
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .modal-header-title {
-      font-family: var(--mono); font-size: 11px;
-      letter-spacing: 3px; color: #d4d0c8; text-transform: uppercase;
-    }
-    .modal-header-close {
-      background: none; border: none;
-      color: #6b6b64; font-size: 16px;
-      cursor: pointer; line-height: 1; padding: 0;
-    }
-    .modal-header-close:hover { color: #d4d0c8; }
-    .modal-body { padding: 22px; }
-    .modal-note {
-      font-size: 12px; color: var(--ink4);
-      margin-bottom: 12px; line-height: 1.5;
-    }
-    #bulk-input {
-      width: 100%; height: 110px;
-      background: var(--bg2); border: 1px solid var(--rule);
-      border-bottom: 2px solid var(--ink);
-      color: var(--ink); font-family: var(--mono);
-      font-size: 14px; letter-spacing: 4px;
-      padding: 12px; resize: none; outline: none;
-      transition: border-bottom-color 0.15s;
-    }
-    #bulk-input:focus { border-bottom-color: var(--red); }
-    #bulk-input::placeholder { color: var(--ink4); font-size: 12px; letter-spacing: 2px; }
-
-    #parsed-preview {
-      margin-top: 12px; padding: 12px 14px;
-      background: var(--bg2); border: 1px solid var(--rule);
-      display: none;
-    }
-    .preview-label {
-      font-family: var(--mono); font-size: 9px;
-      letter-spacing: 2px; color: var(--ink4);
-      text-transform: uppercase; margin-bottom: 8px;
-    }
-    #parsed-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-    .chip {
-      padding: 2px 10px;
-      background: var(--bg); border: 1px solid var(--rule);
-      font-family: var(--mono); font-size: 12px;
-      color: var(--ink2); letter-spacing: 2px;
-    }
-    .modal-footer {
-      padding: 14px 22px;
-      border-top: 1px solid var(--rule);
-      display: flex; gap: 8px; justify-content: flex-end;
-    }
-    .btn-cancel {
-      background: transparent; color: var(--ink3); border-color: var(--rule);
-    }
-    .btn-cancel:hover { border-color: var(--ink3); color: var(--ink); }
-    .btn-danger {
-      background: transparent; color: var(--red); border-color: var(--red);
-    }
-    .btn-danger:hover { background: var(--red-bg); }
-    .btn-danger:disabled {
-      color: var(--ink4); border-color: var(--rule); cursor: not-allowed;
-      background: transparent;
-    }
-
-    /* ── TOAST ── */
-    #toast {
-      position: fixed; bottom: 24px; right: 24px;
-      padding: 10px 18px;
-      background: var(--ink); color: #f2f0eb;
-      font-family: var(--mono); font-size: 11px; letter-spacing: 1px;
-      z-index: 9000; opacity: 0;
-      transition: opacity 0.3s; pointer-events: none;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-    }
-    #toast.show { opacity: 1; }
-    #toast.error { background: var(--red); }
-
-    /* ── UTIL ── */
     .hidden { display: none !important; }
-    .spinner {
-      display: inline-block; width: 10px; height: 10px;
-      border: 1px solid var(--rule); border-top-color: var(--ink);
-      border-radius: 50%; animation: spin 0.6s linear infinite;
-      margin-right: 6px; vertical-align: middle;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    ::-webkit-scrollbar { width: 4px; height: 4px; }
-    ::-webkit-scrollbar-track { background: var(--bg2); }
-    ::-webkit-scrollbar-thumb { background: var(--rule); }
-
-    /* ── FOOTER ── */
-    #footer {
-      position: relative; z-index: 1;
-      padding: 11px 32px;
-      border-top: 1px solid var(--rule);
-      display: flex; justify-content: space-between;
-      font-family: var(--mono); font-size: 9px;
-      color: var(--ink4); letter-spacing: 1px;
-      background: var(--bg2);
-    }
-
-    /* =========================================
-       📱 MOBILE RESPONSIVE TWEAKS 
-       ========================================= */
-    @media (max-width: 768px) {
-      /* TOPBAR */
-      #topbar { padding: 0 16px; }
-      .topbar-sub, .topbar-divider { display: none; }
-      .topbar-right span:first-child { display: none; } /* Hide clock on mobile */
-
-      /* LAYOUT STACK */
-      #layout { flex-direction: column; }
-      
-      /* SIDEBAR BECOMES TOP NAVIGATION TABS */
-      #sidebar {
-        width: 100%;
-        padding: 0;
-        flex-direction: row;
-        border-right: none;
-        border-bottom: 1px solid var(--rule);
-      }
-      .sidebar-section-label { display: none; } /* Hide sections label */
-      .nav-btn {
-        width: 50%;
-        justify-content: center;
-        border-left: none;
-        border-bottom: 2px solid transparent;
-        padding: 14px 10px;
-      }
-      .nav-btn.active {
-        border-left: none;
-        border-bottom: 2px solid var(--ink);
-      }
-      .sidebar-footer { display: none; } /* Hide stats on mobile to save space */
-
-      /* MAIN CONTAINER */
-      #main { padding: 20px 16px; }
-
-      /* PAGE HEADER */
-      .page-header { flex-direction: column; align-items: flex-start; gap: 8px; }
-      .page-meta { text-align: left; margin-top: 4px; }
-      .restricted-stamp { margin-bottom: 0; margin-top: 10px; }
-
-      /* SEARCH PANEL & INPUTS */
-      .search-panel { padding: 16px; }
-      .search-row { flex-direction: column; }
-      #mission-input { width: 100%; }
-      .search-row > .btn { width: 100%; justify-content: center; }
-
-      /* RESULTS CARD CONVERT TO MOBILE GRID */
-      .result-card {
-        grid-template-columns: 1fr auto;
-        gap: 10px;
-      }
-      .result-order-num { grid-column: 1 / 2; }
-      .result-card > div:nth-child(2) { grid-column: 1 / -1; } /* Title & Meta spans full width */
-      .result-card > span.clearance-tag { grid-column: 2 / 3; justify-self: end; }
-      .result-card > span.badge { grid-column: 1 / 2; justify-self: start; }
-      .result-card > .btn-view { grid-column: 2 / 3; width: 100%; text-align: center; }
-
-      /* HORIZONTAL SCROLL FOR DATA TABLE */
-      .table-wrap { 
-        overflow-x: auto; 
-        -webkit-overflow-scrolling: touch; 
-        border-right: none; border-left: none;
-      }
-      .table-head, .table-row { min-width: 600px; }
-
-      /* CLASSIFIED INFO CARDS */
-      .info-card-body { flex-direction: column; gap: 12px; }
-      .info-card-meta { 
-        text-align: left; 
-        display: flex; 
-        justify-content: space-between; 
-        align-items: center; 
-        width: 100%; 
-        border-top: 1px dashed var(--rule);
-        padding-top: 10px;
-      }
-      .info-card-date { margin-top: 0; }
-
-      /* MODAL */
-      #modal { width: 90vw; }
-      .modal-footer { flex-direction: column; gap: 10px; }
-      .modal-footer > .btn { width: 100%; margin: 0; }
-
-      /* FOOTER */
-      #footer { padding: 16px; flex-direction: column; gap: 8px; text-align: center; }
-    }
   </style>
 </head>
 <body>
 
 <div id="topbar">
-  <div class="topbar-left">
-    <div class="topbar-org">Operations Registry</div>
-    <div class="topbar-divider"></div>
-    <div class="topbar-sub">Internal Use Only &mdash; Handle with Care</div>
+  <div class="sys-title">SIS // OMEGA PROTOCOL</div>
+  <div class="live-updates">
+    <span class="live-label">LIVE INTEL:</span>
+    <span id="ticker-text">Initializing secure connection...</span>
   </div>
-  <div class="topbar-right">
-    <span id="clock">—</span>
-    <span class="topbar-enc">Channel Active</span>
-  </div>
+  <div id="clock">00:00:00Z</div>
 </div>
 
 <div id="layout">
-
   <div id="sidebar">
-    <div class="sidebar-section-label">Sections</div>
-    <button class="nav-btn active" onclick="switchTab('mission')" id="nav-mission">
-      <span class="nav-dot"></span> Mission Orders
+    <button class="nav-btn active" onclick="switchPortal('mission')" id="btn-mission">
+      > PORTAL_01: MISSION ORDER
     </button>
-    <button class="nav-btn" onclick="switchTab('classified')" id="nav-classified">
-      <span class="nav-dot"></span> Classified Intelligence
+    <button class="nav-btn" onclick="switchPortal('classified')" id="btn-classified">
+      > PORTAL_02: CLASSIFIED INTEL
     </button>
-    <div class="sidebar-footer">
-      <div class="sidebar-stat-label">Total Records</div>
-      <div class="sidebar-stat-val" id="db-count">—</div>
-      <div class="sidebar-stat-note hidden" id="imported-badge"></div>
-    </div>
   </div>
 
   <div id="main">
-
-    <div id="tab-mission">
-      <div class="page-header">
-        <div>
-          <div class="page-eyebrow">Section 01 &mdash; Field Operations</div>
-          <div class="page-title">Mission Order Lookup</div>
-        </div>
-        <div class="page-meta" id="page-date">—</div>
+    
+    <div id="portal-mission">
+      <div class="portal-header">
+        <div class="portal-sub">CLEARANCE: LEVEL 5 REQUIRED</div>
+        <div class="portal-title">Field Operations Registry</div>
       </div>
 
-      <div class="search-panel">
-        <label class="field-label" for="mission-input">Mission Order No.</label>
-        <div class="search-row">
-          <input type="text" id="mission-input" maxlength="5" placeholder="00000"
-            oninput="this.value=this.value.replace(/\D/g,'')"
-            onkeydown="if(event.key==='Enter') executeSearch()"/>
-          <button class="btn btn-primary" onclick="executeSearch()">Search</button>
-          <button class="btn btn-special" onclick="openModal()">⚿ Special Codes</button>
+      <div class="target-panel">
+        <div class="input-group">
+          <label class="input-label" for="mission-input">ENTER TARGET MISSION DESIGNATION (4-5 DIGITS):</label>
+          <input type="text" id="mission-input" maxlength="5" placeholder="00000" autocomplete="off"
+            oninput="handleInputSearch(this.value)" />
+        </div>
+        
+        <div class="action-row">
+          <button class="btn-cyber btn-save" onclick="executeAction('SAVE')">SAVE RECORD</button>
+          <button class="btn-cyber btn-terminate" onclick="executeAction('TERMINATE')">TERMINATE ASSET</button>
         </div>
       </div>
 
-      <div id="results-section" class="hidden" style="margin-bottom:28px">
-        <div class="results-header" id="results-label">—</div>
-        <div id="results-container"></div>
-      </div>
-
-      <div>
-        <div class="results-header" id="table-label">Loading records...</div>
-        <div class="table-wrap">
-          <div class="table-head">
-            <span>Order No.</span>
-            <span>Title</span>
-            <span>Clearance</span>
-            <span>Status</span>
-            <span>Date</span>
-          </div>
-          <div id="table-body">
-            <div style="padding:20px;color:var(--ink4);font-family:var(--mono);font-size:11px">
-              <span class="spinner"></span> Connecting to database...
-            </div>
-          </div>
-        </div>
+      <div id="terminal-output">
+        <div class="log-line">> SYSTEM READY. AWAITING INPUT...</div>
       </div>
     </div>
 
-    <div id="tab-classified" class="hidden">
-      <div class="page-header">
-        <div>
-          <div class="page-eyebrow">Section 02 &mdash; Restricted Intelligence</div>
-          <div class="page-title">Classified Information</div>
-        </div>
-        <div class="restricted-stamp">RESTRICTED</div>
+    <div id="portal-classified" class="hidden">
+      <div class="portal-header">
+        <div class="portal-sub" style="color:var(--red);">WARNING: TOP SECRET // SENSITIVE COMPARTMENTED INFORMATION</div>
+        <div class="portal-title">Classified Databanks</div>
       </div>
 
-      <div class="alert-bar">
-        <p>⚠&nbsp;&nbsp;Unauthorized disclosure is a violation of applicable law. Distribution strictly controlled.</p>
-      </div>
-
-      <div class="info-card">
-        <div class="info-card-header">
-          <span class="info-card-code">HYDRA-7</span>
-          <span class="clearance-tag">TS // SCI</span>
+      <div class="dossier-grid">
+        <div class="dossier-card">
+          <div class="dossier-stamp">RESTRICTED</div>
+          <div class="dossier-title">PROJECT BLACKBRIAR</div>
+          <div class="dossier-desc">Deep cover operation tracking rogue assets in Eastern Europe. All communications intercepted and decrypted.</div>
+          <div class="log-red" style="font-family:var(--font-mono); font-size:12px;">STATUS: ACTIVE</div>
         </div>
-        <div class="info-card-body">
-          <div class="info-card-desc">Personnel extraction protocol. Distribution restricted to cleared personnel with operational need. Standard authentication required before execution.</div>
-          <div class="info-card-meta">
-            <span class="badge badge-classified">Classified</span>
-            <div class="info-card-date">Updated 02 Apr 2024</div>
-          </div>
+        <div class="dossier-card">
+          <div class="dossier-stamp">REDACTED</div>
+          <div class="dossier-title">OPERATION TREADSTONE</div>
+          <div class="dossier-desc">Behavioral modification and conditioning program. Files relocated to secure offline server.</div>
+          <div class="log-cyan" style="font-family:var(--font-mono); font-size:12px;">STATUS: ARCHIVED</div>
         </div>
-      </div>
-
-      <div class="info-card">
-        <div class="info-card-header">
-          <span class="info-card-code">SIGMA-9</span>
-          <span class="clearance-tag">TOP SECRET</span>
-        </div>
-        <div class="info-card-body">
-          <div class="info-card-desc">Communications blackout contingency directive. Applies to all foreign asset networks under active monitoring. See attached annex for regional exceptions.</div>
-          <div class="info-card-meta">
-            <span class="badge badge-active">Active</span>
-            <div class="info-card-date">Updated 15 Mar 2024</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="info-card">
-        <div class="info-card-header">
-          <span class="info-card-code">VIPER-3</span>
-          <span class="clearance-tag">TS // SAP</span>
-        </div>
-        <div class="info-card-body">
-          <div class="info-card-desc">Counter-surveillance directive for urban theater operations. Coordinates with field offices on a need-to-know basis. Updated protocols effective Q1 2024.</div>
-          <div class="info-card-meta">
-            <span class="badge badge-pending">Pending</span>
-            <div class="info-card-date">Updated 28 Feb 2024</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="info-card">
-        <div class="info-card-header">
-          <span class="info-card-code">ECHO-12</span>
-          <span class="clearance-tag">SECRET // REL</span>
-        </div>
-        <div class="info-card-body">
-          <div class="info-card-desc">Signals intercept authorization for Region IV. Valid through end of fiscal year. Renewal requires re-authorization from senior oversight.</div>
-          <div class="info-card-meta">
-            <span class="badge badge-active">Active</span>
-            <div class="info-card-date">Updated 10 Apr 2024</div>
-          </div>
+        <div class="dossier-card">
+          <div class="dossier-stamp">NOFORN</div>
+          <div class="dossier-title">ECHO INTERCEPT</div>
+          <div class="dossier-desc">Satellite surveillance override codes for Sector 4. Do not distribute outside core command.</div>
+          <div class="log-red" style="font-family:var(--font-mono); font-size:12px;">STATUS: STANDBY</div>
         </div>
       </div>
     </div>
 
   </div>
 </div>
-
-<div id="footer">
-  <span>Operations Registry &mdash; v4.2</span>
-  <span>For official use only</span>
-  <span id="footer-time">—</span>
-</div>
-
-<div id="modal-overlay" onclick="if(event.target===this)closeModal()">
-  <div id="modal">
-    <div class="modal-header">
-      <span class="modal-header-title">Special Codes &mdash; Bulk Entry</span>
-      <button class="modal-header-close" onclick="closeModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <p class="modal-note">Enter mission order numbers (4–5 digits). Separate multiple entries with commas, spaces, or new lines.</p>
-      <textarea id="bulk-input"
-        placeholder="10234&#10;20571, 33901&#10;47812 55000"
-        oninput="resetParsed()"></textarea>
-      <div id="parsed-preview">
-        <div class="preview-label" id="parsed-count">Validated (0)</div>
-        <div id="parsed-chips"></div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-cancel" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="parseCodes()">Parse</button>
-      <button class="btn btn-danger" id="btn-import" onclick="importCodes()" disabled>Import to Database</button>
-    </div>
-  </div>
-</div>
-
-<div id="toast"></div>
-
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import {
-    getFirestore, collection, getDocs, addDoc, query, where, serverTimestamp
-  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
-    authDomain: "my-admin-portal-12691.firebaseapp.com",
-    projectId: "my-admin-portal-12691",
-    storageBucket: "my-admin-portal-12691.firebasestorage.app",
-    messagingSenderId: "317015091563",
-    appId: "1:317015091563:web:d996e585751d5087cd442e",
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db  = getFirestore(app);
-  const COL = "mission_orders";
-
-  window.statusBadge = function(s) {
-    const map = { ACTIVE:"badge-active", COMPLETED:"badge-completed", PENDING:"badge-pending", CLASSIFIED:"badge-classified", UNVERIFIED:"badge-unverified" };
-    const key = (s || "PENDING").toUpperCase();
-    return `<span class="badge ${map[key]||"badge-unverified"}">${key}</span>`;
-  }
-
-  async function loadRecords() {
-    try {
-      const snap = await getDocs(collection(db, COL));
-      const rows = [];
-      snap.forEach(d => rows.push({ id: d.id, ...d.data() }));
-
-      document.getElementById("db-count").textContent = rows.length;
-      document.getElementById("table-label").textContent =
-        `All Records — ${rows.length} ${rows.length === 1 ? "Entry" : "Entries"}`;
-
-      const tbody = document.getElementById("table-body");
-      if (!rows.length) {
-        tbody.innerHTML = `<div style="padding:20px;color:var(--ink4);font-family:var(--mono);font-size:11px">No records found in database.</div>`;
-        return;
-      }
-      tbody.innerHTML = rows.map(r => `
-        <div class="table-row">
-          <span style="font-family:var(--mono);color:var(--ink4)">${r.orderNumber||"—"}</span>
-          <span style="color:var(--ink2)">${r.title||"[Imported]"}</span>
-          <span><span class="clearance-tag">${r.clearance||"Unverified"}</span></span>
-          <span>${window.statusBadge(r.status)}</span>
-          <span style="font-family:var(--mono);font-size:10px;color:var(--ink4)">${r.date||"—"}</span>
-        </div>
-      `).join("");
-    } catch(err) {
-      document.getElementById("table-body").innerHTML =
-        `<div style="padding:20px;color:var(--red);font-family:var(--mono);font-size:11px">Connection error — check console.</div>`;
-      showToast("Firebase: " + err.message, true);
-    }
-  }
-
-  window.executeSearch = async function() {
-    const q = document.getElementById("mission-input").value.trim();
-    if (!q) return;
-    const sec = document.getElementById("results-section");
-    const lbl = document.getElementById("results-label");
-    const box = document.getElementById("results-container");
-    sec.classList.remove("hidden");
-    lbl.textContent = "Searching...";
-    box.innerHTML = `<div style="padding:14px;color:var(--ink4);font-family:var(--mono);font-size:11px"><span class="spinner"></span>Querying records...</div>`;
-    try {
-      const snap = await getDocs(query(collection(db, COL), where("orderNumber","==",q)));
-      const res = [];
-      snap.forEach(d => res.push({ id: d.id, ...d.data() }));
-      lbl.textContent = `${res.length} Record${res.length!==1?"s":""} Found — Query: ${q}`;
-      if (!res.length) {
-        box.innerHTML = `<div class="no-result">No records match order no. ${q}. Verify the number or check clearance level.</div>`;
-      } else {
-        box.innerHTML = res.map(r => `
-          <div class="result-card">
-            <div class="result-order-num">${r.orderNumber}</div>
-            <div>
-              <div class="result-title">${r.title||"[Imported Record]"}</div>
-              <div class="result-meta">Agent: ${r.agent||"—"} &nbsp;·&nbsp; ${r.date||"—"}</div>
-            </div>
-            <span class="clearance-tag">${r.clearance||"Unverified"}</span>
-            ${window.statusBadge(r.status)}
-            <button class="btn-view">View &rsaquo;</button>
-          </div>
-        `).join("");
-      }
-    } catch(err) {
-      box.innerHTML = `<div class="no-result">Query failed: ${err.message}</div>`;
-    }
-  };
-
-  let parsedCodes = [];
-  window.resetParsed = function() {
-    parsedCodes = [];
-    document.getElementById("parsed-preview").style.display = "none";
-    document.getElementById("btn-import").disabled = true;
-  };
-  window.parseCodes = function() {
-    const raw = document.getElementById("bulk-input").value;
-    parsedCodes = [...new Set(raw.split(/[\n,;\s]+/).map(c=>c.trim()).filter(c=>/^\d{4,5}$/.test(c)))];
-    document.getElementById("parsed-count").textContent = `Validated (${parsedCodes.length})`;
-    document.getElementById("parsed-chips").innerHTML = parsedCodes.map(c=>`<span class="chip">${c}</span>`).join("");
-    document.getElementById("parsed-preview").style.display = parsedCodes.length?"block":"none";
-    document.getElementById("btn-import").disabled = !parsedCodes.length;
-  };
-  window.importCodes = async function() {
-    if (!parsedCodes.length) return;
-    const btn = document.getElementById("btn-import");
-    btn.disabled = true; btn.textContent = "Importing...";
-    const today = new Date().toISOString().split("T")[0];
-    let count = 0;
-    try {
-      for (const code of parsedCodes) {
-        await addDoc(collection(db, COL), {
-          orderNumber: code, title: `[Imported] Mission #${code}`,
-          status: "PENDING", clearance: "UNVERIFIED",
-          date: today, agent: "—", createdAt: serverTimestamp(),
-        });
-        count++;
-      }
-      showToast(`${count} record${count!==1?"s":""} imported successfully.`);
-      closeModal(); loadRecords();
-      const badge = document.getElementById("imported-badge");
-      const prev = parseInt(badge.dataset.count||"0") + count;
-      badge.dataset.count = prev;
-      badge.textContent = `+${prev} imported this session`;
-      badge.classList.remove("hidden");
-    } catch(err) {
-      showToast("Import failed: " + err.message, true);
-      btn.disabled = false; btn.textContent = "Import to Database";
-    }
-  };
-
-  loadRecords();
-</script>
 
 <script>
-  function tick() {
+  // --- CLOCK SCRIPT ---
+  function updateClock() {
     const now = new Date();
-    document.getElementById("clock").textContent = now.toUTCString().replace("GMT","UTC");
-    document.getElementById("footer-time").textContent = now.toUTCString().replace("GMT","UTC");
-    document.getElementById("page-date").textContent = now.toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"});
+    document.getElementById('clock').textContent = now.toISOString().substring(11, 19) + 'Z';
   }
-  tick(); setInterval(tick, 1000);
+  setInterval(updateClock, 1000);
+  updateClock();
 
-  function switchTab(tab) {
-    document.getElementById("tab-mission").classList.toggle("hidden", tab!=="mission");
-    document.getElementById("tab-classified").classList.toggle("hidden", tab!=="classified");
-    document.getElementById("nav-mission").classList.toggle("active", tab==="mission");
-    document.getElementById("nav-classified").classList.toggle("active", tab==="classified");
+  // --- LIVE UPDATES TICKER ---
+  const tickerMessages = [
+    "Decrypting intercepts from Sector 7G...",
+    "Satellite footprint repositioning complete.",
+    "Alert: Unidentified signal detected on sub-channel 4.",
+    "Database syncing with Langley mainframe...",
+    "Agent X-Ray has gone dark. Initiating protocol Sigma."
+  ];
+  let tickerIndex = 0;
+  setInterval(() => {
+    tickerIndex = (tickerIndex + 1) % tickerMessages.length;
+    document.getElementById('ticker-text').textContent = tickerMessages[tickerIndex];
+  }, 4500);
+
+  // --- PORTAL SWITCHING ---
+  window.switchPortal = function(portal) {
+    document.getElementById('portal-mission').classList.add('hidden');
+    document.getElementById('portal-classified').classList.add('hidden');
+    document.getElementById('btn-mission').classList.remove('active');
+    document.getElementById('btn-classified').classList.remove('active');
+
+    document.getElementById('portal-' + portal).classList.remove('hidden');
+    document.getElementById('btn-' + portal).classList.add('active');
+  };
+
+  // --- TERMINAL LOGGER ---
+  function logToTerminal(msg, colorClass = '') {
+    const term = document.getElementById('terminal-output');
+    const time = new Date().toISOString().substring(11, 19);
+    term.innerHTML = `<div class="log-line ${colorClass}">[${time}] ${msg}</div>` + term.innerHTML;
   }
-  function openModal() {
-    document.getElementById("modal-overlay").classList.add("open");
-    document.getElementById("bulk-input").value = "";
-    resetParsed();
-    setTimeout(()=>document.getElementById("bulk-input").focus(),100);
-  }
-  function closeModal() { document.getElementById("modal-overlay").classList.remove("open"); }
-  window.showToast = function(msg, err=false) {
-    const t = document.getElementById("toast");
-    t.textContent = msg; t.className = err?"error show":"show";
-    clearTimeout(t._t); t._t = setTimeout(()=>t.classList.remove("show"), 3000);
-  }
+
+  // --- AUTO SEARCH LOGIC ---
+  window.handleInputSearch = function(val) {
+    // Clean input to only digits
+    const cleaned = val.replace(/\D/g, '');
+    const inputField = document.getElementById('mission-input');
+    
+    if (val !== cleaned) {
+      inputField.value = cleaned;
+    }
+
+    // Auto-search if 4 or 5 digits
+    if (cleaned.length >= 4 && cleaned.length <= 5) {
+      executeSearch(cleaned);
+    }
+  };
+
+  window.executeSearch = function(queryStr) {
+    logToTerminal(`> INITIATING QUERY FOR MISSION CODE: [${queryStr}]`, 'log-cyan');
+    
+    // Simulating database latency
+    setTimeout(() => {
+      // Mock logic: If code starts with 9, it's classified. Otherwise, valid target.
+      if (queryStr.startsWith('9')) {
+        logToTerminal(`ERROR: ACCESS DENIED. MISSION ${queryStr} IS HIGHLY CLASSIFIED.`, 'log-red');
+      } else {
+        logToTerminal(`> MISSION ${queryStr} LOCATED. AWAITING COMMAND DIRECTIVE...`, 'log-green');
+      }
+    }, 800);
+  };
+
+  // --- SAVE / TERMINATE ACTIONS ---
+  window.executeAction = function(actionType) {
+    const code = document.getElementById('mission-input').value;
+    if (code.length < 4) {
+      logToTerminal(`ERROR: INVALID TARGET DESIGNATION.`, 'log-red');
+      return;
+    }
+
+    if (actionType === 'SAVE') {
+      logToTerminal(`> ACTION ACKNOWLEDGED: MISSION ${code} DATA SAVED TO ENCRYPTED DRIVE.`, 'log-cyan');
+      document.getElementById('mission-input').value = ''; // clear after action
+    } else if (actionType === 'TERMINATE') {
+      logToTerminal(`> CRITICAL WARNING: MISSION ${code} TERMINATION SEQUENCE INITIATED...`, 'log-red');
+      setTimeout(() => {
+         logToTerminal(`> TARGET ${code} NEUTRALIZED.`, 'log-green');
+         document.getElementById('mission-input').value = '';
+      }, 1500);
+    }
+  };
 </script>
+
 </body>
 </html>

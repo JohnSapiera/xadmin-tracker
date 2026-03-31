@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>AGENCY_INTEL_SYSTEM_v10.1</title>
+  <title>AGENCY_INTEL_SYSTEM_v12.0</title>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
   <style>
     :root { --bg: #01080b; --panel: rgba(2, 12, 18, 0.95); --cyan: #00f3ff; --red: #ff003c; --green: #00ff66; --border: rgba(0, 243, 255, 0.2); --mono: 'Share Tech Mono', monospace; }
@@ -22,14 +22,16 @@
     nav { position: fixed; bottom: 0; width: 100%; height: 70px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; }
     .nav-link { display: flex; align-items: center; justify-content: center; color: #333; font-size: 10px; font-family: var(--mono); text-decoration: none; }
     .nav-link.active { color: var(--cyan); border-top: 2px solid var(--cyan); }
+    #device-info { font-size: 10px; color: #4a5a61; margin-top: 10px; font-family: var(--mono); }
   </style>
 </head>
 <body>
 
 <header><div class="agent-welcome" id="agent-display">TRACE_INITIALIZING...</div></header>
 <main>
-    <div class="intel-greet" id="intel-msg">AWAITING_IDENTITY_TRACE...</div>
+    <div class="intel-greet" id="intel-msg">SCANNING_HARDWARE...</div>
     <button id="main-report-btn" class="report-btn locked" onclick="openReport()" disabled>INITIATE REPORT</button>
+    <div id="device-info">DETECTING_NODE_IDENTITY...</div>
 </main>
 
 <div id="report-modal" class="modal-overlay">
@@ -49,7 +51,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, query, where, getDocs, updateDoc, doc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
@@ -57,30 +59,73 @@
     projectId: "my-admin-portal-12691",
     storageBucket: "my-admin-portal-12691.firebasestorage.app",
     messagingSenderId: "317015091563",
-    appId: "1:317015091563:web:baab5171d8e0a58acd442e",
-    measurementId: "G-150YYLS5FP"
+    appId: "1:317015091563:web:baab5171d8e0a58acd442e"
   };
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
-  const deviceUUID = localStorage.getItem("device_uuid");
+
+  // --- DEVICE DETECTION ENGINE ---
+  function detectHardware() {
+    const ua = navigator.userAgent;
+    let brand = "UNKNOWN_NODE";
+    
+    if (/windows/i.test(ua)) brand = "PC_WINDOWS";
+    else if (/macintosh/i.test(ua)) brand = "PC_MAC";
+    else if (/android/i.test(ua)) {
+        const match = ua.match(/Android\s+([^\s;]+);?\s+([^\s;]+)/);
+        brand = match ? `ANDROID_${match[2]}` : "ANDROID_MOBILE";
+    }
+    else if (/iphone|ipad|ipod/i.test(ua)) brand = "APPLE_IOS";
+
+    return brand.toUpperCase();
+  }
 
   async function silentTrace() {
-    if(!deviceUUID) return;
-    try {
-        const q = query(collection(db, "agents"), where("linkedDevice", "array-contains", deviceUUID));
-        const snap = await getDocs(q);
+    const detectedBase = detectHardware();
+    const display = document.getElementById('agent-display');
+    const msg = document.getElementById('intel-msg');
+    const btn = document.getElementById('main-report-btn');
+    const info = document.getElementById('device-info');
 
-        if(!snap.empty) {
-            const agentData = snap.docs[0].data();
-            document.getElementById('agent-display').textContent = `AGENT_VERIFIED: ${agentData.agentName}`;
-            document.getElementById('intel-msg').innerHTML = `Welcome back, ${agentData.agentName}.<br><span style="font-size:12px; color:#555;">Ready for intel updates.</span>`;
-            document.getElementById('main-report-btn').classList.remove('locked');
-            document.getElementById('main-report-btn').disabled = false;
+    info.textContent = `NODE_ID: ${detectedBase}_SCANNING...`;
+
+    try {
+        // Hahanapin sa lahat ng Agents kung ang "detectedBase" brand ay nasa linkedDevice list nila
+        // Tandaan: Dahil ang database ay may random suffix (e.g. ANDROID_V21_X8Y2), 
+        // gagamit tayo ng query para i-verify.
+        
+        const q = query(collection(db, "agents"));
+        const snap = await getDocs(q);
+        
+        let foundAgent = null;
+        let exactDeviceName = "";
+
+        snap.forEach(doc => {
+            const data = doc.data();
+            // I-check kung may device na nagsisimula sa ating detected brand
+            const match = data.linkedDevice.find(d => d.startsWith(detectedBase));
+            if(match) {
+                foundAgent = data.agentName;
+                exactDeviceName = match;
+            }
+        });
+
+        if(foundAgent) {
+            display.textContent = `AGENT_VERIFIED: ${foundAgent}`;
+            msg.innerHTML = `Welcome back, Agent ${foundAgent}.<br><span style="font-size:12px; color:var(--green);">UPLINK_STABLE</span>`;
+            info.textContent = `AUTHORIZED_DEVICE: ${exactDeviceName}`;
+            btn.classList.remove('locked');
+            btn.disabled = false;
         } else {
-            document.getElementById('agent-display').textContent = "UNAUTHORIZED_NODE";
+            display.textContent = "ACCESS_DENIED";
+            msg.innerHTML = `<span style="color:var(--red);">UNAUTHORIZED_HARDWARE</span>`;
+            info.textContent = `BLOCKING_NODE: ${detectedBase}`;
         }
-    } catch (e) { console.error(e); }
+    } catch (e) { 
+        console.error(e);
+        display.textContent = "CONNECTION_ERROR";
+    }
   }
 
   window.openReport = () => document.getElementById('report-modal').style.display = 'block';

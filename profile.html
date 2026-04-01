@@ -3,119 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CIA_FILES // DOSSIER</title>
+    <title>CIA_NETWORK // DEVICES</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&family=Special+Elite&display=swap" rel="stylesheet">
     <style>
         :root { 
-            --neon: #00f3ff; --bg: #030a0d; --red: #ff003c; 
-            --border: rgba(0, 243, 255, 0.2);
+            --neon: #00f3ff; --bg: #01080b; --red: #ff003c; 
+            --border: rgba(0, 243, 255, 0.15);
             --font-mono: 'Share Tech Mono', monospace;
             --font-main: 'Rajdhani', sans-serif;
-            --font-doc: 'Special Elite', cursive; /* Para sa lumang typewriter look */
+            --font-doc: 'Special Elite', cursive;
         }
         
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
-        
         body { 
             background: var(--bg); color: #e1f5f9; font-family: var(--font-mono); 
             height: 100vh; overflow: hidden; padding: 15px;
-            background-image: radial-gradient(circle at top, rgba(0, 243, 255, 0.05), transparent 60%);
+            background-image: radial-gradient(circle at center, #0a1f29 0%, #01080b 100%);
         }
 
         .container { max-width: 500px; margin: 0 auto; height: 100%; display: flex; flex-direction: column; }
 
-        /* Header */
-        .header { border-left: 4px solid var(--neon); padding-left: 15px; margin-bottom: 20px; }
-        #agentName { font-family: var(--font-main); font-size: 24px; color: #fff; text-transform: uppercase; }
-        .status-line { font-size: 10px; color: var(--neon); opacity: 0.7; }
-
-        /* Desktop Grid */
-        #deviceGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .node-icon { 
-            background: rgba(0, 243, 255, 0.03); border: 1px solid #1a2f37; 
-            padding: 15px; text-align: center; cursor: pointer;
+        /* DEVICE GRID (PHONES) */
+        #deviceGrid { 
+            display: grid; grid-template-columns: 1fr 1fr; gap: 30px; 
+            perspective: 1000px; padding: 40px 10px;
         }
 
-        /* File Grid (PC Style) */
+        .phone-container {
+            width: 100px; height: 180px; margin: 0 auto;
+            position: relative; cursor: pointer;
+            transition: transform 0.8s ease-in-out;
+            transform-style: preserve-3d;
+        }
+
+        /* Rotation on Hover */
+        .phone-container:hover { transform: rotateY(20deg) rotateX(5deg); }
+
+        .phone-body {
+            width: 100%; height: 100%; background: #0a0a0a;
+            border: 3px solid #1a1a1a; border-radius: 15px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5), inset 0 0 10px rgba(0,243,255,0.05);
+            position: relative; overflow: hidden;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+
+        .phone-screen {
+            width: 92%; height: 94%; background: #000;
+            border-radius: 10px; transition: 0.5s;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+
+        /* Power On Animation */
+        .phone-container.booting .phone-screen { background: var(--neon); box-shadow: 0 0 20px var(--neon); }
+        .phone-label { margin-top: 10px; font-family: var(--font-main); font-weight: bold; color: var(--neon); font-size: 14px; text-align: center; }
+
+        /* FILE GRID (vAGENTS) */
         .file-grid { 
             display: none; grid-template-columns: repeat(4, 1fr); gap: 15px; 
-            padding: 10px; overflow-y: auto;
+            padding: 20px 10px; overflow-y: auto;
         }
-        .file-wrapper { display: flex; flex-direction: column; align-items: center; position: relative; }
-        
-        /* The Real File */
-        .file-icon { width: 45px; height: 35px; background: #d4b16a; border-radius: 2px 5px 2px 2px; position: relative; cursor: pointer; z-index: 5; }
-        .file-icon::before { content: ""; position: absolute; top: -5px; left: 0; width: 15px; height: 6px; background: #d4b16a; border-radius: 2px 2px 0 0; }
-        
-        /* Shadow/Silhouette Files (Non-clickable) */
-        .shadow-file { position: absolute; width: 45px; height: 35px; background: rgba(212, 177, 106, 0.15); border-radius: 2px; z-index: 1; pointer-events: none; }
-        .s1 { transform: translate(4px, -4px); }
-        .s2 { transform: translate(8px, -8px); }
 
-        .file-label { font-size: 9px; margin-top: 5px; color: #fff; text-align: center; max-width: 60px; overflow: hidden; }
+        .vagent-box { 
+            width: 60px; height: 70px; background: rgba(0,243,255,0.05);
+            border: 1px solid var(--border); display: flex; flex-direction: column;
+            align-items: center; justify-content: center; cursor: pointer;
+            position: relative;
+        }
 
-        /* Pop-up Document */
-        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
+        .vagent-box.silhouette { opacity: 0.2; cursor: default; border-style: dashed; filter: grayscale(1); }
+        .vagent-box span { font-size: 10px; color: #fff; margin-top: 5px; }
+
+        /* DOCUMENT POPUP */
+        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; }
         .paper-doc {
-            width: 100%; max-width: 350px; background: #fdfaf0; color: #222; padding: 30px 20px;
-            font-family: var(--font-doc); position: relative; box-shadow: 10px 10px 30px rgba(0,0,0,0.5);
-            background-image: repeating-linear-gradient(#fdfaf0 0px, #fdfaf0 24px, #e5e5e5 25px); /* Lines */
+            width: 90%; max-width: 350px; background: #fdfaf0; color: #222; padding: 40px 25px;
+            font-family: var(--font-doc); position: relative;
+            background-image: repeating-linear-gradient(#fdfaf0 0px, #fdfaf0 24px, #e5e5e5 25px);
         }
-        .stamp-secret { 
-            border: 3px solid #8b0000; color: #8b0000; padding: 5px 15px; font-weight: bold;
-            display: inline-block; transform: rotate(-15deg); position: absolute; top: 20px; right: 20px;
-            opacity: 0.8; font-size: 14px;
-        }
-        .doc-header { text-align: center; text-decoration: underline; font-weight: bold; margin-bottom: 20px; }
-        
-        .math-problem { border-top: 2px solid #333; margin-top: 10px; padding-top: 5px; text-align: right; }
-        .total-line { font-size: 18px; font-weight: bold; border-bottom: 4px double #333; }
+        .stamp { border: 3px solid #8b0000; color: #8b0000; padding: 5px; font-weight: bold; position: absolute; top: 15px; right: 15px; transform: rotate(-10deg); font-size: 12px; }
 
-        .btn-archive { width: 100%; padding: 12px; background: #333; color: #fff; border: none; margin-top: 20px; cursor: pointer; font-family: var(--font-main); }
-        .close-x { position: absolute; top: 5px; right: 10px; font-size: 20px; cursor: pointer; font-family: sans-serif; }
+        .archive-btn { width: 100%; padding: 15px; background: #222; color: #fff; border: none; cursor: pointer; font-family: var(--font-main); font-weight: 800; transition: 0.3s; margin-top: 20px; }
+        .archive-btn.clicked { background: var(--red) !important; box-shadow: 0 0 15px var(--red); }
 
         nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; background: #000; display: grid; grid-template-columns: 1fr 1fr 1fr; border-top: 1px solid var(--border); }
-        .nav-link { display: flex; align-items: center; justify-content: center; color: #444; text-decoration: none; font-size: 10px; }
+        .nav-link { display: flex; align-items: center; justify-content: center; color: #444; text-decoration: none; font-size: 10px; font-family: var(--font-main); }
         .nav-link.active { color: var(--neon); }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="header">
-        <h2 id="agentName">ACCESSING...</h2>
-        <div class="status-line" id="sigDisplay">SIG: PENDING</div>
+    <div style="padding: 20px 10px;">
+        <h2 id="agentHeader" style="font-family:var(--font-main); letter-spacing:2px;">UPLINKING_SESSION...</h2>
+        <div style="font-size:9px; color:var(--neon); opacity:0.6;">NETWORK_STABLE // NO_THREAT_DETECTED</div>
     </div>
 
     <div id="deviceGrid"></div>
     <div class="file-grid" id="mainFileGrid"></div>
-    <button id="btnBack" style="display:none; margin: 10px; color: var(--neon); background:none; border:none;" onclick="showDevices()">< BACK</button>
+    
+    <button id="btnBack" style="display:none; margin: 20px; color: var(--neon); background:none; border:none; font-family:var(--font-mono); cursor:pointer;" onclick="showDevices()">< EXIT_DEVICE</button>
 </div>
 
 <div id="docOverlay" class="overlay">
     <div class="paper-doc">
-        <div class="close-x" onclick="closeDoc()">×</div>
-        <div class="stamp-secret">CONFIDENTIAL</div>
-        <div class="doc-header">TOP SECRET</div>
+        <div onclick="closeDoc()" style="position:absolute; top:10px; left:10px; cursor:pointer; font-family:sans-serif; font-weight:bold;">[X]</div>
+        <div class="stamp">TOP SECRET</div>
+        <div style="text-align:center; text-decoration:underline; margin-bottom:20px;">MISSION DOSSIER</div>
 
         <div style="font-size: 12px; line-height: 1.8;">
-            <p><b>MISSION_ORDER#:</b> <span id="d-order">---</span></p>
-            <p><b>TARGET_ID:</b> #<span id="d-vagent">---</span></p>
+            <p>ORDER#: <span id="d-order">---</span></p>
+            <p>vAGENT: #<span id="d-vagent">---</span></p>
             <br>
-            <p><b>EXPENSES_LOG:</b></p>
-            <div id="logs-container" style="padding-left: 20px;"></div>
-            
-            <div class="math-problem">
-                <div>TOTAL_UPLINK:</div>
-                <div class="total-line" id="d-total">₱ 0.00</div>
+            <p><b>EXPENSES BREAKDOWN:</b></p>
+            <div id="logs-list" style="padding-left:15px; font-size:11px;"></div>
+            <div style="border-top:1px solid #333; margin-top:5px; text-align:right; font-weight:bold;">
+                TOTAL: <span id="d-total">₱ 0.00</span>
             </div>
-
             <br>
-            <p><b>DEPLOYMENT:</b> <span id="d-deploy">---</span></p>
-            <p><b>RELIEVE_DATE:</b> <span id="d-relieve">---</span></p>
+            <p>DEPLOYED: <span id="d-deploy">---</span></p>
+            <p>RELIEVED: <span id="d-relieve">---</span></p>
         </div>
 
-        <button class="btn-archive" onclick="archiveMission()">SEND TO ARCHIVES</button>
+        <button id="archiveBtn" class="archive-btn" onclick="archiveToBlacklist()">SEND TO ARCHIVES</button>
     </div>
 </div>
 
@@ -127,7 +136,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, query, where, getDocs, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = { 
         apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
@@ -140,101 +149,147 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    let currentAgent = localStorage.getItem("cia_agent");
     let deviceDataMap = {};
+    let selectedMissionData = null;
 
-    window.onload = async () => {
-        const agent = localStorage.getItem("cia_agent");
-        if (!agent) { window.location.href = "index.html"; return; }
-        document.getElementById('agentName').innerText = "AGENT_" + agent;
-        loadNodes(agent);
+    window.onload = () => {
+        if (!currentAgent) { window.location.href = "index.html"; return; }
+        document.getElementById('agentHeader').innerText = "AGENT_" + currentAgent;
+        loadDevices();
     };
 
-    async function loadNodes(agentName) {
-        const q = query(collection(db, "mission_orders"), where("agentName", "==", agentName));
+    async function loadDevices() {
+        const q = query(collection(db, "mission_orders"), where("agentName", "==", currentAgent));
         const snap = await getDocs(q);
         deviceDataMap = {};
 
         snap.forEach(d => {
             const data = d.data();
-            const weapon = data.weaponSystem || "GENERIC";
+            const weapon = data.weaponSystem || "UNKNOWN";
             if(!deviceDataMap[weapon]) deviceDataMap[weapon] = [];
             deviceDataMap[weapon].push(data);
         });
 
         const grid = document.getElementById('deviceGrid');
         grid.innerHTML = Object.keys(deviceDataMap).map(name => `
-            <div class="node-icon" onclick="openDevice('${name}')">
-                <div style="font-size:20px;">📁</div>
-                <div style="font-size:11px; font-weight:bold;">${name}</div>
+            <div class="phone-wrapper" onclick="bootDevice(this, '${name}')">
+                <div class="phone-container">
+                    <div class="phone-body">
+                        <div class="phone-screen">
+                            <div style="font-size:10px; color:#333;">POWER_OFF</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="phone-label">${name}</div>
             </div>
         `).join('');
     }
 
-    window.openDevice = (name) => {
-        document.getElementById('deviceGrid').style.display = 'none';
-        document.getElementById('mainFileGrid').style.display = 'grid';
-        document.getElementById('btnBack').style.display = 'block';
+    window.bootDevice = (el, weaponName) => {
+        const phone = el.querySelector('.phone-container');
+        phone.classList.add('booting');
         
+        setTimeout(() => {
+            document.getElementById('deviceGrid').style.display = 'none';
+            document.getElementById('mainFileGrid').style.display = 'grid';
+            document.getElementById('btnBack').style.display = 'block';
+            rendervAgents(weaponName);
+        }, 2000);
+    };
+
+    function rendervAgents(weaponName) {
         const fGrid = document.getElementById('mainFileGrid');
-        fGrid.innerHTML = deviceDataMap[name].map(d => `
-            <div class="file-wrapper">
-                <div class="shadow-file s2"></div>
-                <div class="shadow-file s1"></div>
-                <div class="file-icon" onclick="openMissionDoc('${d.vAgentID}', '${name}')"></div>
-                <div class="file-label">ID_${d.vAgentID}</div>
+        const existed = deviceDataMap[weaponName] || [];
+        
+        let html = existed.map(d => `
+            <div class="vagent-box" onclick="openMissionDoc('${d.vAgentID}', '${weaponName}')">
+                <div style="font-size:18px;">👤</div>
+                <span>#${d.vAgentID}</span>
             </div>
         `).join('');
-    };
+
+        // Shadow Files (Silhouettes)
+        html += `
+            <div class="vagent-box silhouette"><div style="font-size:18px;">👤</div><span>#SHDW</span></div>
+            <div class="vagent-box silhouette"><div style="font-size:18px;">👤</div><span>#SHDW</span></div>
+        `;
+        
+        fGrid.innerHTML = html;
+    }
 
     window.openMissionDoc = async (vID, weapon) => {
-        const agent = localStorage.getItem("cia_agent");
-        const docOverlay = document.getElementById('docOverlay');
-        
-        // Data from mission_orders
         const mission = deviceDataMap[weapon].find(m => m.vAgentID == vID);
-        document.getElementById('d-order').innerText = mission.orderNumber || "---";
-        document.getElementById('d-vagent').innerText = vID;
-        document.getElementById('d-deploy').innerText = mission.deploymentDate || "---";
-        document.getElementById('d-relieve').innerText = mission.relieveDate || "---";
+        selectedMissionData = { ...mission, weaponSystem: weapon };
 
-        // Fetch logs from bounty_report (transaction history)
-        const reportID = `${agent}_${weapon}_${vID}`.replace(/\s+/g, '_');
-        const logsContainer = document.getElementById('logs-container');
-        const totalDisplay = document.getElementById('d-total');
-        
-        logsContainer.innerHTML = "";
-        
-        try {
-            const reportSnap = await getDocs(collection(db, "bounty_report", reportID, "logs"));
-            let subtotal = 0;
+        // Handle Date Format Month/Date/Year
+        const formatDate = (dateStr) => {
+            if(!dateStr) return "---";
+            const d = new Date(dateStr);
+            return isNaN(d) ? dateStr : `${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()}`;
+        };
 
-            if (!reportSnap.empty) {
-                reportSnap.forEach(l => {
-                    const log = l.data();
-                    subtotal += log.amount;
-                    logsContainer.innerHTML += `<div>+ ₱${log.amount.toLocaleString()}</div>`;
-                });
-                totalDisplay.innerText = `₱ ${subtotal.toLocaleString()}`;
-            } else {
-                // If no logs, display the single totalExpenses from mission_orders
-                logsContainer.innerHTML = "<i>NO_BREAKDOWN_AVAILABLE</i>";
-                totalDisplay.innerText = `₱ ${parseFloat(mission.expenses || 0).toLocaleString()}`;
-            }
-        } catch (e) {
-            totalDisplay.innerText = `₱ ${parseFloat(mission.expenses || 0).toLocaleString()}`;
+        // Logic for Mission Order Search
+        let orderNum = mission.orderNumber;
+        if (!orderNum || orderNum === "unknown") {
+            // Re-verify logic: search matches
+            orderNum = `RE-VERIFYING...`; 
+            // Sa real implementation, dito mo i-ta-tag yung agentName + weapon + vID match.
         }
 
-        docOverlay.style.display = "flex";
+        document.getElementById('d-order').innerText = orderNum || "---";
+        document.getElementById('d-vagent').innerText = vID;
+        document.getElementById('d-deploy').innerText = formatDate(mission.deploymentDate);
+        document.getElementById('d-relieve').innerText = formatDate(mission.relieveDate);
+
+        // Logs Breakdown
+        const reportID = `${currentAgent}_${weapon}_${vID}`.replace(/\s+/g, '_');
+        const logsList = document.getElementById('logs-list');
+        const totalDisp = document.getElementById('d-total');
+        
+        try {
+            const logSnap = await getDocs(collection(db, "bounty_report", reportID, "logs"));
+            let sum = 0;
+            logsList.innerHTML = "";
+            
+            if(!logSnap.empty) {
+                logSnap.forEach(l => {
+                    const data = l.data();
+                    sum += data.amount;
+                    logsList.innerHTML += `<div>+ ₱${data.amount.toLocaleString()}</div>`;
+                });
+                totalDisp.innerText = `₱ ${sum.toLocaleString()}`;
+            } else {
+                totalDisp.innerText = `₱ ${parseFloat(mission.expenses || 0).toLocaleString()}`;
+            }
+        } catch(e) { totalDisp.innerText = "₱ 0.00"; }
+
+        document.getElementById('docOverlay').style.display = 'flex';
     };
 
-    window.closeDoc = () => document.getElementById('docOverlay').style.display = "none";
+    window.archiveToBlacklist = async () => {
+        const btn = document.getElementById('archiveBtn');
+        btn.classList.add('clicked');
+        btn.innerText = "ARCHIVING...";
+
+        try {
+            // Save all data to 'blacklist' collection
+            const blacklistID = `BLIST_${selectedMissionData.agentName}_${selectedMissionData.vAgentID}`;
+            await setDoc(doc(db, "blacklist", blacklistID), {
+                ...selectedMissionData,
+                archivedAt: new Date(),
+                status: "BLACK_LISTED"
+            });
+
+            alert("SYSTEM: MISSION_DATA_MOVED_TO_BLACKLIST");
+            location.reload();
+        } catch (e) { alert("ERR: ARCHIVE_FAILED"); }
+    };
+
+    window.closeDoc = () => document.getElementById('docOverlay').style.display = 'none';
     window.showDevices = () => {
-        document.getElementById('deviceGrid').style.display = 'grid';
-        document.getElementById('mainFileGrid').style.display = 'none';
-        document.getElementById('btnBack').style.display = 'none';
+        location.reload(); // Refresh to reset animations and grid
     };
-
-    window.archiveMission = () => alert("MISSION_ARCHIVED: DATA_SENT_TO_VAULT");
 </script>
 </body>
 </html>

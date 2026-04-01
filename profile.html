@@ -21,100 +21,82 @@
             background-image: radial-gradient(circle at center, #0a1f29 0%, #01080b 100%);
         }
 
-        .container { max-width: 500px; margin: 0 auto; padding: 20px; padding-bottom: 80px; }
+        .container { max-width: 500px; margin: 0 auto; padding: 20px; padding-bottom: 100px; }
 
         header { border-left: 4px solid var(--cia-cyan); padding-left: 15px; margin-bottom: 30px; }
         .section-title { font-family: var(--font-header); letter-spacing: 4px; color: var(--cia-cyan); text-transform: uppercase; }
 
         /* REALISTIC MOBILE DEVICE GRID */
         .device-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-top: 30px; perspective: 1000px; }
-        
-        .phone-wrapper { position: relative; cursor: pointer; transition: 0.5s; transform-style: preserve-3d; }
-
+        .phone-wrapper { position: relative; cursor: pointer; transform-style: preserve-3d; transition: 0.5s; }
         .phone-body {
             width: 140px; height: 260px; background: #050a0c; margin: 0 auto;
             border-radius: 18px; border: 3px solid #1a2a30; position: relative;
             box-shadow: 0 10px 30px rgba(0,0,0,0.8); overflow: hidden;
             transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            filter: grayscale(1) brightness(0.4); /* Lights Off */
+            filter: grayscale(1) brightness(0.3);
         }
-
         .phone-screen {
             position: absolute; inset: 6px; background: #000; border-radius: 12px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            border: 1px solid rgba(255,255,255,0.05);
         }
-
-        /* Hover Animation: Lights On & Rotate */
         .phone-wrapper:hover .phone-body {
             filter: grayscale(0) brightness(1);
-            transform: rotateY(15deg) rotateX(10deg);
+            transform: rotateY(15deg) rotateX(8deg);
             border-color: var(--cia-cyan);
-            box-shadow: 0 0 25px var(--cia-cyan-dim);
+            box-shadow: 0 0 25px rgba(0, 243, 255, 0.2);
         }
-
-        .activate-text {
-            color: var(--cia-cyan); font-size: 10px; font-weight: bold;
-            opacity: 0; transition: 0.3s; letter-spacing: 2px;
-            text-shadow: 0 0 10px var(--cia-cyan);
-        }
+        .activate-text { color: var(--cia-cyan); font-size: 10px; font-weight: bold; opacity: 0; letter-spacing: 2px; }
         .phone-wrapper:hover .activate-text { opacity: 1; animation: blink 1s infinite; }
 
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-
-        /* VAGENT LIST */
-        .vagent-grid { display: none; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; }
-        .vagent-item { 
-            background: rgba(0, 243, 255, 0.05); border: 1px solid var(--cia-border); 
-            height: 70px; display: flex; flex-direction: column; align-items: center; 
-            justify-content: center; cursor: pointer; transition: 0.2s;
+        /* DESKTOP FILE SYSTEM STYLE */
+        .vagent-grid { display: none; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px; }
+        
+        .file-icon-box {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 10px; cursor: pointer; transition: 0.2s; position: relative;
         }
-        .vagent-item:hover { background: var(--cia-cyan); color: #000; }
+        .file-icon { width: 45px; height: 35px; background: var(--cia-cyan); border-radius: 2px; position: relative; margin-bottom: 5px; opacity: 0.8; }
+        .file-icon::before { content: ""; position: absolute; top: -5px; left: 0; width: 15px; height: 5px; background: var(--cia-cyan); border-radius: 2px 2px 0 0; }
+        .file-label { font-size: 9px; text-align: center; color: #fff; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* GHOST FILE STYLE */
+        .ghost-file { opacity: 0.15 !important; cursor: not-allowed !important; filter: blur(0.5px); pointer-events: none; }
+        .ghost-file .file-icon { background: #444; }
+        .ghost-file .file-label { color: #555; font-style: italic; }
+
+        /* REMASTERED MEMOIR BUTTON (TACTICAL CORE) */
+        .memoir-trigger {
+            position: fixed; bottom: 85px; right: 20px; width: 60px; height: 60px;
+            background: #000; border: 2px solid var(--cia-red); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 20px rgba(255, 0, 60, 0.3); z-index: 500; cursor: pointer;
+            transition: 0.3s;
+        }
+        .memoir-trigger::after { content: "MEMOIR"; position: absolute; top: -20px; font-size: 8px; color: var(--cia-red); letter-spacing: 1px; }
+        .core-pulse { width: 30px; height: 30px; background: var(--cia-red); border-radius: 50%; animation: core-breathing 2s infinite; }
+        
+        @keyframes core-breathing {
+            0% { transform: scale(0.8); opacity: 0.5; box-shadow: 0 0 0px var(--cia-red); }
+            50% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 15px var(--cia-red); }
+            100% { transform: scale(0.8); opacity: 0.5; box-shadow: 0 0 0px var(--cia-red); }
+        }
 
         /* CLASSIFIED DOSSIER POPUP */
-        .overlay { 
-            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); 
-            z-index: 2000; justify-content: center; align-items: center; overflow-y: auto;
-        }
-
+        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; justify-content: center; align-items: center; }
         .dossier-paper {
-            width: 95%; max-width: 400px; background: #e8e2d2; color: #1a1a1a;
+            width: 90%; max-width: 400px; background: #e8e2d2; color: #1a1a1a;
             padding: 40px 25px; position: relative; font-family: var(--font-noir);
-            box-shadow: 0 0 50px rgba(0,0,0,1); border: 1px solid #c5b8a0;
-            background-image: radial-gradient(circle at 50% 50%, transparent 80%, rgba(0,0,0,0.05) 100%);
+            box-shadow: 0 0 50px #000; border: 1px solid #c5b8a0;
         }
-
-        /* TOP SECRET STAMP */
         .stamp-top-secret {
             position: absolute; top: 20px; right: 20px; border: 4px solid #8b0000;
             color: #8b0000; padding: 5px 15px; font-weight: 900; font-size: 18px;
-            transform: rotate(15deg); opacity: 0.8; letter-spacing: 2px;
-            pointer-events: none; text-transform: uppercase;
-        }
-
-        .cia-header-logo {
-            border-bottom: 2px solid #1a1a1a; margin-bottom: 20px; padding-bottom: 5px;
-            font-size: 12px; font-weight: bold; letter-spacing: 1px;
-        }
-
-        .redacted { background: #000; color: #000; padding: 0 4px; }
-        
-        .dossier-field { margin-bottom: 15px; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 5px; }
-
-        .archive-btn {
-            width: 100%; padding: 15px; margin-top: 20px; background: #1a1a1a; color: #e8e2d2;
-            border: none; font-family: var(--font-noir); cursor: pointer; font-weight: bold;
-        }
-
-        /* MEMOIRS SECTION */
-        .memoirs-container { margin-top: 40px; border-top: 1px solid var(--cia-border); padding-top: 20px; }
-        .memory-card {
-            background: rgba(255,0,60,0.03); border: 1px solid rgba(255,0,60,0.1);
-            padding: 15px; margin-bottom: 15px; border-left: 4px solid var(--cia-red);
+            transform: rotate(15deg); opacity: 0.6; pointer-events: none;
         }
 
         nav { position: fixed; bottom: 0; width: 100%; height: 65px; background: #000; display: grid; grid-template-columns: 1fr 1fr 1fr; border-top: 1px solid var(--cia-border); }
-        .nav-link { display: flex; align-items: center; justify-content: center; color: #444; text-decoration: none; font-size: 11px; font-family: var(--font-digital); }
+        .nav-link { display: flex; align-items: center; justify-content: center; color: #444; text-decoration: none; font-size: 11px; }
         .nav-link.active { color: var(--cia-cyan); border-top: 2px solid var(--cia-cyan); }
     </style>
 </head>
@@ -123,60 +105,39 @@
 <div class="container">
     <header>
         <h2 class="section-title">CENTRAL_INTEL_ARCHIVE</h2>
-        <p style="font-size: 9px; opacity: 0.5; color: var(--cia-cyan);">ENCRYPTED_FILES // LEVEL_4_CLEARANCE</p>
+        <p style="font-size: 9px; opacity: 0.5; color: var(--cia-cyan);">NODE_RECOVERY // ENCRYPTED_FILES</p>
     </header>
 
-    <div id="deviceSection" class="device-grid">
-        </div>
-
+    <div id="deviceSection" class="device-grid"></div>
     <div id="vagentSection" class="vagent-grid"></div>
 
-    <button id="btnBack" onclick="location.reload()" style="display:none; background:none; border:1px solid var(--cia-cyan); color:var(--cia-cyan); padding:12px; width:100%; margin-top:20px; font-family:var(--font-digital);">
-        [ << RETURN_TO_SYSTEM_SCAN ]
+    <button id="btnBack" onclick="location.reload()" style="display:none; background:none; border:1px solid var(--cia-cyan); color:var(--cia-cyan); padding:12px; width:100%; margin-top:20px; font-family:var(--font-digital); cursor:pointer;">
+        [ << RE-SCAN_DEVICES ]
     </button>
+</div>
 
-    <div class="memoirs-container">
-        <h3 class="section-title" style="font-size: 14px; color: var(--cia-red);">// AGENT_MEMOIRS</h3>
-        <div id="memoirsList">
-            <div class="memory-card">
-                <div style="font-size: 9px; color: var(--cia-red);">DATE: 2026-03-24 // ID: LOG_882</div>
-                <div style="font-size: 12px; margin-top: 5px;">Operation 'IponHub' initialized. Local data streams connected to Firebase nodes. Security handshake successful.</div>
-            </div>
-        </div>
-    </div>
+<div class="memoir-trigger" onclick="alert('Accessing Encrypted Memoirs...')">
+    <div class="core-pulse"></div>
 </div>
 
 <div id="noirOverlay" class="overlay">
     <div class="dossier-paper">
         <div class="stamp-top-secret">TOP SECRET</div>
+        <div onclick="closeNoir()" style="position:absolute; top:10px; right:15px; cursor:pointer; font-weight:bold; color:#8b0000;">[ X ]</div>
+        <div style="border-bottom: 1px solid #000; margin-bottom: 20px; font-weight: bold;">CIA CASE FILE: #<span id="n-vagent">---</span></div>
         
-        <div class="cia-header-logo">
-            CENTRAL INTELLIGENCE AGENCY<br>
-            <span style="font-size: 9px; font-weight: normal;">OFFICE OF STRATEGIC SERVICES</span>
-        </div>
-
-        <div onclick="closeNoir()" style="position:absolute; top:10px; right:15px; cursor:pointer; font-weight:bold; color: #8b0000;">[ X ]</div>
-
-        <div style="margin-top: 20px;">
-            <div class="dossier-field"><b>CASE_FILE:</b> #<span id="n-vagent">---</span></div>
-            <div class="dossier-field"><b>REFERENCE_ID:</b> <span class="redacted" id="n-order">XXXXXXXXXX</span></div>
+        <div style="margin-top: 15px; font-size: 13px;">
+            <p><b>REF_ID:</b> <span id="n-order">---</span></p>
+            <p style="margin-top:10px;"><b>WEAPON_ASSIGNMENT:</b></p>
+            <select id="weaponSelect" onchange="showSave()" style="width:100%; padding:5px; font-family:var(--font-noir); background:none; margin-top:5px;"></select>
             
-            <div class="dossier-field">
-                <b>CURRENT_WEAPON_SYSTEM:</b><br>
-                <select id="weaponSelect" onchange="showSave()" style="background:rgba(0,0,0,0.05); border:1px solid #ccc; font-family:var(--font-noir); width:100%; padding: 5px; margin-top: 5px;">
-                </select>
+            <div style="background:rgba(0,0,0,0.05); padding:10px; margin-top:15px; border:1px dashed #000;">
+                <b>TRANS_LOGS:</b>
+                <div id="n-logs" style="max-height:80px; overflow-y:auto; font-size:11px; margin:5px 0;"></div>
+                <div style="text-align:right; border-top:1px solid #000;">TOTAL: <span id="n-total">₱ 0.00</span></div>
             </div>
 
-            <div class="dossier-field"><b>CLEARANCE:</b> <span style="color:#8b0000; font-weight:bold; border: 1px solid #8b0000; padding: 2px 5px;">CLASSIFIED</span></div>
-            
-            <div style="background:rgba(0,0,0,0.05); padding:15px; margin-top:15px; border: 1px solid rgba(0,0,0,0.1);">
-                <b style="font-size: 12px;">FINANCIAL_AUDIT (BOUNTY):</b>
-                <div id="n-logs" style="font-size:12px; max-height:80px; overflow-y:auto; margin:10px 0; border-left: 2px solid #1a1a1a; padding-left: 10px;"></div>
-                <div style="text-align:right; font-weight:bold; font-size: 16px;">TOTAL: <span id="n-total">₱ 0.00</span></div>
-            </div>
-
-            <button id="saveBtn" class="archive-btn" style="display:none; background:#2b5329; color:#fff;" onclick="saveWeaponChange()">AUTHORIZE_REASSIGNMENT</button>
-            <button class="archive-btn" onclick="alert('Moving to Archives...')">SEND TO BLACKLIST</button>
+            <button id="saveBtn" style="display:none; width:100%; padding:10px; background:#2b5329; color:#fff; border:none; margin-top:10px; cursor:pointer;" onclick="saveWeaponChange()">UPDATE_DATA</button>
         </div>
     </div>
 </div>
@@ -210,14 +171,12 @@
         if (!currentAgent) return;
         const q = query(collection(db, "mission_orders"), where("agentName", "==", currentAgent));
         const snap = await getDocs(q);
-        
         snap.forEach(d => {
             const data = d.data();
             const w = data.weaponSystem || "UNASSIGNED";
             if(!deviceData[w]) deviceData[w] = [];
             deviceData[w].push({ ...data, id: d.id });
         });
-
         renderDevices();
     };
 
@@ -227,9 +186,7 @@
             <div class="phone-wrapper" onclick="showvAgents('${name}')">
                 <div class="phone-body">
                     <div class="phone-screen">
-                        <div style="font-size:11px; font-weight:bold; color:white; margin-bottom: 5px;">${name}</div>
-                        <div style="font-size:8px; color:var(--cia-cyan);">${deviceData[name].length} FILES</div>
-                        <div style="height: 100px;"></div>
+                        <div style="font-size:11px; font-weight:bold; color:white;">${name}</div>
                         <div class="activate-text">ACTIVATE</div>
                     </div>
                 </div>
@@ -243,46 +200,46 @@
         document.getElementById('btnBack').style.display = 'block';
         
         const grid = document.getElementById('vagentSection');
-        grid.innerHTML = deviceData[name].map(v => `
-            <div class="vagent-item" onclick="openNoirModal('${v.id}', '${name}')">
-                <span style="font-size:9px; opacity: 0.6;">SERIAL:</span>
-                <span style="font-weight:bold;">#${v.vAgentID}</span>
-            </div>
-        `).join('');
+        let html = "";
+        deviceData[name].forEach(v => {
+            // Real File
+            html += `
+                <div class="file-icon-box" onclick="openNoirModal('${v.id}', '${name}')">
+                    <div class="file-icon"></div>
+                    <div class="file-label">ID_${v.vAgentID}</div>
+                </div>
+                <div class="file-icon-box ghost-file">
+                    <div class="file-icon"></div>
+                    <div class="file-label">CORRUPTED</div>
+                </div>
+            `;
+        });
+        grid.innerHTML = html;
     }
 
     window.openNoirModal = async (docID, weapon) => {
         activeDocID = docID;
         const mission = deviceData[weapon].find(m => m.id == docID);
-        
         document.getElementById('noirOverlay').style.display = 'flex';
         document.getElementById('n-vagent').innerText = mission.vAgentID;
         document.getElementById('n-order').innerText = docID;
-
         const sel = document.getElementById('weaponSelect');
         sel.innerHTML = Object.keys(deviceData).map(k => `<option value="${k}" ${k==weapon?'selected':''}>${k}</option>`).join('');
 
         const reportID = `${currentAgent}_${weapon}_${mission.vAgentID}`.replace(/\s+/g, '_');
         const logSnap = await getDocs(collection(db, "bounty_report", reportID, "logs"));
-        let sum = 0;
-        let logHtml = "";
-        logSnap.forEach(l => {
-            sum += l.data().amount;
-            logHtml += `<div>(+) ₱${l.data().amount.toLocaleString()} <span style="font-size:8px; opacity:0.5;">ARCHIVED</span></div>`;
-        });
-        document.getElementById('n-logs').innerHTML = logHtml || "No transactional logs.";
+        let sum = 0; let logHtml = "";
+        logSnap.forEach(l => { sum += l.data().amount; logHtml += `<div>(+) ₱${l.data().amount.toLocaleString()}</div>`; });
+        document.getElementById('n-logs').innerHTML = logHtml || "No logs found.";
         document.getElementById('n-total').innerText = `₱ ${sum.toLocaleString()}`;
     };
 
     window.showSave = () => document.getElementById('saveBtn').style.display = 'block';
-
     window.saveWeaponChange = async () => {
         const newW = document.getElementById('weaponSelect').value;
         await updateDoc(doc(db, "mission_orders", activeDocID), { weaponSystem: newW });
-        alert("AUTHORIZATION GRANTED. REASSIGNMENT COMPLETE.");
-        location.reload();
+        alert("AUTHORIZED."); location.reload();
     };
-
     window.closeNoir = () => document.getElementById('noirOverlay').style.display = 'none';
 </script>
 </body>

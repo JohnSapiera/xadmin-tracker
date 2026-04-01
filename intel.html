@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-    <title>INTEL_TERMINAL_v28</title>
+    <title>INTEL_TERMINAL_v29</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
     <style>
         :root { 
@@ -29,7 +29,6 @@
             transition: 0.3s;
         }
         .report-btn:active { background: var(--cyan); color: #000; }
-
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 1000; }
         .modal-box { 
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
@@ -39,18 +38,11 @@
         .input-group { margin-bottom: 12px; text-align: left; }
         .input-label { font-family: var(--mono); font-size: 9px; color: var(--cyan); margin-bottom: 4px; display: block; opacity: 0.7; }
         .intel-input { width: 100%; background: #05131a; border: 1px solid #1a2f37; padding: 12px; color: #fff; font-family: var(--mono); font-size: 18px; outline: none; text-align: center; }
-        
         .weapon-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px; }
-        .weapon-card { 
-            padding: 12px; border: 1px solid #1a2f37; background: rgba(255,255,255,0.02); 
-            font-family: var(--mono); font-size: 10px; text-align: center; cursor: pointer; color: #5c7882; 
-            transition: 0.2s;
-        }
-        .weapon-card.selected { border-color: var(--green); color: var(--green); background: rgba(0,255,102,0.1); box-shadow: 0 0 10px rgba(0,255,102,0.1); }
-        
+        .weapon-card { padding: 12px; border: 1px solid #1a2f37; background: rgba(255,255,255,0.02); font-family: var(--mono); font-size: 10px; text-align: center; cursor: pointer; color: #5c7882; transition: 0.2s; }
+        .weapon-card.selected { border-color: var(--green); color: var(--green); background: rgba(0,255,102,0.1); }
         .btn-transmit { width: 100%; padding: 15px; background: var(--cyan); color: #000; border: none; font-family: var(--mono); font-size: 13px; font-weight: 900; cursor: pointer; margin-top: 15px; }
         .btn-transmit:disabled { opacity: 0.1; filter: grayscale(1); }
-        
         nav { position: fixed; bottom: 0; width: 100%; height: 60px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; }
         .nav-link { display: flex; align-items: center; justify-content: center; color: #444; font-family: var(--mono); text-decoration: none; font-size: 11px; }
         .nav-link.active { color: var(--cyan); border-top: 2px solid var(--cyan); }
@@ -58,17 +50,17 @@
 </head>
 <body>
 
-<header><div class="intel-title">INTEL_TERMINAL_v28</div></header>
+<header><div class="intel-title">INTEL_TERMINAL_v29</div></header>
 
 <main>
     <div id="display-name" class="agent-name">---</div>
-    <div id="agent-status-label" style="font-size:9px; color:#5c7882; font-family:var(--mono);">STATUS: AWAITING_AUTHENTICATION</div>
+    <div style="font-size:9px; color:#5c7882; font-family:var(--mono);">STATUS: READY_FOR_UPLINK</div>
     <button class="report-btn" onclick="openReport()">INITIATE_SCAN</button>
 </main>
 
 <div id="report-modal" class="modal">
     <div class="modal-box">
-        <div id="scan-status" style="font-size:9px; color:#5c7882; text-align:center; margin-bottom:10px; font-family:var(--mono);">SYSTEM_READY...</div>
+        <div id="scan-status" style="font-size:9px; color:#5c7882; text-align:center; margin-bottom:10px; font-family:var(--mono);">SYSTEM_IDLE...</div>
 
         <div class="input-group">
             <span class="input-label">SCAN_V_AGENT_ID</span>
@@ -76,24 +68,21 @@
         </div>
 
         <div id="weapon-selection-zone" style="display:none; margin-bottom:12px;">
-            <span class="input-label">SELECT_WEAPON_SYSTEM</span>
+            <span class="input-label">TARGET_WEAPON_SYSTEM</span>
             <div id="weapon-grid" class="weapon-grid"></div>
         </div>
 
         <div class="input-group">
-            <span class="input-label">UPLINK_EXPENSE (PHP)</span>
+            <span class="input-label">EXPENSE_LOG (PHP)</span>
             <input type="number" id="expensesInput" class="intel-input" placeholder="0.00" oninput="validateForm()">
         </div>
 
-        <button id="transmit-btn" onclick="transmitData()" class="btn-transmit" disabled>DATA_PENDING</button>
-        <button onclick="closeReport()" style="width:100%; background:transparent; color:var(--red); border:none; margin-top:10px; font-family:var(--mono); font-size:9px; cursor:pointer;">// ABORT</button>
+        <button id="transmit-btn" onclick="transmitData()" class="btn-transmit" disabled>AWAITING_INPUT</button>
+        <button onclick="closeReport()" style="width:100%; background:transparent; color:var(--red); border:none; margin-top:10px; font-family:var(--mono); font-size:9px;">// ABORT</button>
     </div>
 </div>
 
-<nav>
-    <a href="dashboard.html" class="nav-link">DASHBOARD</a>
-    <a href="#" class="nav-link active">INTEL</a>
-</nav>
+<nav><a href="dashboard.html" class="nav-link">DASHBOARD</a><a href="#" class="nav-link active">INTEL</a></nav>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -113,12 +102,11 @@
     let selectedDeviceName = null;
 
     window.onload = () => {
-        const agent = localStorage.getItem("cia_agent"); // e.g., "AGENT_LZ"
+        const agent = localStorage.getItem("cia_agent");
         if (!agent) { window.location.href = "index.html"; return; }
         document.getElementById('display-name').innerText = agent;
     };
 
-    // LOGIC: Check "agents" collection (Authentication) -> Scan "mission_orders" (Targeting)
     window.handleDualSearch = async (val) => {
         const currentAgent = localStorage.getItem("cia_agent");
         const status = document.getElementById('scan-status');
@@ -126,38 +114,42 @@
         const zone = document.getElementById('weapon-selection-zone');
         const cleanVal = val.trim();
 
-        if(cleanVal.length < 1) { 
-            zone.style.display = "none"; 
-            status.innerText = "SYSTEM_READY...";
-            return; 
-        }
+        if(cleanVal.length < 1) { zone.style.display = "none"; return; }
 
         try {
-            // STEP 1: VERIFY AGENT
+            // STEP 1: VERIFY AGENT (Sa 'agents' collection)
             const agentQ = query(collection(db, "agents"), where("agentName", "==", currentAgent));
             const agentSnap = await getDocs(agentQ);
 
             if (agentSnap.empty) {
-                status.innerText = ">> ERR: AGENT_UNAUTHORIZED";
+                status.innerText = ">> ERR: AGENT_NOT_AUTHORIZED";
                 status.style.color = "var(--red)";
                 return;
             }
 
-            // STEP 2: SEARCH MISSION_ORDERS FOR THE V_AGENT_ID
-            const missionQ = query(collection(db, "mission_orders"), 
-                                  where("assignedAgent", "==", currentAgent), 
-                                  where("vAgentID", "==", cleanVal));
-            
-            const missionSnap = await getDocs(missionQ);
+            // STEP 2: SEARCH MISSION_ORDERS (Using 'agentName' instead of 'assignedAgent')
+            // Ginawa nating array para i-check kung String "2" o Number 2 ang nasa database
+            const queries = [
+                query(collection(db, "mission_orders"), where("agentName", "==", currentAgent), where("vAgentID", "==", cleanVal)),
+                query(collection(db, "mission_orders"), where("agentName", "==", currentAgent), where("vAgentID", "==", Number(cleanVal)))
+            ];
 
-            if (!missionSnap.empty) {
+            let finalDocs = [];
+            for (let q of queries) {
+                const snap = await getDocs(q);
+                if (!snap.empty) {
+                    snap.forEach(d => finalDocs.push(d.data()));
+                    break; 
+                }
+            }
+
+            if (finalDocs.length > 0) {
                 zone.style.display = "block";
                 grid.innerHTML = "";
-                status.innerText = ">> VERIFIED: MISSION_DATA_UPLINKED";
+                status.innerText = ">> TARGET_LOCKED: [" + cleanVal + "]";
                 status.style.color = "var(--green)";
 
-                missionSnap.forEach(docSnap => {
-                    const data = docSnap.data();
+                finalDocs.forEach(data => {
                     const card = document.createElement('div');
                     card.className = 'weapon-card';
                     card.innerHTML = `SYSTEM:<br><b>${data.weaponSystem}</b>`;
@@ -165,16 +157,13 @@
                     grid.appendChild(card);
                 });
             } else {
-                status.innerText = ">> ERR: V_AGENT_ID_NOT_FOUND";
+                status.innerText = ">> ERR: ID_NOT_REGISTERED";
                 status.style.color = "#5c7882";
                 zone.style.display = "none";
                 selectedDeviceName = null;
             }
             validateForm();
-        } catch (e) { 
-            console.error("DualSearch Error:", e);
-            status.innerText = ">> ERR: CONNECTION_INTERRUPTED";
-        }
+        } catch (e) { console.error(e); }
     };
 
     window.selectWeapon = (element, name) => {
@@ -188,14 +177,8 @@
         const v = document.getElementById('vAgentInput').value;
         const e = document.getElementById('expensesInput').value;
         const btn = document.getElementById('transmit-btn');
-        
-        if (v && e > 0 && selectedDeviceName) {
-            btn.disabled = false;
-            btn.innerText = "TRANSMIT_TO_" + selectedDeviceName.toUpperCase();
-        } else {
-            btn.disabled = true;
-            btn.innerText = "AWAITING_COMPLETE_DATA";
-        }
+        btn.disabled = !(v && e > 0 && selectedDeviceName);
+        if(!btn.disabled) btn.innerText = "TRANSMIT_TO_" + selectedDeviceName.toUpperCase();
     };
 
     window.transmitData = async () => {
@@ -204,11 +187,9 @@
         const agent = localStorage.getItem("cia_agent");
 
         try {
-            // Unique ID per Agent-Device-VAgent sequence
             const reportID = `${agent}_${selectedDeviceName}_${v}`.replace(/\s+/g, '_');
             const reportRef = doc(db, "bounty_report", reportID);
 
-            // 1. UPDATE SUMMARY TOTAL
             await setDoc(reportRef, {
                 agentOwner: agent,
                 weaponSystem: selectedDeviceName,
@@ -217,19 +198,15 @@
                 lastUpdate: serverTimestamp()
             }, { merge: true });
 
-            // 2. ADD TO LOGS
             await addDoc(collection(db, "bounty_report", reportID, "logs"), {
                 amount: e,
                 timestamp: serverTimestamp(),
                 reportedBy: agent
             });
 
-            alert("✅ SUCCESS: INTEL_REPORT_TRANSMITTED");
+            alert("✅ INTEL_REPORT_TRANSMITTED");
             location.reload();
-        } catch (err) { 
-            console.error(err);
-            alert("❌ TRANSMISSION_FAILED"); 
-        }
+        } catch (err) { alert("❌ FAILED"); }
     };
 
     window.openReport = () => document.getElementById('report-modal').style.display = 'block';

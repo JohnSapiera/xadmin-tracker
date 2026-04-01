@@ -3,260 +3,251 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CLASSIFIED_ARCHIVES_1950s</title>
-    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+    <title>CIA_CENTRAL_UPLINK // SECURE_GATEWAY</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
     <style>
-        :root { 
-            --paper: #e8d5b5; --ink: #2b2b2b; --noir-bg: #1a1a1a;
-            --font-type: 'Special Elite', cursive;
-            --font-mono: 'Courier Prime', monospace;
+        :root {
+            --cia-bg: #01080b;
+            --cia-cyan: #00f3ff;
+            --cia-red: #ff003c;
+            --cia-glass: rgba(0, 243, 255, 0.05);
+            --cia-border: rgba(0, 243, 255, 0.15);
+            --font-digital: 'Share Tech Mono', monospace;
+            --font-header: 'Rajdhani', sans-serif;
         }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
-        
-        body { 
-            background: var(--noir-bg); color: var(--paper); font-family: var(--font-type); 
-            height: 100vh; overflow: hidden; position: relative;
+        body {
+            background-color: var(--cia-bg);
+            color: var(--cia-cyan);
+            font-family: var(--font-digital);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* Subtle Grid Background */
+            background-image: 
+                linear-gradient(var(--cia-border) 1px, transparent 1px),
+                linear-gradient(90deg, var(--cia-border) 1px, transparent 1px);
+            background-size: 40px 40px;
         }
 
-        /* 50s FILM GRAIN EFFECT */
-        body::after {
-            content: ""; position: fixed; inset: 0; 
-            background: url('https://media.giphy.com/media/oEI9uWUicT3hu/giphy.gif'); 
-            opacity: 0.04; pointer-events: none; z-index: 9999; mix-blend-mode: overlay;
+        /* Access Portal Box */
+        .login-box {
+            width: 90%;
+            max-width: 400px;
+            background: rgba(0, 10, 15, 0.9);
+            border: 1px solid var(--cia-cyan);
+            padding: 40px 30px;
+            position: relative;
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.1);
         }
 
-        /* OLD PROJECTOR SHAKE */
-        @keyframes jitter {
-            0% { transform: translate(0,0); }
-            10% { transform: translate(-1px, -1px); }
-            20% { transform: translate(1px, 0px); }
-            100% { transform: translate(0,0); }
+        /* Decorative Corners */
+        .login-box::before, .login-box::after {
+            content: ""; position: absolute; width: 20px; height: 20px;
+            border: 2px solid var(--cia-cyan);
         }
-        .cinematic-shake { animation: jitter 0.2s infinite; }
+        .login-box::before { top: -2px; left: -2px; border-right: 0; border-bottom: 0; }
+        .login-box::after { bottom: -2px; right: -2px; border-left: 0; border-top: 0; }
 
-        .container { max-width: 500px; margin: 0 auto; height: 100%; display: flex; flex-direction: column; overflow-y: auto; padding-bottom: 80px; }
-
-        /* DEVICE GRID (VINTAGE PHONES) */
-        #deviceGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; padding: 30px 15px; }
-        .phone-wrapper { display: flex; flex-direction: column; align-items: center; }
-        .phone-container { 
-            width: 90px; height: 160px; background: #222; border: 4px solid #444; 
-            border-radius: 10px; position: relative; cursor: pointer;
-            box-shadow: 10px 10px 20px #000; transition: 0.3s;
-        }
-        .phone-container.booting { background: #e8d5b5; box-shadow: 0 0 20px #e8d5b5; }
-        .phone-label { margin-top: 10px; font-weight: bold; color: #888; font-size: 12px; letter-spacing: 2px; }
-
-        /* CASE FOLDER (vAGENTS) */
-        .file-grid { display: none; grid-template-columns: repeat(4, 1fr); gap: 15px; padding: 20px; }
-        .vagent-box { 
-            width: 70px; height: 85px; background: #333; border: 1px solid #444;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            cursor: pointer; position: relative; box-shadow: 5px 5px 10px #000;
-        }
-        .vagent-box::before { content: ""; position: absolute; top: -5px; left: 0; width: 30px; height: 5px; background: #444; }
-        .vagent-box span { font-size: 10px; margin-top: 5px; color: var(--paper); }
-
-        /* CASE FILE (MANILA FOLDER) */
-        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; }
-        .manila-folder {
-            width: 92%; max-width: 380px; background: #d4b98a; color: #3d2b1f; padding: 40px 25px;
-            box-shadow: 15px 15px 0px #1a1a1a; position: relative;
-            background-image: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.1) 100%);
-        }
-        .folder-tab { position: absolute; top: -25px; left: 0; background: #d4b98a; padding: 5px 20px; font-weight: bold; border-radius: 5px 20px 0 0; }
-        
-        .typewriter-text { font-family: var(--font-type); border-bottom: 1px solid rgba(0,0,0,0.1); margin-bottom: 15px; padding-bottom: 5px; }
-        
-        /* EDITABLE SELECT */
-        select.edit-field {
-            background: none; border: 2px dashed #3d2b1f; font-family: var(--font-type);
-            font-size: 14px; padding: 5px; width: 100%; color: #3d2b1f; cursor: pointer;
+        .terminal-header {
+            text-align: center;
+            margin-bottom: 30px;
         }
 
-        .memoirs-btn {
-            background: #8b0000; color: #fff; border: none; padding: 15px; width: 80%;
-            margin: 20px auto; display: block; font-family: var(--font-type); cursor: pointer;
-            box-shadow: 5px 5px 0px #000;
+        .terminal-header h1 {
+            font-family: var(--font-header);
+            font-size: 28px;
+            letter-spacing: 5px;
+            margin-bottom: 5px;
+            text-transform: uppercase;
         }
 
-        nav { position: fixed; bottom: 0; width: 100%; height: 60px; background: #000; display: grid; grid-template-columns: 1fr 1fr 1fr; border-top: 2px solid #333; }
-        .nav-link { display: flex; align-items: center; justify-content: center; color: #555; text-decoration: none; font-size: 12px; }
-        .nav-link.active { color: var(--paper); text-decoration: underline; }
+        .status-line {
+            font-size: 10px;
+            opacity: 0.7;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+        }
+
+        /* Input Styles */
+        .input-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 11px;
+            margin-bottom: 8px;
+            opacity: 0.6;
+        }
+
+        .input-group input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--cia-border);
+            padding: 12px 15px;
+            color: #fff;
+            font-family: var(--font-digital);
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .input-group input:focus {
+            border-color: var(--cia-cyan);
+            background: rgba(0, 243, 255, 0.05);
+            box-shadow: inset 0 0 10px rgba(0, 243, 255, 0.1);
+        }
+
+        /* Access Button */
+        .access-btn {
+            width: 100%;
+            padding: 15px;
+            background: none;
+            border: 1px solid var(--cia-cyan);
+            color: var(--cia-cyan);
+            font-family: var(--font-header);
+            font-weight: bold;
+            font-size: 16px;
+            letter-spacing: 3px;
+            cursor: pointer;
+            transition: 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .access-btn:hover {
+            background: var(--cia-cyan);
+            color: #000;
+            box-shadow: 0 0 20px var(--cia-cyan);
+        }
+
+        .access-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Terminal Logs simulation */
+        #logDisplay {
+            margin-top: 20px;
+            height: 60px;
+            font-size: 9px;
+            overflow: hidden;
+            color: #4a6c72;
+            line-height: 1.5;
+        }
+
+        /* Glitch Effect on error */
+        .error-shake {
+            animation: shake 0.2s ease-in-out 0s 2;
+            border-color: var(--cia-red) !important;
+            color: var(--cia-red) !important;
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(5px); }
+            50% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+
+        .loading-bar {
+            height: 2px;
+            background: var(--cia-cyan);
+            width: 0%;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            transition: 0.5s;
+        }
     </style>
 </head>
-<body class="cinematic-shake">
+<body>
 
-<div class="container">
-    <div style="padding: 30px 20px; border-bottom: 2px solid #333;">
-        <h1 style="font-size: 24px; letter-spacing: 5px;">TOP_SECRET</h1>
-        <p style="font-size: 10px; color: #666;">BUREAU OF CLASSIFIED RECORDS - 1956</p>
+<div class="login-box" id="loginContainer">
+    <div class="terminal-header">
+        <h1>UPLINK_NODE</h1>
+        <div class="status-line" id="statusLine">WAITING_FOR_AUTHORIZATION...</div>
     </div>
 
-    <div id="deviceGrid"></div>
-    <div class="file-grid" id="mainFileGrid"></div>
-    
-    <button id="btnBack" style="display:none; margin:20px; background:none; border:1px solid #444; color:#888; padding:10px;" onclick="location.reload()">[ CLOSE_FOLDER ]</button>
-    
-    <button class="memoirs-btn" onclick="openMemoirs()">VIEW MEMOIRS</button>
-</div>
-
-<div id="docOverlay" class="overlay">
-    <div class="manila-folder">
-        <div class="folder-tab">FILE_#<span id="d-vagent">00</span></div>
-        <div onclick="closeDoc()" style="position:absolute; top:10px; right:15px; cursor:pointer;">[ X ]</div>
-        
-        <div style="margin-top: 20px;">
-            <div class="typewriter-text"><b>ORDER_NO:</b> <span id="d-order">---</span></div>
-            
-            <div class="typewriter-text">
-                <b>WEAPON_SYSTEM:</b><br>
-                <select id="deviceSelector" class="edit-field" onchange="enableSaveBtn()">
-                    </select>
-            </div>
-
-            <div class="typewriter-text"><b>LAST_SEEN:</b> <span id="d-deploy">---</span></div>
-            
-            <div style="background: rgba(0,0,0,0.05); padding: 10px; margin-top: 20px;">
-                <p><b>FINANCIAL_REPORTS:</b></p>
-                <div id="logs-list" style="font-size: 11px; margin: 10px 0;"></div>
-                <div style="text-align: right; border-top: 1px solid #3d2b1f; font-weight: bold;">
-                    TOTAL: <span id="d-total">₱ 0.00</span>
-                </div>
-            </div>
-
-            <button id="saveBtn" class="memoirs-btn" style="background: #2b5329; display: none;" onclick="updateWeaponSystem()">SAVE CHANGES</button>
-        </div>
+    <div class="input-group">
+        <label>AGENT_IDENTIFICATION</label>
+        <input type="text" id="agentInput" placeholder="ENTER_AGENT_ID" autocomplete="off">
     </div>
+
+    <div class="input-group" style="margin-bottom: 10px;">
+        <label>ENCRYPTION_KEY</label>
+        <input type="password" id="passInput" placeholder="••••••••" autocomplete="off">
+    </div>
+
+    <div id="logDisplay"></div>
+
+    <button class="access-btn" onclick="initiateUplink()">INITIALIZE_ACCESS</button>
+    <div class="loading-bar" id="loadBar"></div>
 </div>
 
-<div id="creditsOverlay" style="display:none; position:fixed; inset:0; background:#000; z-index:2000; color:#fff; flex-direction:column; align-items:center; justify-content:center;">
-    <div id="creditsContent" style="text-align:center; transform: translateY(100vh); animation: scrollUp 5s linear forwards;"></div>
-</div>
+<script>
+    const logs = [
+        "> INITIALIZING_HANDSHAKE...",
+        "> BYPASSING_FIREWALL...",
+        "> DECRYPTING_LOCAL_STORAGE...",
+        "> VALIDATING_CREDENTIALS...",
+        "> ACCESS_GRANTED_AGENT_PROCEEDING"
+    ];
 
-<nav>
-    <a href="dashboard.html" class="nav-link">DASHBOARD</a>
-    <a href="#" class="nav-link">INTEL</a>
-    <a href="#" class="nav-link active">PROFILE</a>
-</nav>
-
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, query, where, getDocs, doc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-    const firebaseConfig = { 
-        apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
-        authDomain: "my-admin-portal-12691.firebaseapp.com", 
-        projectId: "my-admin-portal-12691", 
-        storageBucket: "my-admin-portal-12691.firebasestorage.app", 
-        messagingSenderId: "317015091563", 
-        appId: "1:317015091563:web:baab5171d8e0a58acd442e" 
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const currentAgent = localStorage.getItem("cia_agent");
-    let deviceDataMap = {};
-    let activeDocID = null;
-
-    window.onload = () => {
-        if (!currentAgent) { window.location.href = "index.html"; return; }
-        loadDevices();
-    };
-
-    async function loadDevices() {
-        const q = query(collection(db, "mission_orders"), where("agentName", "==", currentAgent));
-        const snap = await getDocs(q);
-        deviceDataMap = {};
-        snap.forEach(d => {
-            const data = d.data();
-            const weapon = data.weaponSystem || "UNASSIGNED";
-            if(!deviceDataMap[weapon]) deviceDataMap[weapon] = [];
-            deviceDataMap[weapon].push({ ...data, docID: d.id });
-        });
-
-        const grid = document.getElementById('deviceGrid');
-        grid.innerHTML = Object.keys(deviceDataMap).map(name => `
-            <div class="phone-wrapper" onclick="bootDevice(this, '${name}')">
-                <div class="phone-container"></div>
-                <div class="phone-label">${name}</div>
-            </div>
-        `).join('');
-
-        // Populate the dropdown inside the dossier
-        const selector = document.getElementById('deviceSelector');
-        selector.innerHTML = Object.keys(deviceDataMap).map(name => `<option value="${name}">${name}</option>`).join('');
+    function addLog(text) {
+        const logBox = document.getElementById('logDisplay');
+        const line = document.createElement('div');
+        line.innerText = text;
+        logBox.appendChild(line);
+        if (logBox.childNodes.length > 4) logBox.removeChild(logBox.firstChild);
     }
 
-    window.bootDevice = (el, weaponName) => {
-        el.querySelector('.phone-container').classList.add('booting');
+    async function initiateUplink() {
+        const agent = document.getElementById('agentInput').value.toUpperCase();
+        const pass = document.getElementById('passInput').value;
+        const btn = document.querySelector('.access-btn');
+        const container = document.getElementById('loginContainer');
+        const status = document.getElementById('statusLine');
+        const bar = document.getElementById('loadBar');
+
+        if (!agent || !pass) {
+            container.classList.add('error-shake');
+            status.innerText = "ERROR: CREDENTIALS_REQUIRED";
+            setTimeout(() => container.classList.remove('error-shake'), 400);
+            return;
+        }
+
+        // Disable UI during "login"
+        btn.disabled = true;
+        btn.innerText = "AUTHENTICATING...";
+        status.innerText = "ESTABLISHING_SECURE_CONNECTION...";
+
+        // Simulate Terminal Logs
+        for (let i = 0; i < logs.length; i++) {
+            await new Promise(r => setTimeout(r, 600));
+            addLog(logs[i]);
+            bar.style.width = ((i + 1) * 25) + "%";
+        }
+
+        // Store Session and Redirect
+        localStorage.setItem("cia_agent", agent);
+        status.innerText = "ACCESS_CONFIRMED. WELCOME, " + agent;
+        
         setTimeout(() => {
-            document.getElementById('deviceGrid').style.display = 'none';
-            document.getElementById('mainFileGrid').style.display = 'grid';
-            document.getElementById('btnBack').style.display = 'block';
-            rendervAgents(weaponName);
+            window.location.href = "dashboard.html";
         }, 1000);
-    };
-
-    function rendervAgents(weaponName) {
-        const fGrid = document.getElementById('mainFileGrid');
-        fGrid.innerHTML = (deviceDataMap[weaponName] || []).map(d => `
-            <div class="vagent-box" onclick="openDossier('${d.docID}', '${weaponName}')">
-                <div style="font-size:24px; filter:grayscale(1);">👤</div>
-                <span>#${d.vAgentID}</span>
-            </div>
-        `).join('');
     }
 
-    window.openDossier = async (docID, weapon) => {
-        activeDocID = docID;
-        const mission = deviceDataMap[weapon].find(m => m.docID == docID);
-        
-        document.getElementById('docOverlay').style.display = 'flex';
-        document.getElementById('d-vagent').innerText = mission.vAgentID;
-        document.getElementById('d-order').innerText = docID;
-        document.getElementById('deviceSelector').value = weapon;
-        document.getElementById('saveBtn').style.display = 'none';
-
-        // Load Financials
-        const reportID = `${currentAgent}_${weapon}_${mission.vAgentID}`.replace(/\s+/g, '_');
-        const logsList = document.getElementById('logs-list');
-        const logSnap = await getDocs(collection(db, "bounty_report", reportID, "logs"));
-        let sum = 0;
-        logsList.innerHTML = "";
-        logSnap.forEach(l => {
-            sum += l.data().amount;
-            logsList.innerHTML += `<div>+ ₱${l.data().amount.toLocaleString()}</div>`;
-        });
-        document.getElementById('d-total').innerText = `₱ ${sum.toLocaleString()}`;
-    };
-
-    window.enableSaveBtn = () => { document.getElementById('saveBtn').style.display = 'block'; };
-
-    window.updateWeaponSystem = async () => {
-        const newWeapon = document.getElementById('deviceSelector').value;
-        const btn = document.getElementById('saveBtn');
-        btn.innerText = "UPDATING...";
-        
-        try {
-            const missionRef = doc(db, "mission_orders", activeDocID);
-            await updateDoc(missionRef, { weaponSystem: newWeapon });
-            alert("RECORD UPDATED: Agent Re-assigned.");
-            location.reload();
-        } catch (e) { alert("ERROR: Assignment Failed."); }
-    };
-
-    window.openMemoirs = () => { /* Same logic as before, but ensure it uses 1950s UI */ alert("Feature Loading in Cinematic Format..."); };
-    window.closeDoc = () => { document.getElementById('docOverlay').style.display = 'none'; };
+    // Enter Key Support
+    document.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') initiateUplink();
+    });
 </script>
-
-<style>
-@keyframes scrollUp {
-    0% { transform: translateY(100vh); }
-    100% { transform: translateY(-100vh); }
-}
-</style>
 
 </body>
 </html>

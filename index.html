@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CENTRAL_AUTH_v18.5</title>
+    <title>CENTRAL_AUTH_v19.0</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root { --bg: #01080b; --cyan: #00f2ff; --red: #ff003c; --green: #00ff66; }
@@ -16,7 +16,6 @@
             background-image: radial-gradient(circle at center, #0a1f29 0%, #01080b 100%);
         }
 
-        /* CIA Authentication Box */
         .auth-box {
             width: 300px; padding: 50px 30px;
             border: 1px solid rgba(0, 242, 255, 0.1);
@@ -71,7 +70,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
     <script>
-        // --- FIREBASE CONFIGURATION ---
         const firebaseConfig = { 
             apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
             authDomain: "my-admin-portal-12691.firebaseapp.com", 
@@ -83,7 +81,6 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // 1. Get Hardware Signature (Dapat match ito sa update_db logic)
         function getSignature() {
             const canvas = document.createElement('canvas');
             const gl = canvas.getContext('webgl');
@@ -115,30 +112,32 @@
             trace.innerText = currentSIG;
 
             try {
-                // --- MULTI-DEVICE LOOKUP ---
-                // Dito natin iche-check kung ang 'currentSIG' ay kasali sa 'linkedSignatures' array sa DB
+                // Check kung itong specific Signature na ito ay nasa linkedSignatures ng kahit sinong Agent
                 const snap = await db.collection("agents")
                                      .where("linkedSignatures", "array-contains", currentSIG)
                                      .get();
 
                 if (!snap.empty) {
-                    // Match Found! Ibig sabihin authorized ang device na ito.
                     const agentData = snap.docs[0].data();
                     status.innerText = "ACCESS_GRANTED";
                     status.style.color = "var(--green)";
                     
-                    // Itabi ang session data para sa Dashboard
+                    // --- PINAKA-IMPORTANTENG PARTE ---
+                    // I-save ang identity para sa lahat ng pages (Dashboard, Intel, etc.)
                     localStorage.setItem("cia_agent", agentData.agentName);
+                    localStorage.setItem("agent_verified", "true"); // Flag for other pages
                     localStorage.setItem("intel_device_signature", currentSIG);
+                    localStorage.setItem("agent_brand", agentData.brandName || "UNKNOWN");
                     
                     setTimeout(() => {
                         window.location.href = "dashboard.html";
                     }, 1500);
                 } else {
-                    // Walang nahanap na match sa kahit saang Agent record
                     status.innerText = "DENIED";
                     status.style.color = "var(--red)";
                     error.style.display = "block";
+                    // Clear storage para sigurado
+                    localStorage.clear();
                 }
             } catch (e) {
                 status.innerText = "COMMS_OFFLINE";
@@ -146,7 +145,6 @@
             }
         }
 
-        // Simulan ang scan pagka-load ng page
         window.onload = () => {
             setTimeout(verifyDevice, 1200);
         };

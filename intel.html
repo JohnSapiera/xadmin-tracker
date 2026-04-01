@@ -22,75 +22,66 @@
             background-size: 30px 30px;
         }
 
-        /* NEON PULSE ANIMATION para sa Weapon Detection */
+        /* NEON PULSE ANIMATION */
         @keyframes neonPulse {
-            0% { text-shadow: 0 0 2px var(--green); opacity: 0.7; }
-            50% { text-shadow: 0 0 10px var(--green), 0 0 20px var(--green); opacity: 1; color: #fff; }
-            100% { text-shadow: 0 0 2px var(--green); opacity: 0.7; }
+            0% { text-shadow: 0 0 2px var(--green); opacity: 0.7; box-shadow: inset 0 0 5px var(--green); }
+            50% { text-shadow: 0 0 15px var(--green), 0 0 25px var(--green); opacity: 1; color: #fff; box-shadow: inset 0 0 15px var(--green); }
+            100% { text-shadow: 0 0 2px var(--green); opacity: 0.7; box-shadow: inset 0 0 5px var(--green); }
         }
 
-        header { padding: 15px; border-bottom: 1px solid var(--border); text-align: center; background: #000; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-        .intel-title { font-family: var(--mono); color: var(--cyan); font-size: 14px; letter-spacing: 5px; text-shadow: 0 0 10px var(--cyan); }
+        header { padding: 15px; border-bottom: 1px solid var(--border); text-align: center; background: #000; }
+        .intel-title { font-family: var(--mono); color: var(--cyan); font-size: 14px; letter-spacing: 5px; }
 
         main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 25px; text-align: center; }
         
-        .auth-zone { margin-bottom: 40px; }
-        #log-status { font-family: var(--mono); font-size: 10px; color: #5c7882; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; }
         .agent-name { font-size: 42px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: #fff; margin-bottom: 5px; }
-        .device-tag { font-size: 11px; padding: 5px 12px; background: rgba(0,0,0,0.5); border: 1px solid #1a2f37; color: #5c7882; font-family: var(--mono); display: inline-block; border-radius: 2px; }
+        .device-tag { font-size: 10px; color: #5c7882; font-family: var(--mono); letter-spacing: 1px; }
 
         .report-btn { 
-            background: transparent; border: 1px solid var(--cyan); color: var(--cyan); 
-            padding: 25px 60px; font-family: var(--mono); font-size: 18px; font-weight: bold;
-            cursor: pointer; position: relative; transition: 0.3s;
-            clip-path: polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%);
-            opacity: 0.2; pointer-events: none;
+            margin-top: 40px; background: transparent; border: 1px solid var(--cyan); color: var(--cyan); 
+            padding: 20px 40px; font-family: var(--mono); font-size: 16px; font-weight: bold;
+            cursor: pointer; transition: 0.3s;
+            clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
         }
-        .report-btn.unlocked { opacity: 1; pointer-events: auto; background: rgba(0, 243, 255, 0.05); }
 
-        /* MODAL BOX */
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; backdrop-filter: blur(15px); }
+        /* MODAL */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; backdrop-filter: blur(10px); }
         .modal-box { 
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            width: 90%; max-width: 400px; background: var(--glass); 
-            border-top: 4px solid var(--cyan); padding: 30px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-            max-height: 85vh; overflow-y: auto;
+            width: 90%; max-width: 380px; background: var(--glass); 
+            border: 1px solid var(--border); border-top: 4px solid var(--cyan); padding: 30px;
         }
 
-        .input-group { margin-bottom: 20px; text-align: left; }
-        .input-label { font-family: var(--mono); font-size: 10px; color: var(--cyan); margin-bottom: 8px; display: block; letter-spacing: 1px; }
+        .input-group { margin-bottom: 20px; }
+        .input-label { font-family: var(--mono); font-size: 10px; color: var(--cyan); margin-bottom: 8px; display: block; text-align: left; }
         
-        .weapon-detected-active { color: var(--green) !important; animation: neonPulse 1.5s infinite; }
-
         .intel-input { 
             width: 100%; background: #05131a; border: 1px solid #1a2f37; padding: 15px; 
-            color: #fff; font-family: var(--mono); font-size: 16px; outline: none; border-left: 3px solid #1a2f37;
+            color: #fff; font-family: var(--mono); font-size: 18px; outline: none; text-align: center;
         }
-        .intel-input:focus { border-color: var(--cyan); border-left-color: var(--cyan); }
 
-        .grid-list { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 10px; }
-        .grid-item { 
-            background: #05131a; border: 1px solid #1a2f37; color: #5c7882; 
-            padding: 15px; font-family: var(--mono); font-size: 12px; 
-            text-align: center; text-transform: uppercase;
+        .weapon-detected-active { 
+            border-color: var(--green) !important; 
+            animation: neonPulse 1.5s infinite; 
+            color: var(--green) !important;
         }
-        .grid-item.selected { 
-            border-color: var(--green); color: var(--green); 
-            background: rgba(0, 255, 102, 0.05);
+
+        #weapon-list .grid-item {
+            margin-top: 10px; padding: 15px; border: 1px solid #1a2f37;
+            background: rgba(0,255,102,0.05); font-family: var(--mono);
+            font-size: 14px; text-transform: uppercase;
         }
 
         .btn-transmit { 
-            width: 100%; padding: 20px; background: var(--cyan); color: #000; 
+            width: 100%; padding: 18px; background: var(--cyan); color: #000; 
             border: none; font-family: var(--mono); font-size: 16px; font-weight: 900; 
-            cursor: pointer; text-transform: uppercase; margin-top: 10px;
-            clip-path: polygon(0 0, 100% 0, 100% 75%, 92% 100%, 0 100%);
+            cursor: pointer; margin-top: 10px;
         }
-        .btn-transmit:disabled { opacity: 0.2; pointer-events: none; filter: grayscale(1); }
+        .btn-transmit:disabled { opacity: 0.1; pointer-events: none; }
 
-        nav { position: fixed; bottom: 0; width: 100%; height: 75px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; }
-        .nav-link { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #444; font-size: 11px; font-family: var(--mono); text-decoration: none; font-weight: bold; }
-        .nav-link.active { color: var(--cyan); background: rgba(0,243,255,0.03); border-top: 2px solid var(--cyan); }
+        nav { position: fixed; bottom: 0; width: 100%; height: 70px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; }
+        .nav-link { display: flex; align-items: center; justify-content: center; color: #444; font-family: var(--mono); text-decoration: none; font-size: 12px; }
+        .nav-link.active { color: var(--cyan); border-top: 2px solid var(--cyan); }
     </style>
 </head>
 <body>
@@ -98,44 +89,35 @@
 <header><div class="intel-title">INTEL_TERMINAL_V24</div></header>
 
 <main>
-    <div class="auth-zone">
-        <div id="log-status">>> Establishing_Secure_Link...</div>
-        <div class="agent-name" id="display-name">---</div>
-        <div class="device-tag" id="device-tag">AWAITING_AUTH...</div>
-    </div>
-
-    <button id="main-btn" class="report-btn" onclick="openReport()">
-        [ INITIATE_BOUNTY_REPORT ]
-    </button>
+    <div id="display-name" class="agent-name">---</div>
+    <div id="device-tag" class="device-tag">LINKING_SESSION...</div>
+    
+    <button class="report-btn" onclick="openReport()">[ INITIATE_BOUNTY_REPORT ]</button>
 </main>
 
 <div id="report-modal" class="modal">
     <div class="modal-box">
-        <div style="text-align:center; margin-bottom:20px;">
-            <h2 style="font-family:var(--mono); font-size:12px; letter-spacing:3px; color:var(--cyan);">BOUNTY_UPLINK_PROTOCOL</h2>
-            <div id="scan-status" style="font-size:10px; color:#5c7882; margin-top:5px;">AWAITING_INPUT...</div>
-        </div>
+        <h2 style="font-family:var(--mono); font-size:12px; color:var(--cyan); text-align:center; margin-bottom:20px;">DATA_UPLINK</h2>
+        
+        <div id="scan-status" style="font-size:10px; color:#5c7882; text-align:center; margin-bottom:15px;">AWAITING_V_AGENT_ID...</div>
 
         <div class="input-group">
-            <span class="input-label">TARGET_V_AGENT_NO</span>
-            <input type="text" id="vAgent" class="intel-input" placeholder="SCAN NUMBER..." autocomplete="off">
+            <span class="input-label">SEARCH_V_AGENT_NO</span>
+            <input type="text" id="vAgentInput" class="intel-input" placeholder="0000" autocomplete="off">
         </div>
 
         <div id="weapon-zone" style="display:none; margin-bottom:20px;">
-            <span class="input-label" id="weapon-label">WEAPON_SYSTEM_DETECTION</span>
-            <div id="weapon-list" class="grid-list"></div>
+            <span class="input-label">WEAPON_SYSTEM_STATUS</span>
+            <div id="weapon-list"></div>
         </div>
 
         <div class="input-group">
             <span class="input-label">BOUNTY_EXPENSES (PHP)</span>
-            <input type="number" id="expenses" class="intel-input" placeholder="0.00">
+            <input type="number" id="expensesInput" class="intel-input" placeholder="0.00">
         </div>
 
-        <button id="transmit-btn" onclick="transmitData()" class="btn-transmit" disabled>DATA_INCOMPLETE</button>
-        
-        <button onclick="closeReport()" style="width:100%; background:transparent; color:var(--red); border:none; margin-top:15px; font-family:var(--mono); cursor:pointer; font-size:10px;">
-            // ABORT_TRANSMISSION
-        </button>
+        <button id="transmit-btn" onclick="transmitData()" class="btn-transmit" disabled>INCOMPLETE_DATA</button>
+        <button onclick="closeReport()" style="width:100%; background:transparent; color:var(--red); border:none; margin-top:15px; font-family:var(--mono); cursor:pointer; font-size:10px;">// ABORT</button>
     </div>
 </div>
 
@@ -162,125 +144,95 @@
 
     let selectedWeapon = "N/A";
 
-    // 1. Session Check (Verify if agent is logged in from index)
-    function checkSession() {
+    // 1. Session Check
+    window.onload = () => {
         const name = localStorage.getItem("cia_agent");
-        const verified = localStorage.getItem("agent_verified");
-        const sig = localStorage.getItem("intel_device_signature") || "N/A";
+        if (!name) window.location.href = "index.html";
+        document.getElementById('display-name').innerText = name;
+        document.getElementById('device-tag').innerText = "SECURE_UPLINK_STABLE // " + (localStorage.getItem("intel_device_signature") || "UNKNOWN");
+    };
 
-        if (verified === "true" && name) {
-            document.getElementById('display-name').innerText = name;
-            document.getElementById('device-tag').innerText = "SECURE_SIGNATURE: " + sig;
-            document.getElementById('log-status').innerText = ">> UPLINK_STABLE";
-            document.getElementById('main-btn').classList.add('unlocked');
-        } else {
-            window.location.href = "index.html"; // Balik login kung walang session
-        }
-    }
-
-    // 2. Scan Logic para sa V_AGENT_NO
-    const scanAgent = async (val) => {
+    // 2. Scan Logic (V_AGENT_NO to vAgentID)
+    const handleScan = async (val) => {
         const status = document.getElementById('scan-status');
         const weaponZone = document.getElementById('weapon-zone');
-        const weaponLabel = document.getElementById('weapon-label');
         const weaponList = document.getElementById('weapon-list');
+        const cleanVal = val.trim();
 
-        if(val.length < 3) {
+        if(cleanVal.length < 1) {
             weaponZone.style.display = "none";
-            weaponLabel.classList.remove('weapon-detected-active');
-            selectedWeapon = "N/A";
-            validateForm();
+            status.innerText = "AWAITING_V_AGENT_ID...";
             return;
         }
 
-        status.innerText = ">> ANALYZING_REGISTRY...";
-        status.style.color = "var(--cyan)";
-        
+        status.innerText = ">> SEARCHING_DATABASE...";
+
         try {
-            // Tinitingnan natin ang 'vAgentID' field sa 'mission_orders' collection
-            const q = query(collection(db, "mission_orders"), where("vAgentID", "==", val));
+            // Hinahanap ang vAgentID na string (e.g. "3232") sa mission_orders
+            const q = query(collection(db, "mission_orders"), where("vAgentID", "==", cleanVal));
             const snap = await getDocs(q);
 
             if (!snap.empty) {
                 const data = snap.docs[0].data();
-                status.innerText = ">> IDENTITY_CONFIRMED: MISSION_#" + (data.missionID || "UNK");
+                status.innerText = ">> TARGET_CONFIRMED: " + (data.missionID || "MISSION_ACTIVE");
                 status.style.color = "var(--green)";
 
-                const weapon = data.weaponSystem;
                 weaponZone.style.display = "block";
-                weaponList.innerHTML = "";
-
-                if(weapon && weapon !== "N/A" && weapon !== "RESERVED") {
-                    weaponLabel.innerText = "⚠️ WEAPON_SYSTEM_DETECTED";
-                    weaponLabel.classList.add('weapon-detected-active');
-                    
-                    const b = document.createElement('div');
-                    b.className = 'grid-item selected';
-                    b.innerText = weapon;
-                    weaponList.appendChild(b);
-                    selectedWeapon = weapon;
-                } else {
-                    weaponLabel.innerText = "WEAPON_SYSTEM_DETECTION (EMPTY)";
-                    weaponLabel.classList.remove('weapon-detected-active');
-                    weaponList.innerHTML = "<div style='grid-column:1/-1; color:#5c7882; font-size:10px;'>NO_HARDWARE_LOGGED</div>";
-                    selectedWeapon = "N/A";
-                }
-                validateForm();
+                const weapon = data.weaponSystem || "N/A";
+                
+                // Ipakita ang weapon na may Pulse Animation
+                weaponList.innerHTML = `<div class="grid-item weapon-detected-active">${weapon}</div>`;
+                selectedWeapon = weapon;
             } else {
-                status.innerText = ">> V_AGENT_ID_NOT_FOUND";
+                status.innerText = ">> NO_MATCHING_ID_FOUND";
                 status.style.color = "#5c7882";
                 weaponZone.style.display = "none";
-                weaponLabel.classList.remove('weapon-detected-active');
                 selectedWeapon = "N/A";
-                validateForm();
             }
-        } catch(e) { console.error("Scan error:", e); }
+            validateForm();
+        } catch (e) {
+            console.error("Query Error:", e);
+            status.innerText = ">> SYSTEM_OFFLINE";
+        }
     };
 
-    function validateForm() {
-        const v = document.getElementById('vAgent').value;
-        const e = document.getElementById('expenses').value;
+    const validateForm = () => {
+        const v = document.getElementById('vAgentInput').value;
+        const e = document.getElementById('expensesInput').value;
         const btn = document.getElementById('transmit-btn');
-        
-        if (v.length >= 3 && e > 0 && selectedWeapon !== "N/A") {
+        if (v.length > 0 && e > 0 && selectedWeapon !== "N/A") {
             btn.disabled = false;
             btn.innerText = "CONFIRM_TRANSMISSION";
         } else {
             btn.disabled = true;
-            btn.innerText = "DATA_INCOMPLETE";
+            btn.innerText = "INCOMPLETE_DATA";
         }
-    }
+    };
 
-    // 3. Transmit Bounty Data
+    // 3. Transmit
     window.transmitData = async () => {
-        const v = document.getElementById('vAgent').value;
-        const e = document.getElementById('expenses').value;
-        const agentName = localStorage.getItem("cia_agent");
-        const sig = localStorage.getItem("intel_device_signature");
+        const v = document.getElementById('vAgentInput').value;
+        const e = document.getElementById('expensesInput').value;
+        const agent = localStorage.getItem("cia_agent");
 
         try {
             await addDoc(collection(db, "bounties"), {
-                reportedBy: agentName,
-                targetV_Agent_No: v,
-                weaponSystem: selectedWeapon,
-                expenses: parseFloat(e),
-                reporterSignature: sig,
-                timestamp: serverTimestamp(),
-                status: "PENDING_REVIEW"
+                reportedBy: agent,
+                targetV_Agent: v,
+                weaponUsed: selectedWeapon,
+                amount: parseFloat(e),
+                timestamp: serverTimestamp()
             });
-            alert("✅ BOUNTY_TRANSMISSION_SUCCESSFUL");
+            alert("TRANSMISSION_COMPLETE");
             location.reload();
-        } catch (err) { alert("❌ TRANSMISSION_FAILED"); }
+        } catch (err) { alert("ERROR_SENDING_DATA"); }
     };
 
-    // UI Events
-    document.getElementById('vAgent').addEventListener('input', (e) => scanAgent(e.target.value));
-    document.getElementById('expenses').addEventListener('input', validateForm);
-
+    // Events
+    document.getElementById('vAgentInput').addEventListener('input', (e) => handleScan(e.target.value));
+    document.getElementById('expensesInput').addEventListener('input', validateForm);
     window.openReport = () => document.getElementById('report-modal').style.display = 'block';
     window.closeReport = () => document.getElementById('report-modal').style.display = 'none';
-
-    window.onload = checkSession;
 </script>
 </body>
 </html>

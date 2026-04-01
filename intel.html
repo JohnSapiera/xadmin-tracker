@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-    <title>INTEL_TERMINAL_v29</title>
+    <title>INTEL_TERMINAL_v30</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
     <style>
         :root { 
@@ -21,28 +21,44 @@
         .intel-title { font-family: var(--mono); color: var(--cyan); font-size: 11px; letter-spacing: 2px; }
         main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 15px; }
         .agent-name { font-size: 32px; font-weight: 800; text-transform: uppercase; color: #fff; text-shadow: 0 0 10px var(--cyan); }
+        
         .report-btn { 
             margin-top: 20px; background: rgba(0, 243, 255, 0.05); border: 1px solid var(--cyan); 
             color: var(--cyan); width: 220px; height: 50px; font-family: var(--mono); font-size: 13px; font-weight: bold;
             cursor: pointer; display: flex; align-items: center; justify-content: center;
             clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
-            transition: 0.3s;
         }
-        .report-btn:active { background: var(--cyan); color: #000; }
+
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 1000; }
         .modal-box { 
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
             width: 90%; max-width: 340px; background: var(--glass); 
             border: 1px solid var(--border); border-top: 4px solid var(--cyan); padding: 20px;
         }
+
         .input-group { margin-bottom: 12px; text-align: left; }
         .input-label { font-family: var(--mono); font-size: 9px; color: var(--cyan); margin-bottom: 4px; display: block; opacity: 0.7; }
         .intel-input { width: 100%; background: #05131a; border: 1px solid #1a2f37; padding: 12px; color: #fff; font-family: var(--mono); font-size: 18px; outline: none; text-align: center; }
+
+        /* GRID UI */
         .weapon-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px; }
-        .weapon-card { padding: 12px; border: 1px solid #1a2f37; background: rgba(255,255,255,0.02); font-family: var(--mono); font-size: 10px; text-align: center; cursor: pointer; color: #5c7882; transition: 0.2s; }
-        .weapon-card.selected { border-color: var(--green); color: var(--green); background: rgba(0,255,102,0.1); }
+        
+        /* SINGLE BUTTON UI - Pag iisa lang, magiging full width */
+        .weapon-grid.single-mode { grid-template-columns: 1fr; }
+
+        .weapon-card { 
+            padding: 15px; border: 1px solid #1a2f37; background: rgba(255,255,255,0.02); 
+            font-family: var(--mono); font-size: 11px; text-align: center; cursor: pointer; color: #5c7882; 
+            transition: 0.2s; text-transform: uppercase;
+        }
+        .weapon-card.selected { 
+            border-color: var(--green); color: var(--green); background: rgba(0,255,102,0.1); 
+            box-shadow: 0 0 15px rgba(0,255,102,0.2); 
+        }
+
         .btn-transmit { width: 100%; padding: 15px; background: var(--cyan); color: #000; border: none; font-family: var(--mono); font-size: 13px; font-weight: 900; cursor: pointer; margin-top: 15px; }
         .btn-transmit:disabled { opacity: 0.1; filter: grayscale(1); }
+
         nav { position: fixed; bottom: 0; width: 100%; height: 60px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; }
         .nav-link { display: flex; align-items: center; justify-content: center; color: #444; font-family: var(--mono); text-decoration: none; font-size: 11px; }
         .nav-link.active { color: var(--cyan); border-top: 2px solid var(--cyan); }
@@ -50,34 +66,34 @@
 </head>
 <body>
 
-<header><div class="intel-title">INTEL_TERMINAL_v29</div></header>
+<header><div class="intel-title">INTEL_TERMINAL_v30</div></header>
 
 <main>
     <div id="display-name" class="agent-name">---</div>
-    <div style="font-size:9px; color:#5c7882; font-family:var(--mono);">STATUS: READY_FOR_UPLINK</div>
+    <div style="font-size:9px; color:#5c7882; font-family:var(--mono);">SCANNER_ACTIVE // AGENT_VERIFIED</div>
     <button class="report-btn" onclick="openReport()">INITIATE_SCAN</button>
 </main>
 
 <div id="report-modal" class="modal">
     <div class="modal-box">
-        <div id="scan-status" style="font-size:9px; color:#5c7882; text-align:center; margin-bottom:10px; font-family:var(--mono);">SYSTEM_IDLE...</div>
+        <div id="scan-status" style="font-size:9px; color:#5c7882; text-align:center; margin-bottom:10px; font-family:var(--mono);">READY...</div>
 
         <div class="input-group">
-            <span class="input-label">SCAN_V_AGENT_ID</span>
+            <span class="input-label">V_AGENT_ID</span>
             <input type="text" id="vAgentInput" class="intel-input" placeholder="0000" oninput="handleDualSearch(this.value)">
         </div>
 
         <div id="weapon-selection-zone" style="display:none; margin-bottom:12px;">
-            <span class="input-label">TARGET_WEAPON_SYSTEM</span>
+            <span class="input-label">SYSTEM_IDENTIFIED</span>
             <div id="weapon-grid" class="weapon-grid"></div>
         </div>
 
         <div class="input-group">
-            <span class="input-label">EXPENSE_LOG (PHP)</span>
+            <span class="input-label">UPLINK_AMOUNT (PHP)</span>
             <input type="number" id="expensesInput" class="intel-input" placeholder="0.00" oninput="validateForm()">
         </div>
 
-        <button id="transmit-btn" onclick="transmitData()" class="btn-transmit" disabled>AWAITING_INPUT</button>
+        <button id="transmit-btn" onclick="transmitData()" class="btn-transmit" disabled>AWAITING_TARGET</button>
         <button onclick="closeReport()" style="width:100%; background:transparent; color:var(--red); border:none; margin-top:10px; font-family:var(--mono); font-size:9px;">// ABORT</button>
     </div>
 </div>
@@ -114,51 +130,71 @@
         const zone = document.getElementById('weapon-selection-zone');
         const cleanVal = val.trim();
 
-        if(cleanVal.length < 1) { zone.style.display = "none"; return; }
+        if(cleanVal.length < 1) { 
+            zone.style.display = "none"; 
+            selectedDeviceName = null;
+            validateForm();
+            return; 
+        }
 
         try {
-            // STEP 1: VERIFY AGENT (Sa 'agents' collection)
+            // STEP 1: Verify Agent
             const agentQ = query(collection(db, "agents"), where("agentName", "==", currentAgent));
             const agentSnap = await getDocs(agentQ);
+            if (agentSnap.empty) { status.innerText = ">> ERR: UNAUTHORIZED"; return; }
 
-            if (agentSnap.empty) {
-                status.innerText = ">> ERR: AGENT_NOT_AUTHORIZED";
-                status.style.color = "var(--red)";
-                return;
-            }
-
-            // STEP 2: SEARCH MISSION_ORDERS (Using 'agentName' instead of 'assignedAgent')
-            // Ginawa nating array para i-check kung String "2" o Number 2 ang nasa database
+            // STEP 2: Search Mission Orders
             const queries = [
                 query(collection(db, "mission_orders"), where("agentName", "==", currentAgent), where("vAgentID", "==", cleanVal)),
                 query(collection(db, "mission_orders"), where("agentName", "==", currentAgent), where("vAgentID", "==", Number(cleanVal)))
             ];
 
-            let finalDocs = [];
+            let foundDocs = [];
             for (let q of queries) {
                 const snap = await getDocs(q);
                 if (!snap.empty) {
-                    snap.forEach(d => finalDocs.push(d.data()));
-                    break; 
+                    snap.forEach(d => foundDocs.push(d.data()));
+                    break;
                 }
             }
 
-            if (finalDocs.length > 0) {
+            if (foundDocs.length > 0) {
                 zone.style.display = "block";
                 grid.innerHTML = "";
-                status.innerText = ">> TARGET_LOCKED: [" + cleanVal + "]";
-                status.style.color = "var(--green)";
+                
+                // I-apply ang single-mode class kung isa lang ang device
+                if (foundDocs.length === 1) {
+                    grid.classList.add('single-mode');
+                } else {
+                    grid.classList.remove('single-mode');
+                }
 
-                finalDocs.forEach(data => {
+                foundDocs.forEach((data, index) => {
                     const card = document.createElement('div');
                     card.className = 'weapon-card';
+                    card.id = "card-" + index;
                     card.innerHTML = `SYSTEM:<br><b>${data.weaponSystem}</b>`;
                     card.onclick = () => selectWeapon(card, data.weaponSystem);
                     grid.appendChild(card);
                 });
+
+                // AUTO-SELECT LOGIC
+                if (foundDocs.length === 1) {
+                    // Mas safe na gamitin ang Timeout para sigurado na render na ang element
+                    setTimeout(() => {
+                        const firstCard = document.getElementById('card-0');
+                        selectWeapon(firstCard, foundDocs[0].weaponSystem);
+                        status.innerText = ">> SINGLE_TARGET_AUTO_LOCKED";
+                        status.style.color = "var(--green)";
+                    }, 50);
+                } else {
+                    selectedDeviceName = null;
+                    status.innerText = ">> MULTIPLE_TARGETS: SELECT_ONE";
+                    status.style.color = "var(--cyan)";
+                }
             } else {
-                status.innerText = ">> ERR: ID_NOT_REGISTERED";
-                status.style.color = "#5c7882";
+                status.innerText = ">> ERR: ID_NOT_FOUND";
+                status.style.color = "var(--red)";
                 zone.style.display = "none";
                 selectedDeviceName = null;
             }
@@ -168,8 +204,11 @@
 
     window.selectWeapon = (element, name) => {
         document.querySelectorAll('.weapon-card').forEach(c => c.classList.remove('selected'));
-        element.classList.add('selected');
-        selectedDeviceName = name;
+        if (element) {
+            element.classList.add('selected');
+            selectedDeviceName = name;
+            console.log("Selected:", selectedDeviceName); // Debug log
+        }
         validateForm();
     };
 
@@ -177,8 +216,14 @@
         const v = document.getElementById('vAgentInput').value;
         const e = document.getElementById('expensesInput').value;
         const btn = document.getElementById('transmit-btn');
-        btn.disabled = !(v && e > 0 && selectedDeviceName);
-        if(!btn.disabled) btn.innerText = "TRANSMIT_TO_" + selectedDeviceName.toUpperCase();
+        
+        if (v && e > 0 && selectedDeviceName) {
+            btn.disabled = false;
+            btn.innerText = "TRANSMIT_TO_" + selectedDeviceName.toUpperCase();
+        } else {
+            btn.disabled = true;
+            btn.innerText = selectedDeviceName ? "ENTER_AMOUNT" : "AWAITING_TARGET";
+        }
     };
 
     window.transmitData = async () => {
@@ -204,12 +249,15 @@
                 reportedBy: agent
             });
 
-            alert("✅ INTEL_REPORT_TRANSMITTED");
+            alert("✅ SUCCESS: DATA_UPLINKED");
             location.reload();
-        } catch (err) { alert("❌ FAILED"); }
+        } catch (err) { alert("❌ TRANSMISSION_FAILED"); }
     };
 
-    window.openReport = () => document.getElementById('report-modal').style.display = 'block';
+    window.openReport = () => {
+        document.getElementById('report-modal').style.display = 'block';
+        document.getElementById('vAgentInput').focus();
+    }
     window.closeReport = () => document.getElementById('report-modal').style.display = 'none';
 </script>
 </body>

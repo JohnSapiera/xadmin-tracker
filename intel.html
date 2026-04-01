@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-    <title>AGENCY_INTEL_v21.0</title>
+    <title>AGENCY_INTEL_v22.0</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
     <style>
         :root { 
@@ -42,30 +42,47 @@
         .report-btn.unlocked { opacity: 1; pointer-events: auto; background: rgba(0, 243, 255, 0.05); }
         .report-btn.unlocked:hover { background: var(--cyan); color: #000; box-shadow: 0 0 30px rgba(0, 243, 255, 0.4); }
 
+        /* Modal Styles */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; backdrop-filter: blur(15px); }
         .modal-box { 
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            width: 90%; max-width: 380px; background: var(--glass); 
-            border-top: 4px solid var(--cyan); padding: 40px 30px;
+            width: 90%; max-width: 400px; background: var(--glass); 
+            border-top: 4px solid var(--cyan); padding: 30px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.8);
         }
 
-        .input-group { margin-bottom: 25px; text-align: left; }
+        .input-group { margin-bottom: 20px; text-align: left; }
         .input-label { font-family: var(--mono); font-size: 10px; color: var(--cyan); margin-bottom: 8px; display: block; letter-spacing: 1px; }
         
         .intel-input { 
-            width: 100%; background: #05131a; border: 1px solid #1a2f37; padding: 18px; 
+            width: 100%; background: #05131a; border: 1px solid #1a2f37; padding: 15px; 
             color: #fff; font-family: var(--mono); font-size: 16px; outline: none;
             transition: 0.3s; border-left: 3px solid #1a2f37;
         }
         .intel-input:focus { border-color: var(--cyan); border-left-color: var(--cyan); background: #071b25; }
 
+        /* Weapon System Buttons */
+        #weapon-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+        .weapon-btn { 
+            background: #05131a; border: 1px solid #1a2f37; color: #5c7882; 
+            padding: 12px; font-family: var(--mono); font-size: 11px; 
+            cursor: pointer; transition: 0.3s; text-align: center;
+            text-transform: uppercase;
+        }
+        .weapon-btn.selected { 
+            border-color: var(--cyan); color: var(--cyan); 
+            background: rgba(0, 243, 255, 0.05);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
+        }
+
         .btn-transmit { 
-            width: 100%; padding: 22px; background: var(--cyan); color: #000; 
-            border: none; font-family: var(--font-main); font-size: 18px; font-weight: 900; 
+            width: 100%; padding: 20px; background: var(--cyan); color: #000; 
+            border: none; font-family: var(--mono); font-size: 16px; font-weight: 900; 
             cursor: pointer; text-transform: uppercase; letter-spacing: 2px;
             clip-path: polygon(0 0, 100% 0, 100% 75%, 92% 100%, 0 100%);
+            margin-top: 10px; transition: 0.3s;
         }
+        .btn-transmit:disabled { opacity: 0.2; pointer-events: none; filter: grayscale(1); }
 
         nav { position: fixed; bottom: 0; width: 100%; height: 75px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; }
         .nav-link { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #333; font-size: 11px; font-family: var(--mono); text-decoration: none; font-weight: bold; }
@@ -74,7 +91,7 @@
 </head>
 <body>
 
-<header><div class="intel-title">INTEL_TERMINAL_V21</div></header>
+<header><div class="intel-title">INTEL_TERMINAL_V22</div></header>
 
 <main>
     <div class="auth-zone">
@@ -84,31 +101,36 @@
     </div>
 
     <button id="main-btn" class="report-btn" onclick="openReport()">
-        [INITIATE_BOUNTY_REPORT]
+        [ INITIATE_BOUNTY_REPORT ]
     </button>
 </main>
 
 <div id="report-modal" class="modal">
     <div class="modal-box">
-        <div style="text-align:center; margin-bottom:30px;">
-            <h2 style="font-family:var(--mono); font-size:14px; letter-spacing:3px; color:var(--cyan);">BOUNTY_DATA_ENTRY</h2>
-            <p style="font-size:10px; color:#5c7882;">SECURE_TRANSMISSION_PROTOCOL_ACTIVE</p>
+        <div style="text-align:center; margin-bottom:20px;">
+            <h2 style="font-family:var(--mono); font-size:12px; letter-spacing:3px; color:var(--cyan);">TACTICAL_ENTRY_PROTOCOL</h2>
+            <div id="scan-status" style="font-size:10px; color:#5c7882; margin-top:5px;">READY_FOR_ID_INPUT</div>
         </div>
 
         <div class="input-group">
             <span class="input-label">TARGET_V_AGENT_ID</span>
-            <input type="tel" id="vAgent" class="intel-input" placeholder="EX: 0098" autocomplete="off">
+            <input type="tel" id="vAgent" class="intel-input" placeholder="SCAN ID..." autocomplete="off">
+        </div>
+
+        <div id="weapon-zone" style="display:none; margin-bottom:20px;">
+            <span class="input-label">WEAPON_SYSTEM_DETECTION</span>
+            <div id="weapon-list"></div>
         </div>
 
         <div class="input-group">
             <span class="input-label">BOUNTY_EXPENSES (PHP)</span>
-            <input type="number" id="expenses" class="intel-input" placeholder="0.00" autocomplete="off">
+            <input type="number" id="expenses" class="intel-input" placeholder="0.00">
         </div>
 
-        <button onclick="transmitData()" class="btn-transmit">CONFIRM_TRANSMISSION</button>
+        <button id="transmit-btn" onclick="transmitData()" class="btn-transmit" disabled>DATA_INCOMPLETE</button>
         
-        <button onclick="closeReport()" style="width:100%; background:transparent; color:var(--red); border:none; margin-top:20px; font-family:var(--mono); cursor:pointer; font-size:11px; letter-spacing:1px;">
-            // ABORT_ENTRY
+        <button onclick="closeReport()" style="width:100%; background:transparent; color:var(--red); border:none; margin-top:15px; font-family:var(--mono); cursor:pointer; font-size:10px;">
+            // ABORT_TRANSMISSION
         </button>
     </div>
 </div>
@@ -134,6 +156,9 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
+    let selectedWeapon = null;
+
+    // --- SECURITY SIGNATURE ---
     function getSignature() {
         const canvas = document.createElement('canvas');
         const gl = canvas.getContext('webgl');
@@ -144,6 +169,7 @@
         return "SIG-" + Math.abs(hash).toString(16).toUpperCase();
     }
 
+    // --- AGENT SECURITY SCAN (PAGE LOAD) ---
     async function runSecurityScan() {
         const log = document.getElementById('log-status');
         const nameDisplay = document.getElementById('display-name');
@@ -155,26 +181,21 @@
         const key = urlParams.get('key');
 
         try {
-            // STEP 1: Search by Signature
             let q = query(collection(db, "agents"), where("linkedSignatures", "array-contains", currentSIG));
             let snap = await getDocs(q);
 
-            // STEP 2: If Signature not found but KEY is present, link the device
             if (snap.empty && key) {
                 const qKey = query(collection(db, "agents"), where("accessKey", "==", key));
                 const snapKey = await getDocs(qKey);
-
                 if (!snapKey.empty) {
                     const agentDoc = snapKey.docs[0];
                     const agentRef = doc(db, "agents", agentDoc.id);
                     const existingSigs = agentDoc.data().linkedSignatures || [];
-
                     if (!existingSigs.includes(currentSIG)) {
                         existingSigs.push(currentSIG);
                         await updateDoc(agentRef, { linkedSignatures: existingSigs });
-                        log.innerText = ">> NEW_HARDWARE_LINKED";
                     }
-                    snap = await getDocs(q); // Re-fetch
+                    snap = await getDocs(q);
                 }
             }
 
@@ -192,15 +213,94 @@
             } else {
                 nameDisplay.innerText = "ACCESS_DENIED";
                 nameDisplay.style.color = "var(--red)";
-                log.innerText = ">> UNAUTHORIZED_HARDWARE_DETECTED";
+                log.innerText = ">> UNAUTHORIZED_HARDWARE";
                 tag.innerText = "NODE_ID: " + currentSIG;
             }
         } catch (e) { 
             log.innerText = ">> DATABASE_OFFLINE"; 
-            console.error(e);
         }
     }
 
+    // --- DYNAMIC WEAPON SCANNER ---
+    const scanAgent = async (val) => {
+        const status = document.getElementById('scan-status');
+        const weaponZone = document.getElementById('weapon-zone');
+        const weaponList = document.getElementById('weapon-list');
+
+        if(val.length < 3) {
+            weaponZone.style.display = "none";
+            selectedWeapon = null;
+            validateForm();
+            return;
+        }
+
+        status.innerText = ">> SEARCHING_TARGET...";
+        status.style.color = "var(--cyan)";
+
+        try {
+            // Priority 1: Mission Orders
+            let q = query(collection(db, "mission_orders"), where("vAgentID", "==", val));
+            let snap = await getDocs(q);
+
+            // Priority 2: Blacklist
+            if (snap.empty) {
+                q = query(collection(db, "blacklist"), where("vAgentID", "==", val));
+                snap = await getDocs(q);
+                if (!snap.empty) status.style.color = "var(--red)"; // Red for blacklist
+            }
+
+            if (!snap.empty) {
+                const data = snap.docs[0].data();
+                status.innerText = ">> UNIT_FOUND: " + (data.agentName || "UNKNOWN_NAME");
+                if (status.style.color !== "var(--red)") status.style.color = "var(--green)";
+
+                weaponZone.style.display = "block";
+                weaponList.innerHTML = "";
+                
+                // Fetch weapons or use default
+                const weapons = data.weaponSystems || ["MOBILE_PRIMARY", "DESKTOP_NODE"];
+                
+                weapons.forEach(w => {
+                    const btn = document.createElement('div');
+                    btn.className = 'weapon-btn';
+                    btn.innerText = w;
+                    btn.onclick = () => {
+                        document.querySelectorAll('.weapon-btn').forEach(b => b.classList.remove('selected'));
+                        btn.classList.add('selected');
+                        selectedWeapon = w;
+                        validateForm();
+                    };
+                    weaponList.appendChild(btn);
+                });
+            } else {
+                status.innerText = ">> TARGET_NOT_IN_REGISTRY";
+                status.style.color = "#5c7882";
+                weaponZone.style.display = "none";
+                selectedWeapon = null;
+                validateForm();
+            }
+        } catch (e) { console.error(e); }
+    };
+
+    function validateForm() {
+        const v = document.getElementById('vAgent').value;
+        const e = document.getElementById('expenses').value;
+        const btn = document.getElementById('transmit-btn');
+
+        if (v && selectedWeapon && e > 0) {
+            btn.disabled = false;
+            btn.innerText = "CONFIRM_TRANSMISSION";
+        } else {
+            btn.disabled = true;
+            btn.innerText = "DATA_INCOMPLETE";
+        }
+    }
+
+    // Attach Event Listeners
+    document.getElementById('vAgent').addEventListener('input', (e) => scanAgent(e.target.value));
+    document.getElementById('expenses').addEventListener('input', validateForm);
+
+    // --- DATA TRANSMISSION ---
     window.transmitData = async () => {
         const v = document.getElementById('vAgent').value;
         const e = document.getElementById('expenses').value;
@@ -208,24 +308,24 @@
         const sig = localStorage.getItem("intel_device_signature");
         const brand = localStorage.getItem("agent_brand");
 
-        if(!v || !e) return alert("⚠️ DATA_INCOMPLETE");
-
         try {
             await addDoc(collection(db, "bounties"), {
-                agentName: agentName,
+                reportedBy: agentName,
                 brandName: brand,
-                vAgentID: v,
+                targetV_ID: v,
+                weaponSystem: selectedWeapon,
                 expenses: parseFloat(e),
                 deviceSignature: sig,
                 timestamp: serverTimestamp(),
                 orderNumber: "BNT-" + Math.floor(10000 + Math.random() * 90000),
                 status: "PENDING_REVIEW"
             });
-            alert("✅ TRANSMISSION_SUCCESSFUL");
+            alert("✅ BOUNTY_TRANSMITTED_SUCCESSFULLY");
             location.reload();
         } catch (err) { alert("❌ TRANSMISSION_FAILED"); }
     };
 
+    // Global access for onclick
     window.openReport = () => document.getElementById('report-modal').style.display = 'block';
     window.closeReport = () => document.getElementById('report-modal').style.display = 'none';
 

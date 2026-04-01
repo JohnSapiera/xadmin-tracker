@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-    <title>AGENCY_INTEL_v23.0</title>
+    <title>AGENCY_INTEL_v24.0</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
     <style>
         :root { 
@@ -89,13 +89,13 @@
 </head>
 <body>
 
-<header><div class="intel-title">INTEL_TERMINAL_V23</div></header>
+<header><div class="intel-title">INTEL_TERMINAL_V24</div></header>
 
 <main>
     <div class="auth-zone">
         <div id="log-status">>> Establishing_Secure_Link...</div>
         <div class="agent-name" id="display-name">---</div>
-        <div class="device-tag" id="device-tag">SCANNING_HARDWARE...</div>
+        <div class="device-tag" id="device-tag">CHECKING_SESSION...</div>
     </div>
 
     <button id="main-btn" class="report-btn" onclick="openReport()">
@@ -109,24 +109,19 @@
             <h2 style="font-family:var(--mono); font-size:12px; letter-spacing:3px; color:var(--cyan);">TACTICAL_ENTRY_PROTOCOL</h2>
             <div id="scan-status" style="font-size:10px; color:#5c7882; margin-top:5px;">READY_FOR_ID_INPUT</div>
         </div>
-
         <div class="input-group">
             <span class="input-label">TARGET_V_AGENT_ID</span>
             <input type="tel" id="vAgent" class="intel-input" placeholder="SCAN ID..." autocomplete="off">
         </div>
-
         <div id="weapon-zone" style="display:none; margin-bottom:20px;">
             <span class="input-label">WEAPON_SYSTEM_DETECTION (OPTIONAL)</span>
             <div id="weapon-list"></div>
         </div>
-
         <div class="input-group">
             <span class="input-label">BOUNTY_EXPENSES (PHP)</span>
             <input type="number" id="expenses" class="intel-input" placeholder="0.00">
         </div>
-
         <button id="transmit-btn" onclick="transmitData()" class="btn-transmit" disabled>DATA_INCOMPLETE</button>
-        
         <button onclick="closeReport()" style="width:100%; background:transparent; color:var(--red); border:none; margin-top:15px; font-family:var(--mono); cursor:pointer; font-size:10px;">
             // ABORT_TRANSMISSION
         </button>
@@ -140,7 +135,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, query, where, getDocs, addDoc, serverTimestamp, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, query, where, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
@@ -154,63 +149,42 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    let selectedWeapon = "N/A"; // Default value
+    let selectedWeapon = "N/A";
 
-    function getSignature() {
-        const canvas = document.createElement('canvas');
-        const gl = canvas.getContext('webgl');
-        const gpu = gl ? gl.getParameter(gl.getExtension('WEBGL_debug_renderer_info').UNMASKED_RENDERER_WEBGL) : "GENERIC";
-        const raw = gpu + screen.width + navigator.platform;
-        let hash = 0;
-        for (let i = 0; i < raw.length; i++) { hash = ((hash << 5) - hash) + raw.charCodeAt(i); hash |= 0; }
-        return "SIG-" + Math.abs(hash).toString(16).toUpperCase();
-    }
-
+    // --- NEW LOGIC: SESSION-BASED (NO FINGERPRINT CHECK HERE) ---
     async function runSecurityScan() {
         const log = document.getElementById('log-status');
         const nameDisplay = document.getElementById('display-name');
         const tag = document.getElementById('device-tag');
         const btn = document.getElementById('main-btn');
-        const currentSIG = getSignature();
-        const key = new URLSearchParams(window.location.search).get('key');
+        
+        // Kinukuha natin ang data na sinave ng index.html
+        const savedAgent = localStorage.getItem("cia_agent");
+        const isVerified = localStorage.getItem("agent_verified");
+        const sig = localStorage.getItem("intel_device_signature") || "N/A";
 
-        try {
-            let q = query(collection(db, "agents"), where("linkedSignatures", "array-contains", currentSIG));
-            let snap = await getDocs(q);
-
-            if (snap.empty && key) {
-                const qKey = query(collection(db, "agents"), where("accessKey", "==", key));
-                const snapKey = await getDocs(qKey);
-                if (!snapKey.empty) {
-                    const agentDoc = snapKey.docs[0];
-                    const existingSigs = agentDoc.data().linkedSignatures || [];
-                    if (!existingSigs.includes(currentSIG)) {
-                        existingSigs.push(currentSIG);
-                        await updateDoc(doc(db, "agents", agentDoc.id), { linkedSignatures: existingSigs });
-                    }
-                    snap = await getDocs(q);
-                }
-            }
-
-            if (!snap.empty) {
-                const verifiedAgent = snap.docs[0].data();
-                nameDisplay.innerText = verifiedAgent.agentName;
-                tag.innerText = "NODE_LOCKED: " + currentSIG;
-                tag.style.color = "var(--green)";
-                log.innerText = ">> UPLINK_STABLE // AGENT_VERIFIED";
-                btn.classList.add('unlocked');
-                localStorage.setItem("cia_agent", verifiedAgent.agentName);
-                localStorage.setItem("intel_device_signature", currentSIG);
-                localStorage.setItem("agent_brand", verifiedAgent.brandName || "UNKNOWN");
-            } else {
-                nameDisplay.innerText = "ACCESS_DENIED";
-                nameDisplay.style.color = "var(--red)";
-                log.innerText = ">> UNAUTHORIZED_HARDWARE";
-                tag.innerText = "NODE_ID: " + currentSIG;
-            }
-        } catch (e) { log.innerText = ">> DATABASE_OFFLINE"; }
+        if (isVerified === "true" && savedAgent) {
+            // Pag may nakitang agent sa storage, pasok agad!
+            nameDisplay.innerText = savedAgent;
+            nameDisplay.style.color = "var(--cyan)";
+            tag.innerText = "AGENT_SESSION_ACTIVE // " + sig;
+            tag.style.color = "var(--green)";
+            log.innerText = ">> UPLINK_STABLE // WELCOME BACK";
+            btn.classList.add('unlocked');
+        } else {
+            // Pag wala, Access Denied at pabalikin sa login
+            nameDisplay.innerText = "ACCESS_DENIED";
+            nameDisplay.style.color = "var(--red)";
+            log.innerText = ">> NO_ACTIVE_SESSION_FOUND";
+            tag.innerText = "REDIRECTING_TO_AUTH...";
+            
+            setTimeout(() => {
+                window.location.href = "index.html";
+            }, 2000);
+        }
     }
 
+    // --- BUTTONS LOGIC (PRESERVED) ---
     const scanAgent = async (val) => {
         const status = document.getElementById('scan-status');
         const weaponZone = document.getElementById('weapon-zone');
@@ -224,45 +198,32 @@
         }
 
         status.innerText = ">> SEARCHING_TARGET...";
-        status.style.color = "var(--cyan)";
-
         try {
             let q = query(collection(db, "mission_orders"), where("vAgentID", "==", val));
             let snap = await getDocs(q);
 
-            if (snap.empty) {
-                q = query(collection(db, "blacklist"), where("vAgentID", "==", val));
-                snap = await getDocs(q);
-                if (!snap.empty) status.style.color = "var(--red)";
-            }
-
             if (!snap.empty) {
                 const data = snap.docs[0].data();
-                status.innerText = ">> UNIT_FOUND: " + (data.agentName || "UNKNOWN_NAME");
-                if (status.style.color !== "var(--red)") status.style.color = "var(--green)";
-                
+                status.innerText = ">> UNIT_FOUND: " + (data.agentName || "UNKNOWN");
+                status.style.color = "var(--green)";
                 weaponZone.style.display = "block";
                 weaponList.innerHTML = "";
-                const weapons = data.weaponSystems || [];
-                
-                weapons.forEach(w => {
-                    const btn = document.createElement('div');
-                    btn.className = 'weapon-btn';
-                    btn.innerText = w;
-                    btn.onclick = () => {
-                        document.querySelectorAll('.weapon-btn').forEach(b => b.classList.remove('selected'));
-                        btn.classList.add('selected');
+                (data.weaponSystems || []).forEach(w => {
+                    const b = document.createElement('div');
+                    b.className = 'weapon-btn';
+                    b.innerText = w;
+                    b.onclick = () => {
+                        document.querySelectorAll('.weapon-btn').forEach(x => x.classList.remove('selected'));
+                        b.classList.add('selected');
                         selectedWeapon = w;
                         validateForm();
                     };
-                    weaponList.appendChild(btn);
+                    weaponList.appendChild(b);
                 });
             } else {
-                status.innerText = ">> TARGET_NOT_IN_REGISTRY";
+                status.innerText = ">> TARGET_NOT_FOUND";
                 status.style.color = "#5c7882";
                 weaponZone.style.display = "none";
-                selectedWeapon = "N/A";
-                validateForm();
             }
         } catch (e) { console.error(e); }
     };
@@ -271,8 +232,6 @@
         const v = document.getElementById('vAgent').value;
         const e = document.getElementById('expenses').value;
         const btn = document.getElementById('transmit-btn');
-
-        // Logic updated: Weapon is optional, only V-ID and Expenses are required
         if (v.length >= 3 && e > 0) {
             btn.disabled = false;
             btn.innerText = "CONFIRM_TRANSMISSION";
@@ -297,7 +256,7 @@
                 reportedBy: agentName,
                 brandName: brand,
                 targetV_ID: v,
-                weaponSystem: selectedWeapon, // Will be "N/A" if none selected
+                weaponSystem: selectedWeapon,
                 expenses: parseFloat(e),
                 deviceSignature: sig,
                 timestamp: serverTimestamp(),

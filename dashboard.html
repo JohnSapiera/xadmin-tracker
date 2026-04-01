@@ -125,8 +125,12 @@
 </header>
 
 <div class="status-bar">
-    <span id="clock">00:00:00</span>
-    <span>UPLINK_STATUS: <span style="color:var(--green)">SYNC_ACTIVE</span></span>
+    <div style="display:flex; gap:15px">
+        <span id="clock">00:00:00</span>
+        <span style="color:var(--border)">|</span>
+        <span>DEVICE: <span id="sync-device-name" style="color:#fff">NOT_SELECTED</span></span>
+    </div>
+    <span>UPLINK: <span style="color:var(--green)">SYNC_ACTIVE</span></span>
 </div>
 
 <main>
@@ -189,15 +193,27 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
+  // --- WEAPON CONFIGURATION ---
+  const weaponMap = {
+    "SIG-82A9E4B": "SAMSUNG S23 ULTRA",
+    "SIG-X921FFA": "IPHONE 15 PRO",
+    "SIG-K882190": "POCO X6 PRO",
+    "SIG-V001122": "VIVO V30"
+  };
+
+  const getFriendlyName = (id) => weaponMap[id] || id;
+
   const input = document.getElementById('mission-input');
   const actionBtn = document.getElementById('action-btn');
   const reserveBtn = document.getElementById('reserve-btn');
   const termLog = document.getElementById('terminal');
+  const syncDisplay = document.getElementById('sync-device-name');
+  
   let selectedDevice = "N/A";
   let isRetrieveMode = false;
   let sourceCollection = "mission_orders";
 
-  // --- LOG WRITER (Sends to Firebase) ---
+  // --- LOG WRITER ---
   const log = async (msg, color = "#5c7882") => {
     try {
         await addDoc(collection(db, "terminal_logs"), {
@@ -210,17 +226,17 @@
     } catch (e) { console.error("SYNC_FAIL", e); }
   };
 
-  // --- LOG READER (Loads History & Real-time Updates) ---
+  // --- LOG READER & LIVE SYNC ---
   const initTerminal = () => {
     const q = query(collection(db, "terminal_logs"), orderBy("timestamp", "desc"), limit(15));
     onSnapshot(q, (snapshot) => {
-        termLog.innerHTML = ""; // Clear for refresh
+        termLog.innerHTML = "";
         snapshot.forEach((doc) => {
             const data = doc.data();
             const timeStr = data.timestamp ? data.timestamp.toDate().toLocaleTimeString('en-GB') : "SYNCING";
             const d = document.createElement('div');
             d.innerHTML = `<span style="opacity:0.4">${timeStr}</span> > <span style="color:${data.color}">${data.message}</span>`;
-            termLog.appendChild(d); // Dahil desc order, ang bago ay nasa taas
+            termLog.appendChild(d);
         });
     });
   };
@@ -248,6 +264,9 @@
                 reserveBtn.disabled = true; reserveBtn.classList.add('btn-faded');
                 actionBtn.className = "btn btn-retrieve"; actionBtn.textContent = "RETRIEVE";
                 
+                const data = !snapOrders.empty ? snapOrders.docs[0].data() : snapBlack.docs[0].data();
+                syncDisplay.innerText = getFriendlyName(data.weaponSystem || "N/A");
+
                 if (!snapBlack.empty) {
                     sourceCollection = "blacklist";
                     await log(`ALERT: ID FOUND IN BLACKLIST`, 'var(--red)');
@@ -256,6 +275,7 @@
                     await log(`RECORD LOCATED: ACTIVE MISSION`, 'var(--green)');
                 }
             } else {
+                syncDisplay.innerText = "NOT_SELECTED";
                 await log(`STATUS: ID CLEAR`, 'var(--green)');
             }
         } catch (e) { await log("DB_UPLINK_ERROR", "red"); }
@@ -278,7 +298,7 @@
             sigs.forEach(dev => {
                 const b = document.createElement('button');
                 b.className = `dev-btn`;
-                b.innerText = dev.substring(0, 15) + "...";
+                b.innerText = getFriendlyName(dev); // Brand Name Display
                 b.onclick = () => { 
                     document.querySelectorAll('.dev-btn').forEach(x => x.classList.remove('active')); 
                     b.classList.add('active'); 

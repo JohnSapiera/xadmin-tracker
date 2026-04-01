@@ -22,7 +22,7 @@
             background-size: 30px 30px;
         }
 
-        /* ANIMATIONS */
+        /* NEON PULSE ANIMATION para sa Weapon Detection */
         @keyframes neonPulse {
             0% { text-shadow: 0 0 2px var(--green); opacity: 0.7; }
             50% { text-shadow: 0 0 10px var(--green), 0 0 20px var(--green); opacity: 1; color: #fff; }
@@ -44,11 +44,11 @@
             padding: 25px 60px; font-family: var(--mono); font-size: 18px; font-weight: bold;
             cursor: pointer; position: relative; transition: 0.3s;
             clip-path: polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%);
-            opacity: 0.1; pointer-events: none;
+            opacity: 0.2; pointer-events: none;
         }
         .report-btn.unlocked { opacity: 1; pointer-events: auto; background: rgba(0, 243, 255, 0.05); }
-        .report-btn.unlocked:hover { background: var(--cyan); color: #000; box-shadow: 0 0 30px rgba(0, 243, 255, 0.4); }
 
+        /* MODAL BOX */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; backdrop-filter: blur(15px); }
         .modal-box { 
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
@@ -59,42 +59,37 @@
         }
 
         .input-group { margin-bottom: 20px; text-align: left; }
-        .input-label { font-family: var(--mono); font-size: 10px; color: var(--cyan); margin-bottom: 8px; display: block; letter-spacing: 1px; transition: 0.3s; }
+        .input-label { font-family: var(--mono); font-size: 10px; color: var(--cyan); margin-bottom: 8px; display: block; letter-spacing: 1px; }
         
-        /* Highlight Class for Detection */
         .weapon-detected-active { color: var(--green) !important; animation: neonPulse 1.5s infinite; }
 
         .intel-input { 
             width: 100%; background: #05131a; border: 1px solid #1a2f37; padding: 15px; 
-            color: #fff; font-family: var(--mono); font-size: 16px; outline: none;
-            transition: 0.3s; border-left: 3px solid #1a2f37;
+            color: #fff; font-family: var(--mono); font-size: 16px; outline: none; border-left: 3px solid #1a2f37;
         }
-        .intel-input:focus { border-color: var(--cyan); border-left-color: var(--cyan); background: #071b25; }
+        .intel-input:focus { border-color: var(--cyan); border-left-color: var(--cyan); }
 
-        .grid-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+        .grid-list { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 10px; }
         .grid-item { 
             background: #05131a; border: 1px solid #1a2f37; color: #5c7882; 
-            padding: 12px; font-family: var(--mono); font-size: 11px; 
-            cursor: pointer; transition: 0.3s; text-align: center;
-            text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            padding: 15px; font-family: var(--mono); font-size: 12px; 
+            text-align: center; text-transform: uppercase;
         }
         .grid-item.selected { 
-            border-color: var(--cyan); color: var(--cyan); 
-            background: rgba(0, 243, 255, 0.05);
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
+            border-color: var(--green); color: var(--green); 
+            background: rgba(0, 255, 102, 0.05);
         }
 
         .btn-transmit { 
             width: 100%; padding: 20px; background: var(--cyan); color: #000; 
             border: none; font-family: var(--mono); font-size: 16px; font-weight: 900; 
-            cursor: pointer; text-transform: uppercase; letter-spacing: 2px;
+            cursor: pointer; text-transform: uppercase; margin-top: 10px;
             clip-path: polygon(0 0, 100% 0, 100% 75%, 92% 100%, 0 100%);
-            margin-top: 10px; transition: 0.3s;
         }
         .btn-transmit:disabled { opacity: 0.2; pointer-events: none; filter: grayscale(1); }
 
         nav { position: fixed; bottom: 0; width: 100%; height: 75px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; }
-        .nav-link { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #333; font-size: 11px; font-family: var(--mono); text-decoration: none; font-weight: bold; }
+        .nav-link { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #444; font-size: 11px; font-family: var(--mono); text-decoration: none; font-weight: bold; }
         .nav-link.active { color: var(--cyan); background: rgba(0,243,255,0.03); border-top: 2px solid var(--cyan); }
     </style>
 </head>
@@ -106,7 +101,7 @@
     <div class="auth-zone">
         <div id="log-status">>> Establishing_Secure_Link...</div>
         <div class="agent-name" id="display-name">---</div>
-        <div class="device-tag" id="device-tag">CHECKING_SESSION...</div>
+        <div class="device-tag" id="device-tag">AWAITING_AUTH...</div>
     </div>
 
     <button id="main-btn" class="report-btn" onclick="openReport()">
@@ -117,13 +112,13 @@
 <div id="report-modal" class="modal">
     <div class="modal-box">
         <div style="text-align:center; margin-bottom:20px;">
-            <h2 style="font-family:var(--mono); font-size:12px; letter-spacing:3px; color:var(--cyan);">TACTICAL_ENTRY_PROTOCOL</h2>
+            <h2 style="font-family:var(--mono); font-size:12px; letter-spacing:3px; color:var(--cyan);">BOUNTY_UPLINK_PROTOCOL</h2>
             <div id="scan-status" style="font-size:10px; color:#5c7882; margin-top:5px;">AWAITING_INPUT...</div>
         </div>
 
         <div class="input-group">
-            <span class="input-label">TARGET_V_AGENT_NO (NAME)</span>
-            <input type="text" id="vAgent" class="intel-input" placeholder="SCAN NAME..." autocomplete="off">
+            <span class="input-label">TARGET_V_AGENT_NO</span>
+            <input type="text" id="vAgent" class="intel-input" placeholder="SCAN NUMBER..." autocomplete="off">
         </div>
 
         <div id="weapon-zone" style="display:none; margin-bottom:20px;">
@@ -134,11 +129,6 @@
         <div class="input-group">
             <span class="input-label">BOUNTY_EXPENSES (PHP)</span>
             <input type="number" id="expenses" class="intel-input" placeholder="0.00">
-        </div>
-
-        <div id="device-zone" style="display:none; margin-bottom:20px;">
-            <span class="input-label" id="device-label">DETECTED_AGENT_DEVICES</span>
-            <div id="target-device-list" class="grid-list"></div>
         </div>
 
         <button id="transmit-btn" onclick="transmitData()" class="btn-transmit" disabled>DATA_INCOMPLETE</button>
@@ -158,127 +148,93 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getFirestore, collection, query, where, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
-        authDomain: "my-admin-portal-12691.firebaseapp.com",
-        projectId: "my-admin-portal-12691",
-        storageBucket: "my-admin-portal-12691.firebasestorage.app",
-        messagingSenderId: "317015091563",
-        appId: "1:317015091563:web:baab5171d8e0a58acd442e"
+    const firebaseConfig = { 
+        apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
+        authDomain: "my-admin-portal-12691.firebaseapp.com", 
+        projectId: "my-admin-portal-12691", 
+        storageBucket: "my-admin-portal-12691.firebasestorage.app", 
+        messagingSenderId: "317015091563", 
+        appId: "1:317015091563:web:baab5171d8e0a58acd442e" 
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
     let selectedWeapon = "N/A";
-    let selectedTargetDevice = "N/A";
 
-    async function runSecurityScan() {
-        const nameDisplay = document.getElementById('display-name');
-        const tag = document.getElementById('device-tag');
-        const log = document.getElementById('log-status');
-        const btn = document.getElementById('main-btn');
-        
-        const savedAgent = localStorage.getItem("cia_agent");
-        const isVerified = localStorage.getItem("agent_verified");
+    // 1. Session Check (Verify if agent is logged in from index)
+    function checkSession() {
+        const name = localStorage.getItem("cia_agent");
+        const verified = localStorage.getItem("agent_verified");
         const sig = localStorage.getItem("intel_device_signature") || "N/A";
 
-        if (isVerified === "true" && savedAgent) {
-            nameDisplay.innerText = savedAgent;
-            tag.innerText = "AGENT_SESSION_ACTIVE // " + sig;
-            log.innerText = ">> UPLINK_STABLE";
-            btn.classList.add('unlocked');
+        if (verified === "true" && name) {
+            document.getElementById('display-name').innerText = name;
+            document.getElementById('device-tag').innerText = "SECURE_SIGNATURE: " + sig;
+            document.getElementById('log-status').innerText = ">> UPLINK_STABLE";
+            document.getElementById('main-btn').classList.add('unlocked');
         } else {
-            window.location.href = "index.html";
+            window.location.href = "index.html"; // Balik login kung walang session
         }
     }
 
+    // 2. Scan Logic para sa V_AGENT_NO
     const scanAgent = async (val) => {
         const status = document.getElementById('scan-status');
         const weaponZone = document.getElementById('weapon-zone');
         const weaponLabel = document.getElementById('weapon-label');
         const weaponList = document.getElementById('weapon-list');
-        const deviceZone = document.getElementById('device-zone');
-        const deviceList = document.getElementById('target-device-list');
 
         if(val.length < 3) {
             weaponZone.style.display = "none";
-            deviceZone.style.display = "none";
             weaponLabel.classList.remove('weapon-detected-active');
             selectedWeapon = "N/A";
-            selectedTargetDevice = "N/A";
             validateForm();
             return;
         }
 
         status.innerText = ">> ANALYZING_REGISTRY...";
         status.style.color = "var(--cyan)";
-
+        
         try {
-            // Search by Name in mission_orders
-            let q = query(collection(db, "mission_orders"), where("agentName", "==", val));
-            let snap = await getDocs(q);
+            // Tinitingnan natin ang 'vAgentID' field sa 'mission_orders' collection
+            const q = query(collection(db, "mission_orders"), where("vAgentID", "==", val));
+            const snap = await getDocs(q);
 
             if (!snap.empty) {
                 const data = snap.docs[0].data();
-                status.innerText = ">> UNIT_FOUND: ID#" + (data.vAgentID || "N/A");
+                status.innerText = ">> IDENTITY_CONFIRMED: MISSION_#" + (data.missionID || "UNK");
                 status.style.color = "var(--green)";
-                
-                // 1. WEAPON SYSTEMS + ANIMATION
-                const weapons = data.weaponSystems || [];
+
+                const weapon = data.weaponSystem;
                 weaponZone.style.display = "block";
                 weaponList.innerHTML = "";
-                
-                if(weapons.length > 0) {
+
+                if(weapon && weapon !== "N/A" && weapon !== "RESERVED") {
                     weaponLabel.innerText = "⚠️ WEAPON_SYSTEM_DETECTED";
                     weaponLabel.classList.add('weapon-detected-active');
-                    weapons.forEach(w => {
-                        const b = document.createElement('div');
-                        b.className = 'grid-item';
-                        b.innerText = w;
-                        b.onclick = () => {
-                            document.querySelectorAll('#weapon-list .grid-item').forEach(x => x.classList.remove('selected'));
-                            b.classList.add('selected');
-                            selectedWeapon = w;
-                            validateForm();
-                        };
-                        weaponList.appendChild(b);
-                    });
+                    
+                    const b = document.createElement('div');
+                    b.className = 'grid-item selected';
+                    b.innerText = weapon;
+                    weaponList.appendChild(b);
+                    selectedWeapon = weapon;
                 } else {
                     weaponLabel.innerText = "WEAPON_SYSTEM_DETECTION (EMPTY)";
                     weaponLabel.classList.remove('weapon-detected-active');
-                    weaponList.innerHTML = "<div style='grid-column:1/-1; font-size:10px; color:#5c7882;'>NO_WEAPONS_ASSIGNED</div>";
+                    weaponList.innerHTML = "<div style='grid-column:1/-1; color:#5c7882; font-size:10px;'>NO_HARDWARE_LOGGED</div>";
+                    selectedWeapon = "N/A";
                 }
-
-                // 2. DEVICE SIGNATURES
-                deviceZone.style.display = "block";
-                deviceList.innerHTML = "";
-                const sigs = data.linkedSignatures || [];
-                if(sigs.length > 0) {
-                    sigs.forEach(sig => {
-                        const d = document.createElement('div');
-                        d.className = 'grid-item';
-                        d.innerText = sig.substring(0, 10) + "...";
-                        d.onclick = () => {
-                            document.querySelectorAll('#target-device-list .grid-item').forEach(x => x.classList.remove('selected'));
-                            d.classList.add('selected');
-                            selectedTargetDevice = sig;
-                            validateForm();
-                        };
-                        deviceList.appendChild(d);
-                    });
-                } else {
-                    deviceList.innerHTML = "<div style='grid-column:1/-1; font-size:10px; color:#5c7882;'>NO_DEVICE_LOGS</div>";
-                }
-
+                validateForm();
             } else {
-                status.innerText = ">> IDENTITY_NOT_FOUND";
+                status.innerText = ">> V_AGENT_ID_NOT_FOUND";
                 status.style.color = "#5c7882";
                 weaponZone.style.display = "none";
-                deviceZone.style.display = "none";
                 weaponLabel.classList.remove('weapon-detected-active');
+                selectedWeapon = "N/A";
+                validateForm();
             }
-        } catch (e) { console.error(e); }
+        } catch(e) { console.error("Scan error:", e); }
     };
 
     function validateForm() {
@@ -286,8 +242,7 @@
         const e = document.getElementById('expenses').value;
         const btn = document.getElementById('transmit-btn');
         
-        // Unlocks if: Name is set, Expenses > 0, Weapon chosen, and Device chosen
-        if (v.length >= 3 && e > 0 && selectedWeapon !== "N/A" && selectedTargetDevice !== "N/A") {
+        if (v.length >= 3 && e > 0 && selectedWeapon !== "N/A") {
             btn.disabled = false;
             btn.innerText = "CONFIRM_TRANSMISSION";
         } else {
@@ -296,37 +251,36 @@
         }
     }
 
-    document.getElementById('vAgent').addEventListener('input', (e) => scanAgent(e.target.value));
-    document.getElementById('expenses').addEventListener('input', validateForm);
-
+    // 3. Transmit Bounty Data
     window.transmitData = async () => {
         const v = document.getElementById('vAgent').value;
         const e = document.getElementById('expenses').value;
         const agentName = localStorage.getItem("cia_agent");
-        const mySig = localStorage.getItem("intel_device_signature");
-        const brand = localStorage.getItem("agent_brand");
+        const sig = localStorage.getItem("intel_device_signature");
 
         try {
             await addDoc(collection(db, "bounties"), {
                 reportedBy: agentName,
-                brandName: brand,
                 targetV_Agent_No: v,
-                targetDevice: selectedTargetDevice,
                 weaponSystem: selectedWeapon,
                 expenses: parseFloat(e),
-                reporterSignature: mySig,
+                reporterSignature: sig,
                 timestamp: serverTimestamp(),
-                orderNumber: "BNT-" + Math.floor(10000 + Math.random() * 90000),
                 status: "PENDING_REVIEW"
             });
-            alert("✅ BOUNTY_TRANSMITTED");
+            alert("✅ BOUNTY_TRANSMISSION_SUCCESSFUL");
             location.reload();
-        } catch (err) { alert("❌ FAILED"); }
+        } catch (err) { alert("❌ TRANSMISSION_FAILED"); }
     };
+
+    // UI Events
+    document.getElementById('vAgent').addEventListener('input', (e) => scanAgent(e.target.value));
+    document.getElementById('expenses').addEventListener('input', validateForm);
 
     window.openReport = () => document.getElementById('report-modal').style.display = 'block';
     window.closeReport = () => document.getElementById('report-modal').style.display = 'none';
-    window.onload = runSecurityScan;
+
+    window.onload = checkSession;
 </script>
 </body>
 </html>

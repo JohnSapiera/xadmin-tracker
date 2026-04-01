@@ -36,7 +36,6 @@
             transform-style: preserve-3d;
         }
 
-        /* Rotation on Hover */
         .phone-container:hover { transform: rotateY(20deg) rotateX(5deg); }
 
         .phone-body {
@@ -53,7 +52,6 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
 
-        /* Power On Animation */
         .phone-container.booting .phone-screen { background: var(--neon); box-shadow: 0 0 20px var(--neon); }
         .phone-label { margin-top: 10px; font-family: var(--font-main); font-weight: bold; color: var(--neon); font-size: 14px; text-align: center; }
 
@@ -111,7 +109,7 @@
         <div style="text-align:center; text-decoration:underline; margin-bottom:20px;">MISSION DOSSIER</div>
 
         <div style="font-size: 12px; line-height: 1.8;">
-            <p>ORDER#: <span id="d-order">---</span></p>
+            <p>MISSION ORDER#: <span id="d-order">---</span></p>
             <p>vAGENT: #<span id="d-vagent">---</span></p>
             <br>
             <p><b>EXPENSES BREAKDOWN:</b></p>
@@ -209,7 +207,6 @@
             </div>
         `).join('');
 
-        // Shadow Files (Silhouettes)
         html += `
             <div class="vagent-box silhouette"><div style="font-size:18px;">👤</div><span>#SHDW</span></div>
             <div class="vagent-box silhouette"><div style="font-size:18px;">👤</div><span>#SHDW</span></div>
@@ -222,19 +219,18 @@
         const mission = deviceDataMap[weapon].find(m => m.vAgentID == vID);
         selectedMissionData = { ...mission, weaponSystem: weapon };
 
-        // Handle Date Format Month/Date/Year
-        const formatDate = (dateStr) => {
-            if(!dateStr) return "---";
-            const d = new Date(dateStr);
-            return isNaN(d) ? dateStr : `${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()}`;
+        // MM/DD/YYYY Date Formatter
+        const formatDate = (input) => {
+            if(!input) return "---";
+            let d = (input.seconds) ? input.toDate() : new Date(input);
+            if (isNaN(d.getTime())) return input;
+            return `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}/${d.getFullYear()}`;
         };
 
-        // Logic for Mission Order Search
+        // Mission Order Logic (Search Match)
         let orderNum = mission.orderNumber;
-        if (!orderNum || orderNum === "unknown") {
-            // Re-verify logic: search matches
-            orderNum = `RE-VERIFYING...`; 
-            // Sa real implementation, dito mo i-ta-tag yung agentName + weapon + vID match.
+        if (!orderNum || orderNum.toLowerCase() === "unknown") {
+            orderNum = `RE-VERIFYING_${vID}...`;
         }
 
         document.getElementById('d-order').innerText = orderNum || "---";
@@ -242,7 +238,6 @@
         document.getElementById('d-deploy').innerText = formatDate(mission.deploymentDate);
         document.getElementById('d-relieve').innerText = formatDate(mission.relieveDate);
 
-        // Logs Breakdown
         const reportID = `${currentAgent}_${weapon}_${vID}`.replace(/\s+/g, '_');
         const logsList = document.getElementById('logs-list');
         const totalDisp = document.getElementById('d-total');
@@ -273,23 +268,19 @@
         btn.innerText = "ARCHIVING...";
 
         try {
-            // Save all data to 'blacklist' collection
             const blacklistID = `BLIST_${selectedMissionData.agentName}_${selectedMissionData.vAgentID}`;
             await setDoc(doc(db, "blacklist", blacklistID), {
                 ...selectedMissionData,
                 archivedAt: new Date(),
                 status: "BLACK_LISTED"
             });
-
             alert("SYSTEM: MISSION_DATA_MOVED_TO_BLACKLIST");
             location.reload();
         } catch (e) { alert("ERR: ARCHIVE_FAILED"); }
     };
 
     window.closeDoc = () => document.getElementById('docOverlay').style.display = 'none';
-    window.showDevices = () => {
-        location.reload(); // Refresh to reset animations and grid
-    };
+    window.showDevices = () => { location.reload(); };
 </script>
 </body>
 </html>

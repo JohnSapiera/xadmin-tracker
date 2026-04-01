@@ -72,6 +72,7 @@
         background: rgba(0,0,0,0.7); border-left: 3px solid var(--cyan); 
         padding: 15px; font-family: var(--font-mono); font-size: 11px; 
         height: 180px; color: #9ab4bc; overflow-y: auto; line-height: 1.5;
+        display: flex; flex-direction: column;
     }
 
     .overlay { display: none; position: fixed; inset: 0; background: rgba(1, 4, 5, 0.98); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
@@ -138,7 +139,7 @@
     </div>
   </div>
   
-  <div id="terminal">> TERMINAL_READY...</div>
+  <div id="terminal"></div>
 </main>
 
 <div class="overlay" id="modal-overlay">
@@ -182,7 +183,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, query, where, getDocs, doc, setDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, collection, query, where, getDocs, doc, setDoc, addDoc, serverTimestamp, onSnapshot, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = { apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", authDomain: "my-admin-portal-12691.firebaseapp.com", projectId: "my-admin-portal-12691", storageBucket: "my-admin-portal-12691.firebasestorage.app", messagingSenderId: "317015091563", appId: "1:317015091563:web:baab5171d8e0a58acd442e" };
   const app = initializeApp(firebaseConfig);
@@ -196,14 +197,8 @@
   let isRetrieveMode = false;
   let sourceCollection = "mission_orders";
 
-  // --- NEW LOGIC: PERSISTENT TERMINAL FEEDBACK ---
+  // --- LOG WRITER (Sends to Firebase) ---
   const log = async (msg, color = "#5c7882") => {
-    // UI Update
-    const d = document.createElement('div');
-    d.innerHTML = `<span style="opacity:0.4">${new Date().toLocaleTimeString('en-GB')}</span> > <span style="color:${color}">${msg}</span>`;
-    termLog.prepend(d);
-
-    // Database Sync
     try {
         await addDoc(collection(db, "terminal_logs"), {
             timestamp: serverTimestamp(),
@@ -214,6 +209,22 @@
         });
     } catch (e) { console.error("SYNC_FAIL", e); }
   };
+
+  // --- LOG READER (Loads History & Real-time Updates) ---
+  const initTerminal = () => {
+    const q = query(collection(db, "terminal_logs"), orderBy("timestamp", "desc"), limit(15));
+    onSnapshot(q, (snapshot) => {
+        termLog.innerHTML = ""; // Clear for refresh
+        snapshot.forEach((doc) => {
+            const data = doc.data();
+            const timeStr = data.timestamp ? data.timestamp.toDate().toLocaleTimeString('en-GB') : "SYNCING";
+            const d = document.createElement('div');
+            d.innerHTML = `<span style="opacity:0.4">${timeStr}</span> > <span style="color:${data.color}">${data.message}</span>`;
+            termLog.appendChild(d); // Dahil desc order, ang bago ay nasa taas
+        });
+    });
+  };
+  initTerminal();
 
   const formatMonthDay = (date) => {
     return date.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
@@ -226,7 +237,7 @@
     reserveBtn.disabled = false; reserveBtn.classList.remove('btn-faded');
 
     if (val.length >= 4) {
-        log(`SCANNING DATABASE: [${val}]`, 'var(--cyan)');
+        await log(`SCANNING DATABASE: [${val}]`, 'var(--cyan)');
         try {
             const qOrders = query(collection(db, "mission_orders"), where("missionID", "==", val));
             const qBlack = query(collection(db, "blacklist"), where("targetID", "==", val));
@@ -239,15 +250,15 @@
                 
                 if (!snapBlack.empty) {
                     sourceCollection = "blacklist";
-                    log(`ALERT: ID FOUND IN BLACKLIST`, 'var(--red)');
+                    await log(`ALERT: ID FOUND IN BLACKLIST`, 'var(--red)');
                 } else {
                     sourceCollection = "mission_orders";
-                    log(`RECORD LOCATED: ACTIVE MISSION`, 'var(--green)');
+                    await log(`RECORD LOCATED: ACTIVE MISSION`, 'var(--green)');
                 }
             } else {
-                log(`STATUS: ID CLEAR`, 'var(--green)');
+                await log(`STATUS: ID CLEAR`, 'var(--green)');
             }
-        } catch (e) { log("DB_UPLINK_ERROR", "red"); }
+        } catch (e) { await log("DB_UPLINK_ERROR", "red"); }
     }
   });
 
@@ -276,7 +287,7 @@
                 devGrid.appendChild(b);
             });
         }
-    } catch(e) { log("WEAPON_FETCH_FAIL", "var(--red)"); }
+    } catch(e) { await log("WEAPON_FETCH_FAIL", "var(--red)"); }
 
     if (isRetrieveMode) {
         const idField = sourceCollection === "mission_orders" ? "missionID" : "targetID";
@@ -307,7 +318,7 @@
     if(selectedDevice === "N/A") return alert("SELECT WEAPON SYSTEM");
     
     try {
-        log(`UPLOADING MISSION DATA...`, 'var(--cyan)');
+        await log(`UPLOADING MISSION DATA...`, 'var(--cyan)');
         await setDoc(doc(db, "mission_orders", input.value), {
             missionID: input.value,
             agentName: document.getElementById('pop-agent').innerText,
@@ -322,13 +333,13 @@
         await log(`MISSION SUCCESS: ID ${input.value} LOGGED`, 'var(--green)');
         document.getElementById('modal-overlay').style.display = 'none';
         document.getElementById('success-screen').style.display = 'flex';
-    } catch (e) { log("CRITICAL_UPLOAD_FAIL", "red"); }
+    } catch (e) { await log("CRITICAL_UPLOAD_FAIL", "red"); }
   };
 
   reserveBtn.onclick = async () => {
     if (input.value.length < 4 || reserveBtn.disabled) return;
     try {
-        log(`RESERVING ID: ${input.value}...`, 'var(--blue)');
+        await log(`RESERVING ID: ${input.value}...`, 'var(--blue)');
         await setDoc(doc(db, "mission_orders", input.value), {
             missionID: input.value, 
             agentName: localStorage.getItem("cia_agent") || "JEFFERSON VALLES",
@@ -339,7 +350,7 @@
         await log(`RESERVATION COMPLETE`, 'var(--green)');
         document.getElementById('success-msg').innerText = "ID_RESERVED";
         document.getElementById('success-screen').style.display = 'flex';
-    } catch (e) { log("RESERVE_FAIL", "red"); }
+    } catch (e) { await log("RESERVE_FAIL", "red"); }
   };
 
   setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB'); }, 1000);

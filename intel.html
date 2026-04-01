@@ -3,39 +3,68 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-    <title>INTEL_TARGETING_v26</title>
+    <title>INTEL_TARGETING_v26.1</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #01080b; --cyan: #00f3ff; --red: #ff003c; --green: #00ff66; --border: rgba(0, 243, 255, 0.15); --mono: 'Share Tech Mono', monospace; }
+        :root { 
+            --bg: #01080b; --cyan: #00f3ff; --red: #ff003c; --green: #00ff66; 
+            --border: rgba(0, 243, 255, 0.15); --mono: 'Share Tech Mono', monospace; 
+            --glass: rgba(2, 12, 18, 0.95);
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: #c8e1e5; font-family: 'Rajdhani', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        
+        body { 
+            background: var(--bg); color: #c8e1e5; font-family: 'Rajdhani', sans-serif; 
+            height: 100vh; overflow: hidden; display: flex; flex-direction: column;
+            background-image: radial-gradient(circle at center, #0a1f29 0%, #01080b 100%);
+        }
+
         header { padding: 10px; border-bottom: 1px solid var(--border); text-align: center; background: #000; }
         .intel-title { font-family: var(--mono); color: var(--cyan); font-size: 11px; letter-spacing: 2px; }
-        
-        main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 15px; }
-        .agent-name { font-size: 32px; font-weight: 800; color: #fff; text-transform: uppercase; }
-        .report-btn { margin-top: 20px; background: rgba(0, 243, 255, 0.05); border: 1px solid var(--cyan); color: var(--cyan); width: 220px; height: 50px; font-family: var(--mono); font-size: 13px; font-weight: bold; cursor: pointer; clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%); }
 
+        main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 15px; }
+        .agent-name { font-size: 32px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: #fff; }
+        
+        /* COMPACT MOBILE BUTTON */
+        .report-btn { 
+            margin-top: 20px; background: rgba(0, 243, 255, 0.05); border: 1px solid var(--cyan); 
+            color: var(--cyan); width: 220px; height: 50px; 
+            font-family: var(--mono); font-size: 13px; font-weight: bold;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+            transition: 0.2s;
+        }
+        .report-btn:active { background: var(--cyan); color: #000; }
+
+        /* MODAL */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 1000; }
-        .modal-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 340px; background: rgba(2, 12, 18, 0.95); border-top: 4px solid var(--cyan); padding: 20px; }
+        .modal-box { 
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            width: 90%; max-width: 340px; background: var(--glass); 
+            border: 1px solid var(--border); border-top: 4px solid var(--cyan); padding: 20px;
+        }
 
         .input-group { margin-bottom: 12px; text-align: left; }
         .input-label { font-family: var(--mono); font-size: 9px; color: var(--cyan); margin-bottom: 4px; display: block; }
-        .intel-input { width: 100%; background: #05131a; border: 1px solid #1a2f37; padding: 10px; color: #fff; font-family: var(--mono); font-size: 16px; outline: none; text-align: center; }
+        .intel-input { 
+            width: 100%; background: #05131a; border: 1px solid #1a2f37; padding: 10px; 
+            color: #fff; font-family: var(--mono); font-size: 16px; outline: none; text-align: center;
+        }
 
         /* WEAPON SELECTOR GRID */
-        .weapon-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px; }
+        .weapon-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 5px; }
         .weapon-card { 
             padding: 10px; border: 1px solid #1a2f37; background: rgba(255,255,255,0.02); 
-            font-family: var(--mono); font-size: 10px; text-align: center; cursor: pointer; 
-            transition: 0.2s; color: #5c7882;
+            font-family: var(--mono); font-size: 10px; text-align: center; cursor: pointer; color: #5c7882;
         }
         .weapon-card.selected { 
-            border-color: var(--green); color: var(--green); 
-            background: rgba(0,255,102,0.1); box-shadow: 0 0 10px rgba(0,255,102,0.2); 
+            border-color: var(--green); color: var(--green); background: rgba(0,255,102,0.1); 
         }
 
-        .btn-transmit { width: 100%; padding: 14px; background: var(--cyan); color: #000; border: none; font-family: var(--mono); font-size: 13px; font-weight: 900; cursor: pointer; margin-top: 15px; }
+        .btn-transmit { 
+            width: 100%; padding: 15px; background: var(--cyan); color: #000; 
+            border: none; font-family: var(--mono); font-size: 13px; font-weight: 900; cursor: pointer; margin-top: 15px;
+        }
         .btn-transmit:disabled { opacity: 0.1; }
 
         nav { position: fixed; bottom: 0; width: 100%; height: 60px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; }
@@ -45,40 +74,42 @@
 </head>
 <body>
 
-<header><div class="intel-title">INTEL_TARGETING_v26</div></header>
+<header><div class="intel-title">INTEL_TARGETING_v26.1</div></header>
 
 <main>
     <div id="display-name" class="agent-name">---</div>
-    <div style="font-size:9px; color:#5c7882; font-family:var(--mono);">AGENT_STATUS: ACTIVE_SEARCH</div>
+    <div style="font-size:9px; color:#5c7882; font-family:var(--mono);">AWAITING_SCAN_COMMAND</div>
     <button class="report-btn" onclick="openReport()">INITIATE_SCAN</button>
 </main>
 
 <div id="report-modal" class="modal">
     <div class="modal-box">
-        <div id="scan-status" style="font-size:9px; color:#5c7882; text-align:center; margin-bottom:10px; font-family:var(--mono);">AWAITING_UPLINK...</div>
+        <div id="scan-status" style="font-size:9px; color:#5c7882; text-align:center; margin-bottom:10px; font-family:var(--mono);">READY_FOR_TARGETING...</div>
 
         <div class="input-group">
-            <span class="input-label">STEP 1: ENTER_V_AGENT_ID</span>
+            <span class="input-label">V_AGENT_ID</span>
             <input type="text" id="vAgentInput" class="intel-input" placeholder="0000" oninput="handleAgentScan(this.value)">
         </div>
 
         <div id="weapon-selection-zone" style="display:none; margin-bottom:12px;">
-            <span class="input-label">STEP 2: SELECT_TARGET_DEVICE</span>
-            <div id="weapon-grid" class="weapon-grid">
-                </div>
+            <span class="input-label">SELECT_ACTIVE_DEVICE</span>
+            <div id="weapon-grid" class="weapon-grid"></div>
         </div>
 
         <div class="input-group">
-            <span class="input-label">STEP 3: ADD_EXPENSE</span>
+            <span class="input-label">EXPENSE_AMOUNT (PHP)</span>
             <input type="number" id="expensesInput" class="intel-input" placeholder="0.00" oninput="validateForm()">
         </div>
 
-        <button id="transmit-btn" onclick="transmitData()" class="btn-transmit" disabled>SELECT_DEVICE_FIRST</button>
-        <button onclick="closeReport()" style="width:100%; background:transparent; color:var(--red); border:none; margin-top:10px; font-family:var(--mono); font-size:9px; cursor:pointer;">// ABORT</button>
+        <button id="transmit-btn" onclick="transmitData()" class="btn-transmit" disabled>SELECT_DEVICE</button>
+        <button onclick="closeReport()" style="width:100%; background:transparent; color:var(--red); border:none; margin-top:10px; font-family:var(--mono); font-size:9px; cursor:pointer;">// ABORT_TRANSMISSION</button>
     </div>
 </div>
 
-<nav><a href="dashboard.html" class="nav-link">DASHBOARD</a><a href="#" class="nav-link active">INTEL</a></nav>
+<nav>
+    <a href="dashboard.html" class="nav-link">DASHBOARD</a>
+    <a href="#" class="nav-link active">INTEL</a>
+</nav>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -96,27 +127,32 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     
-    let currentTargetDoc = null;
     let selectedDeviceName = null;
 
     window.onload = () => {
-        document.getElementById('display-name').innerText = localStorage.getItem("cia_agent") || "UNKNOWN";
+        const agent = localStorage.getItem("cia_agent");
+        if (!agent) window.location.href = "index.html";
+        document.getElementById('display-name').innerText = agent;
     };
 
-    // 1. SCAN LOGIC: Priority sa Agent + VAgentID
+    // SEARCH LOGIC: Target ang "agents" collection filter by current user and VAgentID
     window.handleAgentScan = async (val) => {
-        const agent = localStorage.getItem("cia_agent");
+        const currentAgent = localStorage.getItem("cia_agent");
         const status = document.getElementById('scan-status');
         const grid = document.getElementById('weapon-grid');
         const zone = document.getElementById('weapon-selection-zone');
         const cleanVal = val.trim();
 
-        if(cleanVal.length < 1) { zone.style.display = "none"; return; }
+        if(cleanVal.length < 1) { 
+            zone.style.display = "none"; 
+            status.innerText = "AWAITING_INPUT...";
+            return; 
+        }
 
         try {
-            // Hinahanap ang lahat ng records na pag-aari ng Agent na ito na may ganitong VAgentID
-            const q = query(collection(db, "mission_orders"), 
-                        where("assignedAgent", "==", agent), 
+            // Search criteria sa 'agents' collection
+            const q = query(collection(db, "agents"), 
+                        where("agentName", "==", currentAgent), 
                         where("vAgentID", "==", cleanVal));
             
             const snap = await getDocs(q);
@@ -127,16 +163,16 @@
                 status.innerText = ">> TARGET_LOCKED: SELECT_DEVICE";
                 status.style.color = "var(--green)";
 
-                snap.forEach(doc => {
-                    const data = doc.data();
+                snap.forEach(docSnap => {
+                    const data = docSnap.data();
                     const card = document.createElement('div');
                     card.className = 'weapon-card';
-                    card.innerHTML = `DEVICE:<br><b>${data.weaponSystem}</b>`;
+                    card.innerHTML = `SYSTEM:<br><b>${data.weaponSystem}</b>`;
                     card.onclick = () => selectWeapon(card, data.weaponSystem);
                     grid.appendChild(card);
                 });
             } else {
-                status.innerText = ">> NO_PERSONAL_RECORDS_FOUND";
+                status.innerText = ">> NO_MATCHING_TARGET_OWNED";
                 status.style.color = "var(--red)";
                 zone.style.display = "none";
                 selectedDeviceName = null;
@@ -172,7 +208,7 @@
         const agent = localStorage.getItem("cia_agent");
 
         try {
-            // UNIQUE ID: Kombinasyon ng Agent + Weapon + VAgent# para siguradong targeted ang report
+            // Unique ID per Agent-Device-VAgent sequence
             const reportID = `${agent}_${selectedDeviceName}_${v}`.replace(/\s+/g, '_');
             const reportRef = doc(db, "bounty_report", reportID);
 
@@ -185,16 +221,17 @@
                 lastUpdate: serverTimestamp()
             }, { merge: true });
 
-            // 2. LOG HISTORY
-            await addDoc(collection(db, "bounty_report", reportID, "logs"), {
+            // 2. NESTED LOG HISTORY
+            const nestedLogRef = collection(db, "bounty_report", reportID, "logs");
+            await addDoc(nestedLogRef, {
                 amount: e,
                 timestamp: serverTimestamp(),
                 reportedBy: agent
             });
 
-            alert("✅ UPLINK_SUCCESS: TARGET_UPDATED");
+            alert("✅ SUCCESS: DATA_UPLINKED");
             location.reload();
-        } catch (err) { alert("❌ ERROR"); }
+        } catch (err) { alert("❌ UPLINK_ERROR"); }
     };
 
     window.openReport = () => document.getElementById('report-modal').style.display = 'block';

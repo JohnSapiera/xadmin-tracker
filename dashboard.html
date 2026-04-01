@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>INTEL_CENTER_v20.0_RECON</title>
+  <title>INTEL_CENTER_v21.0_SYNC</title>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root { 
@@ -30,7 +30,6 @@
     header { 
         padding: 18px 20px; background: rgba(0,0,0,0.9); border-bottom: 2px solid var(--cyan); 
         display: flex; justify-content: space-between; align-items: center; z-index: 100;
-        box-shadow: 0 5px 20px rgba(0,243,255,0.2);
     }
     .profile-link { 
         background: var(--cyan-dim); border: 1px solid var(--cyan); color: var(--cyan); 
@@ -56,7 +55,6 @@
         width: 100%; background: rgba(0,0,0,0.6); border: none; border-bottom: 2px solid var(--cyan);
         color: #fff; font-family: var(--font-mono); font-size: 55px; font-weight: 700; padding: 15px 0; 
         text-align: center; letter-spacing: 12px; outline: none; margin-bottom: 20px;
-        text-shadow: 0 0 15px rgba(0, 243, 255, 0.5);
     }
 
     .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -68,7 +66,6 @@
     .btn-retrieve { background: var(--blue); color: #fff; }
     .btn-reserve { background: transparent; color: #fff; border: 1px solid #fff; opacity: 0.8; }
     .btn-abort { background: var(--red); color: #fff; }
-    .btn:active { transform: scale(0.95); opacity: 0.8; }
     .btn-faded { opacity: 0.2 !important; pointer-events: none; }
 
     #terminal { 
@@ -80,11 +77,10 @@
     .overlay { display: none; position: fixed; inset: 0; background: rgba(1, 4, 5, 0.98); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
     .popup { 
         width: 100%; max-width: 380px; background: #051014; border: 1px solid var(--cyan); 
-        padding: 25px; position: relative; box-shadow: 0 0 50px rgba(0, 243, 255, 0.1);
+        padding: 25px; position: relative;
     }
     .pop-title { font-size: 48px; color: var(--cyan); text-align: center; font-weight: 700; font-family: var(--font-main); letter-spacing: -2px; }
-    .pop-subtitle { font-family: var(--font-mono); font-size: 10px; color: #556b73; text-align: center; margin-bottom: 20px; letter-spacing: 3px; }
-
+    
     .data-card { background: rgba(255,255,255,0.03); padding: 15px; border: 1px solid var(--border); margin-bottom: 20px; }
     .data-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 13px; }
     .data-label { color: #5c7882; text-transform: uppercase; font-size: 11px; font-family: var(--font-mono); }
@@ -98,7 +94,6 @@
     .dev-btn { 
         background: #08161b; border: 1px solid #1a2f37; color: #5c7882; padding: 12px; 
         font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; cursor: pointer;
-        text-overflow: ellipsis; overflow: hidden; white-space: nowrap;
     }
     .dev-btn.active { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
 
@@ -113,7 +108,7 @@
     }
     .nav-btn { 
         display: flex; flex-direction: column; align-items: center; justify-content: center; 
-        color: #4a5a61; font-size: 11px; text-decoration: none; font-family: var(--font-mono); letter-spacing: 1px;
+        color: #4a5a61; font-size: 11px; text-decoration: none; font-family: var(--font-mono);
     }
     .nav-btn.active { color: var(--cyan); background: var(--cyan-dim); font-weight: bold; }
   </style>
@@ -130,26 +125,26 @@
 
 <div class="status-bar">
     <span id="clock">00:00:00</span>
-    <span>ENCRYPTED_UPLINK: <span style="color:var(--green)">ON</span></span>
+    <span>UPLINK_STATUS: <span style="color:var(--green)">SYNC_ACTIVE</span></span>
 </div>
 
 <main>
   <div class="command-module">
-    <div style="font-size: 10px; color: var(--cyan); margin-bottom: 10px; font-family:var(--mono)">// ENTER_TARGET_ID</div>
+    <div style="font-size: 10px; color: var(--cyan); margin-bottom: 10px; font-family:var(--font-mono)">// ENTER_TARGET_ID</div>
     <input type="tel" id="mission-input" placeholder="----" maxlength="5" autocomplete="off">
     <div class="btn-row">
-      <button id="action-btn" class="btn btn-save">INIT_SAVE</button>
+      <button id="action-btn" class="btn btn-save">SAVE</button>
       <button id="reserve-btn" class="btn btn-reserve">RESERVE</button>
     </div>
   </div>
   
-  <div id="terminal">> CORE_SYSTEMS_ACTIVE...</div>
+  <div id="terminal">> TERMINAL_READY...</div>
 </main>
 
 <div class="overlay" id="modal-overlay">
     <div class="popup">
         <div class="pop-title" id="pop-m-id">#0000</div>
-        <div class="pop-subtitle" id="pop-agent">AGENT_NAME</div>
+        <div class="pop-subtitle" id="pop-agent" style="text-align:center; font-size:10px; color:#5c7882; margin-bottom:20px;">AGENT_NAME</div>
         
         <div class="data-card">
             <div class="data-row">
@@ -164,7 +159,7 @@
             <div class="data-row"><span class="data-label">RELIEVE:</span> <span id="pop-rel" style="color:#fff">--/--</span></div>
         </div>
 
-        <div class="data-label" style="margin-bottom:5px">Select Weapon System:</div>
+        <div class="data-label" style="margin-bottom:5px">Weapon System Selection:</div>
         <div class="device-grid" id="device-list"></div>
         
         <div class="pop-btn-row">
@@ -176,8 +171,7 @@
 
 <div class="overlay" id="success-screen" style="flex-direction: column; background: var(--bg); z-index: 9999;">
     <div style="font-size: 60px; color: var(--green); margin-bottom: 10px;">⚡</div>
-    <div style="color:#fff; font-size:20px; font-weight:700; letter-spacing:4px;" id="success-msg">MISSION_LOGGED</div>
-    <div style="color:var(--cyan); font-family:var(--font-mono); font-size:10px; margin-top:10px;">SYNCING_TO_BUREAU...</div>
+    <div style="color:#fff; font-size:20px; font-weight:700; letter-spacing:4px;" id="success-msg">DATABASE_UPDATED</div>
     <button onclick="location.reload()" class="btn btn-save" style="margin-top: 50px; width: 220px;">CONTINUE</button>
 </div>
 
@@ -188,7 +182,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, query, where, getDocs, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, collection, query, where, getDocs, doc, setDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = { apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", authDomain: "my-admin-portal-12691.firebaseapp.com", projectId: "my-admin-portal-12691", storageBucket: "my-admin-portal-12691.firebasestorage.app", messagingSenderId: "317015091563", appId: "1:317015091563:web:baab5171d8e0a58acd442e" };
   const app = initializeApp(firebaseConfig);
@@ -200,32 +194,42 @@
   const termLog = document.getElementById('terminal');
   let selectedDevice = "N/A";
   let isRetrieveMode = false;
-  let sourceCollection = "mission_orders"; // Tracker kung saan galing ang data
+  let sourceCollection = "mission_orders";
 
-  const log = (msg, color = "#5c7882") => {
+  // --- NEW LOGIC: PERSISTENT TERMINAL FEEDBACK ---
+  const log = async (msg, color = "#5c7882") => {
+    // UI Update
     const d = document.createElement('div');
     d.innerHTML = `<span style="opacity:0.4">${new Date().toLocaleTimeString('en-GB')}</span> > <span style="color:${color}">${msg}</span>`;
     termLog.prepend(d);
+
+    // Database Sync
+    try {
+        await addDoc(collection(db, "terminal_logs"), {
+            timestamp: serverTimestamp(),
+            message: msg,
+            color: color,
+            agent: localStorage.getItem("cia_agent") || "JEFFERSON VALLES",
+            targetID: input.value || "SYSTEM"
+        });
+    } catch (e) { console.error("SYNC_FAIL", e); }
   };
 
   const formatMonthDay = (date) => {
     return date.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
   };
 
-  // --- UPDATED SCAN LOGIC (Blacklist + Orders) ---
   input.addEventListener('input', async () => {
     const val = input.value.trim();
     isRetrieveMode = false;
-    actionBtn.className = "btn btn-save"; actionBtn.textContent = "INIT_SAVE"; actionBtn.disabled = false;
+    actionBtn.className = "btn btn-save"; actionBtn.textContent = "SAVE"; actionBtn.disabled = false;
     reserveBtn.disabled = false; reserveBtn.classList.remove('btn-faded');
 
     if (val.length >= 4) {
-        log(`SCANNING DATABASE...`, 'var(--cyan)');
+        log(`SCANNING DATABASE: [${val}]`, 'var(--cyan)');
         try {
-            // Check both collections simultaneously
             const qOrders = query(collection(db, "mission_orders"), where("missionID", "==", val));
             const qBlack = query(collection(db, "blacklist"), where("targetID", "==", val));
-            
             const [snapOrders, snapBlack] = await Promise.all([getDocs(qOrders), getDocs(qBlack)]);
 
             if (!snapOrders.empty || !snapBlack.empty) {
@@ -235,15 +239,15 @@
                 
                 if (!snapBlack.empty) {
                     sourceCollection = "blacklist";
-                    log(`CAUTION: BLACKLISTED ID FOUND`, 'var(--red)');
+                    log(`ALERT: ID FOUND IN BLACKLIST`, 'var(--red)');
                 } else {
                     sourceCollection = "mission_orders";
-                    log(`ACTIVE MISSION DETECTED`, 'var(--green)');
+                    log(`RECORD LOCATED: ACTIVE MISSION`, 'var(--green)');
                 }
             } else {
-                log(`ID CLEAR: READY FOR DEPLOYMENT`, 'var(--green)');
+                log(`STATUS: ID CLEAR`, 'var(--green)');
             }
-        } catch (e) { log("UPLINK_ERROR", "red"); }
+        } catch (e) { log("DB_UPLINK_ERROR", "red"); }
     }
   });
 
@@ -253,7 +257,6 @@
     document.getElementById('pop-agent').innerText = agentName;
     document.getElementById('pop-m-id').innerText = `#${input.value}`;
 
-    // Weapon List Generation (from agents collection)
     const devGrid = document.getElementById('device-list');
     devGrid.innerHTML = "";
     try {
@@ -273,10 +276,9 @@
                 devGrid.appendChild(b);
             });
         }
-    } catch(e) { log("FETCH_WEAPONS_FAIL", "var(--red)"); }
+    } catch(e) { log("WEAPON_FETCH_FAIL", "var(--red)"); }
 
     if (isRetrieveMode) {
-        // Fetch data from correct source
         const idField = sourceCollection === "mission_orders" ? "missionID" : "targetID";
         const q = query(collection(db, sourceCollection), where(idField, "==", input.value));
         const snap = await getDocs(q);
@@ -286,9 +288,7 @@
         document.getElementById('expenses-input').value = data.expenses || "PHP 0.00";
         document.getElementById('pop-dep').innerText = data.deploymentDate ? formatMonthDay(data.deploymentDate.toDate()) : "--/--";
         document.getElementById('pop-rel').innerText = data.relieveDate ? formatMonthDay(data.relieveDate.toDate()) : "--/--";
-        selectedDevice = data.weaponSystem || "N/A";
     } else {
-        // Default new mission setup
         const now = new Date(); const rel = new Date(); rel.setDate(now.getDate() + 30);
         document.getElementById('pop-dep').innerText = formatMonthDay(now);
         document.getElementById('pop-rel').innerText = formatMonthDay(rel);
@@ -307,7 +307,7 @@
     if(selectedDevice === "N/A") return alert("SELECT WEAPON SYSTEM");
     
     try {
-        // Lahat ng retrieved o bagong mission ay sinesave/update sa mission_orders
+        log(`UPLOADING MISSION DATA...`, 'var(--cyan)');
         await setDoc(doc(db, "mission_orders", input.value), {
             missionID: input.value,
             agentName: document.getElementById('pop-agent').innerText,
@@ -319,25 +319,25 @@
             status: "ACTIVE"
         }, { merge: true });
         
+        await log(`MISSION SUCCESS: ID ${input.value} LOGGED`, 'var(--green)');
         document.getElementById('modal-overlay').style.display = 'none';
         document.getElementById('success-screen').style.display = 'flex';
-    } catch (e) { log("UPLOAD_FAILED", "red"); }
+    } catch (e) { log("CRITICAL_UPLOAD_FAIL", "red"); }
   };
 
   reserveBtn.onclick = async () => {
     if (input.value.length < 4 || reserveBtn.disabled) return;
     try {
+        log(`RESERVING ID: ${input.value}...`, 'var(--blue)');
         await setDoc(doc(db, "mission_orders", input.value), {
             missionID: input.value, 
             agentName: localStorage.getItem("cia_agent") || "JEFFERSON VALLES",
-            vAgentID: "RESERVED", 
-            weaponSystem: "N/A", 
-            expenses: "PHP 0.00",
+            vAgentID: "RESERVED", weaponSystem: "N/A", expenses: "PHP 0.00",
             deploymentDate: serverTimestamp(), 
-            relieveDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 
-            status: "RESERVED"
+            relieveDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), status: "RESERVED"
         }, { merge: true });
-        document.getElementById('success-msg').innerText = "RESERVED";
+        await log(`RESERVATION COMPLETE`, 'var(--green)');
+        document.getElementById('success-msg').innerText = "ID_RESERVED";
         document.getElementById('success-screen').style.display = 'flex';
     } catch (e) { log("RESERVE_FAIL", "red"); }
   };

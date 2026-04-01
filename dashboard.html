@@ -186,6 +186,9 @@
 </nav>
 
 <script type="module">
+  // IMPORT FROM CONFIG.JS
+  import { getWeaponName } from './config.js';
+
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getFirestore, collection, query, where, getDocs, doc, setDoc, addDoc, serverTimestamp, onSnapshot, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -193,15 +196,16 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  // --- WEAPON CONFIGURATION ---
+  /* BACKUP LOGIC: Kung sakaling hindi mabasa ang config.js (dahil sa CORS), 
+     uncomment mo itong block sa ibaba at i-comment ang import sa taas.
+  */
+  /*
   const weaponMap = {
-    "SIG-82A9E4B": "SAMSUNG S23 ULTRA",
-    "SIG-X921FFA": "IPHONE 15 PRO",
-    "SIG-K882190": "POCO X6 PRO",
-    "SIG-V001122": "VIVO V30"
+    "SIG-3A14D65A": "REDMI NOTE 14 PRO 5G",
+    "SIG-5B0D3A5C": "REALME 8 PRO"
   };
-
-  const getFriendlyName = (id) => weaponMap[id] || id;
+  const getWeaponName = (id) => weaponMap[id] || id;
+  */
 
   const input = document.getElementById('mission-input');
   const actionBtn = document.getElementById('action-btn');
@@ -226,7 +230,7 @@
     } catch (e) { console.error("SYNC_FAIL", e); }
   };
 
-  // --- LOG READER & LIVE SYNC ---
+  // --- LOG READER ---
   const initTerminal = () => {
     const q = query(collection(db, "terminal_logs"), orderBy("timestamp", "desc"), limit(15));
     onSnapshot(q, (snapshot) => {
@@ -265,7 +269,9 @@
                 actionBtn.className = "btn btn-retrieve"; actionBtn.textContent = "RETRIEVE";
                 
                 const data = !snapOrders.empty ? snapOrders.docs[0].data() : snapBlack.docs[0].data();
-                syncDisplay.innerText = getFriendlyName(data.weaponSystem || "N/A");
+                
+                // SYNC DEVICE NAME DISPLAY
+                syncDisplay.innerText = getWeaponName(data.weaponSystem || "N/A");
 
                 if (!snapBlack.empty) {
                     sourceCollection = "blacklist";
@@ -298,7 +304,7 @@
             sigs.forEach(dev => {
                 const b = document.createElement('button');
                 b.className = `dev-btn`;
-                b.innerText = getFriendlyName(dev); // Brand Name Display
+                b.innerText = getWeaponName(dev); // DISPLAY FRIENDLY NAME ON POPUP
                 b.onclick = () => { 
                     document.querySelectorAll('.dev-btn').forEach(x => x.classList.remove('active')); 
                     b.classList.add('active'); 

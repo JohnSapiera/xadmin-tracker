@@ -3,151 +3,154 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-    <title>INTEL_TERMINAL_v30</title>
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&family=Special+Elite&display=swap" rel="stylesheet">
+    <title>INTEL_CORE_v4.0</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <style>
         :root { 
-            --cia-bg: #01080b; --cia-cyan: #00f3ff; --cia-red: #ff003c; --cia-green: #00ff66; 
-            --cia-border: rgba(0, 243, 255, 0.15); 
-            --font-digital: 'Share Tech Mono', monospace; 
-            --font-header: 'Rajdhani', sans-serif;
-            --font-noir: 'Special Elite', cursive;
+            --cia-bg: #00080b;
+            --cia-cyan: #00f3ff;
+            --cia-cyan-dim: rgba(0, 243, 255, 0.2);
+            --cia-red: #ff003c;
+            --cia-green: #00ff66;
+            --font-main: 'Rajdhani', sans-serif;
+            --font-mono: 'Share Tech Mono', monospace;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         
         body { 
-            background: var(--cia-bg); color: #c8e1e5; font-family: var(--font-header); 
+            background: var(--cia-bg); color: #fff; font-family: var(--font-main); 
             height: 100vh; overflow: hidden; display: flex; flex-direction: column;
+        }
+
+        /* DIGITAL GRID BACKGROUND */
+        body::before {
+            content: ""; position: fixed; inset: 0;
             background-image: 
-                linear-gradient(var(--cia-border) 1px, transparent 1px),
-                linear-gradient(90deg, var(--cia-border) 1px, transparent 1px);
-            background-size: 30px 30px;
+                linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px);
+            background-size: 30px 30px; pointer-events: none; z-index: -1;
         }
 
-        header { padding: 15px; border-bottom: 1px solid var(--cia-border); text-align: center; background: rgba(0,0,0,0.8); }
-        .intel-title { font-family: var(--font-digital); color: var(--cia-cyan); font-size: 11px; letter-spacing: 3px; }
+        header { padding: 15px; border-bottom: 1px solid var(--cia-cyan-dim); text-align: center; background: rgba(0, 10, 15, 0.9); }
+        .intel-title { font-family: var(--font-mono); color: var(--cia-cyan); font-size: 11px; letter-spacing: 4px; text-shadow: 0 0 10px var(--cia-cyan); }
 
-        main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
+        main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
         
-        /* Tactical Avatar Circle */
-        .scanner-ring {
-            width: 120px; height: 120px; border: 2px solid var(--cia-cyan); border-radius: 50%;
-            display: flex; align-items: center; justify-content: center; margin-bottom: 20px;
-            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2); position: relative;
+        .agent-id-card {
+            text-align: center; border: 1px solid var(--cia-cyan-dim); padding: 30px;
+            background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(10px);
+            position: relative; width: 100%; max-width: 320px;
         }
-        .scanner-ring::after {
-            content: ""; position: absolute; inset: -5px; border: 1px dashed var(--cia-cyan);
-            border-radius: 50%; animation: rotate 10s linear infinite;
-        }
-        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .agent-id-card::before { content: "AGENT_VERIFIED"; position: absolute; top: -10px; left: 10px; background: var(--cia-cyan); color: #000; font-size: 9px; padding: 2px 8px; font-weight: bold; }
 
-        .agent-name { font-size: 38px; font-weight: 800; text-transform: uppercase; color: #fff; letter-spacing: 2px; }
-        
+        .agent-name { font-size: 42px; font-weight: 700; text-transform: uppercase; margin: 10px 0; letter-spacing: 2px; color: #fff; }
+
+        /* TACTICAL BUTTON */
         .report-btn { 
             margin-top: 30px; background: none; border: 1px solid var(--cia-cyan); 
-            color: var(--cia-cyan); width: 250px; height: 60px; font-family: var(--font-digital); 
-            font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.3s;
-            clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
-            box-shadow: inset 0 0 10px rgba(0, 243, 255, 0.1);
+            color: var(--cia-cyan); width: 220px; height: 55px; font-family: var(--font-mono); 
+            font-size: 13px; font-weight: bold; cursor: pointer; position: relative;
+            transition: 0.3s; overflow: hidden;
         }
-        .report-btn:active { background: var(--cia-cyan); color: #000; transform: scale(0.95); }
+        .report-btn::after { content: ""; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(0, 243, 255, 0.2), transparent); transition: 0.5s; }
+        .report-btn:hover::after { left: 100%; }
+        .report-btn:active { background: var(--cia-cyan-dim); transform: translateY(2px); }
 
-        /* NOIR POPUP STYLE (PROJECTOR EFFECT) */
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; }
+        /* REMASTERED TACTICAL POPUP (GLASSMORPHISM) */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0, 5, 10, 0.85); backdrop-filter: blur(8px); z-index: 1000; }
         
-        @keyframes noir-jitter {
-            0% { transform: translate(0,0); }
-            10% { transform: translate(-0.5px, -0.5px); }
-            20% { transform: translate(0.5px, 0px); }
-            100% { transform: translate(0,0); }
-        }
-
         .modal-box { 
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            width: 92%; max-width: 360px; background: #d4b98a; 
-            padding: 35px 25px; font-family: var(--font-noir); color: #3d2b1f;
-            box-shadow: 15px 15px 0px #000;
-            animation: noir-jitter 0.2s infinite;
+            width: 90%; max-width: 360px; background: rgba(0, 20, 30, 0.95); 
+            border: 1px solid var(--cia-cyan); padding: 25px;
+            box-shadow: 0 0 40px rgba(0, 243, 255, 0.15);
         }
 
-        /* Film Grain for Modal */
-        .modal-box::before {
-            content: ""; position: absolute; inset: 0;
-            background: url('https://media.giphy.com/media/oEI9uWUicT3hu/giphy.gif');
-            opacity: 0.05; pointer-events: none; mix-blend-mode: multiply;
+        /* Decorative HUD elements in popup */
+        .modal-box::after { content: ""; position: absolute; bottom: 0; right: 0; width: 40px; height: 40px; border-right: 3px solid var(--cia-cyan); border-bottom: 3px solid var(--cia-cyan); }
+        .modal-box::before { content: ""; position: absolute; top: 0; left: 0; width: 40px; height: 40px; border-left: 3px solid var(--cia-cyan); border-top: 3px solid var(--cia-cyan); }
+
+        .scan-status-bar { 
+            font-family: var(--font-mono); font-size: 10px; color: var(--cia-cyan); 
+            text-align: center; margin-bottom: 20px; text-transform: uppercase;
+            border-bottom: 1px solid var(--cia-cyan-dim); padding-bottom: 10px;
         }
 
-        .input-group { margin-bottom: 15px; }
-        .input-label { font-size: 10px; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; display: block; }
+        .input-group { margin-bottom: 20px; position: relative; }
+        .input-label { font-size: 10px; color: var(--cia-cyan); margin-bottom: 5px; display: block; letter-spacing: 1px; opacity: 0.8; }
         
         .intel-input { 
-            width: 100%; background: none; border: none; border-bottom: 2px solid rgba(61,43,31,0.2); 
-            padding: 10px; color: #3d2b1f; font-family: var(--font-noir); font-size: 20px; outline: none; text-align: center;
+            width: 100%; background: rgba(0, 243, 255, 0.05); border: 1px solid var(--cia-cyan-dim); 
+            padding: 12px; color: #fff; font-family: var(--font-mono); font-size: 20px; outline: none; text-align: center;
         }
+        .intel-input:focus { border-color: var(--cia-cyan); background: rgba(0, 243, 255, 0.1); }
 
-        /* WEAPON GRID NOIR */
-        .weapon-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0; }
+        /* WEAPON GRID (CYBER STYLE) */
+        .weapon-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
         .weapon-grid.single-mode { grid-template-columns: 1fr; }
 
         .weapon-card { 
-            padding: 12px; border: 1px dashed rgba(61,43,31,0.4); background: rgba(0,0,0,0.03); 
-            font-size: 11px; text-align: center; cursor: pointer; color: #3d2b1f; 
+            padding: 12px; border: 1px solid var(--cia-cyan-dim); background: rgba(255,255,255,0.02); 
+            font-size: 11px; text-align: center; cursor: pointer; color: var(--cia-cyan); 
+            font-family: var(--font-mono); text-transform: uppercase;
         }
         .weapon-card.selected { 
-            background: #3d2b1f; color: #d4b98a; border-style: solid;
+            background: var(--cia-cyan); color: #000; border-color: var(--cia-cyan); font-weight: bold;
+            box-shadow: 0 0 15px var(--cia-cyan-dim);
         }
 
         .btn-transmit { 
-            width: 100%; padding: 15px; background: #3d2b1f; color: #d4b98a; 
-            border: none; font-family: var(--font-noir); font-size: 14px; font-weight: bold; 
-            cursor: pointer; margin-top: 15px; box-shadow: 4px 4px 0px rgba(0,0,0,0.2);
+            width: 100%; padding: 16px; background: var(--cia-cyan); color: #000; 
+            border: none; font-family: var(--font-mono); font-size: 13px; font-weight: 900; 
+            cursor: pointer; margin-top: 10px; letter-spacing: 2px;
         }
-        .btn-transmit:disabled { opacity: 0.3; cursor: not-allowed; }
+        .btn-transmit:disabled { background: #111; color: #444; cursor: not-allowed; border: 1px solid #222; }
+
+        .abort-link { width: 100%; background: transparent; color: var(--cia-red); border: none; margin-top: 15px; font-family: var(--font-mono); font-size: 10px; cursor: pointer; opacity: 0.6; }
+        .abort-link:hover { opacity: 1; text-decoration: underline; }
 
         /* NAV */
-        nav { position: fixed; bottom: 0; width: 100%; height: 60px; background: #000; border-top: 1px solid var(--cia-border); display: grid; grid-template-columns: 1fr 1fr; }
-        .nav-link { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #444; font-family: var(--font-digital); text-decoration: none; font-size: 10px; letter-spacing: 1px; }
-        .nav-link.active { color: var(--cia-cyan); border-top: 2px solid var(--cia-cyan); background: linear-gradient(to bottom, rgba(0,243,255,0.05), transparent); }
+        nav { position: fixed; bottom: 0; width: 100%; height: 65px; background: #000; border-top: 1px solid var(--cia-cyan-dim); display: grid; grid-template-columns: 1fr 1fr; }
+        .nav-link { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #444; font-family: var(--font-mono); text-decoration: none; font-size: 11px; }
+        .nav-link.active { color: var(--cia-cyan); background: linear-gradient(0deg, rgba(0, 243, 255, 0.1), transparent); }
     </style>
 </head>
 <body>
 
-<header><div class="intel-title">SYSTEM_INTEL // UPLINK_v3.0</div></header>
+<header><div class="intel-title">SECURE_INTEL_UPLINK_v4.0</div></header>
 
 <main>
-    <div class="scanner-ring">
-        <span style="font-size: 40px;">👤</span>
-    </div>
-    <div id="display-name" class="agent-name">---</div>
-    <div style="font-size:10px; color:var(--cia-cyan); font-family:var(--font-digital); opacity: 0.7; margin-top: 5px;">
-        STATUS: ONLINE // ENCRYPTION: AES-256
+    <div class="agent-id-card">
+        <div style="font-size: 10px; color: var(--cia-cyan); opacity: 0.5;">ACTIVE_SESSION</div>
+        <div id="display-name" class="agent-name">---</div>
+        <div style="font-size: 11px; color: var(--cia-cyan); font-family: var(--font-mono); letter-spacing: 2px;">ENCRYPTION_LEVEL_5</div>
     </div>
     
-    <button class="report-btn" onclick="openReport()">INITIATE_UPLINK_SCAN</button>
+    <button class="report-btn" onclick="openReport()">[ INITIATE_DATA_STREAM ]</button>
 </main>
 
 <div id="report-modal" class="modal">
     <div class="modal-box">
-        <div id="scan-status" style="font-size:10px; text-align:center; margin-bottom:15px; font-weight:bold; letter-spacing:1px;">AWAITING_INPUT...</div>
+        <div class="scan-status-bar" id="scan-status">AWAITING_LOCAL_IDENTIFIER...</div>
 
         <div class="input-group">
-            <span class="input-label">vAgent_Serial_Number</span>
+            <span class="input-label">V_AGENT_SERIAL_ID</span>
             <input type="text" id="vAgentInput" class="intel-input" placeholder="0000" oninput="handleDualSearch(this.value)">
         </div>
 
         <div id="weapon-selection-zone" style="display:none; margin-bottom:15px;">
-            <span class="input-label">System_Identity_Detected:</span>
+            <span class="input-label">SYSTEM_LOCKED:</span>
             <div id="weapon-grid" class="weapon-grid"></div>
         </div>
 
         <div class="input-group">
-            <span class="input-label">Bounty_Amount_PHP</span>
+            <span class="input-label">TRANSMISSION_VALUE (PHP)</span>
             <input type="number" id="expensesInput" class="intel-input" placeholder="0.00" oninput="validateForm()">
         </div>
 
-        <button id="transmit-btn" onclick="transmitData()" class="btn-transmit" disabled>LOCKED_TARGET_REQUIRED</button>
-        <button onclick="closeReport()" style="width:100%; background:transparent; color:#8b0000; border:none; margin-top:15px; font-family:var(--font-noir); font-size:11px; cursor:pointer;">[ ABORT_TRANSMISSION ]</button>
+        <button id="transmit-btn" onclick="transmitData()" class="btn-transmit" disabled>ESTABLISH_CONNECTION</button>
+        <button onclick="closeReport()" class="abort-link">// TERMINATE_PROCESS</button>
     </div>
 </div>
 
@@ -215,7 +218,6 @@
             if (foundDocs.length > 0) {
                 zone.style.display = "block";
                 grid.innerHTML = "";
-                
                 if (foundDocs.length === 1) grid.classList.add('single-mode');
                 else grid.classList.remove('single-mode');
 
@@ -223,7 +225,7 @@
                     const card = document.createElement('div');
                     card.className = 'weapon-card';
                     card.id = "card-" + index;
-                    card.innerHTML = `SYS: <b>${data.weaponSystem}</b>`;
+                    card.innerText = data.weaponSystem;
                     card.onclick = () => selectWeapon(card, data.weaponSystem);
                     grid.appendChild(card);
                 });
@@ -232,17 +234,17 @@
                     setTimeout(() => {
                         const firstCard = document.getElementById('card-0');
                         selectWeapon(firstCard, foundDocs[0].weaponSystem);
-                        status.innerText = "TARGET_LOCKED_AUTO";
-                        status.style.color = "#2b5329";
+                        status.innerText = "TARGET_SYNC_COMPLETE";
+                        status.style.color = "var(--cia-green)";
                     }, 50);
                 } else {
                     selectedDeviceName = null;
-                    status.innerText = "MULTIPLE_SYSTEMS_DETECTED";
-                    status.style.color = "#3d2b1f";
+                    status.innerText = "MULTIPLE_TARGETS_DETECTED";
+                    status.style.color = "var(--cia-cyan)";
                 }
             } else {
-                status.innerText = "SERIAL_NOT_FOUND";
-                status.style.color = "#8b0000";
+                status.innerText = "IDENTIFIER_NOT_IN_DATABASE";
+                status.style.color = "var(--cia-red)";
                 zone.style.display = "none";
                 selectedDeviceName = null;
             }
@@ -266,10 +268,10 @@
         
         if (v && e > 0 && selectedDeviceName) {
             btn.disabled = false;
-            btn.innerText = "TRANSMIT_TO_" + selectedDeviceName.toUpperCase();
+            btn.innerText = "UPLINK_TO_" + selectedDeviceName.toUpperCase();
         } else {
             btn.disabled = true;
-            btn.innerText = selectedDeviceName ? "ENTER_BOUNTY_AMOUNT" : "LOCKED_TARGET_REQUIRED";
+            btn.innerText = selectedDeviceName ? "ENTER_UPLINK_AMOUNT" : "ESTABLISH_CONNECTION";
         }
     };
 
@@ -296,9 +298,9 @@
                 reportedBy: agent
             });
 
-            alert("✅ TRANSMISSION_COMPLETE: Data logged in Archives.");
+            alert("UPLINK_SUCCESSFUL: DATA_ENCRYPTED_AND_SENT");
             location.reload();
-        } catch (err) { alert("❌ ERROR: Uplink Interrupted."); }
+        } catch (err) { alert("UPLINK_FAILED: CONNECTION_LOST"); }
     };
 
     window.openReport = () => {

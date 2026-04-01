@@ -25,7 +25,6 @@
         background-size: 100% 100%, 40px 40px, 40px 40px;
     }
 
-    /* Scanline Effect */
     body::after { content: ""; position: fixed; inset: 0; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%); background-size: 100% 4px; pointer-events: none; z-index: 1000; opacity: 0.3; }
 
     header { 
@@ -78,7 +77,6 @@
         height: 180px; color: #9ab4bc; overflow-y: auto; line-height: 1.5;
     }
 
-    /* Popups / Modals */
     .overlay { display: none; position: fixed; inset: 0; background: rgba(1, 4, 5, 0.98); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
     .popup { 
         width: 100%; max-width: 380px; background: #051014; border: 1px solid var(--cyan); 
@@ -100,6 +98,7 @@
     .dev-btn { 
         background: #08161b; border: 1px solid #1a2f37; color: #5c7882; padding: 12px; 
         font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; cursor: pointer;
+        text-overflow: ellipsis; overflow: hidden; white-space: nowrap;
     }
     .dev-btn.active { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
 
@@ -156,8 +155,8 @@
         
         <div class="data-card">
             <div class="data-row">
-                <span class="data-label">V_AGENT_ID:</span> 
-                <input type="text" id="v-agent-input" class="pop-input" placeholder="ENTER ID">
+                <span class="data-label">V_AGENT_NO:</span> 
+                <input type="text" id="v-agent-input" class="pop-input" placeholder="ENTER NO">
             </div>
             <div class="data-row"><span class="data-label">FUNDS:</span> <span style="color:var(--green)">PHP 0.00</span></div>
             <div class="data-row"><span class="data-label">DEPLOY:</span> <span id="pop-dep" style="color:#fff">--/--</span></div>
@@ -187,8 +186,6 @@
 </nav>
 
 <script type="module">
-  // [PAREHAS PA RIN ANG IYONG LOGIC CODES DITO...]
-  // (Sinigurado kong hindi nagalaw ang functionality ng Firebase mo)
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getFirestore, collection, query, where, getDocs, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -200,7 +197,7 @@
   const actionBtn = document.getElementById('action-btn');
   const reserveBtn = document.getElementById('reserve-btn');
   const termLog = document.getElementById('terminal');
-  let selectedDevice = navigator.platform;
+  let selectedDevice = "N/A";
   let isRetrieveMode = false;
 
   const log = (msg, color = "#5c7882") => {
@@ -248,26 +245,33 @@
     document.getElementById('pop-agent').innerText = agentName;
     document.getElementById('pop-m-id').innerText = `#${input.value}`;
 
+    // Weapon List Generation
     const devGrid = document.getElementById('device-list');
     devGrid.innerHTML = "";
     try {
         const q = query(collection(db, "agents"), where("agentName", "==", agentName));
         const snap = await getDocs(q);
         if (!snap.empty) {
-            (snap.docs[0].data().linkedSignatures || [navigator.platform]).forEach(dev => {
+            const sigs = snap.docs[0].data().linkedSignatures || [];
+            sigs.forEach(dev => {
                 const b = document.createElement('button');
-                b.className = `dev-btn ${dev === selectedDevice ? 'active' : ''}`;
-                b.innerText = dev;
-                b.onclick = () => { document.querySelectorAll('.dev-btn').forEach(x => x.classList.remove('active')); b.classList.add('active'); selectedDevice = dev; };
+                b.className = `dev-btn`;
+                b.innerText = dev.substring(0, 15) + "...";
+                b.onclick = () => { 
+                    document.querySelectorAll('.dev-btn').forEach(x => x.classList.remove('active')); 
+                    b.classList.add('active'); 
+                    selectedDevice = dev; 
+                };
                 devGrid.appendChild(b);
             });
         }
-    } catch(e) {}
+    } catch(e) { log("FETCH_WEAPONS_FAIL", "var(--red)"); }
 
     if (isRetrieveMode) {
         const q = query(collection(db, "mission_orders"), where("missionID", "==", input.value));
         const snap = await getDocs(q);
         const data = snap.docs[0].data();
+        // Database field is vAgentID
         document.getElementById('v-agent-input').value = data.vAgentID === "RESERVED" ? "" : data.vAgentID;
         document.getElementById('pop-dep').innerText = data.deploymentDate ? formatMonthDay(data.deploymentDate.toDate()) : "--/--";
         document.getElementById('pop-rel').innerText = data.relieveDate ? formatMonthDay(data.relieveDate.toDate()) : "--/--";
@@ -284,12 +288,14 @@
 
   window.submitMission = async () => {
     const vId = document.getElementById('v-agent-input').value;
-    if(!vId) return alert("V_AGENT_ID REQUIRED");
+    if(!vId) return alert("V_AGENT_NO REQUIRED");
+    if(selectedDevice === "N/A") return alert("SELECT WEAPON SYSTEM");
+    
     try {
         await setDoc(doc(db, "mission_orders", input.value), {
             missionID: input.value,
             agentName: document.getElementById('pop-agent').innerText,
-            vAgentID: vId,
+            vAgentID: vId, // Naka-map sa vAgentID sa database
             weaponSystem: selectedDevice,
             expenses: "PHP 0.00",
             deploymentDate: serverTimestamp(),
@@ -306,7 +312,7 @@
     try {
         await setDoc(doc(db, "mission_orders", input.value), {
             missionID: input.value, agentName: localStorage.getItem("cia_agent") || "JEFFERSON VALLES",
-            vAgentID: "RESERVED", weaponSystem: navigator.platform, expenses: "PHP 0.00",
+            vAgentID: "RESERVED", weaponSystem: "N/A", expenses: "PHP 0.00",
             deploymentDate: serverTimestamp(), relieveDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), status: "RESERVED"
         }, { merge: true });
         document.getElementById('success-msg').innerText = "RESERVED";

@@ -193,7 +193,7 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  // --- INTERNAL WEAPON MAPPING (Lahat ng devices nandito na) ---
+  // --- INTERNAL WEAPON MAPPING ---
   const weaponMap = {
     "SIG-3A14D65A": "REDMI NOTE 14 PRO 5G",
     "SIG-5B0D3A5C": "REALME 8 PRO",
@@ -204,7 +204,9 @@
   };
 
   const getWeaponName = (sigID) => {
-    return weaponMap[sigID] || sigID;
+    if (!sigID || sigID === "N/A" || sigID === "RESERVED") return "NOT_SELECTED";
+    const cleanID = sigID.trim().toUpperCase(); 
+    return weaponMap[cleanID] || cleanID; 
   };
 
   const input = document.getElementById('mission-input');
@@ -217,7 +219,6 @@
   let isRetrieveMode = false;
   let sourceCollection = "mission_orders";
 
-  // --- LOG WRITER ---
   const log = async (msg, color = "#5c7882") => {
     try {
         await addDoc(collection(db, "terminal_logs"), {
@@ -230,7 +231,6 @@
     } catch (e) { console.error("SYNC_FAIL", e); }
   };
 
-  // --- LOG READER ---
   const initTerminal = () => {
     const q = query(collection(db, "terminal_logs"), orderBy("timestamp", "desc"), limit(15));
     onSnapshot(q, (snapshot) => {
@@ -267,24 +267,16 @@
                 isRetrieveMode = true;
                 reserveBtn.disabled = true; reserveBtn.classList.add('btn-faded');
                 actionBtn.className = "btn btn-retrieve"; actionBtn.textContent = "RETRIEVE";
-                
                 const data = !snapOrders.empty ? snapOrders.docs[0].data() : snapBlack.docs[0].data();
-                
-                // MABABASA NA DITO ANG REDMI O REALME MO
                 syncDisplay.innerText = getWeaponName(data.weaponSystem || "N/A");
 
-                if (!snapBlack.empty) {
-                    sourceCollection = "blacklist";
-                    await log(`ALERT: ID FOUND IN BLACKLIST`, 'var(--red)');
-                } else {
-                    sourceCollection = "mission_orders";
-                    await log(`RECORD LOCATED: ACTIVE MISSION`, 'var(--green)');
-                }
+                if (!snapBlack.empty) { sourceCollection = "blacklist"; await log(`ALERT: BLACKLIST`, 'var(--red)'); }
+                else { sourceCollection = "mission_orders"; await log(`RECORD FOUND`, 'var(--green)'); }
             } else {
                 syncDisplay.innerText = "NOT_SELECTED";
-                await log(`STATUS: ID CLEAR`, 'var(--green)');
+                await log(`STATUS: CLEAR`, 'var(--green)');
             }
-        } catch (e) { await log("DB_UPLINK_ERROR", "red"); }
+        } catch (e) { await log("DB_ERROR", "red"); }
     }
   });
 
@@ -300,7 +292,9 @@
         const q = query(collection(db, "agents"), where("agentName", "==", agentName));
         const snap = await getDocs(q);
         if (!snap.empty) {
-            const sigs = snap.docs[0].data().linkedSignatures || [];
+            let sigs = snap.docs[0].data().linkedSignatures || [];
+            if (typeof sigs === 'string') sigs = [sigs]; // Convert String to Array fix
+
             sigs.forEach(dev => {
                 const b = document.createElement('button');
                 b.className = `dev-btn`;
@@ -313,14 +307,13 @@
                 devGrid.appendChild(b);
             });
         }
-    } catch(e) { await log("WEAPON_FETCH_FAIL", "var(--red)"); }
+    } catch(e) { await log("FETCH_FAIL", "var(--red)"); }
 
     if (isRetrieveMode) {
         const idField = sourceCollection === "mission_orders" ? "missionID" : "targetID";
         const q = query(collection(db, sourceCollection), where(idField, "==", input.value));
         const snap = await getDocs(q);
         const data = snap.docs[0].data();
-
         document.getElementById('v-agent-input').value = data.vAgentID === "RESERVED" ? "" : (data.vAgentID || "");
         document.getElementById('expenses-input').value = data.expenses || "PHP 0.00";
         document.getElementById('pop-dep').innerText = data.deploymentDate ? formatMonthDay(data.deploymentDate.toDate()) : "--/--";
@@ -344,7 +337,7 @@
     if(selectedDevice === "N/A") return alert("SELECT WEAPON SYSTEM");
     
     try {
-        await log(`UPLOADING MISSION DATA...`, 'var(--cyan)');
+        await log(`UPLOADING...`, 'var(--cyan)');
         await setDoc(doc(db, "mission_orders", input.value), {
             missionID: input.value,
             agentName: document.getElementById('pop-agent').innerText,
@@ -356,24 +349,22 @@
             status: "ACTIVE"
         }, { merge: true });
         
-        await log(`MISSION SUCCESS: ID ${input.value} LOGGED`, 'var(--green)');
         document.getElementById('modal-overlay').style.display = 'none';
         document.getElementById('success-screen').style.display = 'flex';
-    } catch (e) { await log("CRITICAL_UPLOAD_FAIL", "red"); }
+    } catch (e) { await log("UPLOAD_FAIL", "red"); }
   };
 
   reserveBtn.onclick = async () => {
     if (input.value.length < 4 || reserveBtn.disabled) return;
     try {
-        await log(`RESERVING ID: ${input.value}...`, 'var(--blue)');
+        await log(`RESERVING...`, 'var(--blue)');
         await setDoc(doc(db, "mission_orders", input.value), {
             missionID: input.value, 
             agentName: localStorage.getItem("cia_agent") || "JEFFERSON VALLES",
-            vAgentID: "RESERVED", weaponSystem: "N/A", expenses: "PHP 0.00",
+            vAgentID: "RESERVED", weaponSystem: "N/A", status: "RESERVED",
             deploymentDate: serverTimestamp(), 
-            relieveDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), status: "RESERVED"
+            relieveDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
         }, { merge: true });
-        await log(`RESERVATION COMPLETE`, 'var(--green)');
         document.getElementById('success-msg').innerText = "ID_RESERVED";
         document.getElementById('success-screen').style.display = 'flex';
     } catch (e) { await log("RESERVE_FAIL", "red"); }

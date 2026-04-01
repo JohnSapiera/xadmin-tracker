@@ -21,7 +21,7 @@
             background-image: radial-gradient(circle at center, #0a1f29 0%, #01080b 100%);
         }
 
-        .container { max-width: 500px; margin: 0 auto; padding: 20px; padding-bottom: 100px; }
+        .container { max-width: 500px; margin: 0 auto; padding: 20px; padding-bottom: 120px; }
 
         header { border-left: 4px solid var(--cia-cyan); padding-left: 15px; margin-bottom: 30px; }
         .section-title { font-family: var(--font-header); letter-spacing: 4px; color: var(--cia-cyan); text-transform: uppercase; }
@@ -51,7 +51,6 @@
 
         /* DESKTOP FILE SYSTEM STYLE */
         .vagent-grid { display: none; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px; }
-        
         .file-icon-box {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             padding: 10px; cursor: pointer; transition: 0.2s; position: relative;
@@ -60,42 +59,69 @@
         .file-icon::before { content: ""; position: absolute; top: -5px; left: 0; width: 15px; height: 5px; background: var(--cia-cyan); border-radius: 2px 2px 0 0; }
         .file-label { font-size: 9px; text-align: center; color: #fff; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* GHOST FILE STYLE */
         .ghost-file { opacity: 0.15 !important; cursor: not-allowed !important; filter: blur(0.5px); pointer-events: none; }
         .ghost-file .file-icon { background: #444; }
         .ghost-file .file-label { color: #555; font-style: italic; }
 
-        /* REMASTERED MEMOIR BUTTON (TACTICAL CORE) */
-        .memoir-trigger {
-            position: fixed; bottom: 85px; right: 20px; width: 60px; height: 60px;
-            background: #000; border: 2px solid var(--cia-red); border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 20px rgba(255, 0, 60, 0.3); z-index: 500; cursor: pointer;
-            transition: 0.3s;
+        /* MEMOIRS TRIGGER (LOWER SECTION) */
+        .memoirs-section { margin-top: 50px; text-align: center; border-top: 1px solid var(--cia-border); padding-top: 30px; }
+        .btn-memoir {
+            background: transparent; border: 1px solid var(--cia-red); color: var(--cia-red);
+            padding: 15px 30px; font-family: var(--font-digital); font-size: 14px; font-weight: bold;
+            letter-spacing: 3px; cursor: pointer; transition: 0.3s;
+            box-shadow: 0 0 10px rgba(255, 0, 60, 0.2);
         }
-        .memoir-trigger::after { content: "MEMOIR"; position: absolute; top: -20px; font-size: 8px; color: var(--cia-red); letter-spacing: 1px; }
-        .core-pulse { width: 30px; height: 30px; background: var(--cia-red); border-radius: 50%; animation: core-breathing 2s infinite; }
+        .btn-memoir:hover { background: rgba(255, 0, 60, 0.1); box-shadow: 0 0 20px rgba(255, 0, 60, 0.5); }
+
+        /* OVERLAYS */
+        .overlay { display: none; position: fixed; inset: 0; z-index: 2000; justify-content: center; align-items: center; }
         
-        @keyframes core-breathing {
-            0% { transform: scale(0.8); opacity: 0.5; box-shadow: 0 0 0px var(--cia-red); }
-            50% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 15px var(--cia-red); }
-            100% { transform: scale(0.8); opacity: 0.5; box-shadow: 0 0 0px var(--cia-red); }
+        /* 1. PAPER SHEET DOSSIER / MASTER LEDGER */
+        .ledger-bg { background: rgba(0,0,0,0.9); }
+        .paper-sheet {
+            width: 90%; max-width: 420px; background: #e8e2d2; color: #1a1a1a;
+            padding: 30px 20px; font-family: var(--font-noir);
+            box-shadow: 0 0 40px rgba(0,0,0,1); border: 1px solid #c5b8a0;
+            max-height: 85vh; display: flex; flex-direction: column; position: relative;
+        }
+        .ledger-header { text-align: center; border-bottom: 2px solid #1a1a1a; padding-bottom: 15px; margin-bottom: 15px; }
+        .grand-total-box {
+            background: rgba(0,0,0,0.05); padding: 15px; text-align: center;
+            border: 2px dashed #1a1a1a; margin-bottom: 15px;
+        }
+        .ledger-list { flex: 1; overflow-y: auto; padding-right: 5px; }
+        .ledger-item { border-bottom: 1px solid rgba(0,0,0,0.2); padding: 10px 0; font-size: 13px; display: flex; justify-content: space-between; }
+        
+        .btn-play-reel {
+            background: #1a1a1a; color: #e8e2d2; border: none; padding: 12px; width: 100%;
+            font-family: var(--font-noir); font-weight: bold; font-size: 14px; cursor: pointer; margin-top: 15px;
         }
 
-        /* CLASSIFIED DOSSIER POPUP */
-        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; justify-content: center; align-items: center; }
-        .dossier-paper {
-            width: 90%; max-width: 400px; background: #e8e2d2; color: #1a1a1a;
-            padding: 40px 25px; position: relative; font-family: var(--font-noir);
-            box-shadow: 0 0 50px #000; border: 1px solid #c5b8a0;
+        /* 2. OLD FILM CINEMATIC REEL */
+        .cinematic-bg { background: #080808; flex-direction: column; }
+        .film-overlay {
+            position: absolute; inset: 0; pointer-events: none;
+            background: url('https://media.giphy.com/media/oEI9uWUicT3hu/giphy.gif');
+            opacity: 0.15; mix-blend-mode: screen; z-index: 2001;
         }
-        .stamp-top-secret {
-            position: absolute; top: 20px; right: 20px; border: 4px solid #8b0000;
-            color: #8b0000; padding: 5px 15px; font-weight: 900; font-size: 18px;
-            transform: rotate(15deg); opacity: 0.6; pointer-events: none;
+        .film-scratch {
+            position: absolute; top: 0; bottom: 0; left: 30%; width: 2px;
+            background: rgba(255,255,255,0.2); z-index: 2002;
+            animation: scratch 3s infinite linear;
         }
+        @keyframes scratch { 0% { left: 20%; opacity: 0; } 50% { opacity: 1; } 100% { left: 80%; opacity: 0; } }
 
-        nav { position: fixed; bottom: 0; width: 100%; height: 65px; background: #000; display: grid; grid-template-columns: 1fr 1fr 1fr; border-top: 1px solid var(--cia-border); }
+        .cinematic-content {
+            z-index: 2005; text-align: center; font-family: var(--font-noir); color: #d4b98a;
+            text-shadow: 0 0 8px rgba(212, 185, 138, 0.5); padding: 20px;
+            filter: sepia(0.6) contrast(1.2); animation: jitter 0.2s infinite;
+        }
+        @keyframes jitter { 0% { transform: translate(1px, 1px); } 50% { transform: translate(-1px, -1px); } 100% { transform: translate(0, 0); } }
+
+        .cine-title { font-size: 14px; letter-spacing: 5px; margin-bottom: 20px; opacity: 0.7; }
+        .cine-data { font-size: 26px; margin: 15px 0; font-weight: bold; }
+
+        nav { position: fixed; bottom: 0; width: 100%; height: 65px; background: #000; display: grid; grid-template-columns: 1fr 1fr 1fr; border-top: 1px solid var(--cia-border); z-index: 1000; }
         .nav-link { display: flex; align-items: center; justify-content: center; color: #444; text-decoration: none; font-size: 11px; }
         .nav-link.active { color: var(--cia-cyan); border-top: 2px solid var(--cia-cyan); }
     </style>
@@ -114,30 +140,54 @@
     <button id="btnBack" onclick="location.reload()" style="display:none; background:none; border:1px solid var(--cia-cyan); color:var(--cia-cyan); padding:12px; width:100%; margin-top:20px; font-family:var(--font-digital); cursor:pointer;">
         [ << RE-SCAN_DEVICES ]
     </button>
+
+    <div class="memoirs-section">
+        <p style="font-size: 10px; color: var(--cia-red); margin-bottom: 10px; letter-spacing: 2px;">RESTRICTED_ACCESS</p>
+        <button class="btn-memoir" onclick="openMasterLedger()">[ DECRYPT_MEMOIRS ]</button>
+    </div>
 </div>
 
-<div class="memoir-trigger" onclick="alert('Accessing Encrypted Memoirs...')">
-    <div class="core-pulse"></div>
+<div id="ledgerOverlay" class="overlay ledger-bg">
+    <div class="paper-sheet">
+        <div onclick="closeLedger()" style="position:absolute; top:10px; right:15px; cursor:pointer; font-weight:bold; color:#8b0000; font-size:18px;">[ X ]</div>
+        <div class="ledger-header">
+            <h2 style="font-size: 20px; letter-spacing: 1px;">MASTER LEDGER</h2>
+            <div style="font-size: 10px; opacity: 0.7;">DOCUMENT_REF: ALPHA-99</div>
+        </div>
+
+        <div class="grand-total-box">
+            <div style="font-size: 12px; font-weight: bold; color: #8b0000;">TOTAL BOUNTY EXPENDITURE</div>
+            <div style="font-size: 28px; font-weight: bold; margin-top: 5px;" id="master-grand-total">₱ 0.00</div>
+        </div>
+
+        <div class="ledger-list" id="ledger-list">
+            <div style="text-align:center; font-size:12px; margin-top:20px;">FETCHING DECRYPTED LOGS...</div>
+        </div>
+
+        <button class="btn-play-reel" onclick="playCinematicReel()">[ PLAY CINEMATIC REEL ]</button>
+    </div>
 </div>
 
-<div id="noirOverlay" class="overlay">
-    <div class="dossier-paper">
-        <div class="stamp-top-secret">TOP SECRET</div>
+<div id="cinematicOverlay" class="overlay cinematic-bg">
+    <div class="film-overlay"></div>
+    <div class="film-scratch"></div>
+    
+    <div class="cinematic-content" id="cinematic-content">
+        </div>
+
+    <button onclick="stopCinematic()" style="position:absolute; bottom:80px; background:none; border:1px solid #d4b98a; color:#d4b98a; font-family:var(--font-noir); padding:10px 20px; z-index:2010; cursor:pointer;">[ ABORT PLAYBACK ]</button>
+</div>
+
+<div id="noirOverlay" class="overlay ledger-bg" style="z-index: 2500;">
+    <div class="paper-sheet" style="max-width: 380px;">
+        <div style="position:absolute; top:20px; right:20px; border:4px solid #8b0000; color:#8b0000; padding:5px 15px; font-weight:900; font-size:18px; transform:rotate(15deg); opacity:0.6; pointer-events:none;">TOP SECRET</div>
         <div onclick="closeNoir()" style="position:absolute; top:10px; right:15px; cursor:pointer; font-weight:bold; color:#8b0000;">[ X ]</div>
-        <div style="border-bottom: 1px solid #000; margin-bottom: 20px; font-weight: bold;">CIA CASE FILE: #<span id="n-vagent">---</span></div>
-        
+        <div style="border-bottom: 1px solid #000; margin-bottom: 20px; font-weight: bold;">CASE FILE: #<span id="n-vagent">---</span></div>
         <div style="margin-top: 15px; font-size: 13px;">
             <p><b>REF_ID:</b> <span id="n-order">---</span></p>
-            <p style="margin-top:10px;"><b>WEAPON_ASSIGNMENT:</b></p>
-            <select id="weaponSelect" onchange="showSave()" style="width:100%; padding:5px; font-family:var(--font-noir); background:none; margin-top:5px;"></select>
-            
             <div style="background:rgba(0,0,0,0.05); padding:10px; margin-top:15px; border:1px dashed #000;">
-                <b>TRANS_LOGS:</b>
-                <div id="n-logs" style="max-height:80px; overflow-y:auto; font-size:11px; margin:5px 0;"></div>
-                <div style="text-align:right; border-top:1px solid #000;">TOTAL: <span id="n-total">₱ 0.00</span></div>
+                <div style="text-align:right; font-weight:bold;">TOTAL: <span id="n-total">₱ 0.00</span></div>
             </div>
-
-            <button id="saveBtn" style="display:none; width:100%; padding:10px; background:#2b5329; color:#fff; border:none; margin-top:10px; cursor:pointer;" onclick="saveWeaponChange()">UPDATE_DATA</button>
         </div>
     </div>
 </div>
@@ -150,7 +200,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, query, where, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = { 
         apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
@@ -165,10 +215,16 @@
     const db = getFirestore(app);
     const currentAgent = localStorage.getItem("cia_agent");
     let deviceData = {};
-    let activeDocID = null;
+    
+    // Memoir Global Variables
+    let memoirsData = [];
+    let cinematicInterval;
+    let currentSceneIndex = 0;
 
     window.onload = async () => {
         if (!currentAgent) return;
+        
+        // Fetch devices (mission_orders)
         const q = query(collection(db, "mission_orders"), where("agentName", "==", currentAgent));
         const snap = await getDocs(q);
         snap.forEach(d => {
@@ -180,16 +236,15 @@
         renderDevices();
     };
 
+    // --- DEVICE / FILES LOGIC ---
     function renderDevices() {
         const grid = document.getElementById('deviceSection');
         grid.innerHTML = Object.keys(deviceData).map(name => `
             <div class="phone-wrapper" onclick="showvAgents('${name}')">
-                <div class="phone-body">
-                    <div class="phone-screen">
-                        <div style="font-size:11px; font-weight:bold; color:white;">${name}</div>
-                        <div class="activate-text">ACTIVATE</div>
-                    </div>
-                </div>
+                <div class="phone-body"><div class="phone-screen">
+                    <div style="font-size:11px; font-weight:bold; color:white;">${name}</div>
+                    <div class="activate-text">ACTIVATE</div>
+                </div></div>
             </div>
         `).join('');
     }
@@ -202,45 +257,127 @@
         const grid = document.getElementById('vagentSection');
         let html = "";
         deviceData[name].forEach(v => {
-            // Real File
             html += `
-                <div class="file-icon-box" onclick="openNoirModal('${v.id}', '${name}')">
-                    <div class="file-icon"></div>
-                    <div class="file-label">ID_${v.vAgentID}</div>
+                <div class="file-icon-box" onclick="openNoirModal('${v.id}', '${v.vAgentID}')">
+                    <div class="file-icon"></div><div class="file-label">ID_${v.vAgentID}</div>
                 </div>
                 <div class="file-icon-box ghost-file">
-                    <div class="file-icon"></div>
-                    <div class="file-label">CORRUPTED</div>
+                    <div class="file-icon"></div><div class="file-label">CORRUPTED</div>
                 </div>
             `;
         });
         grid.innerHTML = html;
     }
 
-    window.openNoirModal = async (docID, weapon) => {
-        activeDocID = docID;
-        const mission = deviceData[weapon].find(m => m.id == docID);
+    window.openNoirModal = async (docID, vAgent) => {
         document.getElementById('noirOverlay').style.display = 'flex';
-        document.getElementById('n-vagent').innerText = mission.vAgentID;
+        document.getElementById('n-vagent').innerText = vAgent;
         document.getElementById('n-order').innerText = docID;
-        const sel = document.getElementById('weaponSelect');
-        sel.innerHTML = Object.keys(deviceData).map(k => `<option value="${k}" ${k==weapon?'selected':''}>${k}</option>`).join('');
-
-        const reportID = `${currentAgent}_${weapon}_${mission.vAgentID}`.replace(/\s+/g, '_');
-        const logSnap = await getDocs(collection(db, "bounty_report", reportID, "logs"));
-        let sum = 0; let logHtml = "";
-        logSnap.forEach(l => { sum += l.data().amount; logHtml += `<div>(+) ₱${l.data().amount.toLocaleString()}</div>`; });
-        document.getElementById('n-logs').innerHTML = logHtml || "No logs found.";
-        document.getElementById('n-total').innerText = `₱ ${sum.toLocaleString()}`;
-    };
-
-    window.showSave = () => document.getElementById('saveBtn').style.display = 'block';
-    window.saveWeaponChange = async () => {
-        const newW = document.getElementById('weaponSelect').value;
-        await updateDoc(doc(db, "mission_orders", activeDocID), { weaponSystem: newW });
-        alert("AUTHORIZED."); location.reload();
     };
     window.closeNoir = () => document.getElementById('noirOverlay').style.display = 'none';
+
+    // --- MEMOIRS / CINEMATIC LOGIC ---
+    window.openMasterLedger = async () => {
+        document.getElementById('ledgerOverlay').style.display = 'flex';
+        const listEl = document.getElementById('ledger-list');
+        listEl.innerHTML = `<div style="text-align:center; padding: 20px;">DECRYPTING DATABASE...</div>`;
+
+        try {
+            // Fetch bounty reports for the agent
+            const bQuery = query(collection(db, "bounty_report"), where("agentOwner", "==", currentAgent));
+            const bSnap = await getDocs(bQuery);
+            
+            memoirsData = [];
+            let grandTotal = 0;
+
+            bSnap.forEach(doc => {
+                const d = doc.data();
+                memoirsData.push(d);
+                grandTotal += (d.totalExpenses || 0);
+            });
+
+            // Sort Latest to Oldest
+            memoirsData.sort((a, b) => {
+                const timeA = a.lastUpdate ? a.lastUpdate.toMillis() : 0;
+                const timeB = b.lastUpdate ? b.lastUpdate.toMillis() : 0;
+                return timeB - timeA; // Descending
+            });
+
+            // Display Grand Total
+            document.getElementById('master-grand-total').innerText = `₱ ${grandTotal.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+
+            // Populate List
+            if (memoirsData.length === 0) {
+                listEl.innerHTML = `<div style="text-align:center; padding: 20px; color: #8b0000;">NO RECORDS FOUND</div>`;
+                return;
+            }
+
+            listEl.innerHTML = memoirsData.map(m => {
+                let dateStr = "N/A";
+                if(m.lastUpdate) {
+                    const d = m.lastUpdate.toDate();
+                    dateStr = `${String(d.getMonth()+1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
+                }
+                return `
+                    <div class="ledger-item">
+                        <div><b>ID:</b> #${m.vAgentID} <span style="opacity:0.5; font-size:10px;">(${dateStr})</span></div>
+                        <div style="font-weight:bold;">₱ ${(m.totalExpenses||0).toLocaleString()}</div>
+                    </div>
+                `;
+            }).join('');
+
+        } catch (error) {
+            listEl.innerHTML = `<div style="text-align:center; color: red;">UPLINK FAILED.</div>`;
+        }
+    };
+
+    window.closeLedger = () => document.getElementById('ledgerOverlay').style.display = 'none';
+
+    // Cinematic Playback
+    window.playCinematicReel = () => {
+        if(memoirsData.length === 0) return alert("NO ARCHIVES TO PLAY.");
+        
+        document.getElementById('ledgerOverlay').style.display = 'none';
+        document.getElementById('cinematicOverlay').style.display = 'flex';
+        
+        currentSceneIndex = 0;
+        renderCinematicScene();
+
+        // 5 Seconds per scene
+        cinematicInterval = setInterval(() => {
+            currentSceneIndex++;
+            if(currentSceneIndex >= memoirsData.length) {
+                stopCinematic(); // Auto-stop when finished
+            } else {
+                renderCinematicScene();
+            }
+        }, 5000); 
+    };
+
+    function renderCinematicScene() {
+        const m = memoirsData[currentSceneIndex];
+        let dateStr = "UNKNOWN";
+        if(m.lastUpdate) {
+            const d = m.lastUpdate.toDate();
+            dateStr = `${String(d.getMonth()+1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
+        }
+        
+        const contentBox = document.getElementById('cinematic-content');
+        contentBox.innerHTML = `
+            <div class="cine-title">ARCHIVE SEQUENCE [ ${currentSceneIndex + 1} / ${memoirsData.length} ]</div>
+            <div style="font-size: 16px;">TARGET_ID:</div>
+            <div class="cine-data">#${m.vAgentID}</div>
+            <div style="font-size: 16px;">TOTAL EXPENDITURE:</div>
+            <div class="cine-data" style="color: #fff; text-shadow: 0 0 10px #fff;">₱ ${(m.totalExpenses||0).toLocaleString()}</div>
+            <div style="font-size: 14px; margin-top: 20px; opacity: 0.8;">LOG DATE: ${dateStr}</div>
+        `;
+    }
+
+    window.stopCinematic = () => {
+        clearInterval(cinematicInterval);
+        document.getElementById('cinematicOverlay').style.display = 'none';
+        document.getElementById('ledgerOverlay').style.display = 'flex'; // Return to paper sheet
+    };
 </script>
 </body>
 </html>

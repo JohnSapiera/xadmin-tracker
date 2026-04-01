@@ -54,7 +54,6 @@
             display: flex; align-items: center; justify-content: center;
         }
 
-        /* Power On Animation */
         .phone-container.booting .phone-screen { 
             background: var(--neon); 
             box-shadow: 0 0 30px var(--neon); 
@@ -103,7 +102,7 @@
         .nav-link { display: flex; align-items: center; justify-content: center; color: #333; text-decoration: none; font-size: 10px; font-family: var(--font-main); }
         .nav-link.active { color: var(--neon); }
 
-        #btnBack { display: none; margin: 20px; color: var(--neon); background: none; border: 1px solid var(--border); padding: 5px 15px; cursor: pointer; }
+        #btnBack { display: none; margin: 20px; color: var(--neon); background: none; border: 1px solid var(--border); padding: 5px 15px; cursor: pointer; font-family: var(--font-mono); }
     </style>
 </head>
 <body>
@@ -211,14 +210,13 @@
             document.getElementById('mainFileGrid').style.display = 'grid';
             document.getElementById('btnBack').style.display = 'block';
             rendervAgents(weaponName);
-        }, 2000); // 2 seconds boot animation
+        }, 2000); 
     };
 
     function rendervAgents(weaponName) {
         const fGrid = document.getElementById('mainFileGrid');
         const existed = deviceDataMap[weaponName] || [];
         
-        // Priority: Display existed files
         let html = existed.map(d => `
             <div class="vagent-box" onclick="openMissionDoc('${d.vAgentID}', '${weaponName}')">
                 <div style="font-size:20px;">👤</div>
@@ -226,7 +224,6 @@
             </div>
         `).join('');
 
-        // Followed by 2 Shadow Files (Silhouettes)
         html += `
             <div class="vagent-box silhouette"><div style="font-size:20px;">👤</div><span>#HIDDEN</span></div>
             <div class="vagent-box silhouette"><div style="font-size:20px;">👤</div><span>#HIDDEN</span></div>
@@ -236,32 +233,41 @@
     }
 
     window.openMissionDoc = async (vID, weapon) => {
-        // Find existing data in local map
-        let mission = deviceDataMap[weapon].find(m => m.vAgentID == vID);
-        
-        // Initial setup for the doc
         document.getElementById('docOverlay').style.display = 'flex';
         document.getElementById('d-vagent').innerText = vID;
-        document.getElementById('d-order').innerText = "VERIFYING...";
+        document.getElementById('d-order').innerText = "LINKING...";
 
         try {
-            // SESTEMA: Smart Search for Mission Order# if unknown
+            // SESTEMA: Hanapin ang document kung saan match ang internal fields
             const q = query(
                 collection(db, "mission_orders"), 
                 where("agentName", "==", currentAgent),
                 where("weaponSystem", "==", weapon),
-                where("vAgentID", "==", vID)
+                where("vAgentID", "==", vID) 
             );
-            const snap = await getDocs(q);
             
+            let snap = await getDocs(q);
+            
+            // Backup Search: Kung ang vAgentID ay Number sa database
+            if (snap.empty) {
+                const qBackup = query(
+                    collection(db, "mission_orders"), 
+                    where("agentName", "==", currentAgent),
+                    where("weaponSystem", "==", weapon),
+                    where("vAgentID", "==", Number(vID))
+                );
+                snap = await getDocs(qBackup);
+            }
+
             if (!snap.empty) {
-                const verifiedData = snap.docs[0].data();
-                activeMissionData = { ...verifiedData, weaponSystem: weapon };
+                const docSnap = snap.docs[0];
+                const missionID = docSnap.id; // <--- Dito kinukuha yung 4-5 digits
+                const verifiedData = docSnap.data();
                 
-                // Display the 4-5 digit Mission Order#
-                document.getElementById('d-order').innerText = verifiedData.orderNumber || "NOT_FOUND";
+                activeMissionData = { ...verifiedData, orderNumber: missionID, weaponSystem: weapon };
                 
-                // Date Formatting MM/DD/YYYY
+                document.getElementById('d-order').innerText = missionID;
+                
                 const fmtDate = (val) => {
                     if(!val) return "---";
                     let d = val.seconds ? val.toDate() : new Date(val);
@@ -270,11 +276,12 @@
 
                 document.getElementById('d-deploy').innerText = fmtDate(verifiedData.deploymentDate);
                 document.getElementById('d-relieve').innerText = fmtDate(verifiedData.relieveDate);
+                
+                renderExpensesLogic(vID, weapon, verifiedData.expenses);
+            } else {
+                document.getElementById('d-order').innerText = "NOT_FOUND";
             }
         } catch (e) { document.getElementById('d-order').innerText = "ERR_SEARCH"; }
-
-        // Render Expenses logic
-        renderExpensesLogic(vID, weapon, mission.expenses);
     };
 
     async function renderExpensesLogic(vID, weapon, fallbackTotal) {
@@ -301,16 +308,16 @@
     }
 
     window.archiveToBlacklist = async () => {
+        if(!activeMissionData) return;
         const btn = document.getElementById('archiveBtn');
         btn.classList.add('clicked');
         btn.innerText = "MOVING_TO_BLACKLIST...";
 
         try {
-            const blacklistID = `BL_${currentAgent}_${activeMissionData.vAgentID}_${Date.now()}`;
+            const blacklistID = `BL_${currentAgent}_${activeMissionData.orderNumber}`;
             await setDoc(doc(db, "blacklist", blacklistID), {
                 ...activeMissionData,
                 archive_timestamp: new Date(),
-                agent_signature: currentAgent,
                 status: "RETIRED"
             });
             alert("SUCCESS: DATA TRANSFERRED TO BLACKLIST VAULT.");

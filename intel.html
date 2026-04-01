@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-    <title>AGENCY_INTEL_v24.5</title>
+    <title>AGENCY_INTEL_v25.0</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
     <style>
         :root { 
@@ -27,11 +27,11 @@
         .agent-name { font-size: 32px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: #fff; }
         .device-tag { font-size: 9px; color: #5c7882; font-family: var(--mono); margin-top: 5px; }
 
-        /* FIXED MOBILE BUTTON */
+        /* FIXED COMPACT BUTTON */
         .report-btn { 
             margin-top: 25px; background: rgba(0, 243, 255, 0.05); border: 1px solid var(--cyan); 
-            color: var(--cyan); width: 260px; height: 55px; /* Fixed height/width para iwas spacing issues */
-            font-family: var(--mono); font-size: 14px; font-weight: bold;
+            color: var(--cyan); width: 220px; height: 50px; 
+            font-family: var(--mono); font-size: 13px; font-weight: bold;
             cursor: pointer; display: flex; align-items: center; justify-content: center;
             clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
             transition: 0.2s;
@@ -42,7 +42,7 @@
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 1000; }
         .modal-box { 
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            width: 90%; max-width: 350px; background: var(--glass); 
+            width: 90%; max-width: 340px; background: var(--glass); 
             border: 1px solid var(--border); border-top: 4px solid var(--cyan); padding: 20px;
         }
 
@@ -54,7 +54,6 @@
             color: #fff; font-family: var(--mono); font-size: 16px; outline: none; text-align: center;
         }
 
-        /* NEON PULSE ANIMATION */
         @keyframes neonPulse {
             0% { border-color: var(--green); box-shadow: 0 0 5px var(--green); }
             50% { border-color: #fff; box-shadow: 0 0 15px var(--green); }
@@ -81,18 +80,17 @@
 </head>
 <body>
 
-<header><div class="intel-title">INTEL_TERMINAL_V24.5</div></header>
+<header><div class="intel-title">INTEL_TERMINAL_V25.0</div></header>
 
 <main>
     <div id="display-name" class="agent-name">---</div>
     <div id="device-tag" class="device-tag">SESSION_ENCRYPTED</div>
-    
     <button class="report-btn" onclick="openReport()">INITIATE_REPORT</button>
 </main>
 
 <div id="report-modal" class="modal">
     <div class="modal-box">
-        <div id="scan-status" style="font-size:9px; color:#5c7882; text-align:center; margin-bottom:15px; font-family:var(--mono);">AWAITING_UPLINK...</div>
+        <div id="scan-status" style="font-size:9px; color:#5c7882; text-align:center; margin-bottom:15px; font-family:var(--mono);">READY_FOR_UPLINK...</div>
 
         <div class="input-group">
             <span class="input-label">V_AGENT_ID</span>
@@ -105,12 +103,12 @@
         </div>
 
         <div class="input-group">
-            <span class="input-label">BOUNTY_EXPENSES (PHP)</span>
+            <span class="input-label">EXPENSE_AMOUNT (PHP)</span>
             <input type="number" id="expensesInput" class="intel-input" placeholder="0.00" oninput="validateForm()">
         </div>
 
         <button id="transmit-btn" onclick="transmitData()" class="btn-transmit" disabled>INCOMPLETE</button>
-        <button onclick="closeReport()" style="width:100%; background:transparent; color:var(--red); border:none; margin-top:10px; font-family:var(--mono); font-size:9px;">// ABORT</button>
+        <button onclick="closeReport()" style="width:100%; background:transparent; color:var(--red); border:none; margin-top:10px; font-family:var(--mono); font-size:9px; cursor:pointer;">// ABORT</button>
     </div>
 </div>
 
@@ -121,7 +119,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, query, where, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, query, where, getDocs, addDoc, doc, setDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = { 
         apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
@@ -139,8 +137,10 @@
 
     window.onload = () => {
         const name = localStorage.getItem("cia_agent");
+        const sig = localStorage.getItem("intel_device_signature") || "SIG-XXXX";
         if (!name) window.location.href = "index.html";
         document.getElementById('display-name').innerText = name;
+        document.getElementById('device-tag').innerText = "DEVICE_SIG: " + sig;
     };
 
     window.handleScan = async (val) => {
@@ -184,24 +184,50 @@
         if(!btn.disabled) btn.innerText = "TRANSMIT_DATA";
     };
 
-    // FIXED NEW ENTRY LOGIC (Para may history ka lagi)
     window.transmitData = async () => {
         const v = document.getElementById('vAgentInput').value.trim();
-        const e = document.getElementById('expensesInput').value;
+        const e = parseFloat(document.getElementById('expensesInput').value);
         const agent = localStorage.getItem("cia_agent");
+        const sig = localStorage.getItem("intel_device_signature") || "UNKNOWN_DEVICE";
 
         try {
-            // Ito ay laging gagawa ng BAGONG document (Fix Entry)
+            // 1. LOG SA BOUNTIES (Global History)
             await addDoc(collection(db, "bounties"), {
                 reportedBy: agent,
                 targetV_Agent: v,
                 weaponUsed: selectedWeapon,
-                amount: parseFloat(e),
+                amount: e,
+                fingerprint: sig,
                 timestamp: serverTimestamp()
             });
-            alert("✅ MISSION_REPORT_LOGGED");
+
+            // 2. UPDATE SA BOUNTY_REPORT (Totalizer & Nested Log)
+            const reportRef = doc(db, "bounty_report", v);
+            
+            // Update the main total for this Agent
+            await setDoc(reportRef, {
+                vAgentID: v,
+                totalExpenses: increment(e),
+                lastUpdated: serverTimestamp(),
+                latestWeapon: selectedWeapon,
+                lastFingerprint: sig
+            }, { merge: true });
+
+            // Add to nested 'logs' sub-collection
+            const nestedLogRef = collection(db, "bounty_report", v, "logs");
+            await addDoc(nestedLogRef, {
+                amount: e,
+                timestamp: serverTimestamp(),
+                reportedBy: agent,
+                fingerprint: sig
+            });
+
+            alert("✅ UPLINK_SUCCESSFUL: DATA_LOGGED");
             location.reload();
-        } catch (err) { alert("❌ ERROR"); }
+        } catch (err) { 
+            console.error(err);
+            alert("❌ TRANSMISSION_FAILED"); 
+        }
     };
 
     window.openReport = () => document.getElementById('report-modal').style.display = 'block';

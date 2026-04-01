@@ -9,4 +9,4 @@ This terminal is used for monitoring and eliminating unauthorized codes within t
 * **Secure Access:** Firebase Encrypted Authentication.
 
 ---
-*Property of FreeShoppingPH Intelligence Division.*
+*Property of * Intelligence Division.*

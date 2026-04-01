@@ -4,101 +4,157 @@
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
     <title>INTEL_TERMINAL_v30</title>
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&family=Special+Elite&display=swap" rel="stylesheet">
     <style>
         :root { 
-            --bg: #01080b; --cyan: #00f3ff; --red: #ff003c; --green: #00ff66; 
-            --border: rgba(0, 243, 255, 0.15); --mono: 'Share Tech Mono', monospace; 
-            --glass: rgba(2, 12, 18, 0.95);
+            --cia-bg: #01080b; --cia-cyan: #00f3ff; --cia-red: #ff003c; --cia-green: #00ff66; 
+            --cia-border: rgba(0, 243, 255, 0.15); 
+            --font-digital: 'Share Tech Mono', monospace; 
+            --font-header: 'Rajdhani', sans-serif;
+            --font-noir: 'Special Elite', cursive;
         }
+
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        
         body { 
-            background: var(--bg); color: #c8e1e5; font-family: 'Rajdhani', sans-serif; 
+            background: var(--cia-bg); color: #c8e1e5; font-family: var(--font-header); 
             height: 100vh; overflow: hidden; display: flex; flex-direction: column;
-            background-image: radial-gradient(circle at center, #0a1f29 0%, #01080b 100%);
+            background-image: 
+                linear-gradient(var(--cia-border) 1px, transparent 1px),
+                linear-gradient(90deg, var(--cia-border) 1px, transparent 1px);
+            background-size: 30px 30px;
         }
-        header { padding: 10px; border-bottom: 1px solid var(--border); text-align: center; background: #000; }
-        .intel-title { font-family: var(--mono); color: var(--cyan); font-size: 11px; letter-spacing: 2px; }
-        main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 15px; }
-        .agent-name { font-size: 32px; font-weight: 800; text-transform: uppercase; color: #fff; text-shadow: 0 0 10px var(--cyan); }
+
+        header { padding: 15px; border-bottom: 1px solid var(--cia-border); text-align: center; background: rgba(0,0,0,0.8); }
+        .intel-title { font-family: var(--font-digital); color: var(--cia-cyan); font-size: 11px; letter-spacing: 3px; }
+
+        main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
+        
+        /* Tactical Avatar Circle */
+        .scanner-ring {
+            width: 120px; height: 120px; border: 2px solid var(--cia-cyan); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; margin-bottom: 20px;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2); position: relative;
+        }
+        .scanner-ring::after {
+            content: ""; position: absolute; inset: -5px; border: 1px dashed var(--cia-cyan);
+            border-radius: 50%; animation: rotate 10s linear infinite;
+        }
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        .agent-name { font-size: 38px; font-weight: 800; text-transform: uppercase; color: #fff; letter-spacing: 2px; }
         
         .report-btn { 
-            margin-top: 20px; background: rgba(0, 243, 255, 0.05); border: 1px solid var(--cyan); 
-            color: var(--cyan); width: 220px; height: 50px; font-family: var(--mono); font-size: 13px; font-weight: bold;
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            margin-top: 30px; background: none; border: 1px solid var(--cia-cyan); 
+            color: var(--cia-cyan); width: 250px; height: 60px; font-family: var(--font-digital); 
+            font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.3s;
             clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+            box-shadow: inset 0 0 10px rgba(0, 243, 255, 0.1);
+        }
+        .report-btn:active { background: var(--cia-cyan); color: #000; transform: scale(0.95); }
+
+        /* NOIR POPUP STYLE (PROJECTOR EFFECT) */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; }
+        
+        @keyframes noir-jitter {
+            0% { transform: translate(0,0); }
+            10% { transform: translate(-0.5px, -0.5px); }
+            20% { transform: translate(0.5px, 0px); }
+            100% { transform: translate(0,0); }
         }
 
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 1000; }
         .modal-box { 
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            width: 90%; max-width: 340px; background: var(--glass); 
-            border: 1px solid var(--border); border-top: 4px solid var(--cyan); padding: 20px;
+            width: 92%; max-width: 360px; background: #d4b98a; 
+            padding: 35px 25px; font-family: var(--font-noir); color: #3d2b1f;
+            box-shadow: 15px 15px 0px #000;
+            animation: noir-jitter 0.2s infinite;
         }
 
-        .input-group { margin-bottom: 12px; text-align: left; }
-        .input-label { font-family: var(--mono); font-size: 9px; color: var(--cyan); margin-bottom: 4px; display: block; opacity: 0.7; }
-        .intel-input { width: 100%; background: #05131a; border: 1px solid #1a2f37; padding: 12px; color: #fff; font-family: var(--mono); font-size: 18px; outline: none; text-align: center; }
+        /* Film Grain for Modal */
+        .modal-box::before {
+            content: ""; position: absolute; inset: 0;
+            background: url('https://media.giphy.com/media/oEI9uWUicT3hu/giphy.gif');
+            opacity: 0.05; pointer-events: none; mix-blend-mode: multiply;
+        }
 
-        /* GRID UI */
-        .weapon-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px; }
+        .input-group { margin-bottom: 15px; }
+        .input-label { font-size: 10px; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; display: block; }
         
-        /* SINGLE BUTTON UI - Pag iisa lang, magiging full width */
+        .intel-input { 
+            width: 100%; background: none; border: none; border-bottom: 2px solid rgba(61,43,31,0.2); 
+            padding: 10px; color: #3d2b1f; font-family: var(--font-noir); font-size: 20px; outline: none; text-align: center;
+        }
+
+        /* WEAPON GRID NOIR */
+        .weapon-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0; }
         .weapon-grid.single-mode { grid-template-columns: 1fr; }
 
         .weapon-card { 
-            padding: 15px; border: 1px solid #1a2f37; background: rgba(255,255,255,0.02); 
-            font-family: var(--mono); font-size: 11px; text-align: center; cursor: pointer; color: #5c7882; 
-            transition: 0.2s; text-transform: uppercase;
+            padding: 12px; border: 1px dashed rgba(61,43,31,0.4); background: rgba(0,0,0,0.03); 
+            font-size: 11px; text-align: center; cursor: pointer; color: #3d2b1f; 
         }
         .weapon-card.selected { 
-            border-color: var(--green); color: var(--green); background: rgba(0,255,102,0.1); 
-            box-shadow: 0 0 15px rgba(0,255,102,0.2); 
+            background: #3d2b1f; color: #d4b98a; border-style: solid;
         }
 
-        .btn-transmit { width: 100%; padding: 15px; background: var(--cyan); color: #000; border: none; font-family: var(--mono); font-size: 13px; font-weight: 900; cursor: pointer; margin-top: 15px; }
-        .btn-transmit:disabled { opacity: 0.1; filter: grayscale(1); }
+        .btn-transmit { 
+            width: 100%; padding: 15px; background: #3d2b1f; color: #d4b98a; 
+            border: none; font-family: var(--font-noir); font-size: 14px; font-weight: bold; 
+            cursor: pointer; margin-top: 15px; box-shadow: 4px 4px 0px rgba(0,0,0,0.2);
+        }
+        .btn-transmit:disabled { opacity: 0.3; cursor: not-allowed; }
 
-        nav { position: fixed; bottom: 0; width: 100%; height: 60px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; }
-        .nav-link { display: flex; align-items: center; justify-content: center; color: #444; font-family: var(--mono); text-decoration: none; font-size: 11px; }
-        .nav-link.active { color: var(--cyan); border-top: 2px solid var(--cyan); }
+        /* NAV */
+        nav { position: fixed; bottom: 0; width: 100%; height: 60px; background: #000; border-top: 1px solid var(--cia-border); display: grid; grid-template-columns: 1fr 1fr; }
+        .nav-link { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #444; font-family: var(--font-digital); text-decoration: none; font-size: 10px; letter-spacing: 1px; }
+        .nav-link.active { color: var(--cia-cyan); border-top: 2px solid var(--cia-cyan); background: linear-gradient(to bottom, rgba(0,243,255,0.05), transparent); }
     </style>
 </head>
 <body>
 
-<header><div class="intel-title">INTEL_TERMINAL_v30</div></header>
+<header><div class="intel-title">SYSTEM_INTEL // UPLINK_v3.0</div></header>
 
 <main>
+    <div class="scanner-ring">
+        <span style="font-size: 40px;">👤</span>
+    </div>
     <div id="display-name" class="agent-name">---</div>
-    <div style="font-size:9px; color:#5c7882; font-family:var(--mono);">SCANNER_ACTIVE // AGENT_VERIFIED</div>
-    <button class="report-btn" onclick="openReport()">INITIATE_SCAN</button>
+    <div style="font-size:10px; color:var(--cia-cyan); font-family:var(--font-digital); opacity: 0.7; margin-top: 5px;">
+        STATUS: ONLINE // ENCRYPTION: AES-256
+    </div>
+    
+    <button class="report-btn" onclick="openReport()">INITIATE_UPLINK_SCAN</button>
 </main>
 
 <div id="report-modal" class="modal">
     <div class="modal-box">
-        <div id="scan-status" style="font-size:9px; color:#5c7882; text-align:center; margin-bottom:10px; font-family:var(--mono);">READY...</div>
+        <div id="scan-status" style="font-size:10px; text-align:center; margin-bottom:15px; font-weight:bold; letter-spacing:1px;">AWAITING_INPUT...</div>
 
         <div class="input-group">
-            <span class="input-label">V_AGENT_ID</span>
+            <span class="input-label">vAgent_Serial_Number</span>
             <input type="text" id="vAgentInput" class="intel-input" placeholder="0000" oninput="handleDualSearch(this.value)">
         </div>
 
-        <div id="weapon-selection-zone" style="display:none; margin-bottom:12px;">
-            <span class="input-label">SYSTEM_IDENTIFIED</span>
+        <div id="weapon-selection-zone" style="display:none; margin-bottom:15px;">
+            <span class="input-label">System_Identity_Detected:</span>
             <div id="weapon-grid" class="weapon-grid"></div>
         </div>
 
         <div class="input-group">
-            <span class="input-label">UPLINK_AMOUNT (PHP)</span>
+            <span class="input-label">Bounty_Amount_PHP</span>
             <input type="number" id="expensesInput" class="intel-input" placeholder="0.00" oninput="validateForm()">
         </div>
 
-        <button id="transmit-btn" onclick="transmitData()" class="btn-transmit" disabled>AWAITING_TARGET</button>
-        <button onclick="closeReport()" style="width:100%; background:transparent; color:var(--red); border:none; margin-top:10px; font-family:var(--mono); font-size:9px;">// ABORT</button>
+        <button id="transmit-btn" onclick="transmitData()" class="btn-transmit" disabled>LOCKED_TARGET_REQUIRED</button>
+        <button onclick="closeReport()" style="width:100%; background:transparent; color:#8b0000; border:none; margin-top:15px; font-family:var(--font-noir); font-size:11px; cursor:pointer;">[ ABORT_TRANSMISSION ]</button>
     </div>
 </div>
 
-<nav><a href="dashboard.html" class="nav-link">DASHBOARD</a><a href="#" class="nav-link active">INTEL</a></nav>
+<nav>
+    <a href="dashboard.html" class="nav-link"><span>DASHBOARD</span></a>
+    <a href="#" class="nav-link active"><span>INTEL</span></a>
+</nav>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -138,12 +194,10 @@
         }
 
         try {
-            // STEP 1: Verify Agent
             const agentQ = query(collection(db, "agents"), where("agentName", "==", currentAgent));
             const agentSnap = await getDocs(agentQ);
-            if (agentSnap.empty) { status.innerText = ">> ERR: UNAUTHORIZED"; return; }
+            if (agentSnap.empty) { status.innerText = "ACCESS_DENIED_UNAUTHORIZED"; return; }
 
-            // STEP 2: Search Mission Orders
             const queries = [
                 query(collection(db, "mission_orders"), where("agentName", "==", currentAgent), where("vAgentID", "==", cleanVal)),
                 query(collection(db, "mission_orders"), where("agentName", "==", currentAgent), where("vAgentID", "==", Number(cleanVal)))
@@ -162,39 +216,33 @@
                 zone.style.display = "block";
                 grid.innerHTML = "";
                 
-                // I-apply ang single-mode class kung isa lang ang device
-                if (foundDocs.length === 1) {
-                    grid.classList.add('single-mode');
-                } else {
-                    grid.classList.remove('single-mode');
-                }
+                if (foundDocs.length === 1) grid.classList.add('single-mode');
+                else grid.classList.remove('single-mode');
 
                 foundDocs.forEach((data, index) => {
                     const card = document.createElement('div');
                     card.className = 'weapon-card';
                     card.id = "card-" + index;
-                    card.innerHTML = `SYSTEM:<br><b>${data.weaponSystem}</b>`;
+                    card.innerHTML = `SYS: <b>${data.weaponSystem}</b>`;
                     card.onclick = () => selectWeapon(card, data.weaponSystem);
                     grid.appendChild(card);
                 });
 
-                // AUTO-SELECT LOGIC
                 if (foundDocs.length === 1) {
-                    // Mas safe na gamitin ang Timeout para sigurado na render na ang element
                     setTimeout(() => {
                         const firstCard = document.getElementById('card-0');
                         selectWeapon(firstCard, foundDocs[0].weaponSystem);
-                        status.innerText = ">> SINGLE_TARGET_AUTO_LOCKED";
-                        status.style.color = "var(--green)";
+                        status.innerText = "TARGET_LOCKED_AUTO";
+                        status.style.color = "#2b5329";
                     }, 50);
                 } else {
                     selectedDeviceName = null;
-                    status.innerText = ">> MULTIPLE_TARGETS: SELECT_ONE";
-                    status.style.color = "var(--cyan)";
+                    status.innerText = "MULTIPLE_SYSTEMS_DETECTED";
+                    status.style.color = "#3d2b1f";
                 }
             } else {
-                status.innerText = ">> ERR: ID_NOT_FOUND";
-                status.style.color = "var(--red)";
+                status.innerText = "SERIAL_NOT_FOUND";
+                status.style.color = "#8b0000";
                 zone.style.display = "none";
                 selectedDeviceName = null;
             }
@@ -207,7 +255,6 @@
         if (element) {
             element.classList.add('selected');
             selectedDeviceName = name;
-            console.log("Selected:", selectedDeviceName); // Debug log
         }
         validateForm();
     };
@@ -222,7 +269,7 @@
             btn.innerText = "TRANSMIT_TO_" + selectedDeviceName.toUpperCase();
         } else {
             btn.disabled = true;
-            btn.innerText = selectedDeviceName ? "ENTER_AMOUNT" : "AWAITING_TARGET";
+            btn.innerText = selectedDeviceName ? "ENTER_BOUNTY_AMOUNT" : "LOCKED_TARGET_REQUIRED";
         }
     };
 
@@ -249,9 +296,9 @@
                 reportedBy: agent
             });
 
-            alert("✅ SUCCESS: DATA_UPLINKED");
+            alert("✅ TRANSMISSION_COMPLETE: Data logged in Archives.");
             location.reload();
-        } catch (err) { alert("❌ TRANSMISSION_FAILED"); }
+        } catch (err) { alert("❌ ERROR: Uplink Interrupted."); }
     };
 
     window.openReport = () => {

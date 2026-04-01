@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-    <title>INTEL_TARGETING_v26.1</title>
+    <title>INTEL_TARGETING_v27</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
     <style>
         :root { 
@@ -25,7 +25,6 @@
         main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 15px; }
         .agent-name { font-size: 32px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: #fff; }
         
-        /* COMPACT MOBILE BUTTON */
         .report-btn { 
             margin-top: 20px; background: rgba(0, 243, 255, 0.05); border: 1px solid var(--cyan); 
             color: var(--cyan); width: 220px; height: 50px; 
@@ -36,7 +35,6 @@
         }
         .report-btn:active { background: var(--cyan); color: #000; }
 
-        /* MODAL */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 1000; }
         .modal-box { 
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
@@ -51,7 +49,6 @@
             color: #fff; font-family: var(--mono); font-size: 16px; outline: none; text-align: center;
         }
 
-        /* WEAPON SELECTOR GRID */
         .weapon-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 5px; }
         .weapon-card { 
             padding: 10px; border: 1px solid #1a2f37; background: rgba(255,255,255,0.02); 
@@ -74,17 +71,17 @@
 </head>
 <body>
 
-<header><div class="intel-title">INTEL_TARGETING_v26.1</div></header>
+<header><div class="intel-title">INTEL_TARGETING_v27</div></header>
 
 <main>
     <div id="display-name" class="agent-name">---</div>
-    <div style="font-size:9px; color:#5c7882; font-family:var(--mono);">AWAITING_SCAN_COMMAND</div>
+    <div style="font-size:9px; color:#5c7882; font-family:var(--mono);">AGENT_STATUS: ACTIVE</div>
     <button class="report-btn" onclick="openReport()">INITIATE_SCAN</button>
 </main>
 
 <div id="report-modal" class="modal">
     <div class="modal-box">
-        <div id="scan-status" style="font-size:9px; color:#5c7882; text-align:center; margin-bottom:10px; font-family:var(--mono);">READY_FOR_TARGETING...</div>
+        <div id="scan-status" style="font-size:9px; color:#5c7882; text-align:center; margin-bottom:10px; font-family:var(--mono);">AWAITING_INPUT...</div>
 
         <div class="input-group">
             <span class="input-label">V_AGENT_ID</span>
@@ -92,24 +89,21 @@
         </div>
 
         <div id="weapon-selection-zone" style="display:none; margin-bottom:12px;">
-            <span class="input-label">SELECT_ACTIVE_DEVICE</span>
+            <span class="input-label">SELECT_WEAPON_SYSTEM</span>
             <div id="weapon-grid" class="weapon-grid"></div>
         </div>
 
         <div class="input-group">
-            <span class="input-label">EXPENSE_AMOUNT (PHP)</span>
+            <span class="input-label">ADD_EXPENSES (PHP)</span>
             <input type="number" id="expensesInput" class="intel-input" placeholder="0.00" oninput="validateForm()">
         </div>
 
-        <button id="transmit-btn" onclick="transmitData()" class="btn-transmit" disabled>SELECT_DEVICE</button>
-        <button onclick="closeReport()" style="width:100%; background:transparent; color:var(--red); border:none; margin-top:10px; font-family:var(--mono); font-size:9px; cursor:pointer;">// ABORT_TRANSMISSION</button>
+        <button id="transmit-btn" onclick="transmitData()" class="btn-transmit" disabled>DATA_PENDING</button>
+        <button onclick="closeReport()" style="width:100%; background:transparent; color:var(--red); border:none; margin-top:10px; font-family:var(--mono); font-size:9px; cursor:pointer;">// ABORT</button>
     </div>
 </div>
 
-<nav>
-    <a href="dashboard.html" class="nav-link">DASHBOARD</a>
-    <a href="#" class="nav-link active">INTEL</a>
-</nav>
+<nav><a href="dashboard.html" class="nav-link">DASHBOARD</a><a href="#" class="nav-link active">INTEL</a></nav>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -126,7 +120,6 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    
     let selectedDeviceName = null;
 
     window.onload = () => {
@@ -135,22 +128,20 @@
         document.getElementById('display-name').innerText = agent;
     };
 
-    // SEARCH LOGIC: Target ang "agents" collection filter by current user and VAgentID
     window.handleAgentScan = async (val) => {
-        const currentAgent = localStorage.getItem("cia_agent");
+        // I-format ang current agent para mag-match sa AGENT_LZ
+        let currentAgent = localStorage.getItem("cia_agent");
+        if (currentAgent) currentAgent = currentAgent.trim().toUpperCase().replace(/\s+/g, '_');
+
         const status = document.getElementById('scan-status');
         const grid = document.getElementById('weapon-grid');
         const zone = document.getElementById('weapon-selection-zone');
         const cleanVal = val.trim();
 
-        if(cleanVal.length < 1) { 
-            zone.style.display = "none"; 
-            status.innerText = "AWAITING_INPUT...";
-            return; 
-        }
+        if(cleanVal.length < 1) { zone.style.display = "none"; return; }
 
         try {
-            // Search criteria sa 'agents' collection
+            // SEARCH SA 'agents' COLLECTION
             const q = query(collection(db, "agents"), 
                         where("agentName", "==", currentAgent), 
                         where("vAgentID", "==", cleanVal));
@@ -160,25 +151,28 @@
             if (!snap.empty) {
                 zone.style.display = "block";
                 grid.innerHTML = "";
-                status.innerText = ">> TARGET_LOCKED: SELECT_DEVICE";
+                status.innerText = ">> TARGET_FOUND";
                 status.style.color = "var(--green)";
 
                 snap.forEach(docSnap => {
                     const data = docSnap.data();
                     const card = document.createElement('div');
                     card.className = 'weapon-card';
-                    card.innerHTML = `SYSTEM:<br><b>${data.weaponSystem}</b>`;
+                    card.innerHTML = `DEVICE:<br><b>${data.weaponSystem}</b>`;
                     card.onclick = () => selectWeapon(card, data.weaponSystem);
                     grid.appendChild(card);
                 });
             } else {
-                status.innerText = ">> NO_MATCHING_TARGET_OWNED";
+                status.innerText = ">> NO_MATCHING_ID";
                 status.style.color = "var(--red)";
                 zone.style.display = "none";
                 selectedDeviceName = null;
             }
             validateForm();
-        } catch (e) { console.error(e); }
+        } catch (e) { 
+            console.error(e);
+            // Kung may error sa Console (F12) tungkol sa 'Index', i-click ang link doon.
+        }
     };
 
     window.selectWeapon = (element, name) => {
@@ -198,21 +192,22 @@
             btn.innerText = "TRANSMIT_TO_" + selectedDeviceName.toUpperCase();
         } else {
             btn.disabled = true;
-            btn.innerText = selectedDeviceName ? "ENTER_AMOUNT" : "SELECT_DEVICE";
+            btn.innerText = "INCOMPLETE_DATA";
         }
     };
 
     window.transmitData = async () => {
         const v = document.getElementById('vAgentInput').value.trim();
         const e = parseFloat(document.getElementById('expensesInput').value);
-        const agent = localStorage.getItem("cia_agent");
+        let agent = localStorage.getItem("cia_agent");
+        if (agent) agent = agent.trim().toUpperCase().replace(/\s+/g, '_');
 
         try {
-            // Unique ID per Agent-Device-VAgent sequence
+            // Unique ID per Agent-Weapon-VAgent
             const reportID = `${agent}_${selectedDeviceName}_${v}`.replace(/\s+/g, '_');
             const reportRef = doc(db, "bounty_report", reportID);
 
-            // 1. UPDATE TOTALIZER
+            // 1. UPDATE SUMMARY
             await setDoc(reportRef, {
                 agentOwner: agent,
                 weaponSystem: selectedDeviceName,
@@ -221,7 +216,7 @@
                 lastUpdate: serverTimestamp()
             }, { merge: true });
 
-            // 2. NESTED LOG HISTORY
+            // 2. LOG HISTORY (Sub-collection)
             const nestedLogRef = collection(db, "bounty_report", reportID, "logs");
             await addDoc(nestedLogRef, {
                 amount: e,
@@ -229,9 +224,9 @@
                 reportedBy: agent
             });
 
-            alert("✅ SUCCESS: DATA_UPLINKED");
+            alert("✅ UPLINK_SUCCESS");
             location.reload();
-        } catch (err) { alert("❌ UPLINK_ERROR"); }
+        } catch (err) { alert("❌ FAILED"); }
     };
 
     window.openReport = () => document.getElementById('report-modal').style.display = 'block';

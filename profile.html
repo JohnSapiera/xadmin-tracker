@@ -18,7 +18,7 @@
         
         body { 
             background: var(--bg); color: #e1f5f9; font-family: var(--font-mono); 
-            overflow-x: hidden; padding: 15px; padding-bottom: 50px;
+            overflow-x: hidden; padding: 15px; padding-bottom: 80px;
             background-image: radial-gradient(circle at top, rgba(0, 243, 255, 0.05), transparent 60%), linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%);
             background-size: 100% 100%, 100% 4px;
         }
@@ -50,11 +50,11 @@
             margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
             cursor: pointer; border-radius: 2px; transition: 0.2s;
         }
-        .device-card:active { background: rgba(0, 243, 255, 0.1); }
+        .device-card:active { background: rgba(0, 243, 255, 0.1); border-color: var(--neon); }
         .device-label { font-family: var(--font-main); font-size: 18px; font-weight: 700; color: #fff; }
 
         /* File Grid */
-        .folder-grid { display: none; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .folder-grid { display: none; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 10px; }
         .file-item { position: relative; cursor: pointer; text-align: center; }
         .file-folder { 
             height: 80px; background: var(--folder-tan); border-radius: 0 4px 2px 2px;
@@ -71,8 +71,13 @@
         .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(8px); }
         .paper {
             width: 300px; background: #e8e0cc; padding: 25px; color: #222; transform: rotate(-1deg);
-            box-shadow: 5px 5px 20px rgba(0,0,0,0.5);
+            box-shadow: 5px 5px 20px rgba(0,0,0,0.5); font-family: serif;
         }
+
+        /* Navigation Fix */
+        nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr 1fr; z-index: 900; }
+        .nav-link { display: flex; align-items: center; justify-content: center; color: #444; font-family: var(--font-mono); text-decoration: none; font-size: 10px; }
+        .nav-link.active { color: var(--neon); border-top: 2px solid var(--neon); background: rgba(0,243,255,0.05); }
     </style>
 </head>
 <body>
@@ -81,8 +86,8 @@
         <div class="header">
             <div class="header-top">
                 <div>
-                    <h2 id="agentName">LOADING_DOSSIER...</h2>
-                    <div id="brandTag">ID: ---</div>
+                    <h2 id="agentName">LOADING...</h2>
+                    <div id="brandTag">INITIALIZING_SESSION</div>
                 </div>
                 <button class="btn-memoir" onclick="openMemoir()">MEMOIR</button>
             </div>
@@ -93,28 +98,36 @@
             </div>
         </div>
 
-        <div id="terminal" style="font-size:10px; color:#5c7882; margin-bottom:15px;">>> INITIALIZING_SECURE_UPLINK...</div>
+        <div id="terminal" style="font-size:10px; color:#5c7882; margin-bottom:15px; font-family: var(--font-mono);">>> BOOTING_SECURE_CORE...</div>
 
         <div id="deviceGrid"></div>
         
         <div class="folder-grid" id="mainFileGrid"></div>
-        <button id="btnBack" style="display:none; margin-top:20px; background:none; border:1px solid var(--neon); color:var(--neon); padding:5px 15px; cursor:pointer;" onclick="showDevices()">< BACK TO NODES</button>
+        <button id="btnBack" style="display:none; width: 100%; margin-top:20px; background:none; border:1px solid var(--neon); color:var(--neon); padding:12px; cursor:pointer; font-family: var(--font-mono); font-size: 11px;" onclick="showDevices()">< RETURN_TO_NODES</button>
     </div>
 
     <div id="memoirOverlay" class="overlay">
         <div class="paper">
-            <h3 style="border-bottom:2px solid #333; margin-bottom:10px;">MISSION_LOG</h3>
-            <p style="font-size:12px;"><strong>ORDER:</strong> <span id="m-order">---</span></p>
-            <p style="font-size:12px;"><strong>WEAPON:</strong> <span id="m-weapon">---</span></p>
-            <p style="font-size:12px;"><strong>AGENT:</strong> <span id="m-vagent">---</span></p>
-            <p style="font-size:12px;"><strong>DATE:</strong> <span id="m-date">---</span></p>
-            <h2 id="m-expenses" style="color:#8b0000; margin-top:15px;">₱ 0.00</h2>
-            <div style="margin-top:20px; display:flex; justify-content:space-between;">
-                <button onclick="closeMemoir()" style="padding:5px 10px; cursor:pointer;">CLOSE</button>
-                <button onclick="nextMemoir()" style="padding:5px 10px; cursor:pointer; background:var(--neon); border:none;">NEXT</button>
+            <h3 style="border-bottom:2px solid #333; margin-bottom:10px; font-family: var(--font-main); font-weight: 800;">MISSION_DOSSIER</h3>
+            <div style="line-height: 1.6;">
+                <p style="font-size:12px;"><strong>REF_ID:</strong> <span id="m-order">---</span></p>
+                <p style="font-size:12px;"><strong>NODE:</strong> <span id="m-weapon">---</span></p>
+                <p style="font-size:12px;"><strong>V_ID:</strong> <span id="m-vagent">---</span></p>
+                <p style="font-size:12px;"><strong>STAMP:</strong> <span id="m-date">---</span></p>
+                <h2 id="m-expenses" style="color:#8b0000; margin-top:15px; font-family: var(--font-main);">₱ 0.00</h2>
+            </div>
+            <div style="margin-top:25px; display:flex; justify-content:space-between;">
+                <button onclick="closeMemoir()" style="padding:8px 15px; cursor:pointer; border:1px solid #333; background: none;">CLOSE</button>
+                <button onclick="nextMemoir()" style="padding:8px 20px; cursor:pointer; background:#333; color:#fff; border:none;">NEXT_FILE</button>
             </div>
         </div>
     </div>
+
+    <nav>
+        <a href="dashboard.html" class="nav-link">DASHBOARD</a>
+        <a href="intel.html" class="nav-link">INTEL</a>
+        <a href="#" class="nav-link active">PROFILE</a>
+    </nav>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -136,9 +149,8 @@
         let allMissions = [];
         let currentIdx = 0;
 
-        // Generate Stable Device Signature
         function generateSignature() {
-            const raw = navigator.userAgent + screen.width + navigator.hardwareConcurrency;
+            const raw = navigator.userAgent + screen.width + (navigator.hardwareConcurrency || "8");
             let hash = 0;
             for (let i = 0; i < raw.length; i++) hash = ((hash << 5) - hash) + raw.charCodeAt(i);
             return "SIG-" + Math.abs(hash).toString(16).toUpperCase();
@@ -146,42 +158,43 @@
 
         async function syncProfile() {
             const signature = generateSignature();
+            const localAgent = localStorage.getItem("cia_agent"); // Same implementation as intel.html
+            
             document.getElementById('sigDisplay').innerText = "SIG: " + signature;
             document.getElementById('currentDate').innerText = new Date().toLocaleDateString();
-            
-            const urlParams = new URLSearchParams(window.location.search);
-            const accessKey = urlParams.get('key') || localStorage.getItem("agent_access_key");
+
+            if (!localAgent) {
+                document.getElementById('terminal').innerText = ">> ERR: NO_SESSION_FOUND. RELOGIN.";
+                setTimeout(() => window.location.href = "index.html", 2000);
+                return;
+            }
 
             try {
-                // 1. Review the Device/Agent
-                let agentSnap = await getDocs(query(collection(db, "agents"), where("accessKey", "==", accessKey)));
-                
-                if (agentSnap.empty) {
-                    // Check by signature if key fails
-                    agentSnap = await getDocs(query(collection(db, "agents"), where("deviceSignature", "==", signature)));
-                }
+                // Fetch agent data using the logged-in name
+                const q = query(collection(db, "agents"), where("agentName", "==", localAgent));
+                const snap = await getDocs(q);
 
-                if (!agentSnap.empty) {
-                    const agentDoc = agentSnap.docs[0];
+                if (!snap.empty) {
+                    const agentDoc = snap.docs[0];
                     const agentData = agentDoc.data();
 
-                    // Auto-update signature if missing (Review Implementation)
+                    // Sync signature if missing
                     if (!agentData.deviceSignature) {
                         await updateDoc(doc(db, "agents", agentDoc.id), { deviceSignature: signature });
                     }
 
                     document.getElementById('agentName').innerText = "AGENT_" + agentData.agentName;
-                    document.getElementById('brandTag').innerText = "BRAND: " + agentData.brandName.toUpperCase();
-                    document.getElementById('terminal').innerText = ">> UPLINK_SUCCESSFUL. DATA_SYNCED.";
+                    document.getElementById('brandTag').innerText = "ID: " + (agentData.brandName || "UNASSIGNED").toUpperCase();
+                    document.getElementById('terminal').innerText = ">> UPLINK_STABLE. ACCESS_GRANTED.";
 
                     loadMissions(agentData.agentName);
                 } else {
-                    document.getElementById('agentName').innerText = "UNKNOWN_AGENT";
-                    document.getElementById('terminal').innerText = ">> ERROR: UNAUTHORIZED_DEVICE.";
+                    document.getElementById('agentName').innerText = "INVALID_AGENT";
+                    document.getElementById('terminal').innerText = ">> ERR: AGENT_RECORD_NOT_FOUND.";
                 }
             } catch (err) {
                 console.error(err);
-                document.getElementById('terminal').innerText = ">> UPLINK_CRITICAL_FAILURE.";
+                document.getElementById('terminal').innerText = ">> ERR: DATABASE_CONNECTION_TIMEOUT.";
             }
         }
 
@@ -190,12 +203,18 @@
             const snap = await getDocs(q);
             let total = 0;
 
+            // Reset data containers
+            allMissions = [];
+            deviceDataMap = {};
+
             snap.forEach(d => {
                 const data = d.data();
                 allMissions.push(data);
-                const weapon = data.weaponSystem || "GENERIC_NODE";
+                const weapon = data.weaponSystem || "UNKNOWN_NODE";
+                
                 if(!deviceDataMap[weapon]) deviceDataMap[weapon] = [];
                 deviceDataMap[weapon].push(data);
+                
                 total += parseFloat(data.expenses || 0);
             });
 
@@ -205,10 +224,17 @@
 
         function renderDevices() {
             const grid = document.getElementById('deviceGrid');
-            grid.innerHTML = Object.keys(deviceDataMap).map(name => `
+            const keys = Object.keys(deviceDataMap);
+
+            if (keys.length === 0) {
+                grid.innerHTML = "<div style='text-align:center; padding:20px; color:#5c7882;'>NO_NODES_FOUND</div>";
+                return;
+            }
+
+            grid.innerHTML = keys.map(name => `
                 <div class="device-card" onclick="openDevice('${name}')">
                     <div class="device-label">${name}</div>
-                    <div style="color:var(--neon); font-size:10px;">${deviceDataMap[name].length} RECORDS</div>
+                    <div style="color:var(--neon); font-size:10px;">${deviceDataMap[name].length} LOGS</div>
                 </div>
             `).join('');
         }
@@ -217,12 +243,25 @@
             document.getElementById('deviceGrid').style.display = 'none';
             document.getElementById('mainFileGrid').style.display = 'grid';
             document.getElementById('btnBack').style.display = 'block';
+            
             const fGrid = document.getElementById('mainFileGrid');
             fGrid.innerHTML = deviceDataMap[name].map(d => `
-                <div class="file-item">
-                    <div class="file-folder"><span class="file-id">#${d.vAgentID || '??'}</span></div>
+                <div class="file-item" onclick="viewSpecificMission('${d.vAgentID}')">
+                    <div class="file-folder">
+                        <span class="file-id">#${d.vAgentID || '??'}</span>
+                        <span style="font-size:7px; color:#000; margin-top:5px;">EXP: ₱${d.expenses || 0}</span>
+                    </div>
                 </div>
             `).join('');
+        };
+
+        window.viewSpecificMission = (vID) => {
+            const mission = allMissions.find(m => m.vAgentID == vID);
+            if (mission) {
+                const idx = allMissions.indexOf(mission);
+                currentIdx = idx;
+                openMemoir();
+            }
         };
 
         window.showDevices = () => {
@@ -232,7 +271,7 @@
         };
 
         window.openMemoir = () => {
-            if (allMissions.length === 0) return alert("NO MISSION DATA FOUND.");
+            if (allMissions.length === 0) return alert("NO_DATA_AVAILABLE");
             updateMemoir();
             document.getElementById('memoirOverlay').style.display = 'flex';
         };
@@ -246,10 +285,10 @@
 
         function updateMemoir() {
             const d = allMissions[currentIdx];
-            document.getElementById('m-order').innerText = d.orderNumber || "N/A";
-            document.getElementById('m-weapon').innerText = d.weaponSystem || "N/A";
-            document.getElementById('m-vagent').innerText = d.vAgentID || "N/A";
-            document.getElementById('m-date').innerText = d.penalizeDate || "N/A";
+            document.getElementById('m-order').innerText = d.orderNumber || "---";
+            document.getElementById('m-weapon').innerText = d.weaponSystem || "---";
+            document.getElementById('m-vagent').innerText = d.vAgentID || "---";
+            document.getElementById('m-date').innerText = d.penalizeDate || d.lastUpdate || "---";
             document.getElementById('m-expenses').innerText = "₱ " + parseFloat(d.expenses || 0).toLocaleString();
         }
 

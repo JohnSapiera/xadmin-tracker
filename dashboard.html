@@ -71,7 +71,6 @@
     .btn-confirm { background: var(--green); color: #000; }
     .btn-abort { background: transparent; color: var(--red); border: 1px solid var(--red); }
 
-    /* CIA SCANNER ANIMATION */
     .cia-scanner { width: 100px; height: 100px; border: 1px solid var(--green); border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; margin-bottom: 30px; }
     .cia-scanner::before { content: ""; position: absolute; width: 80%; height: 1px; background: var(--green); animation: scan-line 2s linear infinite; }
     @keyframes scan-line { 0% { top: 20%; opacity: 0; } 50% { opacity: 1; } 100% { top: 80%; opacity: 0; } }
@@ -272,6 +271,7 @@
 
     if(!vId) return alert("V_AGENT_ID REQUIRED");
 
+    // BASE DATA FOR BOTH TABLES
     let missionData = {
         missionID: input.value,
         agentName: currentAgent,
@@ -280,12 +280,21 @@
         status: "ACTIVE"
     };
 
-    // EXPENSES: Update only if greater than 0
+    let bountyData = {
+        missionID: input.value,
+        vAgentID: vId,
+        agentName: currentAgent,
+        lastUpdated: serverTimestamp()
+    };
+
+    // EXPENSES: Update ONLY if input > 0
     if (exp && parseFloat(exp) > 0) {
-        missionData.expenses = `PHP ${parseFloat(exp).toFixed(2)}`;
+        const formattedExp = `PHP ${parseFloat(exp).toFixed(2)}`;
+        missionData.expenses = formattedExp;
+        bountyData.expenses = formattedExp;
     }
 
-    // DATE PROTECTION: Only set for NEW entries
+    // DATE PROTECTION: Only set if NOT in Retrieve mode
     if (!isRetrieveMode) {
         missionData.deploymentDate = serverTimestamp();
         const futureDate = new Date();
@@ -295,11 +304,16 @@
 
     try {
         confirmBtn.classList.add('uplinking');
-        // merge: true handles the protection of fields not present in missionData
+        
+        // 1. Update Mission Orders
         await setDoc(doc(db, "mission_orders", input.value), missionData, { merge: true });
+        
+        // 2. Update Bounty Report (Dual Sync)
+        await setDoc(doc(db, "bounty_report", input.value), bountyData, { merge: true });
+
         document.getElementById('modal-overlay').style.display = 'none';
         document.getElementById('success-screen').style.display = 'flex';
-        await log(`${isRetrieveMode ? 'RETRIEVE_UPDATE' : 'NEW_UPLINK'}: #${input.value}`, 'var(--green)');
+        await log(`DUAL_SYNC_SUCCESS: #${input.value}`, 'var(--green)');
     } catch (e) { 
         confirmBtn.classList.remove('uplinking');
         alert("UPLINK_FAILED"); 

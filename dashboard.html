@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>CORE_DASH_v22.0_REMASTERED</title>
+  <title>CORE_DASH_v23.0_FINAL</title>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root { 
@@ -25,7 +25,6 @@
         background-size: 100% 100%, 40px 40px, 40px 40px;
     }
 
-    /* NEW TACTICAL UPLINK ANIMATION */
     .uplinking { position: relative; color: transparent !important; pointer-events: none; }
     .uplinking::after {
         content: "UPLINKING..."; position: absolute; inset: 0;
@@ -35,7 +34,6 @@
     }
     @keyframes pulse-text { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; text-shadow: 0 0 10px var(--cyan); } }
 
-    /* ERROR SHAKE */
     .error-shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; border: 1px solid var(--red) !important; }
     @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
 
@@ -68,6 +66,10 @@
     
     .pop-input { background: #000; border: 1px solid var(--cyan); color: var(--green); font-family: var(--font-mono); font-size: 16px; padding: 8px; width: 150px; text-align: right; outline: none; }
     .pop-input:focus { box-shadow: 0 0 10px var(--cyan-dim); }
+
+    .device-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 15px 0; }
+    .dev-btn { background: #08161b; border: 1px solid #1a2f37; color: #5c7882; padding: 10px; font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; cursor: pointer; transition: 0.3s; }
+    .dev-btn.active { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); box-shadow: 0 0 10px var(--cyan-dim); }
 
     .pop-btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .tactical-btn { height: 50px; font-family: var(--font-main); font-size: 18px; font-weight: 700; text-transform: uppercase; border: none; cursor: pointer; }
@@ -124,13 +126,15 @@
                 <span class="data-label">EXPENSES:</span> 
                 <input type="text" id="expenses-input" class="pop-input" value="PHP 0.00">
             </div>
-            <div id="date-info" style="display:none; border-top: 1px solid var(--border); margin-top:10px; pt-10px;">
+            <div id="date-info" style="display:none; border-top: 1px solid var(--border); margin-top:10px; padding-top:10px;">
                 <div class="data-row"><span class="data-label">DEPLOY:</span> <span id="pop-dep" style="color:#fff">--/--</span></div>
                 <div class="data-row"><span class="data-label">RELIEVE:</span> <span id="pop-rel" style="color:#fff">--/--</span></div>
             </div>
         </div>
 
-        <div class="data-label" style="margin-bottom:15px; text-align:center;">Weapon System: <span id="pop-weapon" style="color:var(--cyan)">---</span></div>
+        <div class="data-label" style="margin-bottom:5px">Select Target Weapon System:</div>
+        <div class="device-grid" id="pop-device-list">
+            </div>
         
         <div class="pop-btn-row">
             <button id="uplink-confirm-btn" onclick="submitMission()" class="tactical-btn btn-confirm">UPLINK</button>
@@ -165,30 +169,38 @@
   };
 
   const currentAgent = localStorage.getItem("cia_agent") || "AUTHORIZED_AGENT";
-  const getWeaponName = (sigID) => weaponMap[sigID] || sigID || "NOT_SELECTED";
+  const currentDeviceSig = localStorage.getItem("device_signature") || "N/A";
+  let selectedDeviceForSave = currentDeviceSig; 
+  let authorizedDevices = [];
+  let isRetrieveMode = false;
 
   const input = document.getElementById('mission-input');
   const actionBtn = document.getElementById('action-btn');
   const reserveBtn = document.getElementById('reserve-btn');
   const syncDisplay = document.getElementById('sync-device-name');
-  
-  let selectedDevice = "N/A";
-  let isRetrieveMode = false;
 
-  async function traceDevice() {
-      const localSig = localStorage.getItem("device_signature");
-      if (!localSig) { syncDisplay.innerText = "OFFLINE"; return; }
-      selectedDevice = localSig;
-      syncDisplay.innerText = getWeaponName(localSig);
+  // --- LOGIC: LOAD DEVICES BY AGENT NAME ---
+  async function loadAgentDevices() {
+      syncDisplay.innerText = weaponMap[currentDeviceSig] || "IDENTIFYING...";
+      try {
+          const q = query(collection(db, "agents"), where("agentName", "==", currentAgent));
+          const snap = await getDocs(q);
+          if (!snap.empty) {
+              const data = snap.docs[0].data();
+              authorizedDevices = Array.isArray(data.linkedSignatures) ? data.linkedSignatures : [data.linkedSignatures];
+          } else {
+              authorizedDevices = [currentDeviceSig]; // Fallback sa current
+          }
+      } catch (e) { console.error(e); }
   }
-  traceDevice();
+  loadAgentDevices();
 
   const log = async (msg, color = "#5c7882") => {
     try { await addDoc(collection(db, "terminal_logs"), { timestamp: serverTimestamp(), message: msg, color, agent: currentAgent }); } catch (e) {}
   };
 
   const initTerminal = () => {
-    const q = query(collection(db, "terminal_logs"), orderBy("timestamp", "desc"), limit(10));
+    const q = query(collection(db, "terminal_logs"), orderBy("timestamp", "desc"), limit(12));
     onSnapshot(q, (snap) => {
         const term = document.getElementById('terminal');
         term.innerHTML = "";
@@ -202,30 +214,53 @@
   };
   initTerminal();
 
+  // --- LOGIC: LIVE SEARCH TERMINAL & MODE SWITCH ---
   input.addEventListener('input', async () => {
     const val = input.value.trim();
     if (val.length < 4) {
         isRetrieveMode = false;
         actionBtn.className = "btn btn-save"; actionBtn.textContent = "SAVE";
+        reserveBtn.disabled = false; reserveBtn.classList.remove('btn-faded');
         return;
     }
+    
     const q = query(collection(db, "mission_orders"), where("missionID", "==", val));
     const snap = await getDocs(q);
+    
     if (!snap.empty) {
         isRetrieveMode = true;
         actionBtn.className = "btn btn-retrieve"; actionBtn.textContent = "RETRIEVE";
+        reserveBtn.disabled = true; reserveBtn.classList.add('btn-faded');
+        await log(`SEARCH: Record found for #${val}`, 'var(--cyan)');
     } else {
         isRetrieveMode = false;
         actionBtn.className = "btn btn-save"; actionBtn.textContent = "SAVE";
+        reserveBtn.disabled = false; reserveBtn.classList.remove('btn-faded');
+        await log(`SEARCH: New target ID #${val}`, 'var(--green)');
     }
   });
 
+  function renderDeviceButtons() {
+      const container = document.getElementById('pop-device-list');
+      container.innerHTML = "";
+      authorizedDevices.forEach(sig => {
+          const btn = document.createElement('button');
+          btn.className = `dev-btn ${sig === selectedDeviceForSave ? 'active' : ''}`;
+          btn.innerText = weaponMap[sig] || sig;
+          btn.onclick = () => {
+              document.querySelectorAll('.dev-btn').forEach(b => b.classList.remove('active'));
+              btn.classList.add('active');
+              selectedDeviceForSave = sig;
+          };
+          container.appendChild(btn);
+      });
+  }
+
   actionBtn.onclick = async () => {
     if (input.value.length < 4) return;
-    
     document.getElementById('pop-agent').innerText = currentAgent;
     document.getElementById('pop-m-id').innerText = `#${input.value}`;
-    document.getElementById('pop-weapon').innerText = getWeaponName(selectedDevice);
+    renderDeviceButtons();
 
     if (isRetrieveMode) {
         const q = query(collection(db, "mission_orders"), where("missionID", "==", input.value));
@@ -233,13 +268,17 @@
         const data = snap.docs[0].data();
         document.getElementById('v-agent-input').value = data.vAgentID;
         document.getElementById('expenses-input').value = data.expenses || "PHP 0.00";
-        document.getElementById('pop-dep').innerText = data.deploymentDate ? data.deploymentDate.toDate().toLocaleDateString() : "--";
+        document.getElementById('pop-dep').innerText = data.deploymentDate?.toDate().toLocaleDateString() || "--";
         document.getElementById('pop-rel').innerText = data.relieveDate ? new Date(data.relieveDate).toLocaleDateString() : "--";
         document.getElementById('date-info').style.display = 'block';
+        selectedDeviceForSave = data.weaponSystem || currentDeviceSig;
+        renderDeviceButtons();
     } else {
         document.getElementById('v-agent-input').value = "";
         document.getElementById('expenses-input').value = "PHP 0.00";
         document.getElementById('date-info').style.display = 'none';
+        selectedDeviceForSave = currentDeviceSig;
+        renderDeviceButtons();
     }
     document.getElementById('modal-overlay').style.display = 'flex';
   };
@@ -254,20 +293,15 @@
 
     if(!vId) return alert("V_AGENT_ID REQUIRED");
 
-    // --- DUPLICATE VAGENT CHECK (Locked to specific Weapon System) ---
-    if (!isRetrieveMode) {
-        const dupQ = query(
-            collection(db, "mission_orders"), 
-            where("weaponSystem", "==", selectedDevice),
-            where("vAgentID", "==", vId)
-        );
-        const dupSnap = await getDocs(dupQ);
-        if (!dupSnap.empty) {
-            popBox.classList.add('error-shake');
-            setTimeout(() => popBox.classList.remove('error-shake'), 400);
-            await log(`DUPLICATE_V_AGENT_${vId}_ON_THIS_DEVICE`, 'var(--red)');
-            return; 
-        }
+    // --- DUPLICATE CHECK PER SELECTED DEVICE ---
+    const dupQ = query(collection(db, "mission_orders"), where("weaponSystem", "==", selectedDeviceForSave), where("vAgentID", "==", vId));
+    const dupSnap = await getDocs(dupQ);
+    
+    if (!dupSnap.empty && dupSnap.docs.some(doc => doc.id !== input.value)) {
+        popBox.classList.add('error-shake');
+        setTimeout(() => popBox.classList.remove('error-shake'), 400);
+        await log(`CONFLICT: vAgent ${vId} active on selected device`, 'var(--red)');
+        return;
     }
 
     try {
@@ -276,7 +310,7 @@
             missionID: input.value,
             agentName: currentAgent,
             vAgentID: vId,
-            weaponSystem: selectedDevice,
+            weaponSystem: selectedDeviceForSave,
             expenses: exp,
             deploymentDate: serverTimestamp(),
             relieveDate: Date.now() + (30 * 24 * 60 * 60 * 1000),
@@ -288,7 +322,7 @@
         await log(`UPLINK_SUCCESS: MISSION_${input.value}`, 'var(--green)');
     } catch (e) { 
         confirmBtn.classList.remove('uplinking');
-        alert("CONNECTION_LOST"); 
+        alert("UPLINK_FAILED"); 
     }
   };
 
@@ -297,7 +331,7 @@
     try {
         await setDoc(doc(db, "mission_orders", input.value), {
             missionID: input.value, agentName: currentAgent, vAgentID: "RESERVED",
-            weaponSystem: selectedDevice, status: "RESERVED", deploymentDate: serverTimestamp()
+            weaponSystem: currentDeviceSig, status: "RESERVED", deploymentDate: serverTimestamp()
         }, { merge: true });
         document.getElementById('success-msg').innerText = "ID_RESERVED";
         document.getElementById('success-screen').style.display = 'flex';

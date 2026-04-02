@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>CORE_DASH_v26.6_SYMETRICAL</title>
+  <title>CORE_DASH_v26.7_PERSIST</title>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root { 
@@ -14,40 +14,32 @@
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: var(--bg); color: #e1f5f9; font-family: var(--font-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-    
     header { padding: 15px 20px; background: #000; border-bottom: 2px solid var(--cyan); display: flex; justify-content: space-between; }
     .status-bar { font-size: 11px; padding: 8px 20px; background: rgba(0,243,255,0.05); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; color: var(--cyan); font-family: var(--font-mono); }
-    
     main { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
     .command-module { background: var(--panel); border: 1px solid var(--border); padding: 25px; border-radius: 4px; }
-    
     #mission-input { width: 100%; background: transparent; border: none; border-bottom: 2px solid var(--cyan); color: #fff; font-family: var(--font-mono); font-size: 50px; text-align: center; outline: none; margin-bottom: 20px; letter-spacing: 8px; }
-    
     .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .btn { height: 55px; font-weight: 700; text-transform: uppercase; border: none; cursor: pointer; font-family: var(--font-main); font-size: 16px; }
     .btn-save { background: var(--green); color: #000; }
     .btn-retrieve { background: var(--blue); color: #fff; }
     .btn-reserve { background: transparent; color: #fff; border: 1px solid #fff; }
-    .btn:disabled { opacity: 0.1; }
-
     #terminal { background: rgba(0,0,0,0.8); border-left: 3px solid var(--cyan); padding: 15px; font-family: var(--font-mono); font-size: 11px; height: 180px; overflow-y: auto; color: #9ab4bc; }
-    .term-line { margin-bottom: 5px; }
-
+    .term-line { margin-bottom: 5px; border-bottom: 1px solid rgba(255,255,255,0.02); padding-bottom: 2px; }
     .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999; align-items: center; justify-content: center; padding: 20px; }
-    .popup { width: 100%; max-width: 380px; background: #051014; border: 1px solid var(--cyan); padding: 25px; box-shadow: 0 0 20px var(--cyan-dim); }
+    .popup { width: 100%; max-width: 380px; background: #051014; border: 1px solid var(--cyan); padding: 25px; }
     .pop-title { font-size: 40px; color: var(--cyan); text-align: center; margin-bottom: 20px; font-weight: 700; }
     .pop-input { width: 100%; background: #000; border: 1px solid var(--cyan); color: var(--green); padding: 12px; font-family: var(--font-mono); margin-bottom: 20px; text-align: center; font-size: 18px; }
-    
     .device-grid { display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 20px; max-height: 150px; overflow-y: auto; }
     .dev-btn { background: #08161b; border: 1px solid #1a2f37; color: #5c7882; padding: 12px; font-size: 11px; cursor: pointer; font-family: var(--font-mono); text-align: left; text-transform: uppercase; }
-    .dev-btn.active { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); box-shadow: inset 0 0 10px var(--cyan-dim); }
+    .dev-btn.active { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
     .pop-btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   </style>
 </head>
 <body>
 
 <header>
-  <span style="font-weight: 700; color: #fff; letter-spacing: 2px;">CORE_SYSTEM_v26.6</span>
+  <span style="font-weight: 700; color: #fff; letter-spacing: 2px;">CORE_SYSTEM_v26.7</span>
 </header>
 
 <div class="status-bar">
@@ -72,10 +64,8 @@
         <div class="pop-title" id="pop-m-id">#0000</div>
         <div style="font-size:11px; color:#5c7882; margin-bottom:5px; font-family:var(--font-mono)">V_AGENT_ID:</div>
         <input type="text" id="v-agent-input" class="pop-input" placeholder="REQUIRED">
-        
         <div style="font-size:11px; color:var(--cyan); margin-bottom:8px; font-family:var(--font-mono)">WEAPON_SYSTEMS_LINKED:</div>
         <div class="device-grid" id="pop-device-list"></div>
-        
         <div class="pop-btn-row">
             <button id="modal-submit" onclick="submitMission()" class="btn">ACTION</button>
             <button onclick="closePopup()" class="btn btn-reserve">ABORT</button>
@@ -92,12 +82,9 @@
   const db = getFirestore(app);
 
   const fullWeaponMap = {
-    "SIG-3A14D65A": "REDMI NOTE 14 PRO 5G", 
-    "SIG-5B0D3A5C": "REALME 8 PRO",
-    "SIG-6AC68A2E": "LAPTOP: ACER", 
-    "SIG-X921FFA": "IPHONE 15 PRO",
-    "SIG-K882190": "POCO X6 PRO", 
-    "SIG-V001122": "VIVO V30"
+    "SIG-3A14D65A": "REDMI NOTE 14 PRO 5G", "SIG-5B0D3A5C": "REALME 8 PRO",
+    "SIG-6AC68A2E": "LAPTOP: ACER", "SIG-X921FFA": "IPHONE 15 PRO",
+    "SIG-K882190": "POCO X6 PRO", "SIG-V001122": "VIVO V30"
   };
 
   const currentAgent = localStorage.getItem("cia_agent") || "UNKNOWN";
@@ -115,19 +102,28 @@
   let activeRecord = null;
   let selectedDeviceSig = currentDeviceSig;
 
-  const logToScreen = (msg, color = "#9ab4bc") => {
-    const div = document.createElement('div');
-    div.className = "term-line";
-    div.innerHTML = `> <span style="color:${color}">${msg}</span>`;
-    terminal.prepend(div);
+  // --- CRITICAL: LIVE TERMINAL SYNC ---
+  // Ito ang magbabasa ng logs galing database at magpapakita sa screen mo
+  onSnapshot(query(collection(db, "terminal_logs"), orderBy("timestamp", "desc"), limit(15)), (snap) => {
+    terminal.innerHTML = ""; // Clear for refresh
+    snap.forEach(d => {
+      const data = d.data();
+      const div = document.createElement('div');
+      div.className = "term-line";
+      div.innerHTML = `> <span style="color:${data.color || '#9ab4bc'}">${data.message}</span>`;
+      terminal.appendChild(div); // Newest on top if you use prepend, or standard order
+    });
+  });
+
+  const sendLog = async (msg, color = "#9ab4bc") => {
+    await addDoc(collection(db, "terminal_logs"), { message: msg, color: color, timestamp: serverTimestamp(), agent: currentAgent });
   };
 
   // --- AUTO SCAN ---
   input.addEventListener('input', async () => {
     const val = input.value.trim();
     if (val.length < 4) return;
-
-    logToScreen(`SCANNING_ID: [${val}]`, 'var(--yellow)');
+    
     const q = query(collection(db, "mission_orders"), where("missionID", "==", val));
     const snap = await getDocs(q);
 
@@ -137,13 +133,11 @@
       actionBtn.className = "btn btn-retrieve";
       actionBtn.textContent = "RETRIEVE";
       reserveBtn.disabled = true;
-      logToScreen(`MATCH FOUND: REGISTERED TO ${activeRecord.agentName}`, 'var(--blue)');
     } else {
       isRetrieveMode = false;
       actionBtn.className = "btn btn-save";
       actionBtn.textContent = "SAVE";
       reserveBtn.disabled = false;
-      logToScreen(`NO MATCH: ID AVAILABLE`, 'var(--green)');
     }
   });
 
@@ -152,37 +146,27 @@
     if (input.value.length < 4) return;
     document.getElementById('modal-overlay').style.display = 'flex';
     document.getElementById('pop-m-id').innerText = `#${input.value}`;
-    
     const modalBtn = document.getElementById('modal-submit');
     
-    // UI SYNC: Labels and Colors
     if (isRetrieveMode) {
         modalBtn.innerText = "DEPLOY";
-        modalBtn.className = "btn btn-retrieve"; // Blue background
-        selectedDeviceSig = activeRecord.weaponSystem; // Default to the stored device
+        modalBtn.className = "btn btn-retrieve";
+        selectedDeviceSig = activeRecord.weaponSystem;
     } else {
         modalBtn.innerText = "SAVE";
-        modalBtn.className = "btn btn-save"; // Green background
+        modalBtn.className = "btn btn-save";
         selectedDeviceSig = currentDeviceSig;
     }
 
-    // --- FETCH ALL AGENT-LINKED DEVICES ---
-    // Kumukuha sa Database ng lahat ng unique weaponSystems na ginamit na ng agent na ito
     const q = query(collection(db, "mission_orders"), where("agentName", "==", currentAgent));
     const snap = await getDocs(q);
-    
-    const myDeviceSigs = new Set();
-    myDeviceSigs.add(currentDeviceSig); // Lagi dapat kasama ang current device signature
-    
-    snap.forEach(d => {
-      const sig = d.data().weaponSystem;
-      if(sig && fullWeaponMap[sig]) myDeviceSigs.add(sig);
-    });
+    const myDeviceSigs = new Set([currentDeviceSig]);
+    snap.forEach(d => { if(d.data().weaponSystem) myDeviceSigs.add(d.data().weaponSystem); });
 
     const grid = document.getElementById('pop-device-list');
     grid.innerHTML = "";
-    
     myDeviceSigs.forEach(sig => {
+      if(!fullWeaponMap[sig]) return;
       const btn = document.createElement('button');
       btn.className = `dev-btn ${sig === selectedDeviceSig ? 'active' : ''}`;
       btn.innerText = fullWeaponMap[sig];
@@ -193,32 +177,18 @@
       };
       grid.appendChild(btn);
     });
-
     document.getElementById('v-agent-input').value = isRetrieveMode ? activeRecord.vAgentID : "";
   };
 
   window.submitMission = async () => {
     const targetID = input.value.trim();
     const vID = document.getElementById('v-agent-input').value.trim();
-    
-    const data = {
-      missionID: targetID,
-      agentName: currentAgent,
-      vAgentID: vID,
-      weaponSystem: selectedDeviceSig,
-      expenses: 0,
-      timestamp: serverTimestamp()
-    };
+    const data = { missionID: targetID, agentName: currentAgent, vAgentID: vID, weaponSystem: selectedDeviceSig, expenses: 0, timestamp: serverTimestamp() };
 
     await setDoc(doc(db, "mission_orders", targetID), data, { merge: true });
     
     const logMsg = isRetrieveMode ? `RETRIEVED & RE-DEPLOYED: ID ${targetID}` : `NEW UPLINK SUCCESS: ID ${targetID}`;
-    await addDoc(collection(db, "terminal_logs"), { 
-        message: logMsg, 
-        color: isRetrieveMode ? 'var(--blue)' : 'var(--green)', 
-        timestamp: serverTimestamp(),
-        agent: currentAgent 
-    });
+    await sendLog(logMsg, isRetrieveMode ? 'var(--blue)' : 'var(--green)');
     
     location.reload();
   };

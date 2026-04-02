@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>CORE_DASH_v26.1_AGENT_FILTER</title>
+  <title>CORE_DASH_v26.2_RECON</title>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root { 
@@ -12,54 +12,33 @@
       --green: #05ffa1; --yellow: #ffea00; --border: rgba(0, 243, 255, 0.2);
       --font-main: 'Rajdhani', sans-serif; --font-mono: 'Share Tech Mono', monospace; 
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    
-    body { 
-        background: var(--bg); color: #e1f5f9; font-family: var(--font-main); 
-        height: 100vh; overflow: hidden; display: flex; flex-direction: column;
-        background-image: radial-gradient(circle at 50% 50%, #0a252e 0%, #02080a 100%);
-    }
-
+    body { background: var(--bg); color: #e1f5f9; font-family: var(--font-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; background-image: radial-gradient(circle at 50% 50%, #0a252e 0%, #02080a 100%); }
     header { padding: 18px 20px; background: rgba(0,0,0,0.9); border-bottom: 2px solid var(--cyan); display: flex; justify-content: space-between; align-items: center; }
-    .profile-link { background: var(--cyan-dim); border: 1px solid var(--cyan); color: var(--cyan); font-family: var(--font-mono); font-size: 10px; padding: 6px 12px; text-decoration: none; font-weight: bold; }
-
     .status-bar { font-size: 11px; padding: 10px 20px; background: rgba(0,0,0,0.5); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; color: var(--cyan); font-family: var(--font-mono); }
-
     main { flex: 1; padding: 20px; overflow-y: auto; padding-bottom: 100px; display: flex; flex-direction: column; gap: 20px; }
     .command-module { background: var(--panel); border: 1px solid var(--border); padding: 25px; clip-path: polygon(0 0, 100% 0, 100% 90%, 92% 100%, 0 100%); }
-
     #mission-input { width: 100%; background: transparent; border: none; border-bottom: 2px solid var(--cyan); color: #fff; font-family: var(--font-mono); font-size: 55px; font-weight: 700; padding: 15px 0; text-align: center; letter-spacing: 12px; outline: none; margin-bottom: 20px; }
-
     .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .btn { height: 55px; font-family: var(--font-main); font-size: 18px; font-weight: 700; text-transform: uppercase; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
     .btn-save { background: var(--green); color: #01080a; }
     .btn-retrieve { background: var(--blue); color: #fff; }
     .btn-reserve { background: transparent; color: #fff; border: 1px solid #fff; }
     .btn:disabled { opacity: 0.1; cursor: not-allowed; filter: grayscale(1); }
-
-    #terminal { background: rgba(0,0,0,0.7); border-left: 3px solid var(--cyan); padding: 15px; font-family: var(--font-mono); font-size: 11px; height: 180px; overflow-y: auto; color: #9ab4bc; }
-
+    #terminal { background: rgba(0,0,0,0.7); border-left: 3px solid var(--cyan); padding: 15px; font-family: var(--font-mono); font-size: 11px; height: 180px; overflow-y: auto; color: #9ab4bc; border-radius: 0 5px 5px 0; }
+    .term-line { margin-bottom: 4px; line-height: 1.4; border-bottom: 1px solid rgba(255,255,255,0.02); }
     .overlay { display: none; position: fixed; inset: 0; background: rgba(1, 4, 5, 0.98); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
     .popup { width: 100%; max-width: 380px; background: #051014; border: 1px solid var(--cyan); padding: 25px; }
     .pop-title { font-size: 48px; color: var(--cyan); text-align: center; font-family: var(--font-main); font-weight: 700; }
-    
     .data-card { background: rgba(255,255,255,0.03); padding: 15px; border: 1px solid var(--border); margin-bottom: 20px; }
-    .data-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
     .pop-input { background: #000; border: 1px solid var(--cyan); color: var(--green); font-family: var(--font-mono); font-size: 16px; padding: 8px; width: 150px; text-align: right; outline: none; }
-
     .device-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 15px 0; }
     .dev-btn { background: #08161b; border: 1px solid #1a2f37; color: #5c7882; padding: 10px; font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; cursor: pointer; }
     .dev-btn.active { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
-
     .pop-btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .tactical-btn { height: 50px; font-family: var(--font-main); font-size: 18px; font-weight: 700; text-transform: uppercase; border: none; cursor: pointer; }
     .btn-deploy { background: var(--blue); color: #fff; }
     .btn-abort { background: transparent; color: var(--red); border: 1px solid var(--red); }
-
-    nav { position: fixed; bottom: 0; width: 100%; height: 75px; background: #000; border-top: 2px solid var(--cyan); display: grid; grid-template-columns: 1fr 1fr; }
-    .nav-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #4a5a61; font-size: 11px; text-decoration: none; font-family: var(--font-mono); }
-    .nav-btn.active { color: var(--cyan); }
   </style>
 </head>
 <body>
@@ -69,14 +48,15 @@
     <div style="width:4px; height:20px; background:var(--cyan);"></div>
     <span style="font-size: 24px; font-weight: 700; color: #fff;">CORE_DASH</span>
   </div>
-  <a href="profile.html" class="profile-link">AGENT_SECURE</a>
 </header>
 
 <div class="status-bar">
-    <div style="display:flex; gap:15px">
+    <div style="display:flex; gap:12px">
         <span id="clock">00:00:00</span>
         <span style="color:var(--border)">|</span>
-        <span>AGENT: <span id="agent-display" style="color:#fff">---</span></span>
+        <span style="color:var(--cyan)">AGENT: <span id="agent-display" style="color:#fff">---</span></span>
+        <span style="color:var(--border)">|</span>
+        <span style="color:var(--cyan)">DEV: <span id="device-display" style="color:#fff">---</span></span>
     </div>
 </div>
 
@@ -95,12 +75,12 @@
     <div class="popup">
         <div class="pop-title" id="pop-m-id">#0000</div>
         <div class="data-card">
-            <div class="data-row">
-                <span class="data-label">V_AGENT_NO:</span> 
+            <div class="data-row" style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:11px; color:#5c7882; font-family:var(--font-mono);">V_AGENT_NO:</span> 
                 <input type="text" id="v-agent-input" class="pop-input" placeholder="0000">
             </div>
         </div>
-        <div class="data-label" style="margin-bottom:5px">Select Weapon System:</div>
+        <div style="font-size:11px; color:var(--cyan); margin-bottom:5px; font-family:var(--font-mono)">WEAPON_SYSTEM_UPLINK:</div>
         <div class="device-grid" id="pop-device-list"></div>
         <div class="pop-btn-row">
             <button id="deploy-confirm-btn" onclick="submitMission()" class="tactical-btn btn-deploy">DEPLOY</button>
@@ -108,11 +88,6 @@
         </div>
     </div>
 </div>
-
-<nav>
-    <a href="#" class="nav-btn active">DASHBOARD</a>
-    <a href="intel.html" class="nav-btn">INTEL_LOGS</a>
-</nav>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -122,7 +97,6 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  // Lahat ng devices sa system
   const fullWeaponMap = {
     "SIG-3A14D65A": "REDMI NOTE 14 PRO 5G", "SIG-5B0D3A5C": "REALME 8 PRO",
     "SIG-82A9E4B": "SAMSUNG S23 ULTRA", "SIG-X921FFA": "IPHONE 15 PRO",
@@ -130,43 +104,53 @@
   };
 
   const currentAgent = localStorage.getItem("cia_agent") || "AUTHORIZED_AGENT";
+  const currentDeviceSig = localStorage.getItem("device_signature") || "N/A";
+  
   document.getElementById('agent-display').innerText = currentAgent;
-
-  let isRetrieveMode = false;
-  let activeRecord = null;
-  let selectedDeviceSig = "";
-  let agentDevices = []; // List ng devices na pag-aari ng agent
+  document.getElementById('device-display').innerText = fullWeaponMap[currentDeviceSig] || currentDeviceSig;
 
   const input = document.getElementById('mission-input');
   const actionBtn = document.getElementById('action-btn');
   const reserveBtn = document.getElementById('reserve-btn');
   const terminal = document.getElementById('terminal');
 
-  // --- FETCH AGENT DEVICES ---
-  // Kinukuha natin ang mga unique na devices na ginamit na ng agent dati
-  async function fetchAgentDevices() {
-    const q = query(collection(db, "mission_orders"), where("agentName", "==", currentAgent));
-    const snap = await getDocs(q);
-    const uniqueSigs = new Set();
-    snap.forEach(doc => uniqueSigs.add(doc.data().weaponSystem));
-    agentDevices = Array.from(uniqueSigs).filter(sig => fullWeaponMap[sig]);
-  }
-  fetchAgentDevices();
+  let isRetrieveMode = false;
+  let activeRecord = null;
+  let selectedDeviceSig = "";
 
-  // --- AUTO SCAN ---
+  // --- LIVE TERMINAL LOGS ---
+  onSnapshot(query(collection(db, "terminal_logs"), orderBy("timestamp", "desc"), limit(12)), (snap) => {
+    terminal.innerHTML = "";
+    snap.forEach(d => {
+      const data = d.data();
+      const div = document.createElement('div');
+      div.className = "term-line";
+      div.innerHTML = `> <span style="color:${data.color}">${data.message}</span>`;
+      terminal.appendChild(div);
+    });
+  });
+
+  const sendLog = async (msg, color = "#5c7882") => {
+    await addDoc(collection(db, "terminal_logs"), { message: msg, color: color, timestamp: serverTimestamp(), agent: currentAgent });
+  };
+
+  // --- AUTO SCAN & TERMINAL FEEDBACK ---
   input.addEventListener('input', async () => {
     const val = input.value.trim();
     if (val.length < 3) return;
 
-    const q = query(collection(db, "mission_orders"), where("missionID", "==", val));
-    const snap = await getDocs(q);
+    // Search Mission Orders (3-way check)
+    const q1 = query(collection(db, "mission_orders"), where("missionID", "==", val));
+    const q2 = query(collection(db, "mission_orders"), where("vAgentID", "==", val));
+    const [s1, s2] = await Promise.all([getDocs(q1), getDocs(q2)]);
 
-    if (!snap.empty) {
-      activeRecord = snap.docs[0].data();
+    if (!s1.empty || !s2.empty) {
+      activeRecord = !s1.empty ? s1.docs[0].data() : s2.docs[0].data();
       reserveBtn.disabled = true;
       actionBtn.className = "btn btn-retrieve";
       actionBtn.textContent = "RETRIEVE";
       isRetrieveMode = true;
+      await sendLog(`RECORD DETECTED: [${activeRecord.missionID}] - RETRIEVE AUTHORIZED`, 'var(--cyan)');
     } else {
       reserveBtn.disabled = false;
       actionBtn.className = "btn btn-save";
@@ -175,29 +159,24 @@
     }
   });
 
-  // --- POPUP ACTION ---
-  actionBtn.onclick = () => {
+  // --- POPUP & DEVICE FILTER ---
+  actionBtn.onclick = async () => {
     if (input.value.length < 3) return;
     document.getElementById('modal-overlay').style.display = 'flex';
-    document.getElementById('pop-m-id').innerText = `#${input.value}`;
+    document.getElementById('pop-m-id').innerText = `#${isRetrieveMode ? activeRecord.missionID : input.value}`;
     
-    const vInput = document.getElementById('v-agent-input');
-    if (isRetrieveMode && activeRecord) {
-        vInput.value = activeRecord.vAgentID;
-        selectedDeviceSig = activeRecord.weaponSystem;
-    } else {
-        vInput.value = "";
-        selectedDeviceSig = agentDevices[0] || "";
-    }
-    renderFilteredDevices();
-  };
+    // Auto-filter: Load devices used by current agent
+    const q = query(collection(db, "mission_orders"), where("agentName", "==", currentAgent));
+    const snap = await getDocs(q);
+    const myDevices = new Set([currentDeviceSig]); // Include current device by default
+    snap.forEach(d => myDevices.add(d.data().weaponSystem));
 
-  function renderFilteredDevices() {
-    const container = document.getElementById('pop-device-list');
-    container.innerHTML = "";
-    
-    // I-display lang ang devices na pag-aari ng Agent
-    agentDevices.forEach(sig => {
+    const grid = document.getElementById('pop-device-list');
+    grid.innerHTML = "";
+    selectedDeviceSig = isRetrieveMode ? activeRecord.weaponSystem : currentDeviceSig;
+
+    myDevices.forEach(sig => {
+      if(!fullWeaponMap[sig]) return;
       const btn = document.createElement('button');
       btn.className = `dev-btn ${sig === selectedDeviceSig ? 'active' : ''}`;
       btn.innerText = fullWeaponMap[sig];
@@ -206,35 +185,35 @@
         btn.classList.add('active');
         selectedDeviceSig = sig;
       };
-      container.appendChild(btn);
+      grid.appendChild(btn);
     });
-  }
+
+    document.getElementById('v-agent-input').value = isRetrieveMode ? activeRecord.vAgentID : "";
+  };
 
   window.submitMission = async () => {
-    const targetID = input.value.trim();
+    const targetID = isRetrieveMode ? activeRecord.missionID : input.value.trim();
     const vID = document.getElementById('v-agent-input').value.trim();
-    
-    const deployDate = new Date();
-    const relieveDate = new Date();
-    relieveDate.setDate(deployDate.getDate() + 30);
+    const now = new Date();
+    const rel = new Date(); rel.setDate(now.getDate() + 30);
 
-    const missionData = {
+    const data = {
       missionID: targetID,
       agentName: currentAgent,
       vAgentID: vID,
       weaponSystem: selectedDeviceSig,
-      expenses: 0, // Default 0
-      deploymentDate: deployDate.toLocaleDateString('en-US'),
-      relieveDate: relieveDate.toLocaleDateString('en-US'),
+      expenses: 0,
+      deploymentDate: now.toLocaleDateString('en-US'),
+      relieveDate: rel.toLocaleDateString('en-US'),
       timestamp: serverTimestamp()
     };
 
-    await setDoc(doc(db, "mission_orders", targetID), missionData, { merge: true });
-    location.reload();
+    await setDoc(doc(db, "mission_orders", targetID), data, { merge: true });
+    await sendLog(`UPLINK SUCCESS: ${targetID} DEPLOYED TO ${fullWeaponMap[selectedDeviceSig]}`, 'var(--green)');
+    setTimeout(() => location.reload(), 1200);
   };
 
   window.closePopup = () => document.getElementById('modal-overlay').style.display = 'none';
-
   setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB'); }, 1000);
 </script>
 </body>

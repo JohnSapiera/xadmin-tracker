@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>INTEL_CENTER_v21.0_SYNC</title>
+  <title>CORE_DASH_v22.0_REMASTERED</title>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root { 
@@ -25,91 +25,57 @@
         background-size: 100% 100%, 40px 40px, 40px 40px;
     }
 
-    body::after { content: ""; position: fixed; inset: 0; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%); background-size: 100% 4px; pointer-events: none; z-index: 1000; opacity: 0.3; }
+    /* NEW TACTICAL UPLINK ANIMATION */
+    .uplinking { position: relative; color: transparent !important; pointer-events: none; }
+    .uplinking::after {
+        content: "UPLINKING..."; position: absolute; inset: 0;
+        display: flex; align-items: center; justify-content: center;
+        color: var(--cyan); font-size: 14px; letter-spacing: 2px;
+        animation: pulse-text 0.8s infinite;
+    }
+    @keyframes pulse-text { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; text-shadow: 0 0 10px var(--cyan); } }
 
-    header { 
-        padding: 18px 20px; background: rgba(0,0,0,0.9); border-bottom: 2px solid var(--cyan); 
-        display: flex; justify-content: space-between; align-items: center; z-index: 100;
-    }
-    .profile-link { 
-        background: var(--cyan-dim); border: 1px solid var(--cyan); color: var(--cyan); 
-        font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; 
-        padding: 6px 12px; text-decoration: none; font-weight: bold;
-    }
+    /* ERROR SHAKE */
+    .error-shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; border: 1px solid var(--red) !important; }
+    @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
 
-    .status-bar { 
-        font-size: 11px; padding: 10px 20px; background: rgba(0,0,0,0.5); 
-        border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; 
-        color: var(--cyan); font-family: var(--font-mono);
-    }
+    header { padding: 18px 20px; background: rgba(0,0,0,0.9); border-bottom: 2px solid var(--cyan); display: flex; justify-content: space-between; align-items: center; z-index: 100; }
+    .profile-link { background: var(--cyan-dim); border: 1px solid var(--cyan); color: var(--cyan); font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; padding: 6px 12px; text-decoration: none; font-weight: bold; }
+
+    .status-bar { font-size: 11px; padding: 10px 20px; background: rgba(0,0,0,0.5); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; color: var(--cyan); font-family: var(--font-mono); }
 
     main { flex: 1; padding: 20px; overflow-y: auto; padding-bottom: 100px; display: flex; flex-direction: column; gap: 20px; }
-    
-    .command-module { 
-        background: var(--panel); border: 1px solid var(--border); padding: 25px; 
-        position: relative; backdrop-filter: blur(10px);
-        clip-path: polygon(0 0, 100% 0, 100% 90%, 92% 100%, 0 100%);
-    }
+    .command-module { background: var(--panel); border: 1px solid var(--border); padding: 25px; position: relative; backdrop-filter: blur(10px); clip-path: polygon(0 0, 100% 0, 100% 90%, 92% 100%, 0 100%); }
 
-    #mission-input { 
-        width: 100%; background: rgba(0,0,0,0.6); border: none; border-bottom: 2px solid var(--cyan);
-        color: #fff; font-family: var(--font-mono); font-size: 55px; font-weight: 700; padding: 15px 0; 
-        text-align: center; letter-spacing: 12px; outline: none; margin-bottom: 20px;
-    }
+    #mission-input { width: 100%; background: rgba(0,0,0,0.6); border: none; border-bottom: 2px solid var(--cyan); color: #fff; font-family: var(--font-mono); font-size: 55px; font-weight: 700; padding: 15px 0; text-align: center; letter-spacing: 12px; outline: none; margin-bottom: 20px; }
 
     .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .btn { 
-        height: 55px; font-family: var(--font-main); font-size: 18px; font-weight: 700; 
-        text-transform: uppercase; letter-spacing: 1px; border: none; cursor: pointer; transition: 0.2s; 
-    }
+    .btn { height: 55px; font-family: var(--font-main); font-size: 18px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; border: none; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
     .btn-save { background: var(--green); color: #01080a; }
     .btn-retrieve { background: var(--blue); color: #fff; }
     .btn-reserve { background: transparent; color: #fff; border: 1px solid #fff; opacity: 0.8; }
     .btn-faded { opacity: 0.2 !important; pointer-events: none; }
 
-    #terminal { 
-        background: rgba(0,0,0,0.7); border-left: 3px solid var(--cyan); 
-        padding: 15px; font-family: var(--font-mono); font-size: 11px; 
-        height: 180px; color: #9ab4bc; overflow-y: auto; line-height: 1.5;
-        display: flex; flex-direction: column;
-    }
+    #terminal { background: rgba(0,0,0,0.7); border-left: 3px solid var(--cyan); padding: 15px; font-family: var(--font-mono); font-size: 11px; height: 180px; color: #9ab4bc; overflow-y: auto; line-height: 1.5; }
 
     .overlay { display: none; position: fixed; inset: 0; background: rgba(1, 4, 5, 0.98); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
-    .popup { 
-        width: 100%; max-width: 380px; background: #051014; border: 1px solid var(--cyan); 
-        padding: 25px; position: relative;
-    }
+    .popup { width: 100%; max-width: 380px; background: #051014; border: 1px solid var(--cyan); padding: 25px; position: relative; }
     .pop-title { font-size: 48px; color: var(--cyan); text-align: center; font-weight: 700; font-family: var(--font-main); letter-spacing: -2px; }
     
     .data-card { background: rgba(255,255,255,0.03); padding: 15px; border: 1px solid var(--border); margin-bottom: 20px; }
     .data-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 13px; }
     .data-label { color: #5c7882; text-transform: uppercase; font-size: 11px; font-family: var(--font-mono); }
     
-    .pop-input { 
-        background: #000; border: 1px solid var(--cyan); color: var(--green); 
-        font-family: var(--font-mono); font-size: 16px; padding: 8px; width: 150px; text-align: right; outline: none;
-    }
-
-    .device-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 15px 0; }
-    .dev-btn { 
-        background: #08161b; border: 1px solid #1a2f37; color: #5c7882; padding: 12px; 
-        font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; cursor: pointer;
-    }
-    .dev-btn.active { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
+    .pop-input { background: #000; border: 1px solid var(--cyan); color: var(--green); font-family: var(--font-mono); font-size: 16px; padding: 8px; width: 150px; text-align: right; outline: none; }
+    .pop-input:focus { box-shadow: 0 0 10px var(--cyan-dim); }
 
     .pop-btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .tactical-btn { height: 50px; font-family: var(--font-main); font-size: 18px; font-weight: 700; text-transform: uppercase; border: none; cursor: pointer; }
     .btn-confirm { background: var(--green); color: #000; }
     .btn-abort { background: transparent; color: var(--red); border: 1px solid var(--red); }
 
-    nav { 
-        position: fixed; bottom: 0; width: 100%; height: 75px; background: #000; 
-        border-top: 2px solid var(--cyan); display: grid; grid-template-columns: 1fr 1fr; z-index: 90; 
-    }
-    .nav-btn { 
-        display: flex; flex-direction: column; align-items: center; justify-content: center; 
-        color: #4a5a61; font-size: 11px; text-decoration: none; font-family: var(--font-mono);
-    }
+    nav { position: fixed; bottom: 0; width: 100%; height: 75px; background: #000; border-top: 2px solid var(--cyan); display: grid; grid-template-columns: 1fr 1fr; z-index: 90; }
+    .nav-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #4a5a61; font-size: 11px; text-decoration: none; font-family: var(--font-mono); }
     .nav-btn.active { color: var(--cyan); background: var(--cyan-dim); font-weight: bold; }
   </style>
 </head>
@@ -133,7 +99,7 @@
 </div>
 
 <main>
-  <div class="command-module">
+  <div class="command-module" id="cmd-module">
     <div style="font-size: 10px; color: var(--cyan); margin-bottom: 10px; font-family:var(--font-mono)">// ENTER_TARGET_ID</div>
     <input type="tel" id="mission-input" placeholder="----" maxlength="5" autocomplete="off">
     <div class="btn-row">
@@ -141,34 +107,33 @@
       <button id="reserve-btn" class="btn btn-reserve">RESERVE</button>
     </div>
   </div>
-  
   <div id="terminal"></div>
 </main>
 
 <div class="overlay" id="modal-overlay">
-    <div class="popup">
+    <div class="popup" id="popup-box">
         <div class="pop-title" id="pop-m-id">#0000</div>
-        <div class="pop-subtitle" id="pop-agent" style="text-align:center; font-size:10px; color:#5c7882; margin-bottom:20px;">AGENT_NAME</div>
+        <div id="pop-agent" style="text-align:center; font-size:10px; color:#5c7882; margin-bottom:20px;">AGENT_NAME</div>
         
         <div class="data-card">
             <div class="data-row">
                 <span class="data-label">V_AGENT_NO:</span> 
-                <input type="text" id="v-agent-input" class="pop-input" placeholder="ENTER NO">
+                <input type="text" id="v-agent-input" class="pop-input" placeholder="0000">
             </div>
             <div class="data-row">
                 <span class="data-label">EXPENSES:</span> 
                 <input type="text" id="expenses-input" class="pop-input" value="PHP 0.00">
             </div>
-            <div class="data-row"><span class="data-label">DEPLOY:</span> <span id="pop-dep" style="color:#fff">--/--</span></div>
-            <div class="data-row"><span class="data-label">RELIEVE:</span> <span id="pop-rel" style="color:#fff">--/--</span></div>
+            <div id="date-info" style="display:none; border-top: 1px solid var(--border); margin-top:10px; pt-10px;">
+                <div class="data-row"><span class="data-label">DEPLOY:</span> <span id="pop-dep" style="color:#fff">--/--</span></div>
+                <div class="data-row"><span class="data-label">RELIEVE:</span> <span id="pop-rel" style="color:#fff">--/--</span></div>
+            </div>
         </div>
 
-        <div class="data-label" style="margin-bottom:5px">Weapon System (Locked):</div>
-        <div class="device-grid" id="device-list">
-            </div>
+        <div class="data-label" style="margin-bottom:15px; text-align:center;">Weapon System: <span id="pop-weapon" style="color:var(--cyan)">---</span></div>
         
         <div class="pop-btn-row">
-            <button onclick="submitMission()" class="tactical-btn btn-confirm">UPLINK</button>
+            <button id="uplink-confirm-btn" onclick="submitMission()" class="tactical-btn btn-confirm">UPLINK</button>
             <button onclick="closePopup()" class="tactical-btn btn-abort">CANCEL</button>
         </div>
     </div>
@@ -194,84 +159,44 @@
   const db = getFirestore(app);
 
   const weaponMap = {
-    "SIG-3A14D65A": "REDMI NOTE 14 PRO 5G",
-    "SIG-5B0D3A5C": "REALME 8 PRO",
-    "SIG-82A9E4B": "SAMSUNG S23 ULTRA",
-    "SIG-X921FFA": "IPHONE 15 PRO",
-    "SIG-K882190": "POCO X6 PRO",
-    "SIG-V001122": "VIVO V30"
+    "SIG-3A14D65A": "REDMI NOTE 14 PRO 5G", "SIG-5B0D3A5C": "REALME 8 PRO",
+    "SIG-82A9E4B": "SAMSUNG S23 ULTRA", "SIG-X921FFA": "IPHONE 15 PRO",
+    "SIG-K882190": "POCO X6 PRO", "SIG-V001122": "VIVO V30"
   };
 
   const currentAgent = localStorage.getItem("cia_agent") || "AUTHORIZED_AGENT";
-  const getWeaponName = (sigID) => {
-    if (!sigID || sigID === "N/A") return "NOT_SELECTED";
-    return weaponMap[sigID] || sigID;
-  };
+  const getWeaponName = (sigID) => weaponMap[sigID] || sigID || "NOT_SELECTED";
 
   const input = document.getElementById('mission-input');
   const actionBtn = document.getElementById('action-btn');
   const reserveBtn = document.getElementById('reserve-btn');
-  const termLog = document.getElementById('terminal');
   const syncDisplay = document.getElementById('sync-device-name');
   
-  let selectedDevice = "N/A"; // I-store ang detected device signature
+  let selectedDevice = "N/A";
   let isRetrieveMode = false;
-  let sourceCollection = "mission_orders";
 
-  // --- DEVICE TRACER LOGIC (AUTOMATIC ON LOAD) ---
   async function traceDevice() {
-      // Kunin ang signature na ginamit sa index.html
       const localSig = localStorage.getItem("device_signature");
-      
-      if (!localSig) {
-          syncDisplay.innerText = "NO_SIGNATURE_FOUND";
-          return;
-      }
-
-      try {
-          // I-check sa DB kung ang signature ay naka-link sa Agent
-          const q = query(collection(db, "agents"), where("agentName", "==", currentAgent));
-          const snap = await getDocs(q);
-
-          if (!snap.empty) {
-              const sigs = snap.docs[0].data().linkedSignatures || [];
-              const sigArray = Array.isArray(sigs) ? sigs : [sigs];
-
-              if (sigArray.includes(localSig)) {
-                  selectedDevice = localSig;
-                  syncDisplay.innerText = getWeaponName(localSig);
-                  await log(`DEVICE_MATCH: ${getWeaponName(localSig)}`, 'var(--green)');
-              } else {
-                  syncDisplay.innerText = "UNAUTHORIZED_HW";
-                  await log(`HW_MISMATCH_DETECTED`, 'var(--red)');
-              }
-          }
-      } catch (e) { console.error(e); }
+      if (!localSig) { syncDisplay.innerText = "OFFLINE"; return; }
+      selectedDevice = localSig;
+      syncDisplay.innerText = getWeaponName(localSig);
   }
   traceDevice();
 
   const log = async (msg, color = "#5c7882") => {
-    try {
-        await addDoc(collection(db, "terminal_logs"), {
-            timestamp: serverTimestamp(),
-            message: msg,
-            color: color,
-            agent: currentAgent,
-            targetID: input.value || "SYSTEM"
-        });
-    } catch (e) {}
+    try { await addDoc(collection(db, "terminal_logs"), { timestamp: serverTimestamp(), message: msg, color, agent: currentAgent }); } catch (e) {}
   };
 
   const initTerminal = () => {
-    const q = query(collection(db, "terminal_logs"), orderBy("timestamp", "desc"), limit(15));
-    onSnapshot(q, (snapshot) => {
-        termLog.innerHTML = "";
-        snapshot.forEach((doc) => {
-            const data = doc.data();
-            const timeStr = data.timestamp ? data.timestamp.toDate().toLocaleTimeString('en-GB') : "SYNC";
-            const d = document.createElement('div');
-            d.innerHTML = `<span style="opacity:0.4">${timeStr}</span> > <span style="color:${data.color}">${data.message}</span>`;
-            termLog.appendChild(d);
+    const q = query(collection(db, "terminal_logs"), orderBy("timestamp", "desc"), limit(10));
+    onSnapshot(q, (snap) => {
+        const term = document.getElementById('terminal');
+        term.innerHTML = "";
+        snap.forEach((d) => {
+            const data = d.data();
+            const div = document.createElement('div');
+            div.innerHTML = `> <span style="color:${data.color}">${data.message}</span>`;
+            term.appendChild(div);
         });
     });
   };
@@ -279,25 +204,19 @@
 
   input.addEventListener('input', async () => {
     const val = input.value.trim();
-    isRetrieveMode = false;
-    actionBtn.className = "btn btn-save"; actionBtn.textContent = "SAVE";
-    reserveBtn.disabled = false; reserveBtn.classList.remove('btn-faded');
-
-    if (val.length >= 4) {
-        try {
-            const qOrders = query(collection(db, "mission_orders"), where("missionID", "==", val));
-            const qBlack = query(collection(db, "blacklist"), where("targetID", "==", val));
-            const [snapOrders, snapBlack] = await Promise.all([getDocs(qOrders), getDocs(qBlack)]);
-
-            if (!snapOrders.empty || !snapBlack.empty) {
-                isRetrieveMode = true;
-                reserveBtn.disabled = true; reserveBtn.classList.add('btn-faded');
-                actionBtn.className = "btn btn-retrieve"; actionBtn.textContent = "RETRIEVE";
-                
-                if (!snapBlack.empty) { sourceCollection = "blacklist"; await log(`ALERT: BLACKLIST`, 'var(--red)'); }
-                else { sourceCollection = "mission_orders"; await log(`RECORD FOUND`, 'var(--green)'); }
-            }
-        } catch (e) {}
+    if (val.length < 4) {
+        isRetrieveMode = false;
+        actionBtn.className = "btn btn-save"; actionBtn.textContent = "SAVE";
+        return;
+    }
+    const q = query(collection(db, "mission_orders"), where("missionID", "==", val));
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+        isRetrieveMode = true;
+        actionBtn.className = "btn btn-retrieve"; actionBtn.textContent = "RETRIEVE";
+    } else {
+        isRetrieveMode = false;
+        actionBtn.className = "btn btn-save"; actionBtn.textContent = "SAVE";
     }
   });
 
@@ -306,30 +225,21 @@
     
     document.getElementById('pop-agent').innerText = currentAgent;
     document.getElementById('pop-m-id').innerText = `#${input.value}`;
-
-    // Ipakita lang ang Detected Device sa Popup (Locked)
-    const devGrid = document.getElementById('device-list');
-    devGrid.innerHTML = "";
-    const b = document.createElement('button');
-    b.className = `dev-btn active`;
-    b.innerText = getWeaponName(selectedDevice);
-    devGrid.appendChild(b);
+    document.getElementById('pop-weapon').innerText = getWeaponName(selectedDevice);
 
     if (isRetrieveMode) {
-        const idField = sourceCollection === "mission_orders" ? "missionID" : "targetID";
-        const q = query(collection(db, sourceCollection), where(idField, "==", input.value));
+        const q = query(collection(db, "mission_orders"), where("missionID", "==", input.value));
         const snap = await getDocs(q);
         const data = snap.docs[0].data();
-        document.getElementById('v-agent-input').value = data.vAgentID === "RESERVED" ? "" : (data.vAgentID || "");
+        document.getElementById('v-agent-input').value = data.vAgentID;
         document.getElementById('expenses-input').value = data.expenses || "PHP 0.00";
-        document.getElementById('pop-dep').innerText = data.deploymentDate ? data.deploymentDate.toDate().toLocaleDateString('en-US', {month:'short', day:'2-digit'}) : "--/--";
-        document.getElementById('pop-rel').innerText = data.relieveDate ? data.relieveDate.toDate().toLocaleDateString('en-US', {month:'short', day:'2-digit'}) : "--/--";
+        document.getElementById('pop-dep').innerText = data.deploymentDate ? data.deploymentDate.toDate().toLocaleDateString() : "--";
+        document.getElementById('pop-rel').innerText = data.relieveDate ? new Date(data.relieveDate).toLocaleDateString() : "--";
+        document.getElementById('date-info').style.display = 'block';
     } else {
-        const now = new Date(); const rel = new Date(); rel.setDate(now.getDate() + 30);
-        document.getElementById('pop-dep').innerText = now.toLocaleDateString('en-US', {month:'short', day:'2-digit'});
-        document.getElementById('pop-rel').innerText = rel.toLocaleDateString('en-US', {month:'short', day:'2-digit'});
         document.getElementById('v-agent-input').value = "";
         document.getElementById('expenses-input').value = "PHP 0.00";
+        document.getElementById('date-info').style.display = 'none';
     }
     document.getElementById('modal-overlay').style.display = 'flex';
   };
@@ -337,38 +247,57 @@
   window.closePopup = () => document.getElementById('modal-overlay').style.display = 'none';
 
   window.submitMission = async () => {
-    const vId = document.getElementById('v-agent-input').value;
+    const vId = document.getElementById('v-agent-input').value.trim();
     const exp = document.getElementById('expenses-input').value;
-    if(!vId) return alert("V_AGENT_NO REQUIRED");
-    if(selectedDevice === "N/A") return alert("HARDWARE NOT IDENTIFIED");
-    
+    const confirmBtn = document.getElementById('uplink-confirm-btn');
+    const popBox = document.getElementById('popup-box');
+
+    if(!vId) return alert("V_AGENT_ID REQUIRED");
+
+    // --- DUPLICATE VAGENT CHECK (Locked to specific Weapon System) ---
+    if (!isRetrieveMode) {
+        const dupQ = query(
+            collection(db, "mission_orders"), 
+            where("weaponSystem", "==", selectedDevice),
+            where("vAgentID", "==", vId)
+        );
+        const dupSnap = await getDocs(dupQ);
+        if (!dupSnap.empty) {
+            popBox.classList.add('error-shake');
+            setTimeout(() => popBox.classList.remove('error-shake'), 400);
+            await log(`DUPLICATE_V_AGENT_${vId}_ON_THIS_DEVICE`, 'var(--red)');
+            return; 
+        }
+    }
+
     try {
-        await log(`SYNCING TO DB...`, 'var(--cyan)');
+        confirmBtn.classList.add('uplinking');
         await setDoc(doc(db, "mission_orders", input.value), {
             missionID: input.value,
             agentName: currentAgent,
             vAgentID: vId,
-            weaponSystem: selectedDevice, // Ginagamit ang auto-detected signature
+            weaponSystem: selectedDevice,
             expenses: exp,
             deploymentDate: serverTimestamp(),
-            relieveDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+            relieveDate: Date.now() + (30 * 24 * 60 * 60 * 1000),
             status: "ACTIVE"
         }, { merge: true });
         
         document.getElementById('modal-overlay').style.display = 'none';
         document.getElementById('success-screen').style.display = 'flex';
-    } catch (e) { await log("UPLOAD_FAIL", "red"); }
+        await log(`UPLINK_SUCCESS: MISSION_${input.value}`, 'var(--green)');
+    } catch (e) { 
+        confirmBtn.classList.remove('uplinking');
+        alert("CONNECTION_LOST"); 
+    }
   };
 
   reserveBtn.onclick = async () => {
-    if (input.value.length < 4 || reserveBtn.disabled) return;
+    if (input.value.length < 4) return;
     try {
         await setDoc(doc(db, "mission_orders", input.value), {
-            missionID: input.value, 
-            agentName: currentAgent,
-            vAgentID: "RESERVED", weaponSystem: selectedDevice, status: "RESERVED",
-            deploymentDate: serverTimestamp(), 
-            relieveDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+            missionID: input.value, agentName: currentAgent, vAgentID: "RESERVED",
+            weaponSystem: selectedDevice, status: "RESERVED", deploymentDate: serverTimestamp()
         }, { merge: true });
         document.getElementById('success-msg').innerText = "ID_RESERVED";
         document.getElementById('success-screen').style.display = 'flex';

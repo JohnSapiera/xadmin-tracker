@@ -65,7 +65,6 @@
     .btn-save { background: var(--green); color: #01080a; }
     .btn-retrieve { background: var(--blue); color: #fff; }
     .btn-reserve { background: transparent; color: #fff; border: 1px solid #fff; opacity: 0.8; }
-    .btn-abort { background: var(--red); color: #fff; }
     .btn-faded { opacity: 0.2 !important; pointer-events: none; }
 
     #terminal { 
@@ -128,7 +127,7 @@
     <div style="display:flex; gap:15px">
         <span id="clock">00:00:00</span>
         <span style="color:var(--border)">|</span>
-        <span>DEVICE: <span id="sync-device-name" style="color:#fff">NOT_SELECTED</span></span>
+        <span>DEVICE: <span id="sync-device-name" style="color:#fff">IDENTIFYING...</span></span>
     </div>
     <span>UPLINK: <span style="color:var(--green)">SYNC_ACTIVE</span></span>
 </div>
@@ -164,8 +163,9 @@
             <div class="data-row"><span class="data-label">RELIEVE:</span> <span id="pop-rel" style="color:#fff">--/--</span></div>
         </div>
 
-        <div class="data-label" style="margin-bottom:5px">Weapon System Selection:</div>
-        <div class="device-grid" id="device-list"></div>
+        <div class="data-label" style="margin-bottom:5px">Weapon System (Locked):</div>
+        <div class="device-grid" id="device-list">
+            </div>
         
         <div class="pop-btn-row">
             <button onclick="submitMission()" class="tactical-btn btn-confirm">UPLINK</button>
@@ -193,7 +193,6 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  // --- INTERNAL WEAPON MAPPING ---
   const weaponMap = {
     "SIG-3A14D65A": "REDMI NOTE 14 PRO 5G",
     "SIG-5B0D3A5C": "REALME 8 PRO",
@@ -203,13 +202,10 @@
     "SIG-V001122": "VIVO V30"
   };
 
-  // Dinamikong pagkuha ng kasalukuyang Agent mula sa Login (index.html)
   const currentAgent = localStorage.getItem("cia_agent") || "AUTHORIZED_AGENT";
-
   const getWeaponName = (sigID) => {
-    if (!sigID || sigID === "N/A" || sigID === "RESERVED") return "NOT_SELECTED";
-    const cleanID = String(sigID).trim().toUpperCase(); 
-    return weaponMap[cleanID] || cleanID; 
+    if (!sigID || sigID === "N/A") return "NOT_SELECTED";
+    return weaponMap[sigID] || sigID;
   };
 
   const input = document.getElementById('mission-input');
@@ -218,9 +214,41 @@
   const termLog = document.getElementById('terminal');
   const syncDisplay = document.getElementById('sync-device-name');
   
-  let selectedDevice = "N/A";
+  let selectedDevice = "N/A"; // I-store ang detected device signature
   let isRetrieveMode = false;
   let sourceCollection = "mission_orders";
+
+  // --- DEVICE TRACER LOGIC (AUTOMATIC ON LOAD) ---
+  async function traceDevice() {
+      // Kunin ang signature na ginamit sa index.html
+      const localSig = localStorage.getItem("device_signature");
+      
+      if (!localSig) {
+          syncDisplay.innerText = "NO_SIGNATURE_FOUND";
+          return;
+      }
+
+      try {
+          // I-check sa DB kung ang signature ay naka-link sa Agent
+          const q = query(collection(db, "agents"), where("agentName", "==", currentAgent));
+          const snap = await getDocs(q);
+
+          if (!snap.empty) {
+              const sigs = snap.docs[0].data().linkedSignatures || [];
+              const sigArray = Array.isArray(sigs) ? sigs : [sigs];
+
+              if (sigArray.includes(localSig)) {
+                  selectedDevice = localSig;
+                  syncDisplay.innerText = getWeaponName(localSig);
+                  await log(`DEVICE_MATCH: ${getWeaponName(localSig)}`, 'var(--green)');
+              } else {
+                  syncDisplay.innerText = "UNAUTHORIZED_HW";
+                  await log(`HW_MISMATCH_DETECTED`, 'var(--red)');
+              }
+          }
+      } catch (e) { console.error(e); }
+  }
+  traceDevice();
 
   const log = async (msg, color = "#5c7882") => {
     try {
@@ -231,7 +259,7 @@
             agent: currentAgent,
             targetID: input.value || "SYSTEM"
         });
-    } catch (e) { console.error("SYNC_FAIL", e); }
+    } catch (e) {}
   };
 
   const initTerminal = () => {
@@ -240,7 +268,7 @@
         termLog.innerHTML = "";
         snapshot.forEach((doc) => {
             const data = doc.data();
-            const timeStr = data.timestamp ? data.timestamp.toDate().toLocaleTimeString('en-GB') : "SYNCING";
+            const timeStr = data.timestamp ? data.timestamp.toDate().toLocaleTimeString('en-GB') : "SYNC";
             const d = document.createElement('div');
             d.innerHTML = `<span style="opacity:0.4">${timeStr}</span> > <span style="color:${data.color}">${data.message}</span>`;
             termLog.appendChild(d);
@@ -249,18 +277,13 @@
   };
   initTerminal();
 
-  const formatMonthDay = (date) => {
-    return date.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
-  };
-
   input.addEventListener('input', async () => {
     const val = input.value.trim();
     isRetrieveMode = false;
-    actionBtn.className = "btn btn-save"; actionBtn.textContent = "SAVE"; actionBtn.disabled = false;
+    actionBtn.className = "btn btn-save"; actionBtn.textContent = "SAVE";
     reserveBtn.disabled = false; reserveBtn.classList.remove('btn-faded');
 
     if (val.length >= 4) {
-        await log(`SCANNING DATABASE: [${val}]`, 'var(--cyan)');
         try {
             const qOrders = query(collection(db, "mission_orders"), where("missionID", "==", val));
             const qBlack = query(collection(db, "blacklist"), where("targetID", "==", val));
@@ -270,49 +293,27 @@
                 isRetrieveMode = true;
                 reserveBtn.disabled = true; reserveBtn.classList.add('btn-faded');
                 actionBtn.className = "btn btn-retrieve"; actionBtn.textContent = "RETRIEVE";
-                const data = !snapOrders.empty ? snapOrders.docs[0].data() : snapBlack.docs[0].data();
                 
-                // Ipakita agad ang Device Name pag retrieve
-                syncDisplay.innerText = getWeaponName(data.weaponSystem || "N/A");
-
                 if (!snapBlack.empty) { sourceCollection = "blacklist"; await log(`ALERT: BLACKLIST`, 'var(--red)'); }
                 else { sourceCollection = "mission_orders"; await log(`RECORD FOUND`, 'var(--green)'); }
-            } else {
-                syncDisplay.innerText = "NOT_SELECTED";
-                await log(`STATUS: CLEAR`, 'var(--green)');
             }
-        } catch (e) { await log("DB_ERROR", "red"); }
+        } catch (e) {}
     }
   });
 
   actionBtn.onclick = async () => {
-    if (input.value.length < 4 || actionBtn.disabled) return;
+    if (input.value.length < 4) return;
     
     document.getElementById('pop-agent').innerText = currentAgent;
     document.getElementById('pop-m-id').innerText = `#${input.value}`;
 
+    // Ipakita lang ang Detected Device sa Popup (Locked)
     const devGrid = document.getElementById('device-list');
     devGrid.innerHTML = "";
-    try {
-        const q = query(collection(db, "agents"), where("agentName", "==", currentAgent));
-        const snap = await getDocs(q);
-        if (!snap.empty) {
-            let sigs = snap.docs[0].data().linkedSignatures || [];
-            if (typeof sigs === 'string') sigs = [sigs]; 
-
-            sigs.forEach(dev => {
-                const b = document.createElement('button');
-                b.className = `dev-btn`;
-                b.innerText = getWeaponName(dev); 
-                b.onclick = () => { 
-                    document.querySelectorAll('.dev-btn').forEach(x => x.classList.remove('active')); 
-                    b.classList.add('active'); 
-                    selectedDevice = dev; 
-                };
-                devGrid.appendChild(b);
-            });
-        }
-    } catch(e) { await log("FETCH_FAIL", "var(--red)"); }
+    const b = document.createElement('button');
+    b.className = `dev-btn active`;
+    b.innerText = getWeaponName(selectedDevice);
+    devGrid.appendChild(b);
 
     if (isRetrieveMode) {
         const idField = sourceCollection === "mission_orders" ? "missionID" : "targetID";
@@ -321,12 +322,12 @@
         const data = snap.docs[0].data();
         document.getElementById('v-agent-input').value = data.vAgentID === "RESERVED" ? "" : (data.vAgentID || "");
         document.getElementById('expenses-input').value = data.expenses || "PHP 0.00";
-        document.getElementById('pop-dep').innerText = data.deploymentDate ? formatMonthDay(data.deploymentDate.toDate()) : "--/--";
-        document.getElementById('pop-rel').innerText = data.relieveDate ? formatMonthDay(data.relieveDate.toDate()) : "--/--";
+        document.getElementById('pop-dep').innerText = data.deploymentDate ? data.deploymentDate.toDate().toLocaleDateString('en-US', {month:'short', day:'2-digit'}) : "--/--";
+        document.getElementById('pop-rel').innerText = data.relieveDate ? data.relieveDate.toDate().toLocaleDateString('en-US', {month:'short', day:'2-digit'}) : "--/--";
     } else {
         const now = new Date(); const rel = new Date(); rel.setDate(now.getDate() + 30);
-        document.getElementById('pop-dep').innerText = formatMonthDay(now);
-        document.getElementById('pop-rel').innerText = formatMonthDay(rel);
+        document.getElementById('pop-dep').innerText = now.toLocaleDateString('en-US', {month:'short', day:'2-digit'});
+        document.getElementById('pop-rel').innerText = rel.toLocaleDateString('en-US', {month:'short', day:'2-digit'});
         document.getElementById('v-agent-input').value = "";
         document.getElementById('expenses-input').value = "PHP 0.00";
     }
@@ -339,15 +340,15 @@
     const vId = document.getElementById('v-agent-input').value;
     const exp = document.getElementById('expenses-input').value;
     if(!vId) return alert("V_AGENT_NO REQUIRED");
-    if(selectedDevice === "N/A") return alert("SELECT WEAPON SYSTEM");
+    if(selectedDevice === "N/A") return alert("HARDWARE NOT IDENTIFIED");
     
     try {
-        await log(`UPLOADING...`, 'var(--cyan)');
+        await log(`SYNCING TO DB...`, 'var(--cyan)');
         await setDoc(doc(db, "mission_orders", input.value), {
             missionID: input.value,
             agentName: currentAgent,
             vAgentID: vId,
-            weaponSystem: selectedDevice,
+            weaponSystem: selectedDevice, // Ginagamit ang auto-detected signature
             expenses: exp,
             deploymentDate: serverTimestamp(),
             relieveDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
@@ -362,17 +363,16 @@
   reserveBtn.onclick = async () => {
     if (input.value.length < 4 || reserveBtn.disabled) return;
     try {
-        await log(`RESERVING...`, 'var(--blue)');
         await setDoc(doc(db, "mission_orders", input.value), {
             missionID: input.value, 
             agentName: currentAgent,
-            vAgentID: "RESERVED", weaponSystem: "N/A", status: "RESERVED",
+            vAgentID: "RESERVED", weaponSystem: selectedDevice, status: "RESERVED",
             deploymentDate: serverTimestamp(), 
             relieveDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
         }, { merge: true });
         document.getElementById('success-msg').innerText = "ID_RESERVED";
         document.getElementById('success-screen').style.display = 'flex';
-    } catch (e) { await log("RESERVE_FAIL", "red"); }
+    } catch (e) {}
   };
 
   setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB'); }, 1000);

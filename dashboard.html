@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>CORE_DASH_v23.0_FINAL</title>
+  <title>CORE_DASH_v24.0_CLASSIFIED</title>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root { 
@@ -76,6 +76,11 @@
     .btn-confirm { background: var(--green); color: #000; }
     .btn-abort { background: transparent; color: var(--red); border: 1px solid var(--red); }
 
+    /* CIA DESIGN SUCCESS ELEMENTS */
+    .cia-scanner { width: 120px; height: 120px; border: 2px solid var(--green); border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; margin-bottom: 30px; }
+    .cia-scanner::before { content: ""; position: absolute; width: 100%; height: 2px; background: var(--green); animation: scan-line 2s linear infinite; }
+    @keyframes scan-line { 0% { top: 0%; } 100% { top: 100%; } }
+
     nav { position: fixed; bottom: 0; width: 100%; height: 75px; background: #000; border-top: 2px solid var(--cyan); display: grid; grid-template-columns: 1fr 1fr; z-index: 90; }
     .nav-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #4a5a61; font-size: 11px; text-decoration: none; font-family: var(--font-mono); }
     .nav-btn.active { color: var(--cyan); background: var(--cyan-dim); font-weight: bold; }
@@ -122,7 +127,7 @@
                 <span class="data-label">V_AGENT_NO:</span> 
                 <input type="text" id="v-agent-input" class="pop-input" placeholder="0000">
             </div>
-            <div class="data-row">
+            <div class="data-row" style="display:none">
                 <span class="data-label">EXPENSES:</span> 
                 <input type="text" id="expenses-input" class="pop-input" value="PHP 0.00">
             </div>
@@ -143,10 +148,13 @@
     </div>
 </div>
 
-<div class="overlay" id="success-screen" style="flex-direction: column; background: var(--bg); z-index: 9999;">
-    <div style="font-size: 60px; color: var(--green); margin-bottom: 10px;">⚡</div>
-    <div style="color:#fff; font-size:20px; font-weight:700; letter-spacing:4px;" id="success-msg">DATABASE_UPDATED</div>
-    <button onclick="location.reload()" class="btn btn-save" style="margin-top: 50px; width: 220px;">CONTINUE</button>
+<div class="overlay" id="success-screen" style="flex-direction: column; background: #01080a; z-index: 9999;">
+    <div class="cia-scanner">
+        <div style="font-size: 14px; font-weight: 700; color: var(--green); letter-spacing: 2px;">CLEARED</div>
+    </div>
+    <div style="color:var(--green); font-size:22px; font-weight:700; letter-spacing:6px; text-shadow: 0 0 10px var(--green);">UPLINK_SUCCESS</div>
+    <div style="color:#5c7882; font-size:10px; margin-top:10px; font-family:var(--font-mono)">INTEL_LOGS_UPDATED // ENCRYPTED_SYNC</div>
+    <button onclick="location.reload()" class="btn btn-save" style="margin-top: 50px; width: 220px; background: transparent; border: 1px solid var(--green); color: var(--green);">ACKNOWLEDGE</button>
 </div>
 
 <nav>
@@ -179,7 +187,6 @@
   const reserveBtn = document.getElementById('reserve-btn');
   const syncDisplay = document.getElementById('sync-device-name');
 
-  // --- LOGIC: LOAD DEVICES BY AGENT NAME ---
   async function loadAgentDevices() {
       syncDisplay.innerText = weaponMap[currentDeviceSig] || "IDENTIFYING...";
       try {
@@ -189,7 +196,7 @@
               const data = snap.docs[0].data();
               authorizedDevices = Array.isArray(data.linkedSignatures) ? data.linkedSignatures : [data.linkedSignatures];
           } else {
-              authorizedDevices = [currentDeviceSig]; // Fallback sa current
+              authorizedDevices = [currentDeviceSig];
           }
       } catch (e) { console.error(e); }
   }
@@ -214,7 +221,6 @@
   };
   initTerminal();
 
-  // --- LOGIC: LIVE SEARCH TERMINAL & MODE SWITCH ---
   input.addEventListener('input', async () => {
     const val = input.value.trim();
     if (val.length < 4) {
@@ -268,8 +274,12 @@
         const data = snap.docs[0].data();
         document.getElementById('v-agent-input').value = data.vAgentID;
         document.getElementById('expenses-input').value = data.expenses || "PHP 0.00";
-        document.getElementById('pop-dep').innerText = data.deploymentDate?.toDate().toLocaleDateString() || "--";
-        document.getElementById('pop-rel').innerText = data.relieveDate ? new Date(data.relieveDate).toLocaleDateString() : "--";
+        document.getElementById('pop-dep').innerText = data.deploymentDate?.toDate().toLocaleDateString('en-US') || "--";
+        
+        // DATE FORMATTING FIX
+        const rDate = data.relieveDate;
+        document.getElementById('pop-rel').innerText = rDate || "--/--/----";
+        
         document.getElementById('date-info').style.display = 'block';
         selectedDeviceForSave = data.weaponSystem || currentDeviceSig;
         renderDeviceButtons();
@@ -293,7 +303,6 @@
 
     if(!vId) return alert("V_AGENT_ID REQUIRED");
 
-    // --- DUPLICATE CHECK PER SELECTED DEVICE ---
     const dupQ = query(collection(db, "mission_orders"), where("weaponSystem", "==", selectedDeviceForSave), where("vAgentID", "==", vId));
     const dupSnap = await getDocs(dupQ);
     
@@ -304,6 +313,11 @@
         return;
     }
 
+    // --- RELIEVE DATE LOGIC: CURRENT + 30 DAYS (FORMATTED MM/DD/YYYY) ---
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + 30);
+    const formattedRelieveDate = futureDate.toLocaleDateString('en-US'); 
+
     try {
         confirmBtn.classList.add('uplinking');
         await setDoc(doc(db, "mission_orders", input.value), {
@@ -313,7 +327,7 @@
             weaponSystem: selectedDeviceForSave,
             expenses: exp,
             deploymentDate: serverTimestamp(),
-            relieveDate: Date.now() + (30 * 24 * 60 * 60 * 1000),
+            relieveDate: formattedRelieveDate, // Sinasave na as string para readable sa DB
             status: "ACTIVE"
         }, { merge: true });
         

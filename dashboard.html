@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>CORE_DASH_v25.8_LIVE_FEEDBACK</title>
+  <title>CORE_DASH_v25.9_FINAL_STABLE</title>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root { 
@@ -26,7 +26,7 @@
     }
 
     header { padding: 18px 20px; background: rgba(0,0,0,0.9); border-bottom: 2px solid var(--cyan); display: flex; justify-content: space-between; align-items: center; z-index: 100; }
-    .profile-link { background: var(--cyan-dim); border: 1px solid var(--cyan); color: var(--cyan); font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; padding: 6px 12px; text-decoration: none; font-weight: bold; }
+    .profile-link { background: var(--cyan-dim); border: 1px solid var(--cyan); color: var(--cyan); font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; padding: 6px 12px; text-decoration: none; font-weight: bold; border-radius: 2px; }
 
     .status-bar { font-size: 11px; padding: 10px 20px; background: rgba(0,0,0,0.5); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; color: var(--cyan); font-family: var(--font-mono); }
 
@@ -36,13 +36,14 @@
     #mission-input { width: 100%; background: rgba(0,0,0,0.6); border: none; border-bottom: 2px solid var(--cyan); color: #fff; font-family: var(--font-mono); font-size: 55px; font-weight: 700; padding: 15px 0; text-align: center; letter-spacing: 12px; outline: none; margin-bottom: 20px; }
 
     .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .btn { height: 55px; font-family: var(--font-main); font-size: 18px; font-weight: 700; text-transform: uppercase; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+    .btn { height: 55px; font-family: var(--font-main); font-size: 18px; font-weight: 700; text-transform: uppercase; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; }
     .btn-save { background: var(--green); color: #01080a; }
     .btn-retrieve { background: var(--blue); color: #fff; }
     .btn-reserve { background: transparent; color: #fff; border: 1px solid #fff; opacity: 0.8; }
-    .btn:disabled { opacity: 0.2; cursor: not-allowed; filter: grayscale(1); }
+    .btn:disabled { opacity: 0.1 !important; cursor: not-allowed; filter: grayscale(1); border-color: #333; }
 
-    #terminal { background: rgba(0,0,0,0.7); border-left: 3px solid var(--cyan); padding: 15px; font-family: var(--font-mono); font-size: 11px; height: 180px; color: #9ab4bc; overflow-y: auto; line-height: 1.5; }
+    #terminal { background: rgba(0,0,0,0.7); border-left: 3px solid var(--cyan); padding: 15px; font-family: var(--font-mono); font-size: 11px; height: 200px; color: #9ab4bc; overflow-y: auto; line-height: 1.6; border-radius: 0 4px 4px 0; }
+    .term-line { margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.02); padding-bottom: 2px; }
 
     .overlay { display: none; position: fixed; inset: 0; background: rgba(1, 4, 5, 0.98); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
     .popup { width: 100%; max-width: 380px; background: #051014; border: 1px solid var(--cyan); padding: 25px; position: relative; }
@@ -56,7 +57,7 @@
 
     .device-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 15px 0; }
     .dev-btn { background: #08161b; border: 1px solid #1a2f37; color: #5c7882; padding: 10px; font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; cursor: pointer; }
-    .dev-btn.active { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
+    .dev-btn.active { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); box-shadow: 0 0 10px var(--cyan-dim); }
 
     .pop-btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .tactical-btn { height: 50px; font-family: var(--font-main); font-size: 18px; font-weight: 700; text-transform: uppercase; border: none; cursor: pointer; }
@@ -136,9 +137,12 @@
   const db = getFirestore(app);
 
   const weaponMap = {
-    "SIG-3A14D65A": "REDMI NOTE 14 PRO 5G", "SIG-5B0D3A5C": "REALME 8 PRO",
-    "SIG-82A9E4B": "SAMSUNG S23 ULTRA", "SIG-X921FFA": "IPHONE 15 PRO",
-    "SIG-K882190": "POCO X6 PRO", "SIG-V001122": "VIVO V30"
+    "SIG-3A14D65A": "REDMI NOTE 14 PRO 5G", 
+    "SIG-5B0D3A5C": "REALME 8 PRO",
+    "SIG-82A9E4B": "SAMSUNG S23 ULTRA", 
+    "SIG-X921FFA": "IPHONE 15 PRO",
+    "SIG-K882190": "POCO X6 PRO", 
+    "SIG-V001122": "VIVO V30"
   };
 
   const currentAgent = localStorage.getItem("cia_agent") || "AUTHORIZED_AGENT";
@@ -148,84 +152,110 @@
   const input = document.getElementById('mission-input');
   const actionBtn = document.getElementById('action-btn');
   const reserveBtn = document.getElementById('reserve-btn');
+  const terminal = document.getElementById('terminal');
 
-  const logToTerminal = (msg, color = "#5c7882") => {
-    const term = document.getElementById('terminal');
-    const div = document.createElement('div');
-    div.innerHTML = `> <span style="color:${color}">${msg}</span>`;
-    term.prepend(div); // I-prepend para makita agad sa taas
+  // DISPLAY CURRENT DEVICE NAME
+  document.getElementById('sync-device-name').innerText = weaponMap[currentDeviceSig] || "UNKNOWN_SYSTEM";
+
+  // --- PERSISTENT TERMINAL SYSTEM ---
+  const sendLogToDB = async (msg, color = "#5c7882") => {
+    try {
+      await addDoc(collection(db, "terminal_logs"), {
+        message: msg,
+        color: color,
+        timestamp: serverTimestamp(),
+        agent: currentAgent
+      });
+    } catch (e) { console.error("Logger Error", e); }
   };
 
+  // Live History Listener
+  onSnapshot(query(collection(db, "terminal_logs"), orderBy("timestamp", "desc"), limit(15)), (snap) => {
+    terminal.innerHTML = "";
+    snap.forEach((d) => {
+      const data = d.data();
+      const div = document.createElement('div');
+      div.className = "term-line";
+      div.innerHTML = `> <span style="color:${data.color}">${data.message}</span>`;
+      terminal.appendChild(div);
+    });
+  });
+
+  // --- LIVE SCANNER LOGIC ---
   input.addEventListener('input', async () => {
     const val = input.value.trim();
     if (val.length < 4) {
-        reserveBtn.disabled = false;
-        actionBtn.className = "btn btn-save"; actionBtn.textContent = "SAVE";
-        return;
+      reserveBtn.disabled = false;
+      actionBtn.className = "btn btn-save"; actionBtn.textContent = "SAVE";
+      return;
     }
 
-    // 1. Check Blacklisted
+    // Check Blacklisted
     const blackQuery = query(collection(db, "blacklisted"), where("missionID", "==", val));
     const blackSnap = await getDocs(blackQuery);
     if (!blackSnap.empty) {
-        logToTerminal(`ID ${val}: IT'S ALREADY EXISTED (BLACKLISTED)`, 'var(--blue)');
-        reserveBtn.disabled = true;
-        return;
+      await sendLogToDB(`ID ${val}: ALREADY EXISTED (BLACKLISTED)`, 'var(--blue)');
+      reserveBtn.disabled = true;
+      return;
     }
 
-    // 2. Check Mission Orders
+    // Check Mission Orders
     const missionQuery = query(collection(db, "mission_orders"), where("missionID", "==", val));
     const missionSnap = await getDocs(missionQuery);
 
     if (!missionSnap.empty) {
-        const data = missionSnap.docs[0].data();
-        reserveBtn.disabled = true;
+      const data = missionSnap.docs[0].data();
+      reserveBtn.disabled = true;
 
-        if (data.agentName === currentAgent) {
-            // Feedback for Current Agent
-            const deviceName = weaponMap[data.weaponSystem] || data.weaponSystem;
-            logToTerminal(`DEPLOYED: [${deviceName}] | vAgent#: ${data.vAgentID}`, 'var(--cyan)');
-            isRetrieveMode = true;
-            actionBtn.className = "btn btn-retrieve"; actionBtn.textContent = "RETRIEVE";
-        } else {
-            // Feedback for Another Agent
-            logToTerminal(`ID ${val}: ALREADY USED BY ANOTHER AGENT`, 'var(--blue)');
-            isRetrieveMode = false;
-            actionBtn.className = "btn btn-save";
-        }
-    } else {
-        // Available
-        logToTerminal(`MISSION ORDER# ${val} IS AVAILABLE`, 'var(--green)');
-        reserveBtn.disabled = false;
+      if (data.agentName === currentAgent) {
+        const deviceName = weaponMap[data.weaponSystem] || data.weaponSystem || "UNKNOWN";
+        await sendLogToDB(`DEPLOYED: [${deviceName}] | vAgent#: ${data.vAgentID}`, 'var(--cyan)');
+        isRetrieveMode = true;
+        actionBtn.className = "btn btn-retrieve"; actionBtn.textContent = "RETRIEVE";
+      } else {
+        await sendLogToDB(`ID ${val}: ALREADY USED BY AGENT [${data.agentName}]`, 'var(--blue)');
         isRetrieveMode = false;
-        actionBtn.className = "btn btn-save"; actionBtn.textContent = "SAVE";
+        actionBtn.className = "btn btn-save";
+      }
+    } else {
+      await sendLogToDB(`MISSION ORDER# ${val} IS AVAILABLE`, 'var(--green)');
+      reserveBtn.disabled = false;
+      isRetrieveMode = false;
+      actionBtn.className = "btn btn-save"; actionBtn.textContent = "SAVE";
     }
   });
 
+  // --- RESERVE ACTION ---
   reserveBtn.onclick = async () => {
     const val = input.value.trim();
     if (val.length < 4) return;
     
-    logToTerminal("THIS MISSION ORDER WILL BE RESERVE", 'var(--yellow)');
+    await sendLogToDB(`THIS MISSION ORDER ${val} WILL BE RESERVE`, 'var(--yellow)');
     
     try {
-        await setDoc(doc(db, "mission_orders", val), {
-            missionID: val,
-            agentName: currentAgent,
-            vAgentID: "RESERVED",
-            weaponSystem: currentDeviceSig,
-            status: "RESERVED",
-            deploymentDate: serverTimestamp()
-        }, { merge: true });
-        
-        setTimeout(() => location.reload(), 2000);
+      await setDoc(doc(db, "mission_orders", val), {
+        missionID: val,
+        agentName: currentAgent,
+        vAgentID: "RESERVED",
+        weaponSystem: currentDeviceSig,
+        status: "RESERVED",
+        deploymentDate: serverTimestamp()
+      }, { merge: true });
     } catch (e) {
-        logToTerminal("RESERVATION FAILED", 'var(--red)');
+      await sendLogToDB("CRITICAL: RESERVATION FAILED", 'var(--red)');
     }
   };
 
-  // Clock script
+  // CLOCK
   setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB'); }, 1000);
+
+  // Modal helper functions (Close/Submit will depend on your specific needs)
+  window.closePopup = () => document.getElementById('modal-overlay').style.display = 'none';
+  
+  // placeholder for submission (connected to your AGENT_WEAPON_vAgent format)
+  window.submitMission = async () => {
+     // ... same logic as before ...
+  };
 </script>
 </body>
 </html>

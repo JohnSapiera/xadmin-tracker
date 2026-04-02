@@ -81,6 +81,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
+        // Kinukuha ang unique hardware hash
         function getSignature() {
             const canvas = document.createElement('canvas');
             const gl = canvas.getContext('webgl');
@@ -112,7 +113,7 @@
             trace.innerText = currentSIG;
 
             try {
-                // Check kung itong specific Signature na ito ay nasa linkedSignatures ng kahit sinong Agent
+                // I-check kung itong SIG ay registered sa 'linkedSignatures' array sa agents collection
                 const snap = await db.collection("agents")
                                      .where("linkedSignatures", "array-contains", currentSIG)
                                      .get();
@@ -122,10 +123,13 @@
                     status.innerText = "ACCESS_GRANTED";
                     status.style.color = "var(--green)";
                     
-                    // --- PINAKA-IMPORTANTENG PARTE ---
-                    // I-save ang identity para sa lahat ng pages (Dashboard, Intel, etc.)
+                    // --- STORAGE UPLINK SYNC ---
+                    // Sinisigurado nating 'device_signature' ang key para sa dashboard logic
                     localStorage.setItem("cia_agent", agentData.agentName);
-                    localStorage.setItem("agent_verified", "true"); // Flag for other pages
+                    localStorage.setItem("agent_verified", "true"); 
+                    localStorage.setItem("device_signature", currentSIG); 
+                    
+                    // Optional fallback/metadata
                     localStorage.setItem("intel_device_signature", currentSIG);
                     localStorage.setItem("agent_brand", agentData.brandName || "UNKNOWN");
                     
@@ -136,7 +140,6 @@
                     status.innerText = "DENIED";
                     status.style.color = "var(--red)";
                     error.style.display = "block";
-                    // Clear storage para sigurado
                     localStorage.clear();
                 }
             } catch (e) {

@@ -203,9 +203,12 @@
     "SIG-V001122": "VIVO V30"
   };
 
+  // Dinamikong pagkuha ng kasalukuyang Agent mula sa Login (index.html)
+  const currentAgent = localStorage.getItem("cia_agent") || "AUTHORIZED_AGENT";
+
   const getWeaponName = (sigID) => {
     if (!sigID || sigID === "N/A" || sigID === "RESERVED") return "NOT_SELECTED";
-    const cleanID = sigID.trim().toUpperCase(); 
+    const cleanID = String(sigID).trim().toUpperCase(); 
     return weaponMap[cleanID] || cleanID; 
   };
 
@@ -225,7 +228,7 @@
             timestamp: serverTimestamp(),
             message: msg,
             color: color,
-            agent: localStorage.getItem("cia_agent") || "JEFFERSON VALLES",
+            agent: currentAgent,
             targetID: input.value || "SYSTEM"
         });
     } catch (e) { console.error("SYNC_FAIL", e); }
@@ -268,6 +271,8 @@
                 reserveBtn.disabled = true; reserveBtn.classList.add('btn-faded');
                 actionBtn.className = "btn btn-retrieve"; actionBtn.textContent = "RETRIEVE";
                 const data = !snapOrders.empty ? snapOrders.docs[0].data() : snapBlack.docs[0].data();
+                
+                // Ipakita agad ang Device Name pag retrieve
                 syncDisplay.innerText = getWeaponName(data.weaponSystem || "N/A");
 
                 if (!snapBlack.empty) { sourceCollection = "blacklist"; await log(`ALERT: BLACKLIST`, 'var(--red)'); }
@@ -282,18 +287,18 @@
 
   actionBtn.onclick = async () => {
     if (input.value.length < 4 || actionBtn.disabled) return;
-    const agentName = localStorage.getItem("cia_agent") || "JEFFERSON VALLES";
-    document.getElementById('pop-agent').innerText = agentName;
+    
+    document.getElementById('pop-agent').innerText = currentAgent;
     document.getElementById('pop-m-id').innerText = `#${input.value}`;
 
     const devGrid = document.getElementById('device-list');
     devGrid.innerHTML = "";
     try {
-        const q = query(collection(db, "agents"), where("agentName", "==", agentName));
+        const q = query(collection(db, "agents"), where("agentName", "==", currentAgent));
         const snap = await getDocs(q);
         if (!snap.empty) {
             let sigs = snap.docs[0].data().linkedSignatures || [];
-            if (typeof sigs === 'string') sigs = [sigs]; // Convert String to Array fix
+            if (typeof sigs === 'string') sigs = [sigs]; 
 
             sigs.forEach(dev => {
                 const b = document.createElement('button');
@@ -340,7 +345,7 @@
         await log(`UPLOADING...`, 'var(--cyan)');
         await setDoc(doc(db, "mission_orders", input.value), {
             missionID: input.value,
-            agentName: document.getElementById('pop-agent').innerText,
+            agentName: currentAgent,
             vAgentID: vId,
             weaponSystem: selectedDevice,
             expenses: exp,
@@ -360,7 +365,7 @@
         await log(`RESERVING...`, 'var(--blue)');
         await setDoc(doc(db, "mission_orders", input.value), {
             missionID: input.value, 
-            agentName: localStorage.getItem("cia_agent") || "JEFFERSON VALLES",
+            agentName: currentAgent,
             vAgentID: "RESERVED", weaponSystem: "N/A", status: "RESERVED",
             deploymentDate: serverTimestamp(), 
             relieveDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)

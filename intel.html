@@ -23,7 +23,6 @@
             height: 100vh; overflow: hidden; display: flex; flex-direction: column;
         }
 
-        /* DIGITAL GRID BACKGROUND */
         body::before {
             content: ""; position: fixed; inset: 0;
             background-image: 
@@ -46,7 +45,6 @@
 
         .agent-name { font-size: 42px; font-weight: 700; text-transform: uppercase; margin: 10px 0; letter-spacing: 2px; color: #fff; }
 
-        /* TACTICAL BUTTON */
         .report-btn { 
             margin-top: 30px; background: none; border: 1px solid var(--cia-cyan); 
             color: var(--cia-cyan); width: 220px; height: 55px; font-family: var(--font-mono); 
@@ -57,7 +55,6 @@
         .report-btn:hover::after { left: 100%; }
         .report-btn:active { background: var(--cia-cyan-dim); transform: translateY(2px); }
 
-        /* REMASTERED TACTICAL POPUP (GLASSMORPHISM) */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0, 5, 10, 0.85); backdrop-filter: blur(8px); z-index: 1000; }
         
         .modal-box { 
@@ -67,7 +64,6 @@
             box-shadow: 0 0 40px rgba(0, 243, 255, 0.15);
         }
 
-        /* Decorative HUD elements in popup */
         .modal-box::after { content: ""; position: absolute; bottom: 0; right: 0; width: 40px; height: 40px; border-right: 3px solid var(--cia-cyan); border-bottom: 3px solid var(--cia-cyan); }
         .modal-box::before { content: ""; position: absolute; top: 0; left: 0; width: 40px; height: 40px; border-left: 3px solid var(--cia-cyan); border-top: 3px solid var(--cia-cyan); }
 
@@ -86,7 +82,6 @@
         }
         .intel-input:focus { border-color: var(--cia-cyan); background: rgba(0, 243, 255, 0.1); }
 
-        /* WEAPON GRID (CYBER STYLE) */
         .weapon-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
         .weapon-grid.single-mode { grid-template-columns: 1fr; }
 
@@ -110,7 +105,6 @@
         .abort-link { width: 100%; background: transparent; color: var(--cia-red); border: none; margin-top: 15px; font-family: var(--font-mono); font-size: 10px; cursor: pointer; opacity: 0.6; }
         .abort-link:hover { opacity: 1; text-decoration: underline; }
 
-        /* NAV */
         nav { position: fixed; bottom: 0; width: 100%; height: 65px; background: #000; border-top: 1px solid var(--cia-cyan-dim); display: grid; grid-template-columns: 1fr 1fr; }
         .nav-link { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #444; font-family: var(--font-mono); text-decoration: none; font-size: 11px; }
         .nav-link.active { color: var(--cia-cyan); background: linear-gradient(0deg, rgba(0, 243, 255, 0.1), transparent); }
@@ -174,7 +168,20 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    let selectedDeviceName = null;
+    let selectedDeviceName = null; // Ito ang raw SIG-XXX na ise-save sa DB
+    let displayDeviceName = null;  // Ito ang readable name para sa Button UI
+
+    // --- WEAPON MAP SYNC ---
+    const weaponMap = {
+        "SIG-3A14D65A": "REDMI NOTE 14 PRO 5G",
+        "SIG-5B0D3A5C": "REALME 8 PRO",
+        "SIG-82A9E4B": "SAMSUNG S23 ULTRA",
+        "SIG-X921FFA": "IPHONE 15 PRO",
+        "SIG-K882190": "POCO X6 PRO",
+        "SIG-V001122": "VIVO V30"
+    };
+
+    const getReadableName = (sig) => weaponMap[sig] || sig;
 
     window.onload = () => {
         const agent = localStorage.getItem("cia_agent");
@@ -210,7 +217,13 @@
             for (let q of queries) {
                 const snap = await getDocs(q);
                 if (!snap.empty) {
-                    snap.forEach(d => foundDocs.push(d.data()));
+                    snap.forEach(d => {
+                        const data = d.data();
+                        // Iwasan ang duplicate entries sa UI
+                        if(!foundDocs.some(item => item.weaponSystem === data.weaponSystem)) {
+                             foundDocs.push(data);
+                        }
+                    });
                     break;
                 }
             }
@@ -225,15 +238,20 @@
                     const card = document.createElement('div');
                     card.className = 'weapon-card';
                     card.id = "card-" + index;
-                    card.innerText = data.weaponSystem;
-                    card.onclick = () => selectWeapon(card, data.weaponSystem);
+                    
+                    // RENAME LOGIC HERE:
+                    const readable = getReadableName(data.weaponSystem);
+                    card.innerText = readable;
+                    
+                    card.onclick = () => selectWeapon(card, data.weaponSystem, readable);
                     grid.appendChild(card);
                 });
 
                 if (foundDocs.length === 1) {
                     setTimeout(() => {
                         const firstCard = document.getElementById('card-0');
-                        selectWeapon(firstCard, foundDocs[0].weaponSystem);
+                        const sig = foundDocs[0].weaponSystem;
+                        selectWeapon(firstCard, sig, getReadableName(sig));
                         status.innerText = "TARGET_SYNC_COMPLETE";
                         status.style.color = "var(--cia-green)";
                     }, 50);
@@ -252,11 +270,12 @@
         } catch (e) { console.error(e); }
     };
 
-    window.selectWeapon = (element, name) => {
+    window.selectWeapon = (element, sig, readable) => {
         document.querySelectorAll('.weapon-card').forEach(c => c.classList.remove('selected'));
         if (element) {
             element.classList.add('selected');
-            selectedDeviceName = name;
+            selectedDeviceName = sig;      // For DB saving
+            displayDeviceName = readable; // For Button UI
         }
         validateForm();
     };
@@ -268,7 +287,8 @@
         
         if (v && e > 0 && selectedDeviceName) {
             btn.disabled = false;
-            btn.innerText = "UPLINK_TO_" + selectedDeviceName.toUpperCase();
+            // Ipinapakita ang Readable Name sa button habang tina-transmit
+            btn.innerText = "UPLINK_TO_" + displayDeviceName.replace(/\s+/g, '_').toUpperCase();
         } else {
             btn.disabled = true;
             btn.innerText = selectedDeviceName ? "ENTER_UPLINK_AMOUNT" : "ESTABLISH_CONNECTION";
@@ -281,12 +301,13 @@
         const agent = localStorage.getItem("cia_agent");
 
         try {
+            // Gagamitin pa rin ang SIG-XXX sa reportID para sa database consistency
             const reportID = `${agent}_${selectedDeviceName}_${v}`.replace(/\s+/g, '_');
             const reportRef = doc(db, "bounty_report", reportID);
 
             await setDoc(reportRef, {
                 agentOwner: agent,
-                weaponSystem: selectedDeviceName,
+                weaponSystem: selectedDeviceName, // Sine-save pa rin ang raw SIG para sa tracing
                 vAgentID: v,
                 totalExpenses: increment(e),
                 lastUpdate: serverTimestamp()

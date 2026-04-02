@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>CORE_DASH_v25.5_INTEL_FIX</title>
+  <title>CORE_DASH_v25.6_FINAL</title>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root { 
@@ -272,7 +272,7 @@
 
     if(!vId) return alert("V_AGENT_ID REQUIRED");
 
-    // 1. DATA PARA SA mission_orders (Key: Mission ID)
+    // 1. DATA PARA SA mission_orders (Key: missionID)
     let missionData = {
         missionID: missionID,
         agentName: currentAgent,
@@ -281,10 +281,11 @@
         status: "ACTIVE"
     };
 
-    // 2. INTEL KEY FORMAT: AGENT_WEAPON_ID (e.g. AGENT_LZ_SIG-3A14D65A_12)
-    const bountyDocID = `${currentAgent}_${selectedDeviceForSave}_${missionID}`;
+    // 2. CORRECT INTEL KEY FORMAT: AGENT_WEAPON_vAgent#
+    // Format: AGENT_LZ_SIG-3A14D65A_101
+    const bountyDocID = `${currentAgent}_${selectedDeviceForSave}_${vId}`;
     
-    // 3. DATA PARA SA bounty_report
+    // 3. DATA PARA SA bounty_report (Key: bountyDocID)
     let bountyData = {
         intelKey: bountyDocID,
         missionID: missionID,
@@ -313,13 +314,15 @@
     try {
         confirmBtn.classList.add('uplinking');
         
-        // Sabay na update
+        // Update mission_orders gamit ang Mission ID
         await setDoc(doc(db, "mission_orders", missionID), missionData, { merge: true });
+        
+        // Update bounty_report gamit ang bagong format (AGENT_WEAPON_vAgent#)
         await setDoc(doc(db, "bounty_report", bountyDocID), bountyData, { merge: true });
 
         document.getElementById('modal-overlay').style.display = 'none';
         document.getElementById('success-screen').style.display = 'flex';
-        await log(`INTEL_SYNC: ${bountyDocID} initialized.`, 'var(--green)');
+        await log(`INTEL_UPLINK: ${bountyDocID}`, 'var(--green)');
     } catch (e) { 
         confirmBtn.classList.remove('uplinking');
         alert("CRITICAL_ERROR: INTEL_SYNC_FAILED"); 

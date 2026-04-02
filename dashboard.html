@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>CORE_DASH_v25.9_FINAL_STABLE</title>
+  <title>CORE_DASH_v26.0_DYNAMIC_RETRIEVE</title>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root { 
@@ -56,12 +56,13 @@
     .pop-input { background: #000; border: 1px solid var(--cyan); color: var(--green); font-family: var(--font-mono); font-size: 16px; padding: 8px; width: 150px; text-align: right; outline: none; }
 
     .device-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 15px 0; }
-    .dev-btn { background: #08161b; border: 1px solid #1a2f37; color: #5c7882; padding: 10px; font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; cursor: pointer; }
+    .dev-btn { background: #08161b; border: 1px solid #1a2f37; color: #5c7882; padding: 10px; font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; cursor: pointer; transition: 0.3s; }
     .dev-btn.active { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); box-shadow: 0 0 10px var(--cyan-dim); }
 
     .pop-btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .tactical-btn { height: 50px; font-family: var(--font-main); font-size: 18px; font-weight: 700; text-transform: uppercase; border: none; cursor: pointer; }
     .btn-confirm { background: var(--green); color: #000; }
+    .btn-deploy { background: var(--blue); color: #fff; } /* Added Blue Deploy Style */
     .btn-abort { background: transparent; color: var(--red); border: 1px solid var(--red); }
 
     nav { position: fixed; bottom: 0; width: 100%; height: 75px; background: #000; border-top: 2px solid var(--cyan); display: grid; grid-template-columns: 1fr 1fr; z-index: 90; }
@@ -90,7 +91,7 @@
 
 <main>
   <div class="command-module">
-    <div style="font-size: 10px; color: var(--cyan); margin-bottom: 10px; font-family:var(--font-mono)">// ENTER_TARGET_ID</div>
+    <div style="font-size: 10px; color: var(--cyan); margin-bottom: 10px; font-family:var(--font-mono)">// ENTER_TARGET_ID (MISSION# OR V-AGENT#)</div>
     <input type="tel" id="mission-input" placeholder="----" maxlength="5" autocomplete="off">
     <div class="btn-row">
       <button id="action-btn" class="btn btn-save">SAVE</button>
@@ -104,18 +105,21 @@
     <div class="popup" id="popup-box">
         <div class="pop-title" id="pop-m-id">#0000</div>
         <div id="pop-agent" style="text-align:center; font-size:10px; color:#5c7882; margin-bottom:20px;">AGENT_NAME</div>
+        
         <div class="data-card">
             <div class="data-row">
                 <span class="data-label">V_AGENT_NO:</span> 
                 <input type="text" id="v-agent-input" class="pop-input" placeholder="0000">
             </div>
-            <div class="data-row">
+            <div class="data-row" id="expenses-row">
                 <span class="data-label">EXPENSES (PHP):</span> 
                 <input type="number" id="expenses-input" class="pop-input" placeholder="0.00">
             </div>
         </div>
+
         <div class="data-label" style="margin-bottom:5px">Target Weapon System:</div>
         <div class="device-grid" id="pop-device-list"></div>
+        
         <div class="pop-btn-row">
             <button id="uplink-confirm-btn" onclick="submitMission()" class="tactical-btn btn-confirm">UPLINK</button>
             <button onclick="closePopup()" class="tactical-btn btn-abort">CANCEL</button>
@@ -146,30 +150,25 @@
   };
 
   const currentAgent = localStorage.getItem("cia_agent") || "AUTHORIZED_AGENT";
-  const currentDeviceSig = localStorage.getItem("device_signature") || "N/A";
+  const currentDeviceSig = localStorage.getItem("device_signature") || "SIG-3A14D65A"; // Default fallback
+  
   let isRetrieveMode = false;
+  let activeRecord = null; // Store fetched data
+  let selectedDeviceForSave = currentDeviceSig;
 
   const input = document.getElementById('mission-input');
   const actionBtn = document.getElementById('action-btn');
   const reserveBtn = document.getElementById('reserve-btn');
   const terminal = document.getElementById('terminal');
+  const vAgentInput = document.getElementById('v-agent-input');
+  const confirmBtn = document.getElementById('uplink-confirm-btn');
 
-  // DISPLAY CURRENT DEVICE NAME
   document.getElementById('sync-device-name').innerText = weaponMap[currentDeviceSig] || "UNKNOWN_SYSTEM";
 
-  // --- PERSISTENT TERMINAL SYSTEM ---
   const sendLogToDB = async (msg, color = "#5c7882") => {
-    try {
-      await addDoc(collection(db, "terminal_logs"), {
-        message: msg,
-        color: color,
-        timestamp: serverTimestamp(),
-        agent: currentAgent
-      });
-    } catch (e) { console.error("Logger Error", e); }
+    try { await addDoc(collection(db, "terminal_logs"), { message: msg, color: color, timestamp: serverTimestamp(), agent: currentAgent }); } catch (e) {}
   };
 
-  // Live History Listener
   onSnapshot(query(collection(db, "terminal_logs"), orderBy("timestamp", "desc"), limit(15)), (snap) => {
     terminal.innerHTML = "";
     snap.forEach((d) => {
@@ -181,16 +180,17 @@
     });
   });
 
-  // --- LIVE SCANNER LOGIC ---
+  // --- 3-WAY AUTO SCAN LOGIC ---
   input.addEventListener('input', async () => {
     const val = input.value.trim();
     if (val.length < 4) {
       reserveBtn.disabled = false;
       actionBtn.className = "btn btn-save"; actionBtn.textContent = "SAVE";
+      isRetrieveMode = false; activeRecord = null;
       return;
     }
 
-    // Check Blacklisted
+    // 1. Blacklist Scan (Scan missionID or name/vAgent if you store it there)
     const blackQuery = query(collection(db, "blacklisted"), where("missionID", "==", val));
     const blackSnap = await getDocs(blackQuery);
     if (!blackSnap.empty) {
@@ -199,39 +199,150 @@
       return;
     }
 
-    // Check Mission Orders
+    // 2. Mission Order Scan (by missionID)
     const missionQuery = query(collection(db, "mission_orders"), where("missionID", "==", val));
     const missionSnap = await getDocs(missionQuery);
 
-    if (!missionSnap.empty) {
-      const data = missionSnap.docs[0].data();
+    // 3. Mission Order Scan (by vAgentID)
+    const vAgentQuery = query(collection(db, "mission_orders"), where("vAgentID", "==", val));
+    const vAgentSnap = await getDocs(vAgentQuery);
+
+    if (!missionSnap.empty || !vAgentSnap.empty) {
+      activeRecord = !missionSnap.empty ? missionSnap.docs[0].data() : vAgentSnap.docs[0].data();
       reserveBtn.disabled = true;
 
-      if (data.agentName === currentAgent) {
-        const deviceName = weaponMap[data.weaponSystem] || data.weaponSystem || "UNKNOWN";
-        await sendLogToDB(`DEPLOYED: [${deviceName}] | vAgent#: ${data.vAgentID}`, 'var(--cyan)');
+      if (activeRecord.agentName === currentAgent) {
+        const deviceName = weaponMap[activeRecord.weaponSystem] || activeRecord.weaponSystem;
+        await sendLogToDB(`DEPLOYED: [${deviceName}] | M#: ${activeRecord.missionID} | vAgent#: ${activeRecord.vAgentID}`, 'var(--cyan)');
         isRetrieveMode = true;
         actionBtn.className = "btn btn-retrieve"; actionBtn.textContent = "RETRIEVE";
       } else {
-        await sendLogToDB(`ID ${val}: ALREADY USED BY AGENT [${data.agentName}]`, 'var(--blue)');
+        await sendLogToDB(`ID ${val}: ALREADY USED BY AGENT [${activeRecord.agentName}]`, 'var(--blue)');
         isRetrieveMode = false;
-        actionBtn.className = "btn btn-save";
+        actionBtn.className = "btn btn-save"; actionBtn.textContent = "SAVE";
       }
     } else {
-      await sendLogToDB(`MISSION ORDER# ${val} IS AVAILABLE`, 'var(--green)');
+      await sendLogToDB(`AVAILABLE: ${val} READY FOR UPLINK`, 'var(--green)');
       reserveBtn.disabled = false;
       isRetrieveMode = false;
+      activeRecord = null;
       actionBtn.className = "btn btn-save"; actionBtn.textContent = "SAVE";
     }
   });
 
-  // --- RESERVE ACTION ---
+  // --- SHOW POPUP (ACTION BUTTON) ---
+  actionBtn.onclick = () => {
+    if (input.value.length < 4) return;
+    document.getElementById('modal-overlay').style.display = 'flex';
+    document.getElementById('pop-agent').innerText = currentAgent;
+
+    const expRow = document.getElementById('expenses-row');
+
+    if (isRetrieveMode && activeRecord) {
+        document.getElementById('pop-m-id').innerText = `#${activeRecord.missionID}`; // Always show mission order #
+        vAgentInput.value = activeRecord.vAgentID || "";
+        selectedDeviceForSave = activeRecord.weaponSystem;
+
+        expRow.style.display = 'none'; // Hide expenses on retrieve
+        
+        // Hide deploy button initially during retrieve
+        confirmBtn.style.display = 'none'; 
+        confirmBtn.innerText = "DEPLOY";
+        confirmBtn.className = "tactical-btn btn-deploy"; // Make it blue
+
+    } else {
+        document.getElementById('pop-m-id').innerText = `#${input.value}`;
+        vAgentInput.value = "";
+        document.getElementById('expenses-input').value = "";
+        selectedDeviceForSave = currentDeviceSig;
+
+        expRow.style.display = 'flex'; // Show expenses on new save
+        
+        // Always show green SAVE/UPLINK button for new entries
+        confirmBtn.style.display = 'block';
+        confirmBtn.innerText = "SAVE";
+        confirmBtn.className = "tactical-btn btn-confirm"; 
+    }
+
+    renderDeviceButtons();
+  };
+
+  // --- RENDER DEVICES & DETECT CHANGES ---
+  function renderDeviceButtons() {
+      const container = document.getElementById('pop-device-list');
+      container.innerHTML = "";
+      Object.keys(weaponMap).forEach(sig => {
+          const btn = document.createElement('button');
+          btn.className = `dev-btn ${sig === selectedDeviceForSave ? 'active' : ''}`;
+          btn.innerText = weaponMap[sig];
+          btn.onclick = () => {
+              document.querySelectorAll('.dev-btn').forEach(b => b.classList.remove('active'));
+              btn.classList.add('active');
+              selectedDeviceForSave = sig;
+              
+              // Show DEPLOY button if device is changed during retrieve mode
+              if(isRetrieveMode) confirmBtn.style.display = 'block'; 
+          };
+          container.appendChild(btn);
+      });
+  }
+
+  // Auto-delete "RESERVED" and detect input changes to show DEPLOY button
+  vAgentInput.onfocus = function() {
+      if(this.value.toUpperCase() === "RESERVED" || this.value.toUpperCase() === "RESERVE") {
+          this.value = "";
+          if(isRetrieveMode) confirmBtn.style.display = 'block';
+      }
+  };
+  vAgentInput.addEventListener('input', () => {
+      if(isRetrieveMode) confirmBtn.style.display = 'block';
+  });
+
+
+  // --- SUBMIT / DEPLOY MISSION ---
+  window.submitMission = async () => {
+    let targetID = isRetrieveMode ? activeRecord.missionID : input.value.trim();
+    let vId = vAgentInput.value.trim();
+
+    let missionData = {
+        missionID: targetID,
+        agentName: currentAgent,
+        vAgentID: vId,
+        weaponSystem: selectedDeviceForSave,
+        status: "ACTIVE"
+    };
+
+    if (!isRetrieveMode) {
+        // Date Generation Logic (MM/DD/YYYY)
+        let deployDate = new Date();
+        missionData.deploymentDate = `${deployDate.getMonth() + 1}/${deployDate.getDate()}/${deployDate.getFullYear()}`;
+        
+        let relieveDate = new Date();
+        relieveDate.setDate(relieveDate.getDate() + 30);
+        missionData.relieveDate = `${relieveDate.getMonth() + 1}/${relieveDate.getDate()}/${relieveDate.getFullYear()}`;
+
+        let exp = document.getElementById('expenses-input').value;
+        if (exp) missionData.expenses = `PHP ${parseFloat(exp).toFixed(2)}`;
+    }
+
+    try {
+        await setDoc(doc(db, "mission_orders", targetID), missionData, { merge: true });
+        await sendLogToDB(isRetrieveMode ? `DATA RE-DEPLOYED: #${targetID}` : `NEW UPLINK SUCCESS: #${targetID}`, 'var(--green)');
+        closePopup();
+        setTimeout(() => location.reload(), 1500); // Reload after save
+    } catch (e) {
+        alert("UPLINK_FAILED"); 
+    }
+  };
+
+  // --- RESERVE LOGIC ---
   reserveBtn.onclick = async () => {
     const val = input.value.trim();
     if (val.length < 4) return;
     
     await sendLogToDB(`THIS MISSION ORDER ${val} WILL BE RESERVE`, 'var(--yellow)');
     
+    // Auto-create Mission Orders with RESERVED status
     try {
       await setDoc(doc(db, "mission_orders", val), {
         missionID: val,
@@ -239,23 +350,17 @@
         vAgentID: "RESERVED",
         weaponSystem: currentDeviceSig,
         status: "RESERVED",
-        deploymentDate: serverTimestamp()
+        deploymentDate: serverTimestamp() // Keeping timestamp here for sorting logic if needed
       }, { merge: true });
+      setTimeout(() => location.reload(), 2000);
     } catch (e) {
       await sendLogToDB("CRITICAL: RESERVATION FAILED", 'var(--red)');
     }
   };
 
-  // CLOCK
-  setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB'); }, 1000);
-
-  // Modal helper functions (Close/Submit will depend on your specific needs)
   window.closePopup = () => document.getElementById('modal-overlay').style.display = 'none';
-  
-  // placeholder for submission (connected to your AGENT_WEAPON_vAgent format)
-  window.submitMission = async () => {
-     // ... same logic as before ...
-  };
+
+  setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB'); }, 1000);
 </script>
 </body>
 </html>

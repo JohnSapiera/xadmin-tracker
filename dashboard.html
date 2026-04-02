@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>CORE_DASH_v25.0_FINAL</title>
+  <title>CORE_DASH_v25.5_INTEL_FIX</title>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root { 
@@ -265,58 +265,64 @@
   window.closePopup = () => document.getElementById('modal-overlay').style.display = 'none';
 
   window.submitMission = async () => {
+    const missionID = input.value;
     const vId = document.getElementById('v-agent-input').value.trim();
     const exp = document.getElementById('expenses-input').value;
     const confirmBtn = document.getElementById('uplink-confirm-btn');
 
     if(!vId) return alert("V_AGENT_ID REQUIRED");
 
-    // BASE DATA FOR BOTH TABLES
+    // 1. DATA PARA SA mission_orders (Key: Mission ID)
     let missionData = {
-        missionID: input.value,
+        missionID: missionID,
         agentName: currentAgent,
         vAgentID: vId,
         weaponSystem: selectedDeviceForSave,
         status: "ACTIVE"
     };
 
+    // 2. INTEL KEY FORMAT: AGENT_WEAPON_ID (e.g. AGENT_LZ_SIG-3A14D65A_12)
+    const bountyDocID = `${currentAgent}_${selectedDeviceForSave}_${missionID}`;
+    
+    // 3. DATA PARA SA bounty_report
     let bountyData = {
-        missionID: input.value,
-        vAgentID: vId,
+        intelKey: bountyDocID,
+        missionID: missionID,
         agentName: currentAgent,
+        vAgentID: vId,
+        weaponSystem: selectedDeviceForSave,
         lastUpdated: serverTimestamp()
     };
 
-    // EXPENSES: Update ONLY if input > 0
+    // EXPENSES logic (Sync sa dalawang table kung may value)
     if (exp && parseFloat(exp) > 0) {
         const formattedExp = `PHP ${parseFloat(exp).toFixed(2)}`;
         missionData.expenses = formattedExp;
         bountyData.expenses = formattedExp;
     }
 
-    // DATE PROTECTION: Only set if NOT in Retrieve mode
+    // DATE PROTECTION logic
     if (!isRetrieveMode) {
         missionData.deploymentDate = serverTimestamp();
         const futureDate = new Date();
         futureDate.setDate(futureDate.getDate() + 30);
         missionData.relieveDate = futureDate.toLocaleDateString('en-US');
+        bountyData.createdDate = serverTimestamp();
     }
 
     try {
         confirmBtn.classList.add('uplinking');
         
-        // 1. Update Mission Orders
-        await setDoc(doc(db, "mission_orders", input.value), missionData, { merge: true });
-        
-        // 2. Update Bounty Report (Dual Sync)
-        await setDoc(doc(db, "bounty_report", input.value), bountyData, { merge: true });
+        // Sabay na update
+        await setDoc(doc(db, "mission_orders", missionID), missionData, { merge: true });
+        await setDoc(doc(db, "bounty_report", bountyDocID), bountyData, { merge: true });
 
         document.getElementById('modal-overlay').style.display = 'none';
         document.getElementById('success-screen').style.display = 'flex';
-        await log(`DUAL_SYNC_SUCCESS: #${input.value}`, 'var(--green)');
+        await log(`INTEL_SYNC: ${bountyDocID} initialized.`, 'var(--green)');
     } catch (e) { 
         confirmBtn.classList.remove('uplinking');
-        alert("UPLINK_FAILED"); 
+        alert("CRITICAL_ERROR: INTEL_SYNC_FAILED"); 
     }
   };
 

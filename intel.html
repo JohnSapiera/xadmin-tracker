@@ -9,13 +9,13 @@
   
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>CORE_INTEL_v28.8</title>
+  <title>CORE_INTEL_v29.0</title>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root { 
       --bg: #02080a; --panel: rgba(5, 15, 20, 0.9); --cyan: #00f3ff; 
-      --cyan-dim: rgba(0, 243, 255, 0.1); --red: #ff003c; --blue: #007bff; 
-      --green: #05ffa1; --yellow: #ffbd00; --border: rgba(0, 243, 255, 0.2);
+      --cyan-dim: rgba(0, 243, 255, 0.1); --red: #ff003c; --green: #05ffa1; 
+      --yellow: #ffbd00; --border: rgba(0, 243, 255, 0.2);
       --font-mono: 'Share Tech Mono', monospace; --font-main: 'Rajdhani', sans-serif;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -53,11 +53,11 @@
 </head>
 <body>
 
-<header><span style="font-weight: 700; color: #fff;">CORE_INTEL // v28.8</span></header>
+<header><span style="font-weight: 700; color: #fff;">CORE_INTEL // v29.0</span></header>
 
 <div class="status-bar">
     <div>SYS_TIME: <span id="clock">00:00:00</span></div>
-    <div style="color: var(--cyan);">EXPENSE_TRACKER_ONLINE</div>
+    <div id="auth-status" style="color: var(--green);">[ AUTHENTICATING... ]</div>
 </div>
 
 <main>
@@ -105,16 +105,26 @@
   const expenseModule = document.getElementById('expense-module');
   const expenseInput = document.getElementById('expense-input');
   const submitBtn = document.getElementById('submit-btn');
+  const authStatus = document.getElementById('auth-status');
 
   let typingTimer;
   let selectedMissionDocId = null;
 
-  // 1. KUNIN ANG AGENT ID MULA SA LOCALSTORAGE
-  const localAgentID = localStorage.getItem('agentID'); 
+  // --- LOGIC 1: IDENTITY CHECK ---
+  // Kinukuha ang 'agentName' mula sa localstorage (Dapat pareho ito sa database, e.g. "AGENT_LZ")
+  const localAgentName = localStorage.getItem('agentName'); 
+
+  if (localAgentName) {
+      authStatus.innerText = `AGENT: ${localAgentName}`;
+  } else {
+      authStatus.innerHTML = `<span style="color:var(--red)">[ UNAUTHORIZED ]</span>`;
+      vAgentInput.disabled = true;
+      scanStatus.innerText = "NO SESSION DETECTED. PLEASE RE-LOGIN.";
+  }
 
   vAgentInput.addEventListener('input', () => {
     clearTimeout(typingTimer);
-    const val = vAgentInput.value.trim();
+    const vAgentID = vAgentInput.value.trim();
     
     deviceList.innerHTML = "";
     expenseModule.style.opacity = "0.1";
@@ -122,50 +132,45 @@
     submitBtn.classList.remove('ready');
     selectedMissionDocId = null;
 
-    if (val.length > 0) {
-        scanStatus.innerHTML = `<span class="blink">[SYSTEM] VERIFYING V_AGENT# ${val}...</span>`;
-        typingTimer = setTimeout(() => executeSecureSearch(val), 2000);
+    if (vAgentID.length > 0 && localAgentName) {
+        scanStatus.innerHTML = `<span class="blink">[SYSTEM] SCANNING FOR ${vAgentID} UNDER ${localAgentName}...</span>`;
+        typingTimer = setTimeout(() => executeHierarchySearch(vAgentID), 2000);
     } else {
         scanStatus.innerHTML = "AWAITING INPUT...";
     }
   });
 
-  // 2. SECURE SEARCH LOGIC
-  async function executeSecureSearch(vInput) {
-    if (!localAgentID) {
-        scanStatus.innerHTML = `<span style="color:var(--red)">[ERROR] NO LOCAL AGENT_ID FOUND. PLEASE RE-LOGIN.</span>`;
-        return;
-    }
-
+  // --- LOGIC 2 & 3: HIERARCHY & V_AGENT SEARCH ---
+  async function executeHierarchySearch(vInput) {
     try {
         scanStatus.innerHTML = `<span style="color:var(--cyan)">[SYSTEM] ANALYZING MISSION LOGS...</span>`;
         
-        // Multi-Filter: vAgentID (Input) + agentID (LocalStorage)
+        // Multi-level search: Match sa Agent Name (mula sa localStorage) AT sa vAgentID (Input)
         const q = query(
             collection(db, "mission_orders"), 
-            where("vAgentID", "==", vInput),
-            where("agentID", "==", localAgentID)
+            where("agent", "==", localAgentName), 
+            where("vAgentID", "==", vInput)
         );
 
         const snap = await getDocs(q);
 
         if (snap.empty) {
-            scanStatus.innerHTML = `<span style="color:var(--red)">[ACCESS DENIED] UNKNOWN TARGET OR UNAUTHORIZED</span>`;
+            scanStatus.innerHTML = `<span style="color:var(--red)">[ACCESS DENIED] NO MISSION MATCHED FOR THIS OPERATOR</span>`;
             return;
         }
 
-        scanStatus.innerHTML = `<span style="color:var(--green)">[SUCCESS] ${snap.size} DEVICE(S) IDENTIFIED.</span>`;
+        scanStatus.innerHTML = `<span style="color:var(--green)">[SUCCESS] MISSION DATA RETRIEVED.</span>`;
         
         snap.forEach(d => {
             const data = d.data();
             const btn = document.createElement('button');
             btn.className = "dev-btn";
             
-            // Translate SIG via config.js
-            const deviceDisplayName = DEVICE_REGISTRY[data.weaponSystem] || `SIG: ${data.weaponSystem}`;
+            // Translate Weapon System code via config.js
+            const deviceDisplayName = DEVICE_REGISTRY[data.weaponSystem] || `SIG_CODE: ${data.weaponSystem}`;
 
             btn.innerHTML = `
-              <span class="agent-tag">AGENT: ${data.agent || 'AUTHORIZED_OPERATOR'}</span>
+              <span class="agent-tag">AGENT: ${data.agent}</span>
               <span style="font-weight:700">> ${deviceDisplayName}</span>
               <span class="mission-tag">MISSION_ORDER: #${data.missionID}</span>
             `;
@@ -188,13 +193,13 @@
     }
   }
 
-  // 3. SUBMIT EXPENSE
+  // --- SUBMIT EXPENSE ---
   submitBtn.onclick = async () => {
     const expenseAmount = parseFloat(expenseInput.value);
     if (!selectedMissionDocId || isNaN(expenseAmount) || expenseAmount <= 0) return;
 
     submitBtn.innerText = "UPLINKING DATA...";
-    submitBtn.classList.add('processing');
+    submitBtn.style.opacity = "0.5";
 
     try {
         const missionRef = doc(db, "mission_orders", selectedMissionDocId);
@@ -219,6 +224,7 @@
     }
   };
 
+  // Clock
   setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB'); }, 1000);
 </script>
 </body>

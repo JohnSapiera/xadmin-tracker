@@ -1,334 +1,241 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-    <title>INTEL_CORE_v4.0</title>
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
-    <style>
-        :root { 
-            --cia-bg: #00080b;
-            --cia-cyan: #00f3ff;
-            --cia-cyan-dim: rgba(0, 243, 255, 0.2);
-            --cia-red: #ff003c;
-            --cia-green: #00ff66;
-            --font-main: 'Rajdhani', sans-serif;
-            --font-mono: 'Share Tech Mono', monospace;
-        }
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>CORE_INTEL_v27.5</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { 
+      --bg: #02080a; --panel: rgba(5, 15, 20, 0.9); --cyan: #00f3ff; 
+      --cyan-dim: rgba(0, 243, 255, 0.1); --red: #ff003c; --blue: #007bff; 
+      --green: #05ffa1; --yellow: #ffbd00; --border: rgba(0, 243, 255, 0.2);
+      --font-mono: 'Share Tech Mono', monospace; --font-main: 'Rajdhani', sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: #e1f5f9; font-family: var(--font-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+    
+    header { padding: 15px 20px; background: #000; border-bottom: 2px solid var(--cyan); display: flex; justify-content: space-between; align-items: center; }
+    .status-bar { font-size: 11px; padding: 8px 20px; background: rgba(0,243,255,0.05); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; color: var(--cyan); font-family: var(--font-mono); }
+    
+    main { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; padding-bottom: 80px; }
+    
+    .intel-module { background: var(--panel); border: 1px solid var(--border); padding: 20px; border-radius: 4px; position: relative; }
+    .module-title { color: var(--cyan); font-family: var(--font-mono); font-size: 12px; margin-bottom: 15px; letter-spacing: 2px; border-bottom: 1px solid rgba(0,243,255,0.2); padding-bottom: 5px;}
+    
+    .input-field { width: 100%; background: #000; border: 1px solid var(--border); color: var(--green); font-family: var(--font-mono); font-size: 20px; padding: 12px; text-align: center; outline: none; margin-bottom: 10px; transition: 0.3s; }
+    .input-field:focus { border-color: var(--cyan); box-shadow: 0 0 10px rgba(0,243,255,0.2); }
+    
+    /* Device Selection Area */
+    .device-grid { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 10px; margin-bottom: 15px; }
+    .dev-btn { background: #08161b; border: 1px solid #1a2f37; color: #5c7882; padding: 12px; font-size: 12px; cursor: pointer; text-align: left; font-family: var(--font-mono); transition: all 0.3s ease; display: flex; justify-content: space-between; }
+    
+    /* Highlight Animation */
+    .dev-btn.active { border-color: var(--cyan); color: var(--cyan); background: rgba(0, 243, 255, 0.05); box-shadow: inset 0 0 15px rgba(0,243,255,0.1); }
+    .dev-btn.active::before { content: '[SELECTED]'; color: var(--green); font-size: 10px; margin-right: 10px; }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        
-        body { 
-            background: var(--cia-bg); color: #fff; font-family: var(--font-main); 
-            height: 100vh; overflow: hidden; display: flex; flex-direction: column;
-        }
+    .btn-save { background: var(--green); color: #000; height: 50px; font-weight: 700; width: 100%; border: none; font-family: var(--font-main); font-size: 16px; cursor: pointer; transition: 0.3s; opacity: 0.5; pointer-events: none; }
+    .btn-save.ready { opacity: 1; pointer-events: auto; }
+    
+    /* Scanning Animation */
+    #scan-status { font-family: var(--font-mono); font-size: 11px; color: var(--yellow); text-align: center; margin-bottom: 10px; min-height: 15px; }
+    .blink { animation: blinker 1s linear infinite; }
+    @keyframes blinker { 50% { opacity: 0; } }
 
-        body::before {
-            content: ""; position: fixed; inset: 0;
-            background-image: 
-                linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px);
-            background-size: 30px 30px; pointer-events: none; z-index: -1;
-        }
+    /* Processing Animation */
+    .processing { background: var(--yellow) !important; color: #000 !important; cursor: wait !important; }
 
-        header { padding: 15px; border-bottom: 1px solid var(--cia-cyan-dim); text-align: center; background: rgba(0, 10, 15, 0.9); }
-        .intel-title { font-family: var(--font-mono); color: var(--cia-cyan); font-size: 11px; letter-spacing: 4px; text-shadow: 0 0 10px var(--cia-cyan); }
-
-        main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        
-        .agent-id-card {
-            text-align: center; border: 1px solid var(--cia-cyan-dim); padding: 30px;
-            background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(10px);
-            position: relative; width: 100%; max-width: 320px;
-        }
-        .agent-id-card::before { content: "AGENT_VERIFIED"; position: absolute; top: -10px; left: 10px; background: var(--cia-cyan); color: #000; font-size: 9px; padding: 2px 8px; font-weight: bold; }
-
-        .agent-name { font-size: 42px; font-weight: 700; text-transform: uppercase; margin: 10px 0; letter-spacing: 2px; color: #fff; }
-
-        .report-btn { 
-            margin-top: 30px; background: none; border: 1px solid var(--cia-cyan); 
-            color: var(--cia-cyan); width: 220px; height: 55px; font-family: var(--font-mono); 
-            font-size: 13px; font-weight: bold; cursor: pointer; position: relative;
-            transition: 0.3s; overflow: hidden;
-        }
-        .report-btn::after { content: ""; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(0, 243, 255, 0.2), transparent); transition: 0.5s; }
-        .report-btn:hover::after { left: 100%; }
-        .report-btn:active { background: var(--cia-cyan-dim); transform: translateY(2px); }
-
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0, 5, 10, 0.85); backdrop-filter: blur(8px); z-index: 1000; }
-        
-        .modal-box { 
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            width: 90%; max-width: 360px; background: rgba(0, 20, 30, 0.95); 
-            border: 1px solid var(--cia-cyan); padding: 25px;
-            box-shadow: 0 0 40px rgba(0, 243, 255, 0.15);
-        }
-
-        .modal-box::after { content: ""; position: absolute; bottom: 0; right: 0; width: 40px; height: 40px; border-right: 3px solid var(--cia-cyan); border-bottom: 3px solid var(--cia-cyan); }
-        .modal-box::before { content: ""; position: absolute; top: 0; left: 0; width: 40px; height: 40px; border-left: 3px solid var(--cia-cyan); border-top: 3px solid var(--cia-cyan); }
-
-        .scan-status-bar { 
-            font-family: var(--font-mono); font-size: 10px; color: var(--cia-cyan); 
-            text-align: center; margin-bottom: 20px; text-transform: uppercase;
-            border-bottom: 1px solid var(--cia-cyan-dim); padding-bottom: 10px;
-        }
-
-        .input-group { margin-bottom: 20px; position: relative; }
-        .input-label { font-size: 10px; color: var(--cia-cyan); margin-bottom: 5px; display: block; letter-spacing: 1px; opacity: 0.8; }
-        
-        .intel-input { 
-            width: 100%; background: rgba(0, 243, 255, 0.05); border: 1px solid var(--cia-cyan-dim); 
-            padding: 12px; color: #fff; font-family: var(--font-mono); font-size: 20px; outline: none; text-align: center;
-        }
-        .intel-input:focus { border-color: var(--cia-cyan); background: rgba(0, 243, 255, 0.1); }
-
-        .weapon-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
-        .weapon-grid.single-mode { grid-template-columns: 1fr; }
-
-        .weapon-card { 
-            padding: 12px; border: 1px solid var(--cia-cyan-dim); background: rgba(255,255,255,0.02); 
-            font-size: 11px; text-align: center; cursor: pointer; color: var(--cia-cyan); 
-            font-family: var(--font-mono); text-transform: uppercase;
-        }
-        .weapon-card.selected { 
-            background: var(--cia-cyan); color: #000; border-color: var(--cia-cyan); font-weight: bold;
-            box-shadow: 0 0 15px var(--cia-cyan-dim);
-        }
-
-        .btn-transmit { 
-            width: 100%; padding: 16px; background: var(--cia-cyan); color: #000; 
-            border: none; font-family: var(--font-mono); font-size: 13px; font-weight: 900; 
-            cursor: pointer; margin-top: 10px; letter-spacing: 2px;
-        }
-        .btn-transmit:disabled { background: #111; color: #444; cursor: not-allowed; border: 1px solid #222; }
-
-        .abort-link { width: 100%; background: transparent; color: var(--cia-red); border: none; margin-top: 15px; font-family: var(--font-mono); font-size: 10px; cursor: pointer; opacity: 0.6; }
-        .abort-link:hover { opacity: 1; text-decoration: underline; }
-
-        nav { position: fixed; bottom: 0; width: 100%; height: 65px; background: #000; border-top: 1px solid var(--cia-cyan-dim); display: grid; grid-template-columns: 1fr 1fr; }
-        .nav-link { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #444; font-family: var(--font-mono); text-decoration: none; font-size: 11px; }
-        .nav-link.active { color: var(--cia-cyan); background: linear-gradient(0deg, rgba(0, 243, 255, 0.1), transparent); }
-    </style>
+    /* Bottom Nav */
+    .bottom-nav { position: fixed; bottom: 0; width: 100%; height: 65px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr 1fr; z-index: 1000; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #5c7882; text-decoration: none; font-size: 10px; font-weight: 700; letter-spacing: 1px; transition: 0.3s; }
+    .nav-item.active { color: var(--cyan); background: var(--cyan-dim); border-top: 2px solid var(--cyan); }
+  </style>
 </head>
 <body>
 
-<header><div class="intel-title">SECURE_INTEL_UPLINK_v4.0</div></header>
+<header><span style="font-weight: 700; color: #fff;">CORE_INTEL_v27.5</span></header>
 
-<main>
-    <div class="agent-id-card">
-        <div style="font-size: 10px; color: var(--cia-cyan); opacity: 0.5;">ACTIVE_SESSION</div>
-        <div id="display-name" class="agent-name">---</div>
-        <div style="font-size: 11px; color: var(--cia-cyan); font-family: var(--font-mono); letter-spacing: 2px;">ENCRYPTION_LEVEL_5</div>
-    </div>
-    
-    <button class="report-btn" onclick="openReport()">[ INITIATE_DATA_STREAM ]</button>
-</main>
-
-<div id="report-modal" class="modal">
-    <div class="modal-box">
-        <div class="scan-status-bar" id="scan-status">AWAITING_LOCAL_IDENTIFIER...</div>
-
-        <div class="input-group">
-            <span class="input-label">V_AGENT_SERIAL_ID</span>
-            <input type="text" id="vAgentInput" class="intel-input" placeholder="0000" oninput="handleDualSearch(this.value)">
-        </div>
-
-        <div id="weapon-selection-zone" style="display:none; margin-bottom:15px;">
-            <span class="input-label">SYSTEM_LOCKED:</span>
-            <div id="weapon-grid" class="weapon-grid"></div>
-        </div>
-
-        <div class="input-group">
-            <span class="input-label">TRANSMISSION_VALUE (PHP)</span>
-            <input type="number" id="expensesInput" class="intel-input" placeholder="0.00" oninput="validateForm()">
-        </div>
-
-        <button id="transmit-btn" onclick="transmitData()" class="btn-transmit" disabled>ESTABLISH_CONNECTION</button>
-        <button onclick="closeReport()" class="abort-link">// TERMINATE_PROCESS</button>
-    </div>
+<div class="status-bar">
+    <div>SYS_TIME: <span id="clock">00:00:00</span></div>
+    <div style="color: var(--cyan);">EXPENSE_TRACKER_ONLINE</div>
 </div>
 
-<nav>
-    <a href="dashboard.html" class="nav-link"><span>DASHBOARD</span></a>
-    <a href="#" class="nav-link active"><span>INTEL</span></a>
+<main>
+  <div class="intel-module">
+    <div class="module-title">TARGET IDENTIFICATION</div>
+    <input type="text" id="vagent-input" class="input-field" placeholder="ENTER V_AGENT#" autocomplete="off">
+    <div id="scan-status">AWAITING INPUT...</div>
+    
+    <div id="device-list" class="device-grid">
+        </div>
+  </div>
+
+  <div class="intel-module" id="expense-module" style="opacity: 0.3; pointer-events: none; transition: 0.3s;">
+    <div class="module-title">EXPENSE INJECTION</div>
+    <input type="number" id="expense-input" class="input-field" placeholder="0.00" autocomplete="off">
+    <button id="submit-btn" class="btn-save">EXECUTE OVERRIDE</button>
+  </div>
+</main>
+
+<nav class="bottom-nav">
+    <a href="dashboard.html" class="nav-item">DASHBOARD</a>
+    <a href="#" class="nav-item active">INTEL</a>
+    <a href="profile.html" class="nav-item">PROFILE</a>
 </nav>
 
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, query, where, getDocs, doc, setDoc, increment, serverTimestamp, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, query, where, getDocs, doc, updateDoc, arrayUnion, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    const firebaseConfig = { 
-        apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
-        authDomain: "my-admin-portal-12691.firebaseapp.com", 
-        projectId: "my-admin-portal-12691", 
-        storageBucket: "my-admin-portal-12691.firebasestorage.app", 
-        messagingSenderId: "317015091563", 
-        appId: "1:317015091563:web:baab5171d8e0a58acd442e" 
-    };
+  const firebaseConfig = { 
+    apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
+    authDomain: "my-admin-portal-12691.firebaseapp.com", 
+    projectId: "my-admin-portal-12691", 
+    storageBucket: "my-admin-portal-12691.firebasestorage.app", 
+    messagingSenderId: "317015091563", 
+    appId: "1:317015091563:web:baab5171d8e0a58acd442e" 
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    let selectedDeviceName = null; // Ito ang raw SIG-XXX na ise-save sa DB
-    let displayDeviceName = null;  // Ito ang readable name para sa Button UI
+  // Weapon Map from previous configuration
+  const fullWeaponMap = { "SIG-20452634": "REDMI NOTE 14 PRO 5G", "SIG-5B0D3A5C": "REALME 8 PRO", "SIG-6AC68A2E": "LAPTOP: ACER" };
 
-    // --- WEAPON MAP SYNC ---
-    const weaponMap = {
-        "SIG-3A14D65A": "REDMI NOTE 14 PRO 5G",
-        "SIG-5B0D3A5C": "REALME 8 PRO",
-        "SIG-82A9E4B": "SAMSUNG S23 ULTRA",
-        "SIG-X921FFA": "IPHONE 15 PRO",
-        "SIG-K882190": "POCO X6 PRO",
-        "SIG-V001122": "VIVO V30"
-    };
+  const vAgentInput = document.getElementById('vagent-input');
+  const scanStatus = document.getElementById('scan-status');
+  const deviceList = document.getElementById('device-list');
+  const expenseModule = document.getElementById('expense-module');
+  const expenseInput = document.getElementById('expense-input');
+  const submitBtn = document.getElementById('submit-btn');
 
-    const getReadableName = (sig) => weaponMap[sig] || sig;
+  let typingTimer;
+  let selectedMissionDocId = null; // Ito ang ID ng mission_order kung saan i-u-update ang data
 
-    window.onload = () => {
-        const agent = localStorage.getItem("cia_agent");
-        if (!agent) { window.location.href = "index.html"; return; }
-        document.getElementById('display-name').innerText = agent;
-    };
+  // --- 1. THE 3-SECOND DELAY SCANNER ---
+  vAgentInput.addEventListener('input', () => {
+    clearTimeout(typingTimer);
+    const val = vAgentInput.value.trim();
+    
+    deviceList.innerHTML = "";
+    expenseModule.style.opacity = "0.3";
+    expenseModule.style.pointerEvents = "none";
+    expenseInput.value = "";
+    submitBtn.classList.remove('ready');
+    selectedMissionDocId = null;
 
-    window.handleDualSearch = async (val) => {
-        const currentAgent = localStorage.getItem("cia_agent");
-        const status = document.getElementById('scan-status');
-        const grid = document.getElementById('weapon-grid');
-        const zone = document.getElementById('weapon-selection-zone');
-        const cleanVal = val.trim();
-
-        if(cleanVal.length < 1) { 
-            zone.style.display = "none"; 
-            selectedDeviceName = null;
-            validateForm();
-            return; 
-        }
-
-        try {
-            const agentQ = query(collection(db, "agents"), where("agentName", "==", currentAgent));
-            const agentSnap = await getDocs(agentQ);
-            if (agentSnap.empty) { status.innerText = "ACCESS_DENIED_UNAUTHORIZED"; return; }
-
-            const queries = [
-                query(collection(db, "mission_orders"), where("agentName", "==", currentAgent), where("vAgentID", "==", cleanVal)),
-                query(collection(db, "mission_orders"), where("agentName", "==", currentAgent), where("vAgentID", "==", Number(cleanVal)))
-            ];
-
-            let foundDocs = [];
-            for (let q of queries) {
-                const snap = await getDocs(q);
-                if (!snap.empty) {
-                    snap.forEach(d => {
-                        const data = d.data();
-                        // Iwasan ang duplicate entries sa UI
-                        if(!foundDocs.some(item => item.weaponSystem === data.weaponSystem)) {
-                             foundDocs.push(data);
-                        }
-                    });
-                    break;
-                }
-            }
-
-            if (foundDocs.length > 0) {
-                zone.style.display = "block";
-                grid.innerHTML = "";
-                if (foundDocs.length === 1) grid.classList.add('single-mode');
-                else grid.classList.remove('single-mode');
-
-                foundDocs.forEach((data, index) => {
-                    const card = document.createElement('div');
-                    card.className = 'weapon-card';
-                    card.id = "card-" + index;
-                    
-                    // RENAME LOGIC HERE:
-                    const readable = getReadableName(data.weaponSystem);
-                    card.innerText = readable;
-                    
-                    card.onclick = () => selectWeapon(card, data.weaponSystem, readable);
-                    grid.appendChild(card);
-                });
-
-                if (foundDocs.length === 1) {
-                    setTimeout(() => {
-                        const firstCard = document.getElementById('card-0');
-                        const sig = foundDocs[0].weaponSystem;
-                        selectWeapon(firstCard, sig, getReadableName(sig));
-                        status.innerText = "TARGET_SYNC_COMPLETE";
-                        status.style.color = "var(--cia-green)";
-                    }, 50);
-                } else {
-                    selectedDeviceName = null;
-                    status.innerText = "MULTIPLE_TARGETS_DETECTED";
-                    status.style.color = "var(--cia-cyan)";
-                }
-            } else {
-                status.innerText = "IDENTIFIER_NOT_IN_DATABASE";
-                status.style.color = "var(--cia-red)";
-                zone.style.display = "none";
-                selectedDeviceName = null;
-            }
-            validateForm();
-        } catch (e) { console.error(e); }
-    };
-
-    window.selectWeapon = (element, sig, readable) => {
-        document.querySelectorAll('.weapon-card').forEach(c => c.classList.remove('selected'));
-        if (element) {
-            element.classList.add('selected');
-            selectedDeviceName = sig;      // For DB saving
-            displayDeviceName = readable; // For Button UI
-        }
-        validateForm();
-    };
-
-    window.validateForm = () => {
-        const v = document.getElementById('vAgentInput').value;
-        const e = document.getElementById('expensesInput').value;
-        const btn = document.getElementById('transmit-btn');
-        
-        if (v && e > 0 && selectedDeviceName) {
-            btn.disabled = false;
-            // Ipinapakita ang Readable Name sa button habang tina-transmit
-            btn.innerText = "UPLINK_TO_" + displayDeviceName.replace(/\s+/g, '_').toUpperCase();
-        } else {
-            btn.disabled = true;
-            btn.innerText = selectedDeviceName ? "ENTER_UPLINK_AMOUNT" : "ESTABLISH_CONNECTION";
-        }
-    };
-
-    window.transmitData = async () => {
-        const v = document.getElementById('vAgentInput').value.trim();
-        const e = parseFloat(document.getElementById('expensesInput').value);
-        const agent = localStorage.getItem("cia_agent");
-
-        try {
-            // Gagamitin pa rin ang SIG-XXX sa reportID para sa database consistency
-            const reportID = `${agent}_${selectedDeviceName}_${v}`.replace(/\s+/g, '_');
-            const reportRef = doc(db, "bounty_report", reportID);
-
-            await setDoc(reportRef, {
-                agentOwner: agent,
-                weaponSystem: selectedDeviceName, // Sine-save pa rin ang raw SIG para sa tracing
-                vAgentID: v,
-                totalExpenses: increment(e),
-                lastUpdate: serverTimestamp()
-            }, { merge: true });
-
-            await addDoc(collection(db, "bounty_report", reportID, "logs"), {
-                amount: e,
-                timestamp: serverTimestamp(),
-                reportedBy: agent
-            });
-
-            alert("UPLINK_SUCCESSFUL: DATA_ENCRYPTED_AND_SENT");
-            location.reload();
-        } catch (err) { alert("UPLINK_FAILED: CONNECTION_LOST"); }
-    };
-
-    window.openReport = () => {
-        document.getElementById('report-modal').style.display = 'block';
-        document.getElementById('vAgentInput').focus();
+    if (val.length > 0) {
+        scanStatus.innerHTML = `<span class="blink">[SYSTEM] SCANNING DATABANKS FOR ${val}...</span>`;
+        typingTimer = setTimeout(() => executeSearch(val), 3000); // 3 Seconds Delay
+    } else {
+        scanStatus.innerHTML = "AWAITING INPUT...";
     }
-    window.closeReport = () => document.getElementById('report-modal').style.display = 'none';
+  });
+
+  // --- 2. SEARCH & RENDER DEVICES ---
+  async function executeSearch(agentVal) {
+    try {
+        scanStatus.innerHTML = `<span style="color:var(--cyan)">[SYSTEM] RETRIEVING WEAPON SYSTEMS...</span>`;
+        
+        // Hahanapin natin sa mission_orders kung nasaan yung vAgentID na tinype mo
+        const q = query(collection(db, "mission_orders"), where("vAgentID", "==", agentVal));
+        const snap = await getDocs(q);
+
+        if (snap.empty) {
+            scanStatus.innerHTML = `<span style="color:var(--red)">[ERROR] NO RECORDS FOUND FOR ${agentVal}</span>`;
+            return;
+        }
+
+        scanStatus.innerHTML = `<span style="color:var(--green)">[SUCCESS] TARGET ACQUIRED. SELECT DEVICE.</span>`;
+        
+        snap.forEach(d => {
+            const data = d.data();
+            const btn = document.createElement('button');
+            btn.className = "dev-btn";
+            const deviceName = fullWeaponMap[data.weaponSystem] || data.weaponSystem;
+            
+            // Format: M-ID (Right side) | Device (Left side)
+            btn.innerHTML = `<span>${deviceName}</span> <span style="color:#5c7882">MISSION: #${data.missionID}</span>`;
+            
+            // Selection Logic with Highlight Animation
+            btn.onclick = () => {
+                document.querySelectorAll('.dev-btn').forEach(x => x.classList.remove('active'));
+                btn.classList.add('active');
+                
+                selectedMissionDocId = d.id; // I-store ang Document ID para sa Update Mamaya
+                
+                // I-unlock ang Expense Module
+                expenseModule.style.opacity = "1";
+                expenseModule.style.pointerEvents = "auto";
+                submitBtn.classList.add('ready');
+            };
+            deviceList.appendChild(btn);
+        });
+
+    } catch (e) {
+        scanStatus.innerHTML = `<span style="color:var(--red)">[ERROR] DATABASE CONNECTION FAILED</span>`;
+    }
+  }
+
+  // --- 3. SUBMIT EXPENSE (WITH BREAKDOWN & TOTAL) ---
+  submitBtn.onclick = async () => {
+    const expenseAmount = parseFloat(expenseInput.value);
+
+    if (!selectedMissionDocId || isNaN(expenseAmount) || expenseAmount <= 0) {
+        alert("INVALID EXPENSE AMOUNT OR NO MISSION SELECTED");
+        return;
+    }
+
+    // Animation During Submission
+    const originalText = submitBtn.innerText;
+    submitBtn.innerText = "UPDATING CORE DATABANK...";
+    submitBtn.classList.add('processing');
+    submitBtn.classList.remove('ready');
+
+    try {
+        const missionRef = doc(db, "mission_orders", selectedMissionDocId);
+        
+        const timestampNow = new Date().toISOString();
+
+        // Firebase Magik: Idadagdag sa Array at Mag-a-add sa Total
+        await updateDoc(missionRef, {
+            expensesBreakdown: arrayUnion({
+                amount: expenseAmount,
+                timestamp: timestampNow
+            }),
+            totalExpenses: increment(expenseAmount)
+        });
+
+        // Success Animation
+        submitBtn.classList.remove('processing');
+        submitBtn.style.background = "var(--cyan)";
+        submitBtn.style.color = "#000";
+        submitBtn.innerText = "[ OVERRIDE SUCCESSFUL ]";
+
+        // Reset after 2 seconds
+        setTimeout(() => {
+            submitBtn.style.background = "";
+            submitBtn.style.color = "";
+            submitBtn.innerText = originalText;
+            expenseInput.value = "";
+            vAgentInput.value = "";
+            vAgentInput.dispatchEvent(new Event('input')); // I-trigger ang reset
+        }, 2000);
+
+    } catch (e) {
+        console.error(e);
+        submitBtn.classList.remove('processing');
+        submitBtn.style.background = "var(--red)";
+        submitBtn.innerText = "[ ERROR ]";
+        setTimeout(() => {
+            submitBtn.style.background = "";
+            submitBtn.innerText = originalText;
+            submitBtn.classList.add('ready');
+        }, 2000);
+    }
+  };
+
+  // Clock
+  setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB'); }, 1000);
 </script>
 </body>
 </html>

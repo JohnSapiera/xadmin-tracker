@@ -9,7 +9,7 @@
     
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-    <title>CORE_DASH_v28.1_DYNAMIC</title>
+    <title>CORE_DASH_v28.2_REMISTERE</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root { 
@@ -26,7 +26,6 @@
         
         main { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 80px; }
         
-        /* COMMAND MODULE */
         .command-module { background: var(--panel); border: 1px solid var(--border); padding: 20px; border-radius: 4px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
         #mission-input { width: 100%; background: transparent; border: none; border-bottom: 2px solid var(--cyan); color: #fff; font-family: var(--font-mono); font-size: 45px; text-align: center; outline: none; margin-bottom: 5px; letter-spacing: 5px; }
         
@@ -43,15 +42,12 @@
         .btn-reserve { background: transparent; color: #fff; border: 1px solid #fff; opacity: 0.3; pointer-events: none; }
         .btn-reserve.active { opacity: 1; pointer-events: auto; border-color: var(--yellow); color: var(--yellow); }
 
-        /* LIVE TERMINAL */
         #terminal { background: rgba(0,0,0,0.9); border-left: 3px solid var(--cyan); padding: 12px; font-family: var(--font-mono); font-size: 10px; height: 180px; overflow-y: auto; color: #9ab4bc; box-shadow: inset 0 0 15px #000; border-radius: 0 4px 4px 0; }
-        .term-line { margin-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.03); line-height: 1.4; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateX(-5px); } to { opacity: 1; transform: translateX(0); } }
+        .term-line { margin-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.03); line-height: 1.4; }
 
         .profile-mini { background: #051014; border: 1px solid var(--border); padding: 12px; display: flex; align-items: center; gap: 15px; border-radius: 4px; }
         .avatar { width: 40px; height: 40px; background: var(--cyan-dim); border: 1px solid var(--cyan); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--cyan); font-weight: bold; font-size: 18px; }
         
-        /* POPUP OVERLAY */
         .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.96); z-index: 9999; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); }
         .popup { width: 100%; max-width: 360px; background: #051014; border: 1px solid var(--cyan); padding: 25px; box-shadow: 0 0 40px rgba(0, 243, 255, 0.15); }
         .pop-label { font-size: 10px; color: var(--cyan); letter-spacing: 1px; margin-bottom: 6px; display: block; font-weight: bold; }
@@ -59,8 +55,7 @@
         
         .weapon-selector { display: grid; gap: 8px; margin-bottom: 20px; max-height: 140px; overflow-y: auto; padding-right: 5px; }
         .weapon-btn { background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: #fff; padding: 12px; font-size: 11px; cursor: pointer; font-family: var(--font-mono); text-align: left; transition: 0.3s; }
-        .weapon-btn.selected { background: var(--cyan-dim); border-color: var(--cyan); color: var(--cyan); animation: scanline 1s infinite alternate; }
-        @keyframes scanline { from { box-shadow: inset 0 0 2px var(--cyan); } to { box-shadow: inset 0 0 10px var(--cyan); } }
+        .weapon-btn.selected { background: var(--cyan-dim); border-color: var(--cyan); color: var(--cyan); box-shadow: inset 0 0 10px var(--cyan); }
 
         .bottom-nav { position: fixed; bottom: 0; width: 100%; height: 65px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr 1fr; z-index: 1000; }
         .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #5c7882; text-decoration: none; font-size: 10px; font-weight: 700; letter-spacing: 1px; }
@@ -69,7 +64,7 @@
 </head>
 <body>
 
-<header><span style="font-weight: 700; color: #fff; letter-spacing: 2px;">CORE_DASH // v28.1</span></header>
+<header><span style="font-weight: 700; color: #fff; letter-spacing: 2px;">CORE_DASH // v28.2</span></header>
 
 <div class="status-bar">
     <div>SYS_TIME: <span id="clock">00:00:00</span></div>
@@ -86,9 +81,7 @@
         </div>
     </div>
 
-    <div id="terminal">
-        <div class="term-line" style="color:var(--cyan)">[SYSTEM] INITIALIZING SECURE TERMINAL...</div>
-    </div>
+    <div id="terminal"></div>
 
     <div class="profile-mini">
         <div class="avatar" id="avatar-init">?</div>
@@ -133,6 +126,8 @@
 </div>
 
 <script type="module">
+    // IMPORT CONFIG
+    import { DEVICE_REGISTRY } from './config.js';
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getFirestore, collection, query, where, getDocs, doc, setDoc, addDoc, serverTimestamp, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -155,40 +150,24 @@
     const statusLabel = document.getElementById('mission-status');
     const weaponList = document.getElementById('weapon-list');
 
-    // DITO NA NATIN I-STORE ANG MGA DEVICES NA MANGGAGALING SA DB
-    let dynamicWeaponMap = {}; 
     let selectedWeaponID = "";
+    let agentSignatures = []; // Dynamic signatures mula sa agents collection
 
     document.getElementById('prof-name').innerText = currentAgent;
     document.getElementById('avatar-init').innerText = currentAgent.charAt(0);
 
-    // --- 1. SYNC WEAPON SYSTEMS MULA SA DATABASE AGENTS ---
-    async function syncWeaponSystems() {
-        try {
-            const agentRef = doc(db, "agents", currentAgent);
-            const agentSnap = await getDoc(agentRef);
-            
-            if (agentSnap.exists()) {
-                const data = agentSnap.data();
-                const signatures = data.linkedSignatures || [];
-                const brand = data.brandName || "GENERIC_STATION";
-
-                // Gawa ng map para sa display
-                dynamicWeaponMap = {};
-                signatures.forEach(sig => {
-                    dynamicWeaponMap[sig] = brand;
-                });
-                renderLine(`WEAPON_SYSTEMS_SYNCED: ${signatures.length} NODES ONLINE`, 'var(--green)');
-            } else {
-                renderLine(`SYSTEM_WARNING: NO LINKED DEVICES FOUND FOR ${currentAgent}`, 'var(--red)');
-            }
-        } catch (e) {
-            console.error("Sync Error:", e);
+    // --- 1. FETCH AGENT SIGNATURES FROM DATABASE ---
+    async function syncAgentDevices() {
+        const agentRef = doc(db, "agents", currentAgent);
+        const snap = await getDoc(agentRef);
+        if(snap.exists()){
+            agentSignatures = snap.data().linkedSignatures || [];
+            console.log("Devices Synced for Agent:", agentSignatures);
         }
     }
-    syncWeaponSystems();
+    syncAgentDevices();
 
-    // --- TERMINAL LOGS SYSTEM ---
+    // --- TERMINAL LOGS ---
     function renderLine(msg, color, time) {
         const div = document.createElement('div');
         div.className = "term-line";
@@ -201,36 +180,27 @@
         renderLine(msg, color); 
         try {
             await addDoc(collection(db, "terminal_logs"), {
-                agent: currentAgent,
-                message: msg,
-                color: color,
-                timestamp: serverTimestamp()
-            });
-        } catch(e) { console.error("Log failed", e); }
-    }
-
-    async function fetchLogs() {
-        terminal.innerHTML = "<div class='term-line'>[SYSTEM] SYNCING DATABASE...</div>";
-        try {
-            const q = query(collection(db, "terminal_logs"), where("agent", "==", currentAgent));
-            const snap = await getDocs(q);
-            if(snap.empty) {
-                terminal.innerHTML = "<div class='term-line'>[SYSTEM] TERMINAL READY.</div>";
-                return;
-            }
-            const logs = [];
-            snap.forEach(d => logs.push(d.data()));
-            logs.sort((a, b) => (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0));
-            terminal.innerHTML = "";
-            logs.forEach(log => {
-                const time = log.timestamp ? new Date(log.timestamp.seconds * 1000).toLocaleTimeString('en-GB') : "00:00:00";
-                renderLine(log.message, log.color, time);
+                agent: currentAgent, message: msg, color: color, timestamp: serverTimestamp()
             });
         } catch(e) { console.error(e); }
     }
+
+    async function fetchLogs() {
+        terminal.innerHTML = "<div class='term-line'>[SYSTEM] SYNCING...</div>";
+        const q = query(collection(db, "terminal_logs"), where("agent", "==", currentAgent));
+        const snap = await getDocs(q);
+        terminal.innerHTML = "";
+        const logs = [];
+        snap.forEach(d => logs.push(d.data()));
+        logs.sort((a,b) => (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0));
+        logs.forEach(log => {
+            const time = log.timestamp ? new Date(log.timestamp.seconds * 1000).toLocaleTimeString('en-GB') : "00:00:00";
+            renderLine(log.message, log.color, time);
+        });
+    }
     fetchLogs();
 
-    // --- SEARCH LOGIC ---
+    // --- SEARCH MISSION ---
     input.addEventListener('input', async () => {
         const val = input.value.trim();
         if (val.length < 4) { statusLabel.innerHTML = ""; return; }
@@ -238,20 +208,17 @@
         statusLabel.innerHTML = "SCANNING...";
         const qM = query(collection(db, "mission_orders"), where("missionID", "==", val));
         const qR = query(collection(db, "reserve_list"), where("missionID", "==", val));
-        
         const [snapM, snapR] = await Promise.all([getDocs(qM), getDocs(qR)]);
 
         if (!snapM.empty) {
             actionBtn.className = "btn btn-retrieve"; actionBtn.textContent = "RETRIEVE";
             reserveBtn.classList.remove('active');
             const data = snapM.docs[0].data();
-            statusLabel.innerHTML = (data.vAgentID && data.vAgentID !== "") ? '<span class="status-deployed">DEPLOYED</span>' : "";
-            renderLine(`TARGET #${val} RECOGNIZED. STATUS: RECORDED`, 'var(--blue)');
+            statusLabel.innerHTML = data.vAgentID ? '<span class="status-deployed">DEPLOYED</span>' : "";
         } else if (!snapR.empty) {
             actionBtn.className = "btn btn-save"; actionBtn.textContent = "SAVE";
             reserveBtn.classList.remove('active');
             statusLabel.innerHTML = '<span class="status-reserved">RESERVED</span>';
-            renderLine(`TARGET #${val} IDENTIFIED IN RESERVE ARCHIVE`, 'var(--yellow)');
         } else {
             actionBtn.className = "btn btn-save"; actionBtn.textContent = "SAVE";
             reserveBtn.classList.add('active');
@@ -259,7 +226,7 @@
         }
     });
 
-    // --- ACTION HANDLER (SAVE / RETRIEVE) ---
+    // --- POPUP HANDLER (SAVE/RETRIEVE) ---
     actionBtn.onclick = async () => {
         const id = input.value;
         if (id.length < 4) return;
@@ -268,36 +235,29 @@
         document.getElementById('pop-header').innerText = `#${id}`;
         document.getElementById('form-ui').style.display = "block";
         document.getElementById('reserve-ui').style.display = "none";
-        document.getElementById('modal-submit').innerText = "CONFIRM_UPLINK";
-        document.getElementById('modal-submit').style.background = "var(--green)";
         document.getElementById('v-agent-input').value = "";
         selectedWeaponID = "";
 
-        // Load DYNAMIC Weapon Systems (Yung galing sa agents collection)
+        // BUILD DYNAMIC WEAPON LIST
         weaponList.innerHTML = "";
-        const signatures = Object.keys(dynamicWeaponMap);
-
-        if(signatures.length === 0) {
-            weaponList.innerHTML = "<div style='color:var(--red); font-size:10px; padding:10px;'>NO LINKED DEVICES. AUTHORIZE VIA UPLINK FIRST.</div>";
-        }
-
-        signatures.forEach(key => {
+        agentSignatures.forEach(sig => {
             const b = document.createElement('button');
             b.className = "weapon-btn";
-            b.id = `w-${key}`;
-            b.innerText = `> ${dynamicWeaponMap[key]} [${key}]`;
+            b.id = `w-${sig}`;
+            // RENAMING LOGIC FROM CONFIG.JS
+            const displayName = DEVICE_REGISTRY[sig] || `UNKNOWN_UNIT [${sig}]`;
+            b.innerText = `> ${displayName}`;
             b.onclick = () => {
                 document.querySelectorAll('.weapon-btn').forEach(x => x.classList.remove('selected'));
                 b.classList.add('selected');
-                selectedWeaponID = key;
+                selectedWeaponID = sig;
             };
             weaponList.appendChild(b);
         });
 
-        // RETRIEVE DATA PARA SA DISPLAY
+        // RETRIEVE MISSION DATA
         if (actionBtn.textContent === "RETRIEVE") {
-            const dRef = doc(db, "mission_orders", id);
-            const dSnap = await getDoc(dRef);
+            const dSnap = await getDoc(doc(db, "mission_orders", id));
             if (dSnap.exists()) {
                 const data = dSnap.data();
                 document.getElementById('v-agent-input').value = data.vAgentID || "";
@@ -309,49 +269,24 @@
                     selectedWeaponID = data.weaponSystem;
                     setTimeout(() => {
                         const target = document.getElementById(`w-${data.weaponSystem}`);
-                        if(target) { target.classList.add('selected'); target.scrollIntoView(); }
-                    }, 300);
+                        if(target) target.classList.add('selected');
+                    }, 200);
                 }
             }
         }
 
-        // SAVE / UPDATE EXECUTION
+        // DEPLOY/UPDATE SUBMIT
         document.getElementById('modal-submit').onclick = async () => {
             const vID = document.getElementById('v-agent-input').value.trim();
-            if (!vID || !selectedWeaponID) return alert("REQUIRED: vAgentID and Weapon System.");
+            if (!vID || !selectedWeaponID) return alert("MISSING: vAgentID or Weapon System.");
             
-            const depDate = new Date();
-            const relDate = new Date(); relDate.setDate(depDate.getDate() + 30);
-
             await setDoc(doc(db, "mission_orders", id), {
                 missionID: id, agent: currentAgent, vAgentID: vID,
-                weaponSystem: selectedWeaponID, 
-                weaponName: dynamicWeaponMap[selectedWeaponID], // Save the name too
-                deploymentDate: depDate.toISOString(),
-                relieveDate: relDate.toISOString(), 
-                timestamp: serverTimestamp()
+                weaponSystem: selectedWeaponID, timestamp: serverTimestamp()
             }, { merge: true });
 
-            await addLog(`MISSION #${id} UPLINKED TO [${vID}] VIA ${dynamicWeaponMap[selectedWeaponID]}`, 'var(--green)');
-            closePopup();
-            input.value = "";
-        };
-    };
-
-    // --- RESERVE HANDLER ---
-    reserveBtn.onclick = () => {
-        const id = input.value;
-        document.getElementById('modal-overlay').style.display = 'flex';
-        document.getElementById('form-ui').style.display = "none";
-        document.getElementById('reserve-ui').style.display = "block";
-        document.getElementById('pop-header').innerText = `#${id}`;
-        document.getElementById('modal-submit').innerText = "ARCHIVE";
-        document.getElementById('modal-submit').style.background = "var(--yellow)";
-        document.getElementById('modal-submit').style.color = "#000";
-
-        document.getElementById('modal-submit').onclick = async () => {
-            await setDoc(doc(db, "reserve_list", id), { missionID: id, agent: currentAgent, timestamp: serverTimestamp() });
-            await addLog(`MISSION #${id} MOVED TO RESERVE STORAGE`, 'var(--yellow)');
+            const deviceName = DEVICE_REGISTRY[selectedWeaponID] || selectedWeaponID;
+            await addLog(`MISSION #${id} UPLINKED TO [${vID}] VIA ${deviceName}`, 'var(--green)');
             closePopup();
             input.value = "";
         };

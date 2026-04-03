@@ -2,15 +2,14 @@
 <html lang="en">
 <head>
     <link rel="manifest" href="manifest.json">
-
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#02080a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#02080a">
     
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-    <title>CORE_DASH_v28_STABLE</title>
+    <title>CORE_DASH_v28.1_DYNAMIC</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root { 
@@ -70,7 +69,7 @@
 </head>
 <body>
 
-<header><span style="font-weight: 700; color: #fff; letter-spacing: 2px;">CORE_DASH // v28.0</span></header>
+<header><span style="font-weight: 700; color: #fff; letter-spacing: 2px;">CORE_DASH // v28.1</span></header>
 
 <div class="status-bar">
     <div>SYS_TIME: <span id="clock">00:00:00</span></div>
@@ -156,11 +155,38 @@
     const statusLabel = document.getElementById('mission-status');
     const weaponList = document.getElementById('weapon-list');
 
-    const fullWeaponMap = { "SIG-20452634": "REDMI NOTE 14 PRO", "SIG-5B0D3A5C": "REALME 8 PRO", "SIG-121B8F43": "Terchno Camon 40 PRO 5G" };
+    // DITO NA NATIN I-STORE ANG MGA DEVICES NA MANGGAGALING SA DB
+    let dynamicWeaponMap = {}; 
     let selectedWeaponID = "";
 
     document.getElementById('prof-name').innerText = currentAgent;
     document.getElementById('avatar-init').innerText = currentAgent.charAt(0);
+
+    // --- 1. SYNC WEAPON SYSTEMS MULA SA DATABASE AGENTS ---
+    async function syncWeaponSystems() {
+        try {
+            const agentRef = doc(db, "agents", currentAgent);
+            const agentSnap = await getDoc(agentRef);
+            
+            if (agentSnap.exists()) {
+                const data = agentSnap.data();
+                const signatures = data.linkedSignatures || [];
+                const brand = data.brandName || "GENERIC_STATION";
+
+                // Gawa ng map para sa display
+                dynamicWeaponMap = {};
+                signatures.forEach(sig => {
+                    dynamicWeaponMap[sig] = brand;
+                });
+                renderLine(`WEAPON_SYSTEMS_SYNCED: ${signatures.length} NODES ONLINE`, 'var(--green)');
+            } else {
+                renderLine(`SYSTEM_WARNING: NO LINKED DEVICES FOUND FOR ${currentAgent}`, 'var(--red)');
+            }
+        } catch (e) {
+            console.error("Sync Error:", e);
+        }
+    }
+    syncWeaponSystems();
 
     // --- TERMINAL LOGS SYSTEM ---
     function renderLine(msg, color, time) {
@@ -188,17 +214,13 @@
         try {
             const q = query(collection(db, "terminal_logs"), where("agent", "==", currentAgent));
             const snap = await getDocs(q);
-            
             if(snap.empty) {
                 terminal.innerHTML = "<div class='term-line'>[SYSTEM] TERMINAL READY.</div>";
                 return;
             }
-
             const logs = [];
             snap.forEach(d => logs.push(d.data()));
-            // Sort by time (Oldest to Newest para sa .prepend logic)
             logs.sort((a, b) => (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0));
-
             terminal.innerHTML = "";
             logs.forEach(log => {
                 const time = log.timestamp ? new Date(log.timestamp.seconds * 1000).toLocaleTimeString('en-GB') : "00:00:00";
@@ -237,7 +259,7 @@
         }
     });
 
-    // --- ACTION HANDLER ---
+    // --- ACTION HANDLER (SAVE / RETRIEVE) ---
     actionBtn.onclick = async () => {
         const id = input.value;
         if (id.length < 4) return;
@@ -246,18 +268,24 @@
         document.getElementById('pop-header').innerText = `#${id}`;
         document.getElementById('form-ui').style.display = "block";
         document.getElementById('reserve-ui').style.display = "none";
-        document.getElementById('modal-submit').innerText = "DEPLOY";
+        document.getElementById('modal-submit').innerText = "CONFIRM_UPLINK";
         document.getElementById('modal-submit').style.background = "var(--green)";
         document.getElementById('v-agent-input').value = "";
         selectedWeaponID = "";
 
-        // Load Weapon Systems
+        // Load DYNAMIC Weapon Systems (Yung galing sa agents collection)
         weaponList.innerHTML = "";
-        Object.keys(fullWeaponMap).forEach(key => {
+        const signatures = Object.keys(dynamicWeaponMap);
+
+        if(signatures.length === 0) {
+            weaponList.innerHTML = "<div style='color:var(--red); font-size:10px; padding:10px;'>NO LINKED DEVICES. AUTHORIZE VIA UPLINK FIRST.</div>";
+        }
+
+        signatures.forEach(key => {
             const b = document.createElement('button');
             b.className = "weapon-btn";
             b.id = `w-${key}`;
-            b.innerText = `> ${fullWeaponMap[key]}`;
+            b.innerText = `> ${dynamicWeaponMap[key]} [${key}]`;
             b.onclick = () => {
                 document.querySelectorAll('.weapon-btn').forEach(x => x.classList.remove('selected'));
                 b.classList.add('selected');
@@ -266,7 +294,7 @@
             weaponList.appendChild(b);
         });
 
-        // RETRIEVE MODE DATA
+        // RETRIEVE DATA PARA SA DISPLAY
         if (actionBtn.textContent === "RETRIEVE") {
             const dRef = doc(db, "mission_orders", id);
             const dSnap = await getDoc(dRef);
@@ -287,6 +315,7 @@
             }
         }
 
+        // SAVE / UPDATE EXECUTION
         document.getElementById('modal-submit').onclick = async () => {
             const vID = document.getElementById('v-agent-input').value.trim();
             if (!vID || !selectedWeaponID) return alert("REQUIRED: vAgentID and Weapon System.");
@@ -296,11 +325,14 @@
 
             await setDoc(doc(db, "mission_orders", id), {
                 missionID: id, agent: currentAgent, vAgentID: vID,
-                weaponSystem: selectedWeaponID, deploymentDate: depDate.toISOString(),
-                relieveDate: relDate.toISOString(), timestamp: serverTimestamp()
+                weaponSystem: selectedWeaponID, 
+                weaponName: dynamicWeaponMap[selectedWeaponID], // Save the name too
+                deploymentDate: depDate.toISOString(),
+                relieveDate: relDate.toISOString(), 
+                timestamp: serverTimestamp()
             }, { merge: true });
 
-            await addLog(`MISSION #${id} DEPLOYED TO [${vID}] ON ${fullWeaponMap[selectedWeaponID]}`, 'var(--green)');
+            await addLog(`MISSION #${id} UPLINKED TO [${vID}] VIA ${dynamicWeaponMap[selectedWeaponID]}`, 'var(--green)');
             closePopup();
             input.value = "";
         };

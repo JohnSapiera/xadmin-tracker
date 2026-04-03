@@ -9,7 +9,7 @@
   
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>CORE_INTEL_v30.2</title>
+  <title>CORE_INTEL_v30.4</title>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root { 
@@ -48,7 +48,7 @@
 </head>
 <body>
 
-<header><span style="font-weight: 700; color: #fff; letter-spacing: 2px;">CORE_INTEL // v30.2</span></header>
+<header><span style="font-weight: 700; color: #fff; letter-spacing: 2px;">CORE_INTEL // v30.4</span></header>
 
 <div class="status-bar">
     <div>SYS_TIME: <span id="clock">00:00:00</span></div>
@@ -57,8 +57,8 @@
 
 <main>
   <div class="intel-module">
-    <div class="module-title">TARGET IDENTIFICATION</div>
-    <input type="text" id="vagent-input" class="input-field" placeholder="ENTER V_AGENT#" autocomplete="off" disabled>
+    <div class="module-title">IDENTITY VERIFICATION</div>
+    <input type="text" id="vagent-input" class="input-field" placeholder="ENTER vAGENT#" autocomplete="off" disabled>
     <div id="scan-status">WAITING FOR DASHBOARD UPLINK...</div>
     <div id="device-list" class="device-grid"></div>
   </div>
@@ -101,22 +101,35 @@
   const submitBtn = document.getElementById('submit-btn');
 
   let selectedMissionDocId = null;
-  const currentAgent = localStorage.getItem('cia_agent'); // MATCHED WITH DASHBOARD KEY
+  const currentAgent = localStorage.getItem('cia_agent'); 
 
-  // --- STEP 1: IDENTITY SYNC ---
+  // --- IDENTITY SYNC ---
   function establishSession() {
       if (currentAgent) {
           authStatus.innerText = `AGENT: ${currentAgent}`;
           vAgentInput.disabled = false;
-          scanStatus.innerText = "READY FOR TARGET IDENTIFICATION";
+          scanStatus.innerText = "INPUT TARGET vAGENT# FOR VERIFICATION";
       } else {
           authStatus.innerHTML = `<span style="color:var(--red)">[ UNAUTHORIZED ]</span>`;
-          scanStatus.innerHTML = "ACCESS DENIED: LOG-IN VIA DASHBOARD.";
+          scanStatus.innerHTML = "ACCESS DENIED: REDIRECTING TO DASHBOARD...";
+          setTimeout(() => location.href = "dashboard.html", 3000);
       }
   }
   establishSession();
 
-  // --- STEP 2: DYNAMIC SEARCH ---
+  // --- LOGGING UTILITY ---
+  async function addLog(msg, color) {
+      try {
+          await addDoc(collection(db, "terminal_logs"), {
+              agent: currentAgent,
+              message: msg,
+              color: color,
+              timestamp: serverTimestamp()
+          });
+      } catch(e) {}
+  }
+
+  // --- DYNAMIC SEARCH LOGIC ---
   let typingTimer;
   vAgentInput.addEventListener('input', () => {
     clearTimeout(typingTimer);
@@ -128,46 +141,55 @@
     submitBtn.classList.remove('ready');
 
     if (vInput.length >= 2 && currentAgent) {
-        scanStatus.innerHTML = `<span class="blink">[SCANNING] vAgent# ${vInput}...</span>`;
-        typingTimer = setTimeout(() => {
-            performHierarchySearch(vInput);
-        }, 800);
+        scanStatus.innerHTML = `<span class="blink">[VERIFYING IDENTITY] ${vInput}...</span>`;
+        typingTimer = setTimeout(() => performHierarchySearch(vInput), 1000);
     }
   });
 
   async function performHierarchySearch(vInput) {
     try {
-        // Query missions matching vAgentID only (Flexible)
-        const q = query(
+        // STEP 1: Verify Ownership
+        const qMatch = query(
             collection(db, "mission_orders"), 
-            where("vAgentID", "==", vInput)
+            where("vAgentID", "==", vInput),
+            where("agent", "==", currentAgent)
         );
 
-        const snap = await getDocs(q);
+        const snapMatch = await getDocs(qMatch);
 
-        if (snap.empty) {
-            scanStatus.innerHTML = `<span style="color:var(--red)">[ERROR] TARGET NOT FOUND: ${vInput}</span>`;
+        if (snapMatch.empty) {
+            // STEP 2: Check if target exists for someone else
+            const qGlobal = query(collection(db, "mission_orders"), where("vAgentID", "==", vInput));
+            const snapGlobal = await getDocs(qGlobal);
+
+            if (!snapGlobal.empty) {
+                scanStatus.innerHTML = `<span style="color:var(--red)">[ACCESS DENIED] UNAUTHORIZED TARGET DETECTED</span>`;
+                addLog(`SECURITY ALERT: ${currentAgent} ACCESSED FOREIGN TARGET ${vInput}`, 'var(--red)');
+            } else {
+                scanStatus.innerHTML = `<span style="color:var(--yellow)">[ERROR] vAGENT# ${vInput} NOT FOUND</span>`;
+            }
             return;
         }
 
-        scanStatus.innerHTML = `<span style="color:var(--green)">[SUCCESS] ${snap.size} UNIT(S) LOCATED.</span>`;
+        // SUCCESS: Retrieve Asset Details
+        scanStatus.innerHTML = `<span style="color:var(--green)">[IDENTITY MATCH] RETRIEVING WEAPON SYSTEM...</span>`;
         
-        snap.forEach(d => {
+        snapMatch.forEach(d => {
             const data = d.data();
             const btn = document.createElement('button');
             btn.className = "dev-btn";
             const deviceName = DEVICE_REGISTRY[data.weaponSystem] || `SIG: ${data.weaponSystem}`;
 
             btn.innerHTML = `
-              <span style="font-size:9px; color:var(--cyan)">SYSTEM: ${data.weaponSystem}</span>
+              <span style="font-size:9px; color:var(--cyan)">AUTHORIZED SYSTEM: ${data.weaponSystem}</span>
               <span style="font-weight:700">> ${deviceName}</span>
-              <span style="font-size:10px; color:#5c7882; align-self:flex-end">MISSION_ID: #${data.missionID}</span>
+              <span style="font-size:10px; color:#5c7882; align-self:flex-end">MISSION_REF: #${data.missionID}</span>
             `;
             
             btn.onclick = () => {
                 document.querySelectorAll('.dev-btn').forEach(x => x.classList.remove('active'));
                 btn.classList.add('active');
-                selectedMissionDocId = data.missionID; // Consistent ID usage
+                selectedMissionDocId = data.missionID; 
                 expenseModule.style.opacity = "1";
                 expenseModule.style.pointerEvents = "auto";
                 submitBtn.classList.add('ready');
@@ -175,16 +197,16 @@
             deviceList.appendChild(btn);
         });
     } catch (e) {
-        scanStatus.innerHTML = `<span style="color:var(--red)">[SYS ERROR] DATABASE_OFFLINE</span>`;
+        scanStatus.innerHTML = `<span style="color:var(--red)">[FAILURE] SYSTEM_ACCESS_TIMED_OUT</span>`;
     }
   }
 
-  // --- STEP 3: DATA INJECTION ---
+  // --- DATA INJECTION ---
   submitBtn.onclick = async () => {
     const amount = parseFloat(document.getElementById('expense-input').value);
     
     if (!selectedMissionDocId || isNaN(amount) || amount <= 0) {
-        alert("INPUT ERROR: INVALID AMOUNT.");
+        alert("CRITICAL ERROR: DATA MISMATCH OR INVALID AMOUNT.");
         return;
     }
 
@@ -194,13 +216,7 @@
     try {
         const ref = doc(db, "mission_orders", selectedMissionDocId);
         
-        // Log activity to terminal_logs
-        await addDoc(collection(db, "terminal_logs"), {
-            agent: currentAgent,
-            message: `OVERRIDE: ₱${amount.toFixed(2)} INJECTED TO #${selectedMissionDocId}`,
-            color: 'var(--yellow)',
-            timestamp: serverTimestamp()
-        });
+        await addLog(`OVERRIDE: ₱${amount.toFixed(2)} INJECTED TO #${selectedMissionDocId}`, 'var(--yellow)');
 
         await updateDoc(ref, {
             expensesBreakdown: arrayUnion({ 
@@ -211,16 +227,16 @@
             totalExpenses: increment(amount)
         });
         
-        alert("OVERRIDE SUCCESSFUL.");
+        alert("DATABASE OVERRIDDEN SUCCESSFULLY.");
         location.reload();
     } catch (e) { 
-        alert("CRITICAL ERROR: DB_UPDATE_FAILED"); 
+        alert("CRITICAL ERROR: INJECTION FAILED"); 
         submitBtn.innerText = "EXECUTE OVERRIDE";
         submitBtn.disabled = false;
     }
   };
 
-  // Clock
+  // SYS CLOCK
   setInterval(() => { 
     document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB'); 
   }, 1000);

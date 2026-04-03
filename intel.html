@@ -9,7 +9,7 @@
   
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>CORE_INTEL_v28.2</title>
+  <title>CORE_INTEL_v28.5</title>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root { 
@@ -53,7 +53,7 @@
 </head>
 <body>
 
-<header><span style="font-weight: 700; color: #fff;">CORE_INTEL // v28.2</span></header>
+<header><span style="font-weight: 700; color: #fff;">CORE_INTEL // v28.5</span></header>
 
 <div class="status-bar">
     <div>SYS_TIME: <span id="clock">00:00:00</span></div>
@@ -83,7 +83,6 @@
 </nav>
 
 <script type="module">
-  // 1. IMPORT REGISTRY
   import { DEVICE_REGISTRY } from './config.js';
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getFirestore, collection, query, where, getDocs, doc, updateDoc, arrayUnion, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -109,6 +108,9 @@
   let typingTimer;
   let selectedMissionDocId = null;
 
+  // Kunin ang logged in Agent mula sa LocalStorage
+  const localAgentName = localStorage.getItem('agentName');
+
   vAgentInput.addEventListener('input', () => {
     clearTimeout(typingTimer);
     const val = vAgentInput.value.trim();
@@ -121,55 +123,65 @@
 
     if (val.length > 0) {
         scanStatus.innerHTML = `<span class="blink">[SYSTEM] SCANNING DATABANKS FOR ${val}...</span>`;
-        typingTimer = setTimeout(() => executeSearch(val), 2000); // 2 Seconds enough
+        typingTimer = setTimeout(() => executeSearch(val), 2000);
     } else {
         scanStatus.innerHTML = "AWAITING INPUT...";
     }
   });
 
-  async function executeSearch(agentVal) {
+  async function executeSearch(vAgentID) {
     try {
         scanStatus.innerHTML = `<span style="color:var(--cyan)">[SYSTEM] ANALYZING MISSION LOGS...</span>`;
         
-        // Hahanapin lahat ng missions na nakatali sa vAgentID na iyan
-        const q = query(collection(db, "mission_orders"), where("vAgentID", "==", agentVal));
+        // Search by vAgentID
+        const q = query(collection(db, "mission_orders"), where("vAgentID", "==", vAgentID));
         const snap = await getDocs(q);
 
         if (snap.empty) {
-            scanStatus.innerHTML = `<span style="color:var(--red)">[ERROR] NO ACTIVE MISSIONS FOR ${agentVal}</span>`;
+            scanStatus.innerHTML = `<span style="color:var(--red)">[ERROR] NO RECORDS FOUND FOR ${vAgentID}</span>`;
             return;
         }
 
-        scanStatus.innerHTML = `<span style="color:var(--green)">[SUCCESS] ${snap.size} MISSION(S) DETECTED.</span>`;
-        
+        let matchCount = 0;
+
         snap.forEach(d => {
             const data = d.data();
-            const btn = document.createElement('button');
-            btn.className = "dev-btn";
             
-            // Translate SIG via config.js
-            const deviceDisplayName = DEVICE_REGISTRY[data.weaponSystem] || `UNKNOWN [${data.weaponSystem}]`;
-            const ownerAgent = data.agent || "UNKNOWN_AGENT";
-
-            btn.innerHTML = `
-              <span class="agent-tag">OPERATOR: ${ownerAgent}</span>
-              <span style="font-weight:700">> ${deviceDisplayName}</span>
-              <span class="mission-tag">LOG_ID: #${data.missionID}</span>
-            `;
-            
-            btn.onclick = () => {
-                document.querySelectorAll('.dev-btn').forEach(x => x.classList.remove('active'));
-                btn.classList.add('active');
-                selectedMissionDocId = d.id;
+            // SECURITY CHECK: I-display lang kung ang agent sa database ay tugma sa agent sa LocalStorage
+            if (data.agent === localAgentName) {
+                matchCount++;
+                const btn = document.createElement('button');
+                btn.className = "dev-btn";
                 
-                expenseModule.style.opacity = "1";
-                expenseModule.style.pointerEvents = "auto";
-                submitBtn.classList.add('ready');
-            };
-            deviceList.appendChild(btn);
+                const deviceDisplayName = DEVICE_REGISTRY[data.weaponSystem] || `UNKNOWN [${data.weaponSystem}]`;
+
+                btn.innerHTML = `
+                  <span class="agent-tag">AGENT: ${data.agent}</span>
+                  <span style="font-weight:700">> ${deviceDisplayName}</span>
+                  <span class="mission-tag">MISSION_ORDER: #${data.missionID}</span>
+                `;
+                
+                btn.onclick = () => {
+                    document.querySelectorAll('.dev-btn').forEach(x => x.classList.remove('active'));
+                    btn.classList.add('active');
+                    selectedMissionDocId = d.id;
+                    
+                    expenseModule.style.opacity = "1";
+                    expenseModule.style.pointerEvents = "auto";
+                    submitBtn.classList.add('ready');
+                };
+                deviceList.appendChild(btn);
+            }
         });
 
+        if (matchCount > 0) {
+            scanStatus.innerHTML = `<span style="color:var(--green)">[SUCCESS] ${matchCount} DEVICE(S) IDENTIFIED.</span>`;
+        } else {
+            scanStatus.innerHTML = `<span style="color:var(--red)">[ACCESS DENIED] AGENT MISMATCH</span>`;
+        }
+
     } catch (e) {
+        console.error(e);
         scanStatus.innerHTML = `<span style="color:var(--red)">[ERROR] SYS_FAILURE: DB_UNREACHABLE</span>`;
     }
   }
@@ -195,7 +207,7 @@
         submitBtn.style.background = "var(--cyan)";
 
         setTimeout(() => {
-            location.reload(); // Refresh para malinis
+            location.reload();
         }, 1500);
 
     } catch (e) {

@@ -70,7 +70,7 @@
   </div>
 
   <div id="terminal">
-      <div class="term-line" style="color:var(--yellow)">[SYSTEM] INITIALIZING TERMINAL...</div>
+    <div class="term-line" style="color:var(--yellow)">[SYSTEM] INITIALIZING CORE FEED...</div>
   </div>
 
   <div class="profile-mini">
@@ -121,10 +121,12 @@
   const db = getFirestore(app);
 
   const fullWeaponMap = { "SIG-20452634": "REDMI NOTE 14 PRO 5G", "SIG-5B0D3A5C": "REALME 8 PRO", "SIG-6AC68A2E": "LAPTOP: ACER" };
-  const currentAgent = localStorage.getItem("cia_agent") || "UNKNOWN";
+  
+  // MGA IMPORTANTE: Siguraduhin na 'AGENT_LZ' ang naka-set
+  const currentAgent = localStorage.getItem("cia_agent") || "AGENT_LZ";
   const currentDeviceSig = localStorage.getItem("device_signature") || "SIG-3A14D65A";
 
-  // Setup Profile
+  // Setup Profile UI
   document.getElementById('prof-name').innerText = currentAgent;
   document.getElementById('avatar-init').innerText = currentAgent.charAt(0);
   document.getElementById('prof-dev').innerText = "WEAPON: " + (fullWeaponMap[currentDeviceSig] || "UNDEFINED");
@@ -134,36 +136,33 @@
   const reserveBtn = document.getElementById('reserve-btn');
   const terminal = document.getElementById('terminal');
 
-  // --- PERSISTENT LIVE TERMINAL LOGIC ---
+  // --- LIVE TERMINAL SYNC (IMPORTANT: Field must be 'agent') ---
   const qLogs = query(
     collection(db, "terminal_logs"), 
     where("agent", "==", currentAgent), 
     orderBy("timestamp", "desc"), 
-    limit(15)
+    limit(20)
   );
   
   onSnapshot(qLogs, (snap) => {
     terminal.innerHTML = "";
-    if (snap.empty) {
-        terminal.innerHTML = `<div class="term-line" style="color:var(--cyan)">[SYSTEM] TERMINAL ONLINE. AWAITING DATA...</div>`;
+    if(snap.empty) {
+        terminal.innerHTML = `<div class="term-line" style="color:var(--cyan)">[SYSTEM] NO ACTIVE LOGS FOR ${currentAgent}</div>`;
     }
     snap.forEach(d => {
       const log = d.data();
       const div = document.createElement('div');
       div.className = "term-line";
-      
-      // I-format ang oras, o ipakita ang "SYNCING" kung bagong gawa ang entry
-      const time = log.timestamp ? log.timestamp.toDate().toLocaleTimeString('en-GB') : "SYNCING";
-      
+      const time = log.timestamp ? log.timestamp.toDate().toLocaleTimeString('en-GB') : "PENDING";
       div.innerHTML = `<span style="color:#5c7882">[${time}]</span> <span style="color:${log.color || 'var(--cyan)'}">${log.message}</span>`;
       terminal.appendChild(div);
     });
   }, (error) => {
       console.error("Log Sync Error: ", error);
-      terminal.innerHTML = `<div class="term-line" style="color:var(--red)">[ERROR] Sync Failed. Check Console for Index Link.</div>`;
+      terminal.innerHTML = `<div class="term-line" style="color:var(--red)">[ERROR] Sync failed. Please check/create Firestore Index.</div>`;
   });
 
-  // --- MISSION INPUT HANDLER ---
+  // --- MISSION INPUT DETECTION ---
   input.addEventListener('input', async () => {
     const val = input.value.trim();
     if (val.length >= 4) {
@@ -179,7 +178,7 @@
     }
   });
 
-  // --- SAVE / RETRIEVE ACTION ---
+  // --- ACTION: SAVE / RETRIEVE ---
   actionBtn.onclick = async () => {
     if (input.value.length < 4) return;
     document.getElementById('action-ui').style.display = "block";
@@ -187,13 +186,11 @@
     document.getElementById('modal-overlay').style.display = 'flex';
     document.getElementById('pop-m-id').innerText = `#${input.value}`;
     
-    // Auto-fetch devices used by this agent before
+    // Auto-populate device list
     const myDevices = new Set([currentDeviceSig]);
-    try {
-        const qD = query(collection(db, "mission_orders"), where("agentName", "==", currentAgent));
-        const snapD = await getDocs(qD);
-        snapD.forEach(d => myDevices.add(d.data().weaponSystem));
-    } catch(e) { console.warn("Device fetch failed"); }
+    const qD = query(collection(db, "mission_orders"), where("agent", "==", currentAgent));
+    const snapD = await getDocs(qD);
+    snapD.forEach(d => myDevices.add(d.data().weaponSystem));
 
     const grid = document.getElementById('pop-device-list');
     grid.innerHTML = "";
@@ -210,28 +207,31 @@
     
     document.getElementById('modal-submit').onclick = async () => {
         const id = input.value;
-        const selectedDev = document.querySelector('.dev-btn.active')?.innerText || "UNKNOWN_SIG";
+        const vAgent = document.getElementById('v-agent-input').value || "N/A";
         
+        // Save to Mission Orders
         await setDoc(doc(db, "mission_orders", id), { 
             missionID: id, 
-            agentName: currentAgent, 
-            vAgentID: document.getElementById('v-agent-input').value || "NONE", 
-            weaponSystem: selectedDev, 
+            agent: currentAgent, 
+            vAgentID: vAgent, 
+            weaponSystem: currentDeviceSig, 
             timestamp: serverTimestamp() 
         }, {merge:true});
 
+        // Add to Terminal Logs
         await addDoc(collection(db, "terminal_logs"), { 
             message: `MISSION ${id} RECORDED BY ${currentAgent}`, 
             agent: currentAgent, 
             timestamp: serverTimestamp(), 
             color: 'var(--green)' 
         });
+
         closePopup();
         input.value = "";
     };
   };
 
-  // --- RESERVE ACTION ---
+  // --- ACTION: RESERVE ---
   reserveBtn.onclick = () => {
     document.getElementById('action-ui').style.display = "none";
     document.getElementById('reserve-ui').style.display = "block";
@@ -252,6 +252,7 @@
             timestamp: serverTimestamp(), 
             color: 'var(--yellow)' 
         });
+
         closePopup();
         input.value = "";
     };

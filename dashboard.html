@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>CORE_DASH_v27.5</title>
+  <title>CORE_DASH_v27.5_FINAL</title>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root { 
@@ -29,26 +29,21 @@
     .btn-reserve { background: transparent; color: #fff; border: 1px solid #fff; opacity: 0.3; pointer-events: none; }
     .btn-reserve.active { opacity: 1; pointer-events: auto; border-color: var(--yellow); color: var(--yellow); }
 
-    /* Terminal & Profile */
     #terminal { background: rgba(0,0,0,0.9); border-left: 3px solid var(--cyan); padding: 12px; font-family: var(--font-mono); font-size: 10px; height: 180px; overflow-y: auto; color: #9ab4bc; box-shadow: inset 0 0 15px #000; }
-    .term-line { margin-bottom: 3px; border-bottom: 1px solid rgba(255,255,255,0.02); }
+    .term-line { margin-bottom: 5px; border-bottom: 1px solid rgba(255,255,255,0.02); line-height: 1.4; }
     
     .profile-mini { background: #051014; border: 1px solid var(--border); padding: 10px; display: flex; align-items: center; gap: 15px; }
     .avatar { width: 40px; height: 40px; background: var(--cyan-dim); border: 1px solid var(--cyan); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--cyan); font-weight: bold; }
     .profile-info { flex: 1; font-size: 12px; }
 
-    /* Bottom Nav */
     .bottom-nav { position: fixed; bottom: 0; width: 100%; height: 65px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr 1fr; z-index: 1000; }
     .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #5c7882; text-decoration: none; font-size: 10px; font-weight: 700; letter-spacing: 1px; transition: 0.3s; }
     .nav-item.active { color: var(--cyan); background: var(--cyan-dim); border-top: 2px solid var(--cyan); }
 
-    /* Popups */
     .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 9999; align-items: center; justify-content: center; padding: 20px; }
     .popup { width: 100%; max-width: 350px; background: #051014; border: 1px solid var(--cyan); padding: 20px; }
     .pop-input { width: 100%; background: #000; border: 1px solid var(--cyan); color: var(--green); padding: 10px; text-align: center; font-size: 18px; margin-bottom: 15px; font-family: var(--font-mono); }
-    .device-grid { display: grid; grid-template-columns: 1fr; gap: 5px; margin-bottom: 15px; max-height: 120px; overflow-y: auto; }
-    .dev-btn { background: #08161b; border: 1px solid #1a2f37; color: #5c7882; padding: 10px; font-size: 11px; cursor: pointer; text-align: left; }
-    .dev-btn.active { border-color: var(--cyan); color: var(--cyan); }
+    .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   </style>
 </head>
 <body>
@@ -70,14 +65,14 @@
   </div>
 
   <div id="terminal">
-    <div class="term-line" style="color:var(--yellow)">[SYSTEM] INITIALIZING CORE FEED...</div>
+    <div class="term-line" style="color:var(--cyan)">[SYSTEM] READY. SYNCING LOGS...</div>
   </div>
 
   <div class="profile-mini">
     <div class="avatar" id="avatar-init">?</div>
     <div class="profile-info">
         <div style="color: var(--cyan); font-weight: 700; text-transform: uppercase;" id="prof-name">AGENT_NAME</div>
-        <div style="color: #5c7882; font-size: 10px;" id="prof-dev">WEAPON: ---</div>
+        <div style="color: #5c7882; font-size: 10px;" id="prof-dev">WEAPON: SECURE_LINE</div>
     </div>
   </div>
 </main>
@@ -93,21 +88,20 @@
         <div style="color:var(--cyan); text-align:center; margin-bottom:15px; font-size:24px; font-weight:700;" id="pop-m-id">#ID</div>
         <div id="action-ui">
             <input type="text" id="v-agent-input" class="pop-input" placeholder="V_AGENT_ID">
-            <div class="device-grid" id="pop-device-list"></div>
         </div>
         <div id="reserve-ui" style="display:none; text-align:center; padding:20px; color:var(--yellow);">
             SEND TO RESERVE LIST?
         </div>
         <div class="btn-row">
             <button id="modal-submit" class="btn btn-save">PROCEED</button>
-            <button onclick="closePopup()" class="btn btn-reserve" style="opacity:1; pointer-events:auto;">ABORT</button>
+            <button onclick="closePopup()" class="btn btn-reserve" style="opacity:1; pointer-events:auto; border: 1px solid #fff;">ABORT</button>
         </div>
     </div>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, query, where, getDocs, doc, setDoc, addDoc, serverTimestamp, onSnapshot, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, collection, query, where, getDocs, doc, setDoc, addDoc, serverTimestamp, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = { 
     apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
@@ -120,119 +114,88 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  const fullWeaponMap = { "SIG-20452634": "REDMI NOTE 14 PRO 5G", "SIG-5B0D3A5C": "REALME 8 PRO", "SIG-6AC68A2E": "LAPTOP: ACER" };
-  
-  // MGA IMPORTANTE: Siguraduhin na 'AGENT_LZ' ang naka-set
   const currentAgent = localStorage.getItem("cia_agent") || "AGENT_LZ";
-  const currentDeviceSig = localStorage.getItem("device_signature") || "SIG-3A14D65A";
-
-  // Setup Profile UI
-  document.getElementById('prof-name').innerText = currentAgent;
-  document.getElementById('avatar-init').innerText = currentAgent.charAt(0);
-  document.getElementById('prof-dev').innerText = "WEAPON: " + (fullWeaponMap[currentDeviceSig] || "UNDEFINED");
-
   const input = document.getElementById('mission-input');
   const actionBtn = document.getElementById('action-btn');
   const reserveBtn = document.getElementById('reserve-btn');
   const terminal = document.getElementById('terminal');
 
-  // --- LIVE TERMINAL SYNC (IMPORTANT: Field must be 'agent') ---
-  const qLogs = query(
-    collection(db, "terminal_logs"), 
-    where("agent", "==", currentAgent), 
-    orderBy("timestamp", "desc"), 
-    limit(20)
-  );
-  
-  onSnapshot(qLogs, (snap) => {
-    terminal.innerHTML = "";
-    if(snap.empty) {
-        terminal.innerHTML = `<div class="term-line" style="color:var(--cyan)">[SYSTEM] NO ACTIVE LOGS FOR ${currentAgent}</div>`;
-    }
-    snap.forEach(d => {
-      const log = d.data();
-      const div = document.createElement('div');
-      div.className = "term-line";
-      const time = log.timestamp ? log.timestamp.toDate().toLocaleTimeString('en-GB') : "PENDING";
-      div.innerHTML = `<span style="color:#5c7882">[${time}]</span> <span style="color:${log.color || 'var(--cyan)'}">${log.message}</span>`;
-      terminal.appendChild(div);
-    });
-  }, (error) => {
-      console.error("Log Sync Error: ", error);
-      terminal.innerHTML = `<div class="term-line" style="color:var(--red)">[ERROR] Sync failed. Please check/create Firestore Index.</div>`;
-  });
+  document.getElementById('prof-name').innerText = currentAgent;
+  document.getElementById('avatar-init').innerText = currentAgent.charAt(0);
 
-  // --- MISSION INPUT DETECTION ---
+  // --- 1. LOAD LOGS ON STARTUP ---
+  async function loadLogs() {
+    try {
+        const q = query(collection(db, "terminal_logs"), where("agent", "==", currentAgent), limit(15));
+        const snap = await getDocs(q);
+        if(!snap.empty) terminal.innerHTML = "";
+        snap.forEach(d => {
+            renderLine(d.data().message, d.data().color);
+        });
+    } catch(e) { console.error(e); }
+  }
+  loadLogs();
+
+  // --- 2. STORAGE & RENDER FUNCTION ---
+  async function recordActivity(msg, color) {
+    renderLine(msg, color);
+    await addDoc(collection(db, "terminal_logs"), {
+        agent: currentAgent,
+        message: msg,
+        color: color,
+        timestamp: serverTimestamp()
+    });
+  }
+
+  function renderLine(msg, color) {
+    const div = document.createElement('div');
+    div.className = "term-line";
+    const time = new Date().toLocaleTimeString('en-GB');
+    div.innerHTML = `<span style="color:#5c7882">[${time}]</span> <span style="color:${color}">${msg}</span>`;
+    terminal.prepend(div);
+  }
+
+  // --- 3. AUTO SEARCH & COLOR LOGIC ---
+  let lastSearched = "";
   input.addEventListener('input', async () => {
     const val = input.value.trim();
-    if (val.length >= 4) {
+    if (val.length >= 4 && val !== lastSearched) {
+      lastSearched = val;
       const q = query(collection(db, "mission_orders"), where("missionID", "==", val));
       const snap = await getDocs(q);
+
       if (!snap.empty) {
         actionBtn.className = "btn btn-retrieve"; actionBtn.textContent = "RETRIEVE";
         reserveBtn.classList.remove('active');
+        recordActivity(`This #${val} is already existed do you want to retrieve`, 'var(--blue)');
       } else {
         actionBtn.className = "btn btn-save"; actionBtn.textContent = "SAVE";
         reserveBtn.classList.add('active');
+        recordActivity(`This #${val} is available`, 'var(--green)');
       }
     }
   });
 
-  // --- ACTION: SAVE / RETRIEVE ---
-  actionBtn.onclick = async () => {
+  // --- 4. ACTION CLICKS ---
+  actionBtn.onclick = () => {
     if (input.value.length < 4) return;
     document.getElementById('action-ui').style.display = "block";
     document.getElementById('reserve-ui').style.display = "none";
     document.getElementById('modal-overlay').style.display = 'flex';
     document.getElementById('pop-m-id').innerText = `#${input.value}`;
     
-    // Auto-populate device list
-    const myDevices = new Set([currentDeviceSig]);
-    const qD = query(collection(db, "mission_orders"), where("agent", "==", currentAgent));
-    const snapD = await getDocs(qD);
-    snapD.forEach(d => myDevices.add(d.data().weaponSystem));
-
-    const grid = document.getElementById('pop-device-list');
-    grid.innerHTML = "";
-    myDevices.forEach(sig => {
-        const b = document.createElement('button');
-        b.className = `dev-btn ${sig === currentDeviceSig ? 'active' : ''}`;
-        b.innerText = fullWeaponMap[sig] || sig;
-        b.onclick = () => {
-            document.querySelectorAll('.dev-btn').forEach(x => x.classList.remove('active'));
-            b.classList.add('active');
-        };
-        grid.appendChild(b);
-    });
-    
     document.getElementById('modal-submit').onclick = async () => {
         const id = input.value;
-        const vAgent = document.getElementById('v-agent-input').value || "N/A";
-        
-        // Save to Mission Orders
-        await setDoc(doc(db, "mission_orders", id), { 
-            missionID: id, 
-            agent: currentAgent, 
-            vAgentID: vAgent, 
-            weaponSystem: currentDeviceSig, 
-            timestamp: serverTimestamp() 
-        }, {merge:true});
-
-        // Add to Terminal Logs
-        await addDoc(collection(db, "terminal_logs"), { 
-            message: `MISSION ${id} RECORDED BY ${currentAgent}`, 
-            agent: currentAgent, 
-            timestamp: serverTimestamp(), 
-            color: 'var(--green)' 
-        });
-
+        await setDoc(doc(db, "mission_orders", id), { missionID: id, agent: currentAgent, timestamp: serverTimestamp() }, {merge:true});
+        recordActivity(`ID ${id} SUCCESSFULLY PROCESSED`, 'var(--green)');
         closePopup();
         input.value = "";
+        lastSearched = "";
     };
   };
 
-  // --- ACTION: RESERVE ---
   reserveBtn.onclick = () => {
+    if (input.value.length < 4) return;
     document.getElementById('action-ui').style.display = "none";
     document.getElementById('reserve-ui').style.display = "block";
     document.getElementById('modal-overlay').style.display = 'flex';
@@ -240,21 +203,11 @@
 
     document.getElementById('modal-submit').onclick = async () => {
         const id = input.value;
-        await setDoc(doc(db, "reserve_list", id), { 
-            missionID: id, 
-            agent: currentAgent, 
-            timestamp: serverTimestamp() 
-        });
-
-        await addDoc(collection(db, "terminal_logs"), { 
-            message: `ID ${id} MOVED TO RESERVE`, 
-            agent: currentAgent, 
-            timestamp: serverTimestamp(), 
-            color: 'var(--yellow)' 
-        });
-
+        await setDoc(doc(db, "reserve_list", id), { missionID: id, agent: currentAgent, timestamp: serverTimestamp() });
+        recordActivity(`This #${id} sent to archive for RESERVE`, 'var(--yellow)');
         closePopup();
         input.value = "";
+        lastSearched = "";
     };
   };
 

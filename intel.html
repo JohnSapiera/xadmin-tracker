@@ -9,7 +9,7 @@
   
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>CORE_INTEL_v28.5</title>
+  <title>CORE_INTEL_v28.8</title>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root { 
@@ -53,7 +53,7 @@
 </head>
 <body>
 
-<header><span style="font-weight: 700; color: #fff;">CORE_INTEL // v28.5</span></header>
+<header><span style="font-weight: 700; color: #fff;">CORE_INTEL // v28.8</span></header>
 
 <div class="status-bar">
     <div>SYS_TIME: <span id="clock">00:00:00</span></div>
@@ -95,6 +95,7 @@
     messagingSenderId: "317015091563", 
     appId: "1:317015091563:web:baab5171d8e0a58acd442e" 
   };
+  
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
@@ -108,8 +109,8 @@
   let typingTimer;
   let selectedMissionDocId = null;
 
-  // Kunin ang logged in Agent mula sa LocalStorage
-  const localAgentName = localStorage.getItem('agentName');
+  // 1. KUNIN ANG AGENT ID MULA SA LOCALSTORAGE
+  const localAgentID = localStorage.getItem('agentID'); 
 
   vAgentInput.addEventListener('input', () => {
     clearTimeout(typingTimer);
@@ -122,70 +123,72 @@
     selectedMissionDocId = null;
 
     if (val.length > 0) {
-        scanStatus.innerHTML = `<span class="blink">[SYSTEM] SCANNING DATABANKS FOR ${val}...</span>`;
-        typingTimer = setTimeout(() => executeSearch(val), 2000);
+        scanStatus.innerHTML = `<span class="blink">[SYSTEM] VERIFYING V_AGENT# ${val}...</span>`;
+        typingTimer = setTimeout(() => executeSecureSearch(val), 2000);
     } else {
         scanStatus.innerHTML = "AWAITING INPUT...";
     }
   });
 
-  async function executeSearch(vAgentID) {
+  // 2. SECURE SEARCH LOGIC
+  async function executeSecureSearch(vInput) {
+    if (!localAgentID) {
+        scanStatus.innerHTML = `<span style="color:var(--red)">[ERROR] NO LOCAL AGENT_ID FOUND. PLEASE RE-LOGIN.</span>`;
+        return;
+    }
+
     try {
         scanStatus.innerHTML = `<span style="color:var(--cyan)">[SYSTEM] ANALYZING MISSION LOGS...</span>`;
         
-        // Search by vAgentID
-        const q = query(collection(db, "mission_orders"), where("vAgentID", "==", vAgentID));
+        // Multi-Filter: vAgentID (Input) + agentID (LocalStorage)
+        const q = query(
+            collection(db, "mission_orders"), 
+            where("vAgentID", "==", vInput),
+            where("agentID", "==", localAgentID)
+        );
+
         const snap = await getDocs(q);
 
         if (snap.empty) {
-            scanStatus.innerHTML = `<span style="color:var(--red)">[ERROR] NO RECORDS FOUND FOR ${vAgentID}</span>`;
+            scanStatus.innerHTML = `<span style="color:var(--red)">[ACCESS DENIED] UNKNOWN TARGET OR UNAUTHORIZED</span>`;
             return;
         }
 
-        let matchCount = 0;
-
+        scanStatus.innerHTML = `<span style="color:var(--green)">[SUCCESS] ${snap.size} DEVICE(S) IDENTIFIED.</span>`;
+        
         snap.forEach(d => {
             const data = d.data();
+            const btn = document.createElement('button');
+            btn.className = "dev-btn";
             
-            // SECURITY CHECK: I-display lang kung ang agent sa database ay tugma sa agent sa LocalStorage
-            if (data.agent === localAgentName) {
-                matchCount++;
-                const btn = document.createElement('button');
-                btn.className = "dev-btn";
-                
-                const deviceDisplayName = DEVICE_REGISTRY[data.weaponSystem] || `UNKNOWN [${data.weaponSystem}]`;
+            // Translate SIG via config.js
+            const deviceDisplayName = DEVICE_REGISTRY[data.weaponSystem] || `SIG: ${data.weaponSystem}`;
 
-                btn.innerHTML = `
-                  <span class="agent-tag">AGENT: ${data.agent}</span>
-                  <span style="font-weight:700">> ${deviceDisplayName}</span>
-                  <span class="mission-tag">MISSION_ORDER: #${data.missionID}</span>
-                `;
+            btn.innerHTML = `
+              <span class="agent-tag">AGENT: ${data.agent || 'AUTHORIZED_OPERATOR'}</span>
+              <span style="font-weight:700">> ${deviceDisplayName}</span>
+              <span class="mission-tag">MISSION_ORDER: #${data.missionID}</span>
+            `;
+            
+            btn.onclick = () => {
+                document.querySelectorAll('.dev-btn').forEach(x => x.classList.remove('active'));
+                btn.classList.add('active');
+                selectedMissionDocId = d.id;
                 
-                btn.onclick = () => {
-                    document.querySelectorAll('.dev-btn').forEach(x => x.classList.remove('active'));
-                    btn.classList.add('active');
-                    selectedMissionDocId = d.id;
-                    
-                    expenseModule.style.opacity = "1";
-                    expenseModule.style.pointerEvents = "auto";
-                    submitBtn.classList.add('ready');
-                };
-                deviceList.appendChild(btn);
-            }
+                expenseModule.style.opacity = "1";
+                expenseModule.style.pointerEvents = "auto";
+                submitBtn.classList.add('ready');
+            };
+            deviceList.appendChild(btn);
         });
-
-        if (matchCount > 0) {
-            scanStatus.innerHTML = `<span style="color:var(--green)">[SUCCESS] ${matchCount} DEVICE(S) IDENTIFIED.</span>`;
-        } else {
-            scanStatus.innerHTML = `<span style="color:var(--red)">[ACCESS DENIED] AGENT MISMATCH</span>`;
-        }
 
     } catch (e) {
         console.error(e);
-        scanStatus.innerHTML = `<span style="color:var(--red)">[ERROR] SYS_FAILURE: DB_UNREACHABLE</span>`;
+        scanStatus.innerHTML = `<span style="color:var(--red)">[ERROR] DATABASE_LINK_SEVERED</span>`;
     }
   }
 
+  // 3. SUBMIT EXPENSE
   submitBtn.onclick = async () => {
     const expenseAmount = parseFloat(expenseInput.value);
     if (!selectedMissionDocId || isNaN(expenseAmount) || expenseAmount <= 0) return;
@@ -207,7 +210,7 @@
         submitBtn.style.background = "var(--cyan)";
 
         setTimeout(() => {
-            location.reload();
+            location.reload(); 
         }, 1500);
 
     } catch (e) {

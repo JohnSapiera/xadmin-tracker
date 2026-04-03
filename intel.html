@@ -9,7 +9,7 @@
   
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>CORE_INTEL_v30.0</title>
+  <title>CORE_INTEL_v30.1</title>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root { 
@@ -18,38 +18,48 @@
       --yellow: #ffbd00; --border: rgba(0, 243, 255, 0.2);
       --font-mono: 'Share Tech Mono', monospace; --font-main: 'Rajdhani', sans-serif;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { background: var(--bg); color: #e1f5f9; font-family: var(--font-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+    
     header { padding: 15px 20px; background: #000; border-bottom: 2px solid var(--cyan); display: flex; justify-content: space-between; align-items: center; }
     .status-bar { font-size: 11px; padding: 8px 20px; background: rgba(0,243,255,0.05); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; color: var(--cyan); font-family: var(--font-mono); }
+    
     main { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; padding-bottom: 80px; }
     .intel-module { background: var(--panel); border: 1px solid var(--border); padding: 20px; border-radius: 4px; position: relative; }
     .module-title { color: var(--cyan); font-family: var(--font-mono); font-size: 12px; margin-bottom: 15px; letter-spacing: 2px; border-bottom: 1px solid rgba(0,243,255,0.2); padding-bottom: 5px;}
+    
     .input-field { width: 100%; background: #000; border: 1px solid var(--border); color: var(--green); font-family: var(--font-mono); font-size: 20px; padding: 12px; text-align: center; outline: none; margin-bottom: 10px; }
     .device-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 10px; }
-    .dev-btn { background: #08161b; border: 1px solid #1a2f37; color: #fff; padding: 15px; font-size: 13px; text-align: left; font-family: var(--font-mono); display: flex; flex-direction: column; gap: 4px; }
-    .dev-btn.active { border-color: var(--cyan); background: rgba(0, 243, 255, 0.08); }
-    .btn-save { background: var(--green); color: #000; height: 50px; font-weight: 700; width: 100%; border: none; opacity: 0.3; pointer-events: none; }
+    .dev-btn { background: #08161b; border: 1px solid #1a2f37; color: #fff; padding: 15px; font-size: 13px; text-align: left; font-family: var(--font-mono); display: flex; flex-direction: column; gap: 4px; cursor: pointer; }
+    .dev-btn.active { border-color: var(--cyan); background: rgba(0, 243, 255, 0.15); box-shadow: inset 0 0 10px var(--cyan-dim); }
+    
+    .btn-save { background: var(--green); color: #000; height: 50px; font-weight: 700; width: 100%; border: none; opacity: 0.3; pointer-events: none; cursor: pointer; transition: 0.3s; }
     .btn-save.ready { opacity: 1; pointer-events: auto; }
+    
     #scan-status { font-family: var(--font-mono); font-size: 11px; color: var(--yellow); text-align: center; margin-bottom: 10px; min-height: 15px; }
+    
     .bottom-nav { position: fixed; bottom: 0; width: 100%; height: 65px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr 1fr; }
-    .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #5c7882; text-decoration: none; font-size: 10px; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #5c7882; text-decoration: none; font-size: 10px; font-weight: 700; }
     .nav-item.active { color: var(--cyan); background: var(--cyan-dim); border-top: 2px solid var(--cyan); }
+    
+    .blink { animation: blinker 1s linear infinite; }
+    @keyframes blinker { 50% { opacity: 0; } }
   </style>
 </head>
 <body>
 
-<header><span style="font-weight: 700; color: #fff;">CORE_INTEL // v30.0</span></header>
+<header><span style="font-weight: 700; color: #fff; letter-spacing: 2px;">CORE_INTEL // v30.1</span></header>
+
 <div class="status-bar">
     <div>SYS_TIME: <span id="clock">00:00:00</span></div>
-    <div id="auth-status" style="color: var(--green);">[ ESTABLISHING UPLINK... ]</div>
+    <div id="auth-status" style="color: var(--green);">[ OFFLINE ]</div>
 </div>
 
 <main>
   <div class="intel-module">
     <div class="module-title">TARGET IDENTIFICATION</div>
     <input type="text" id="vagent-input" class="input-field" placeholder="ENTER V_AGENT#" autocomplete="off" disabled>
-    <div id="scan-status">WAITING FOR LINK SIGNATURE...</div>
+    <div id="scan-status">WAITING FOR DASHBOARD UPLINK...</div>
     <div id="device-list" class="device-grid"></div>
   </div>
 
@@ -92,54 +102,23 @@
 
   let selectedMissionDocId = null;
 
-  // --- STEP 1: LINK SIGNATURE DETECTION ---
-  async function establishSession() {
-      // Kunin ang 'sig' mula sa URL (e.g. intel.html?sig=ABC123)
-      const urlParams = new URLSearchParams(window.location.search);
-      const linkSig = urlParams.get('sig');
+  // --- STEP 1: IDENTITY SYNC ---
+  function establishSession() {
+      // Babasahin ang 'agentName' na in-update sa dashboard.html
+      const currentAgent = localStorage.getItem('agentName');
 
-      if (!linkSig) {
-          // Kung walang signature sa URL, tingnan kung meron na sa Storage
-          const existingAgent = localStorage.getItem('agentName');
-          if (existingAgent) {
-              activateSystem(existingAgent);
-          } else {
-              authStatus.innerHTML = `<span style="color:var(--red)">[ NO LINK SIGNATURE ]</span>`;
-              scanStatus.innerText = "ACCESS DENIED: LINK SIGNATURE MISSING.";
-          }
-          return;
-      }
-
-      try {
-          // I-search ang signature sa 'users' collection (o kung saan naka-store ang Link Signatures mo)
-          const userQuery = query(collection(db, "users"), where("linkSignature", "==", linkSig));
-          const userSnap = await getDocs(userQuery);
-
-          if (!userSnap.empty) {
-              const userData = userSnap.docs[0].data();
-              const agentName = userData.agent; // AGENT_LZ
-
-              // I-SAVE SA LOCAL STORAGE
-              localStorage.setItem('agentName', agentName);
-              activateSystem(agentName);
-          } else {
-              authStatus.innerHTML = `<span style="color:var(--red)">[ INVALID SIGNATURE ]</span>`;
-          }
-      } catch (e) {
-          console.error(e);
-          authStatus.innerText = "UPLINK FAILURE";
+      if (currentAgent) {
+          authStatus.innerText = `AGENT: ${currentAgent}`;
+          vAgentInput.disabled = false;
+          scanStatus.innerText = "READY FOR TARGET IDENTIFICATION";
+      } else {
+          authStatus.innerHTML = `<span style="color:var(--red)">[ UNAUTHORIZED ]</span>`;
+          scanStatus.innerText = "ACCESS DENIED: GUMAMIT NG DASHBOARD.";
       }
   }
-
-  function activateSystem(agentName) {
-      authStatus.innerText = `AGENT: ${agentName}`;
-      vAgentInput.disabled = false;
-      scanStatus.innerText = "READY FOR TARGET IDENTIFICATION";
-  }
-
   establishSession();
 
-  // --- STEP 2: SEARCH LOGIC ---
+  // --- STEP 2: DYNAMIC SEARCH ---
   let typingTimer;
   vAgentInput.addEventListener('input', () => {
     clearTimeout(typingTimer);
@@ -149,74 +128,95 @@
     deviceList.innerHTML = "";
     expenseModule.style.opacity = "0.1";
     expenseModule.style.pointerEvents = "none";
+    submitBtn.classList.remove('ready');
 
     if (vInput.length > 0 && currentAgent) {
-        scanStatus.innerHTML = `<span class="blink">[SCANNING] vAgent# ${vInput} for ${currentAgent}...</span>`;
+        scanStatus.innerHTML = `<span class="blink">[SCANNING] vAgent# ${vInput}...</span>`;
         typingTimer = setTimeout(() => {
             performHierarchySearch(vInput, currentAgent);
-        }, 1500);
+        }, 1200);
     }
   });
 
   async function performHierarchySearch(vInput, agentName) {
-      try {
-          const q = query(
-              collection(db, "mission_orders"), 
-              where("agent", "==", agentName), 
-              where("vAgentID", "==", vInput)
-          );
+    try {
+        // Multi-stage filter: dapat match ang Agent at ang vAgentID
+        const q = query(
+            collection(db, "mission_orders"), 
+            where("agent", "==", agentName), 
+            where("vAgentID", "==", vInput)
+        );
 
-          const snap = await getDocs(q);
+        const snap = await getDocs(q);
 
-          if (snap.empty) {
-              scanStatus.innerHTML = `<span style="color:var(--red)">[ERROR] MISSION NOT FOUND</span>`;
-              return;
-          }
+        if (snap.empty) {
+            scanStatus.innerHTML = `<span style="color:var(--red)">[ERROR] MISSION NOT FOUND FOR ${vInput}</span>`;
+            return;
+        }
 
-          scanStatus.innerHTML = `<span style="color:var(--green)">[SUCCESS] DEVICES LOADED.</span>`;
-          
-          snap.forEach(d => {
-              const data = d.data();
-              const btn = document.createElement('button');
-              btn.className = "dev-btn";
-              const deviceName = DEVICE_REGISTRY[data.weaponSystem] || `SIG: ${data.weaponSystem}`;
+        scanStatus.innerHTML = `<span style="color:var(--green)">[SUCCESS] ${snap.size} UNIT(S) DETECTED.</span>`;
+        
+        snap.forEach(d => {
+            const data = d.data();
+            const btn = document.createElement('button');
+            btn.className = "dev-btn";
+            const deviceName = DEVICE_REGISTRY[data.weaponSystem] || `SIG: ${data.weaponSystem}`;
 
-              btn.innerHTML = `
-                <span style="font-size:9px; color:var(--cyan)">AGENT: ${data.agent}</span>
-                <span style="font-weight:700">> ${deviceName}</span>
-                <span style="font-size:10px; color:#5c7882; align-self:flex-end">MISSION: #${data.missionID}</span>
-              `;
-              
-              btn.onclick = () => {
-                  document.querySelectorAll('.dev-btn').forEach(x => x.classList.remove('active'));
-                  btn.classList.add('active');
-                  selectedMissionDocId = d.id;
-                  expenseModule.style.opacity = "1";
-                  expenseModule.style.pointerEvents = "auto";
-                  submitBtn.classList.add('ready');
-              };
-              deviceList.appendChild(btn);
-          });
-      } catch (e) {
-          scanStatus.innerHTML = `<span style="color:var(--red)">[SYS ERROR] UPLINK TIMEOUT</span>`;
-      }
+            btn.innerHTML = `
+              <span style="font-size:9px; color:var(--cyan)">SYSTEM: ${data.weaponSystem}</span>
+              <span style="font-weight:700">> ${deviceName}</span>
+              <span style="font-size:10px; color:#5c7882; align-self:flex-end">MISSION_ID: #${data.missionID}</span>
+            `;
+            
+            btn.onclick = () => {
+                document.querySelectorAll('.dev-btn').forEach(x => x.classList.remove('active'));
+                btn.classList.add('active');
+                selectedMissionDocId = d.id; // Ito ang MissionID string na doc name
+                expenseModule.style.opacity = "1";
+                expenseModule.style.pointerEvents = "auto";
+                submitBtn.classList.add('ready');
+            };
+            deviceList.appendChild(btn);
+        });
+    } catch (e) {
+        scanStatus.innerHTML = `<span style="color:var(--red)">[SYS ERROR] DB_ACCESS_DENIED</span>`;
+        console.error(e);
+    }
   }
 
-  // Submit Expense Logic (same as before)
+  // --- STEP 3: DATA INJECTION ---
   submitBtn.onclick = async () => {
-    const amount = parseFloat(document.getElementById('expense-input').value);
-    if (!selectedMissionDocId || !amount) return;
+    const amountStr = document.getElementById('expense-input').value;
+    const amount = parseFloat(amountStr);
+    
+    if (!selectedMissionDocId || isNaN(amount) || amount <= 0) {
+        alert("INPUT ERROR: INVALID AMOUNT OR TARGET.");
+        return;
+    }
+
     try {
         const ref = doc(db, "mission_orders", selectedMissionDocId);
         await updateDoc(ref, {
-            expensesBreakdown: arrayUnion({ amount, timestamp: new Date().toISOString() }),
+            expensesBreakdown: arrayUnion({ 
+                amount: amount, 
+                timestamp: new Date().toISOString(),
+                injectedBy: localStorage.getItem('agentName') 
+            }),
             totalExpenses: increment(amount)
         });
+        
+        alert("SUCCESS: EXPENSE DATA OVERRIDDEN.");
         location.reload();
-    } catch (e) { alert("OVERRIDE FAILED"); }
+    } catch (e) { 
+        alert("CRITICAL ERROR: DB_UPDATE_FAILED"); 
+        console.error(e);
+    }
   };
 
-  setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB'); }, 1000);
+  // Clock
+  setInterval(() => { 
+    document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB'); 
+  }, 1000);
 </script>
 </body>
 </html>

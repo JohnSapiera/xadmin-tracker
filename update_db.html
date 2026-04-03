@@ -2,86 +2,78 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TERMINAL_UPLINK_v18.5</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TERMINAL_UPLINK_v19.0</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
     <style>
         :root { --cyan: #00f2ff; --bg: #020a0d; --green: #00ff66; --border: rgba(0, 242, 255, 0.2); }
-        
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { 
             background: var(--bg); color: #fff; font-family: 'Share Tech Mono', monospace; 
             display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0;
             background-image: radial-gradient(circle at center, #0a1f29 0%, #020a0d 100%);
         }
-
         .card { 
-            width: 320px; background: rgba(1, 15, 20, 0.9); padding: 25px; 
+            width: 340px; background: rgba(1, 15, 20, 0.95); padding: 30px; 
             border: 1px solid var(--border); backdrop-filter: blur(10px);
-            box-shadow: 0 0 40px rgba(0,0,0,0.9); position: relative;
+            box-shadow: 0 0 50px rgba(0,0,0,0.9); position: relative;
         }
-
         h2 { 
-            font-size: 14px; margin: 0 0 20px 0; color: var(--cyan); 
-            text-align: center; letter-spacing: 3px; text-transform: uppercase;
-            border-bottom: 1px solid var(--border); padding-bottom: 10px;
+            font-size: 16px; margin: 0 0 25px 0; color: var(--cyan); 
+            text-align: center; letter-spacing: 4px; text-transform: uppercase;
+            border-bottom: 2px solid var(--cyan); padding-bottom: 12px;
         }
-
-        .form-container { display: flex; flex-direction: column; gap: 15px; }
-        .field-group { width: 100%; }
-        label { font-size: 9px; color: var(--cyan); text-transform: uppercase; margin-bottom: 6px; display: block; opacity: 0.7; }
-        
+        .form-container { display: flex; flex-direction: column; gap: 20px; }
+        label { font-size: 10px; color: var(--cyan); text-transform: uppercase; margin-bottom: 8px; display: block; opacity: 0.8; letter-spacing: 1px; }
         .input-field {
-            width: 100%; box-sizing: border-box; padding: 12px; 
-            background: rgba(0,0,0,0.8); border: 1px solid var(--border);
-            color: var(--green); font-family: 'Share Tech Mono'; font-size: 11px;
-            outline: none; border-radius: 0;
+            width: 100%; padding: 14px; background: #000; border: 1px solid var(--border);
+            color: var(--green); font-family: 'Share Tech Mono'; font-size: 12px;
+            outline: none; border-radius: 0; appearance: none;
         }
-
+        select.input-field { background-image: linear-gradient(45deg, transparent 50%, var(--cyan) 50%), linear-gradient(135deg, var(--cyan) 50%, transparent 50%); background-position: calc(100% - 20px) calc(1em + 2px), calc(100% - 15px) calc(1em + 2px); background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; }
         .btn-auth {
-            width: 100%; padding: 16px; background: transparent; 
-            color: var(--green); border: 1px solid var(--green);
-            font-family: 'Share Tech Mono'; font-weight: bold; cursor: pointer;
-            text-transform: uppercase; letter-spacing: 2px; font-size: 11px;
-            margin-top: 10px; transition: 0.3s;
+            width: 100%; padding: 18px; background: transparent; 
+            color: var(--green); border: 2px solid var(--green);
+            font-family: 'Rajdhani'; font-weight: 700; cursor: pointer;
+            text-transform: uppercase; letter-spacing: 3px; font-size: 14px;
+            margin-top: 10px; transition: 0.4s;
         }
-        .btn-auth:hover { background: var(--green); color: #000; box-shadow: 0 0 20px rgba(0, 255, 102, 0.3); }
-
+        .btn-auth:hover { background: var(--green); color: #000; box-shadow: 0 0 30px rgba(0, 255, 102, 0.4); }
         .ticker-wrap {
-            margin-top: 25px; background: rgba(0, 242, 255, 0.05);
+            margin-top: 30px; background: rgba(0, 242, 255, 0.03);
             border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
-            overflow: hidden; white-space: nowrap; padding: 8px 0;
+            overflow: hidden; white-space: nowrap; padding: 10px 0;
         }
-        .ticker-move { display: inline-block; animation: marquee 20s linear infinite; font-size: 9px; color: #556b73; }
+        .ticker-move { display: inline-block; animation: marquee 15s linear infinite; font-size: 10px; color: #556b73; }
         @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-        .ticker-item { display: inline-block; margin-right: 40px; }
-        .ticker-item span { color: var(--cyan); font-weight: bold; }
-
-        #status { font-size: 9px; text-align: center; margin-top: 15px; color: #4a5a61; min-height: 12px; }
+        .ticker-item { display: inline-block; margin-right: 50px; }
+        .ticker-item span { color: var(--cyan); }
+        #status { font-size: 10px; text-align: center; margin-top: 20px; color: #4a5a61; min-height: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h2>MULTI_DEVICE_UPLINK</h2>
+        <h2>HARDWARE_UPLINK</h2>
 
         <div class="form-container">
             <div class="field-group">
-                <label>CURRENT_NODE_SIGNATURE:</label>
+                <label>NODE_SIGNATURE_DETECTED:</label>
                 <input type="text" id="val-fp" class="input-field" readonly>
             </div>
 
             <div class="field-group">
-                <label>SELECT_AGENT_PROFILE:</label>
+                <label>AGENT_IDENTITY_PROFILE:</label>
                 <select id="agentSelect" class="input-field">
-                    <option value="JEFFERSON VALLES">AGENT_JEFFERSON</option>
+                    <option value="AGENT_JFSN">AGENT_JFSN</option>
                     <option value="AGENT_LZ">AGENT_LZ</option>
                 </select>
             </div>
 
-            <button class="btn-auth" onclick="authorizeAccess()">Authorize Current Device</button>
+            <button class="btn-auth" id="syncBtn">EXECUTE_UPLINK</button>
         </div>
 
-        <div id="status">> SYSTEM_READY...</div>
+        <div id="status">> WAITING_FOR_COMMAND...</div>
 
         <div class="ticker-wrap">
             <div class="ticker-move" id="ticker-content"></div>
@@ -103,6 +95,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
+        // Hardware Fingerprinting
         function getHardwareSpecs() {
             const canvas = document.createElement('canvas');
             const gl = canvas.getContext('webgl');
@@ -130,37 +123,53 @@
         const specs = getHardwareSpecs();
         const signature = generateSignature(specs);
 
+        // UI Initialization
         document.getElementById('val-fp').value = signature;
         const tickerHtml = `
-            <div class="ticker-item">MODEL: <span>${specs.brand}</span></div>
+            <div class="ticker-item">DEVICE: <span>${specs.brand}</span></div>
             <div class="ticker-item">GPU: <span>${specs.gpu}</span></div>
-            <div class="ticker-item">SCREEN: <span>${specs.res}</span></div>
-            <div class="ticker-item">PLATFORM: <span>${specs.plt}</span></div>
+            <div class="ticker-item">RESOLVE: <span>${specs.res}</span></div>
+            <div class="ticker-item">OS: <span>${specs.plt}</span></div>
         `;
         document.getElementById('ticker-content').innerHTML = tickerHtml + tickerHtml;
 
-        async function authorizeAccess() {
+        // Authorize Access Logic
+        document.getElementById('syncBtn').onclick = async () => {
             const agent = document.getElementById('agentSelect').value;
             const log = document.getElementById('status');
-            log.innerHTML = `> SYNCING_WITH_CENTRAL_DB...`;
+            const btn = document.getElementById('syncBtn');
+
+            btn.disabled = true;
+            log.innerHTML = `> SYNCING_WITH_CORE_DATABASE...`;
 
             try {
-                // Gagamit tayo ng arrayUnion para ma-store ang signature sa 'linkedSignatures' array
+                // Pinapunta nito sa collection 'agents' gamit ang AGENT_JFSN (o iba pang pili) bilang Doc ID
                 await db.collection("agents").doc(agent).set({
                     agentName: agent,
-                    // Ito ang magic part: ina-add nito ang bagong signature sa listahan nang hindi nabubura ang luma
+                    // LinkedSignatures: Dito i-se-save lahat ng phone/laptop na ginagamit ni Agent
                     linkedSignatures: firebase.firestore.FieldValue.arrayUnion(signature),
                     lastFingerprint: signature,
+                    brandName: specs.brand,
                     lastSync: firebase.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
 
+                // I-save din sa browser storage para sa auto-login
                 localStorage.setItem("cia_agent", agent);
+                localStorage.setItem("agent_verified", "true");
+                localStorage.setItem("device_signature", signature);
+
                 log.innerHTML = `> <span style="color:var(--green)">UPLINK_SUCCESSFUL</span>`;
-                alert(`DEVICE AUTHORIZED: Current device signature [${signature}] has been linked to Agent ${agent}.`);
+                
+                setTimeout(() => {
+                    alert(`ACCESS GRANTED: Device ${signature} linked to ${agent}`);
+                    window.location.href = "dashboard.html";
+                }, 1000);
+
             } catch (e) {
-                log.innerHTML = `> ERROR: ${e.message}`;
+                log.innerHTML = `> <span style="color:var(--red)">UPLINK_FAILED: ${e.message}</span>`;
+                btn.disabled = false;
             }
-        }
+        };
     </script>
 </body>
 </html>

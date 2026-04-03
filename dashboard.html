@@ -69,7 +69,9 @@
     </div>
   </div>
 
-  <div id="terminal"></div>
+  <div id="terminal">
+      <div class="term-line" style="color:var(--yellow)">[SYSTEM] INITIALIZING TERMINAL...</div>
+  </div>
 
   <div class="profile-mini">
     <div class="avatar" id="avatar-init">?</div>
@@ -81,9 +83,9 @@
 </main>
 
 <nav class="bottom-nav">
-    <a href="/dashboard.html" class="nav-item active">DASHBOARD</a>
-    <a href="/intel.html" class="nav-item">INTEL</a>
-    <a href="/profile.html" class="nav-item">PROFILE</a>
+    <a href="#" class="nav-item active">DASHBOARD</a>
+    <a href="intel.html" class="nav-item">INTEL</a>
+    <a href="profile.html" class="nav-item">PROFILE</a>
 </nav>
 
 <div class="overlay" id="modal-overlay">
@@ -132,25 +134,36 @@
   const reserveBtn = document.getElementById('reserve-btn');
   const terminal = document.getElementById('terminal');
 
-  // --- PERSISTENT LIVE TERMINAL ---
-  // Kung mag-error ito, kailangan mong i-click ang link sa browser console para gumawa ng Index.
-  const qLogs = query(collection(db, "terminal_logs"), where("agent", "==", currentAgent), orderBy("timestamp", "desc"), limit(20));
+  // --- PERSISTENT LIVE TERMINAL LOGIC ---
+  const qLogs = query(
+    collection(db, "terminal_logs"), 
+    where("agent", "==", currentAgent), 
+    orderBy("timestamp", "desc"), 
+    limit(15)
+  );
   
   onSnapshot(qLogs, (snap) => {
     terminal.innerHTML = "";
+    if (snap.empty) {
+        terminal.innerHTML = `<div class="term-line" style="color:var(--cyan)">[SYSTEM] TERMINAL ONLINE. AWAITING DATA...</div>`;
+    }
     snap.forEach(d => {
       const log = d.data();
       const div = document.createElement('div');
       div.className = "term-line";
-      const time = log.timestamp ? log.timestamp.toDate().toLocaleTimeString() : "PENDING";
+      
+      // I-format ang oras, o ipakita ang "SYNCING" kung bagong gawa ang entry
+      const time = log.timestamp ? log.timestamp.toDate().toLocaleTimeString('en-GB') : "SYNCING";
+      
       div.innerHTML = `<span style="color:#5c7882">[${time}]</span> <span style="color:${log.color || 'var(--cyan)'}">${log.message}</span>`;
       terminal.appendChild(div);
     });
   }, (error) => {
       console.error("Log Sync Error: ", error);
-      terminal.innerHTML = `<div class="term-line" style="color:var(--red)">[ERROR] Terminal sync failed. Check Firestore Indexes.</div>`;
+      terminal.innerHTML = `<div class="term-line" style="color:var(--red)">[ERROR] Sync Failed. Check Console for Index Link.</div>`;
   });
 
+  // --- MISSION INPUT HANDLER ---
   input.addEventListener('input', async () => {
     const val = input.value.trim();
     if (val.length >= 4) {
@@ -166,6 +179,7 @@
     }
   });
 
+  // --- SAVE / RETRIEVE ACTION ---
   actionBtn.onclick = async () => {
     if (input.value.length < 4) return;
     document.getElementById('action-ui').style.display = "block";
@@ -173,11 +187,13 @@
     document.getElementById('modal-overlay').style.display = 'flex';
     document.getElementById('pop-m-id').innerText = `#${input.value}`;
     
-    // Harvest Devices
+    // Auto-fetch devices used by this agent before
     const myDevices = new Set([currentDeviceSig]);
-    const qD = query(collection(db, "mission_orders"), where("agentName", "==", currentAgent));
-    const snapD = await getDocs(qD);
-    snapD.forEach(d => myDevices.add(d.data().weaponSystem));
+    try {
+        const qD = query(collection(db, "mission_orders"), where("agentName", "==", currentAgent));
+        const snapD = await getDocs(qD);
+        snapD.forEach(d => myDevices.add(d.data().weaponSystem));
+    } catch(e) { console.warn("Device fetch failed"); }
 
     const grid = document.getElementById('pop-device-list');
     grid.innerHTML = "";
@@ -194,21 +210,50 @@
     
     document.getElementById('modal-submit').onclick = async () => {
         const id = input.value;
-        await setDoc(doc(db, "mission_orders", id), { missionID: id, agentName: currentAgent, vAgentID: document.getElementById('v-agent-input').value, weaponSystem: currentDeviceSig, timestamp: serverTimestamp() }, {merge:true});
-        await addDoc(collection(db, "terminal_logs"), { message: `ID ${id} PROCESSED`, agent: currentAgent, timestamp: serverTimestamp(), color: 'var(--green)' });
+        const selectedDev = document.querySelector('.dev-btn.active')?.innerText || "UNKNOWN_SIG";
+        
+        await setDoc(doc(db, "mission_orders", id), { 
+            missionID: id, 
+            agentName: currentAgent, 
+            vAgentID: document.getElementById('v-agent-input').value || "NONE", 
+            weaponSystem: selectedDev, 
+            timestamp: serverTimestamp() 
+        }, {merge:true});
+
+        await addDoc(collection(db, "terminal_logs"), { 
+            message: `MISSION ${id} RECORDED BY ${currentAgent}`, 
+            agent: currentAgent, 
+            timestamp: serverTimestamp(), 
+            color: 'var(--green)' 
+        });
         closePopup();
+        input.value = "";
     };
   };
 
+  // --- RESERVE ACTION ---
   reserveBtn.onclick = () => {
     document.getElementById('action-ui').style.display = "none";
     document.getElementById('reserve-ui').style.display = "block";
     document.getElementById('modal-overlay').style.display = 'flex';
+    document.getElementById('pop-m-id').innerText = `#${input.value}`;
+
     document.getElementById('modal-submit').onclick = async () => {
         const id = input.value;
-        await setDoc(doc(db, "reserve_list", id), { missionID: id, agent: currentAgent, timestamp: serverTimestamp() });
-        await addDoc(collection(db, "terminal_logs"), { message: `ID ${id} RESERVED`, agent: currentAgent, timestamp: serverTimestamp(), color: 'var(--yellow)' });
+        await setDoc(doc(db, "reserve_list", id), { 
+            missionID: id, 
+            agent: currentAgent, 
+            timestamp: serverTimestamp() 
+        });
+
+        await addDoc(collection(db, "terminal_logs"), { 
+            message: `ID ${id} MOVED TO RESERVE`, 
+            agent: currentAgent, 
+            timestamp: serverTimestamp(), 
+            color: 'var(--yellow)' 
+        });
         closePopup();
+        input.value = "";
     };
   };
 

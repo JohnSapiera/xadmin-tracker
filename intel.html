@@ -9,7 +9,7 @@
   
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>CORE_INTEL_v29.0</title>
+  <title>CORE_INTEL_v30.0</title>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root { 
@@ -20,58 +20,42 @@
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: var(--bg); color: #e1f5f9; font-family: var(--font-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-    
     header { padding: 15px 20px; background: #000; border-bottom: 2px solid var(--cyan); display: flex; justify-content: space-between; align-items: center; }
     .status-bar { font-size: 11px; padding: 8px 20px; background: rgba(0,243,255,0.05); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; color: var(--cyan); font-family: var(--font-mono); }
-    
     main { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; padding-bottom: 80px; }
-    
     .intel-module { background: var(--panel); border: 1px solid var(--border); padding: 20px; border-radius: 4px; position: relative; }
     .module-title { color: var(--cyan); font-family: var(--font-mono); font-size: 12px; margin-bottom: 15px; letter-spacing: 2px; border-bottom: 1px solid rgba(0,243,255,0.2); padding-bottom: 5px;}
-    
-    .input-field { width: 100%; background: #000; border: 1px solid var(--border); color: var(--green); font-family: var(--font-mono); font-size: 20px; padding: 12px; text-align: center; outline: none; margin-bottom: 10px; transition: 0.3s; }
-    .input-field:focus { border-color: var(--cyan); box-shadow: 0 0 10px rgba(0,243,255,0.2); }
-    
-    .device-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 10px; margin-bottom: 15px; }
-    .dev-btn { background: #08161b; border: 1px solid #1a2f37; color: #fff; padding: 15px; font-size: 13px; cursor: pointer; text-align: left; font-family: var(--font-mono); transition: 0.3s; position: relative; display: flex; flex-direction: column; gap: 4px; }
-    
-    .dev-btn.active { border-color: var(--cyan); background: rgba(0, 243, 255, 0.08); box-shadow: inset 0 0 15px rgba(0,243,255,0.1); }
-    .dev-btn .agent-tag { font-size: 9px; color: var(--cyan); font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
-    .dev-btn .mission-tag { font-size: 10px; color: #5c7882; align-self: flex-end; }
-
-    .btn-save { background: var(--green); color: #000; height: 50px; font-weight: 700; width: 100%; border: none; font-family: var(--font-main); font-size: 16px; cursor: pointer; transition: 0.3s; opacity: 0.3; pointer-events: none; }
+    .input-field { width: 100%; background: #000; border: 1px solid var(--border); color: var(--green); font-family: var(--font-mono); font-size: 20px; padding: 12px; text-align: center; outline: none; margin-bottom: 10px; }
+    .device-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 10px; }
+    .dev-btn { background: #08161b; border: 1px solid #1a2f37; color: #fff; padding: 15px; font-size: 13px; text-align: left; font-family: var(--font-mono); display: flex; flex-direction: column; gap: 4px; }
+    .dev-btn.active { border-color: var(--cyan); background: rgba(0, 243, 255, 0.08); }
+    .btn-save { background: var(--green); color: #000; height: 50px; font-weight: 700; width: 100%; border: none; opacity: 0.3; pointer-events: none; }
     .btn-save.ready { opacity: 1; pointer-events: auto; }
-    
     #scan-status { font-family: var(--font-mono); font-size: 11px; color: var(--yellow); text-align: center; margin-bottom: 10px; min-height: 15px; }
-    .blink { animation: blinker 1s linear infinite; }
-    @keyframes blinker { 50% { opacity: 0; } }
-
-    .bottom-nav { position: fixed; bottom: 0; width: 100%; height: 65px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr 1fr; z-index: 1000; }
-    .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #5c7882; text-decoration: none; font-size: 10px; font-weight: 700; letter-spacing: 1px; }
+    .bottom-nav { position: fixed; bottom: 0; width: 100%; height: 65px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr 1fr; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #5c7882; text-decoration: none; font-size: 10px; }
     .nav-item.active { color: var(--cyan); background: var(--cyan-dim); border-top: 2px solid var(--cyan); }
   </style>
 </head>
 <body>
 
-<header><span style="font-weight: 700; color: #fff;">CORE_INTEL // v29.0</span></header>
-
+<header><span style="font-weight: 700; color: #fff;">CORE_INTEL // v30.0</span></header>
 <div class="status-bar">
     <div>SYS_TIME: <span id="clock">00:00:00</span></div>
-    <div id="auth-status" style="color: var(--green);">[ AUTHENTICATING... ]</div>
+    <div id="auth-status" style="color: var(--green);">[ ESTABLISHING UPLINK... ]</div>
 </div>
 
 <main>
   <div class="intel-module">
     <div class="module-title">TARGET IDENTIFICATION</div>
-    <input type="text" id="vagent-input" class="input-field" placeholder="ENTER V_AGENT#" autocomplete="off">
-    <div id="scan-status">AWAITING INPUT...</div>
-    
+    <input type="text" id="vagent-input" class="input-field" placeholder="ENTER V_AGENT#" autocomplete="off" disabled>
+    <div id="scan-status">WAITING FOR LINK SIGNATURE...</div>
     <div id="device-list" class="device-grid"></div>
   </div>
 
-  <div class="intel-module" id="expense-module" style="opacity: 0.1; pointer-events: none; transition: 0.3s;">
+  <div class="intel-module" id="expense-module" style="opacity: 0.1; pointer-events: none;">
     <div class="module-title">EXPENSE INJECTION</div>
-    <input type="number" id="expense-input" class="input-field" placeholder="0.00" autocomplete="off">
+    <input type="number" id="expense-input" class="input-field" placeholder="0.00">
     <button id="submit-btn" class="btn-save">EXECUTE OVERRIDE</button>
   </div>
 </main>
@@ -102,129 +86,136 @@
   const vAgentInput = document.getElementById('vagent-input');
   const scanStatus = document.getElementById('scan-status');
   const deviceList = document.getElementById('device-list');
-  const expenseModule = document.getElementById('expense-module');
-  const expenseInput = document.getElementById('expense-input');
-  const submitBtn = document.getElementById('submit-btn');
   const authStatus = document.getElementById('auth-status');
+  const expenseModule = document.getElementById('expense-module');
+  const submitBtn = document.getElementById('submit-btn');
 
-  let typingTimer;
   let selectedMissionDocId = null;
 
-  // --- LOGIC 1: IDENTITY CHECK ---
-  // Kinukuha ang 'agentName' mula sa localstorage (Dapat pareho ito sa database, e.g. "AGENT_LZ")
-  const localAgentName = localStorage.getItem('agentName'); 
+  // --- STEP 1: LINK SIGNATURE DETECTION ---
+  async function establishSession() {
+      // Kunin ang 'sig' mula sa URL (e.g. intel.html?sig=ABC123)
+      const urlParams = new URLSearchParams(window.location.search);
+      const linkSig = urlParams.get('sig');
 
-  if (localAgentName) {
-      authStatus.innerText = `AGENT: ${localAgentName}`;
-  } else {
-      authStatus.innerHTML = `<span style="color:var(--red)">[ UNAUTHORIZED ]</span>`;
-      vAgentInput.disabled = true;
-      scanStatus.innerText = "NO SESSION DETECTED. PLEASE RE-LOGIN.";
+      if (!linkSig) {
+          // Kung walang signature sa URL, tingnan kung meron na sa Storage
+          const existingAgent = localStorage.getItem('agentName');
+          if (existingAgent) {
+              activateSystem(existingAgent);
+          } else {
+              authStatus.innerHTML = `<span style="color:var(--red)">[ NO LINK SIGNATURE ]</span>`;
+              scanStatus.innerText = "ACCESS DENIED: LINK SIGNATURE MISSING.";
+          }
+          return;
+      }
+
+      try {
+          // I-search ang signature sa 'users' collection (o kung saan naka-store ang Link Signatures mo)
+          const userQuery = query(collection(db, "users"), where("linkSignature", "==", linkSig));
+          const userSnap = await getDocs(userQuery);
+
+          if (!userSnap.empty) {
+              const userData = userSnap.docs[0].data();
+              const agentName = userData.agent; // AGENT_LZ
+
+              // I-SAVE SA LOCAL STORAGE
+              localStorage.setItem('agentName', agentName);
+              activateSystem(agentName);
+          } else {
+              authStatus.innerHTML = `<span style="color:var(--red)">[ INVALID SIGNATURE ]</span>`;
+          }
+      } catch (e) {
+          console.error(e);
+          authStatus.innerText = "UPLINK FAILURE";
+      }
   }
 
+  function activateSystem(agentName) {
+      authStatus.innerText = `AGENT: ${agentName}`;
+      vAgentInput.disabled = false;
+      scanStatus.innerText = "READY FOR TARGET IDENTIFICATION";
+  }
+
+  establishSession();
+
+  // --- STEP 2: SEARCH LOGIC ---
+  let typingTimer;
   vAgentInput.addEventListener('input', () => {
     clearTimeout(typingTimer);
-    const vAgentID = vAgentInput.value.trim();
-    
+    const vInput = vAgentInput.value.trim();
+    const currentAgent = localStorage.getItem('agentName');
+
     deviceList.innerHTML = "";
     expenseModule.style.opacity = "0.1";
     expenseModule.style.pointerEvents = "none";
-    submitBtn.classList.remove('ready');
-    selectedMissionDocId = null;
 
-    if (vAgentID.length > 0 && localAgentName) {
-        scanStatus.innerHTML = `<span class="blink">[SYSTEM] SCANNING FOR ${vAgentID} UNDER ${localAgentName}...</span>`;
-        typingTimer = setTimeout(() => executeHierarchySearch(vAgentID), 2000);
-    } else {
-        scanStatus.innerHTML = "AWAITING INPUT...";
+    if (vInput.length > 0 && currentAgent) {
+        scanStatus.innerHTML = `<span class="blink">[SCANNING] vAgent# ${vInput} for ${currentAgent}...</span>`;
+        typingTimer = setTimeout(() => {
+            performHierarchySearch(vInput, currentAgent);
+        }, 1500);
     }
   });
 
-  // --- LOGIC 2 & 3: HIERARCHY & V_AGENT SEARCH ---
-  async function executeHierarchySearch(vInput) {
-    try {
-        scanStatus.innerHTML = `<span style="color:var(--cyan)">[SYSTEM] ANALYZING MISSION LOGS...</span>`;
-        
-        // Multi-level search: Match sa Agent Name (mula sa localStorage) AT sa vAgentID (Input)
-        const q = query(
-            collection(db, "mission_orders"), 
-            where("agent", "==", localAgentName), 
-            where("vAgentID", "==", vInput)
-        );
+  async function performHierarchySearch(vInput, agentName) {
+      try {
+          const q = query(
+              collection(db, "mission_orders"), 
+              where("agent", "==", agentName), 
+              where("vAgentID", "==", vInput)
+          );
 
-        const snap = await getDocs(q);
+          const snap = await getDocs(q);
 
-        if (snap.empty) {
-            scanStatus.innerHTML = `<span style="color:var(--red)">[ACCESS DENIED] NO MISSION MATCHED FOR THIS OPERATOR</span>`;
-            return;
-        }
+          if (snap.empty) {
+              scanStatus.innerHTML = `<span style="color:var(--red)">[ERROR] MISSION NOT FOUND</span>`;
+              return;
+          }
 
-        scanStatus.innerHTML = `<span style="color:var(--green)">[SUCCESS] MISSION DATA RETRIEVED.</span>`;
-        
-        snap.forEach(d => {
-            const data = d.data();
-            const btn = document.createElement('button');
-            btn.className = "dev-btn";
-            
-            // Translate Weapon System code via config.js
-            const deviceDisplayName = DEVICE_REGISTRY[data.weaponSystem] || `SIG_CODE: ${data.weaponSystem}`;
+          scanStatus.innerHTML = `<span style="color:var(--green)">[SUCCESS] DEVICES LOADED.</span>`;
+          
+          snap.forEach(d => {
+              const data = d.data();
+              const btn = document.createElement('button');
+              btn.className = "dev-btn";
+              const deviceName = DEVICE_REGISTRY[data.weaponSystem] || `SIG: ${data.weaponSystem}`;
 
-            btn.innerHTML = `
-              <span class="agent-tag">AGENT: ${data.agent}</span>
-              <span style="font-weight:700">> ${deviceDisplayName}</span>
-              <span class="mission-tag">MISSION_ORDER: #${data.missionID}</span>
-            `;
-            
-            btn.onclick = () => {
-                document.querySelectorAll('.dev-btn').forEach(x => x.classList.remove('active'));
-                btn.classList.add('active');
-                selectedMissionDocId = d.id;
-                
-                expenseModule.style.opacity = "1";
-                expenseModule.style.pointerEvents = "auto";
-                submitBtn.classList.add('ready');
-            };
-            deviceList.appendChild(btn);
-        });
-
-    } catch (e) {
-        console.error(e);
-        scanStatus.innerHTML = `<span style="color:var(--red)">[ERROR] DATABASE_LINK_SEVERED</span>`;
-    }
+              btn.innerHTML = `
+                <span style="font-size:9px; color:var(--cyan)">AGENT: ${data.agent}</span>
+                <span style="font-weight:700">> ${deviceName}</span>
+                <span style="font-size:10px; color:#5c7882; align-self:flex-end">MISSION: #${data.missionID}</span>
+              `;
+              
+              btn.onclick = () => {
+                  document.querySelectorAll('.dev-btn').forEach(x => x.classList.remove('active'));
+                  btn.classList.add('active');
+                  selectedMissionDocId = d.id;
+                  expenseModule.style.opacity = "1";
+                  expenseModule.style.pointerEvents = "auto";
+                  submitBtn.classList.add('ready');
+              };
+              deviceList.appendChild(btn);
+          });
+      } catch (e) {
+          scanStatus.innerHTML = `<span style="color:var(--red)">[SYS ERROR] UPLINK TIMEOUT</span>`;
+      }
   }
 
-  // --- SUBMIT EXPENSE ---
+  // Submit Expense Logic (same as before)
   submitBtn.onclick = async () => {
-    const expenseAmount = parseFloat(expenseInput.value);
-    if (!selectedMissionDocId || isNaN(expenseAmount) || expenseAmount <= 0) return;
-
-    submitBtn.innerText = "UPLINKING DATA...";
-    submitBtn.style.opacity = "0.5";
-
+    const amount = parseFloat(document.getElementById('expense-input').value);
+    if (!selectedMissionDocId || !amount) return;
     try {
-        const missionRef = doc(db, "mission_orders", selectedMissionDocId);
-        await updateDoc(missionRef, {
-            expensesBreakdown: arrayUnion({
-                amount: expenseAmount,
-                timestamp: new Date().toISOString()
-            }),
-            totalExpenses: increment(expenseAmount)
+        const ref = doc(db, "mission_orders", selectedMissionDocId);
+        await updateDoc(ref, {
+            expensesBreakdown: arrayUnion({ amount, timestamp: new Date().toISOString() }),
+            totalExpenses: increment(amount)
         });
-
-        submitBtn.innerText = "[ OVERRIDE SUCCESS ]";
-        submitBtn.style.background = "var(--cyan)";
-
-        setTimeout(() => {
-            location.reload(); 
-        }, 1500);
-
-    } catch (e) {
-        submitBtn.innerText = "[ FAILED ]";
-        submitBtn.style.background = "var(--red)";
-    }
+        location.reload();
+    } catch (e) { alert("OVERRIDE FAILED"); }
   };
 
-  // Clock
   setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB'); }, 1000);
 </script>
 </body>

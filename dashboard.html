@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-    <title>CORE_DASH_v28_REMASTERED</title>
+    <title>CORE_DASH_v28_FIXED</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root { 
@@ -14,79 +14,53 @@
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: var(--bg); color: #e1f5f9; font-family: var(--font-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-        
         header { padding: 15px 20px; background: #000; border-bottom: 2px solid var(--cyan); display: flex; justify-content: space-between; align-items: center; }
         .status-bar { font-size: 11px; padding: 8px 20px; background: rgba(0,243,255,0.05); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; color: var(--cyan); font-family: var(--font-mono); }
-        
         main { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 80px; }
-        .command-module { background: var(--panel); border: 1px solid var(--border); padding: 20px; border-radius: 4px; position: relative;}
+        .command-module { background: var(--panel); border: 1px solid var(--border); padding: 20px; border-radius: 4px; }
         #mission-input { width: 100%; background: transparent; border: none; border-bottom: 2px solid var(--cyan); color: #fff; font-family: var(--font-mono); font-size: 45px; text-align: center; outline: none; margin-bottom: 5px; letter-spacing: 5px; }
-        
-        /* STATUS TEXT UNDER INPUT */
-        #mission-status { font-family: var(--font-mono); font-size: 12px; text-align: center; height: 15px; margin-bottom: 15px; font-weight: bold; text-transform: uppercase; }
-        .status-reserved { color: var(--yellow); animation: pulse 1s infinite; }
+        #mission-status { font-family: var(--font-mono); font-size: 12px; text-align: center; height: 15px; margin-bottom: 15px; font-weight: bold; }
+        .status-reserved { color: var(--yellow); animation: blink 1s infinite; }
         .status-deployed { color: var(--green); }
-        @keyframes pulse { 50% { opacity: 0.5; } }
-
+        @keyframes blink { 50% { opacity: 0.3; } }
         .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .btn { height: 50px; font-weight: 700; text-transform: uppercase; border: none; cursor: pointer; font-family: var(--font-main); font-size: 14px; transition: 0.3s;}
+        .btn { height: 50px; font-weight: 700; text-transform: uppercase; border: none; cursor: pointer; font-family: var(--font-main); font-size: 14px; }
         .btn-save { background: var(--green); color: #000; }
         .btn-retrieve { background: var(--blue); color: #fff; }
         .btn-reserve { background: transparent; color: #fff; border: 1px solid #fff; opacity: 0.3; pointer-events: none; }
         .btn-reserve.active { opacity: 1; pointer-events: auto; border-color: var(--yellow); color: var(--yellow); }
-
         #terminal { background: rgba(0,0,0,0.9); border-left: 3px solid var(--cyan); padding: 12px; font-family: var(--font-mono); font-size: 10px; height: 180px; overflow-y: auto; color: #9ab4bc; box-shadow: inset 0 0 15px #000; }
         .term-line { margin-bottom: 5px; border-bottom: 1px solid rgba(255,255,255,0.02); line-height: 1.4; }
-        
-        .profile-mini { background: #051014; border: 1px solid var(--border); padding: 10px; display: flex; align-items: center; gap: 15px; }
-        .avatar { width: 40px; height: 40px; background: var(--cyan-dim); border: 1px solid var(--cyan); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--cyan); font-weight: bold; }
-        .profile-info { flex: 1; font-size: 12px; }
-
-        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 9999; align-items: center; justify-content: center; padding: 20px; }
-        .popup { width: 100%; max-width: 350px; background: #051014; border: 1px solid var(--cyan); padding: 25px; box-shadow: 0 0 30px rgba(0,243,255,0.2); }
-        .pop-label { font-size: 10px; color: var(--cyan); letter-spacing: 1px; margin-bottom: 5px; display: block; }
-        .pop-input { width: 100%; background: #000; border: 1px solid var(--cyan); color: var(--green); padding: 10px; text-align: center; font-size: 18px; margin-bottom: 15px; font-family: var(--font-mono); outline: none;}
-        
-        /* WEAPON SELECTOR BUTTONS */
-        .weapon-selector { display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 20px; max-height: 150px; overflow-y: auto; padding-right: 5px; }
-        .weapon-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: #fff; padding: 10px; font-size: 11px; cursor: pointer; font-family: var(--font-mono); text-align: left; }
-        .weapon-btn.selected { background: var(--cyan-dim); border-color: var(--cyan); color: var(--cyan); animation: highlight 0.8s infinite alternate; }
-        @keyframes highlight { from { box-shadow: 0 0 2px var(--cyan); } to { box-shadow: 0 0 10px var(--cyan); } }
-
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; height: 65px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr 1fr; z-index: 1000; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #5c7882; text-decoration: none; font-size: 10px; font-weight: 700; letter-spacing: 1px; }
-        .nav-item.active { color: var(--cyan); background: var(--cyan-dim); border-top: 2px solid var(--cyan); }
+        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999; align-items: center; justify-content: center; padding: 20px; }
+        .popup { width: 100%; max-width: 350px; background: #051014; border: 1px solid var(--cyan); padding: 25px; }
+        .pop-input { width: 100%; background: #000; border: 1px solid var(--cyan); color: var(--green); padding: 10px; text-align: center; font-size: 18px; margin-bottom: 15px; font-family: var(--font-mono); }
+        .weapon-selector { display: grid; gap: 8px; margin-bottom: 20px; max-height: 120px; overflow-y: auto; }
+        .weapon-btn { background: #000; border: 1px solid var(--border); color: #fff; padding: 10px; font-size: 11px; text-align: left; cursor: pointer; }
+        .weapon-btn.selected { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); animation: highlight 0.5s infinite alternate; }
+        @keyframes highlight { from { box-shadow: 0 0 2px var(--cyan); } to { box-shadow: 0 0 8px var(--cyan); } }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; height: 65px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr 1fr; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #5c7882; text-decoration: none; font-size: 10px; font-weight: 700; }
+        .nav-item.active { color: var(--cyan); border-top: 2px solid var(--cyan); }
     </style>
 </head>
 <body>
 
-<header><span style="font-weight: 700; color: #fff;">CORE_DASH_v28</span></header>
-
+<header><span style="font-weight: 700; color: #fff;">CORE_DASH_FIXED</span></header>
 <div class="status-bar">
     <div>SYS_TIME: <span id="clock">00:00:00</span></div>
-    <div style="color: var(--green);">SECURE_UPLINK</div>
+    <div style="color: var(--green);">DATA_SYNC_ACTIVE</div>
 </div>
 
 <main>
-  <div class="command-module">
-    <input type="tel" id="mission-input" placeholder="0000" maxlength="5">
-    <div id="mission-status"></div> <div class="btn-row">
-      <button id="action-btn" class="btn btn-save">SAVE</button>
-      <button id="reserve-btn" class="btn btn-reserve">RESERVE</button>
+    <div class="command-module">
+        <input type="tel" id="mission-input" placeholder="0000" maxlength="5">
+        <div id="mission-status"></div>
+        <div class="btn-row">
+            <button id="action-btn" class="btn btn-save">SAVE</button>
+            <button id="reserve-btn" class="btn btn-reserve">RESERVE</button>
+        </div>
     </div>
-  </div>
-
-  <div id="terminal">
-    <div class="term-line" style="color:var(--cyan)">[SYSTEM] READY. WAITING FOR INPUT...</div>
-  </div>
-
-  <div class="profile-mini">
-    <div class="avatar" id="avatar-init">?</div>
-    <div class="profile-info">
-        <div style="color: var(--cyan); font-weight: 700; text-transform: uppercase;" id="prof-name">AGENT</div>
-        <div style="color: #5c7882; font-size: 10px;" id="prof-dev">UPLINK: ACTIVE</div>
-    </div>
-  </div>
+    <div id="terminal"></div>
 </main>
 
 <nav class="bottom-nav">
@@ -97,25 +71,19 @@
 
 <div class="overlay" id="modal-overlay">
     <div class="popup">
-        <div id="pop-header" style="color:var(--cyan); text-align:center; margin-bottom:15px; font-size:24px; font-weight:700;">#ID</div>
-        
+        <div id="pop-id-display" style="color:var(--cyan); text-align:center; margin-bottom:15px; font-size:24px; font-weight:700;">#ID</div>
         <div id="form-ui">
-            <span class="pop-label">vAGENT#:</span>
-            <input type="text" id="v-agent-input" class="pop-input" placeholder="ENTER vAGENT_ID">
-            
-            <span class="pop-label">WEAPON SYSTEM DESIGNATION:</span>
-            <div class="weapon-selector" id="weapon-list">
-                </div>
-
-            <div id="expense-info" style="display:none; text-align:right; margin-bottom:10px; font-family:var(--font-mono); font-size:12px;">
-                EXPENSES: <span id="pop-expense" style="color:var(--green)">₱ 0.00</span>
+            <label style="font-size:10px; color:var(--cyan)">vAGENT#:</label>
+            <input type="text" id="v-agent-input" class="pop-input" placeholder="vAgentID">
+            <label style="font-size:10px; color:var(--cyan)">WEAPON SYSTEM:</label>
+            <div class="weapon-selector" id="weapon-list"></div>
+            <div id="pop-expense-div" style="display:none; text-align:right; font-size:12px; margin-bottom:10px;">
+                EXPENSES: <span id="pop-total-val" style="color:var(--green)">₱ 0.00</span>
             </div>
         </div>
-
         <div id="reserve-ui" style="display:none; text-align:center; padding:20px; color:var(--yellow); font-weight:bold;">
-            NOTICE:<br>DO YOU WANT TO SEND THIS INTO OUR RESERVE LIST?
+            SEND TO RESERVE LIST?
         </div>
-
         <div class="btn-row">
             <button id="modal-submit" class="btn btn-save">DEPLOY</button>
             <button onclick="closePopup()" class="btn" style="background:#333; color:#fff;">DECLINE</button>
@@ -124,198 +92,157 @@
 </div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, query, where, getDocs, doc, setDoc, addDoc, serverTimestamp, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, query, where, getDocs, doc, setDoc, addDoc, serverTimestamp, orderBy, limit, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  const firebaseConfig = { 
-    apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
-    authDomain: "my-admin-portal-12691.firebaseapp.com", 
-    projectId: "my-admin-portal-12691", 
-    storageBucket: "my-admin-portal-12691.firebasestorage.app", 
-    messagingSenderId: "317015091563", 
-    appId: "1:317015091563:web:baab5171d8e0a58acd442e" 
-  };
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+    const firebaseConfig = { 
+        apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
+        authDomain: "my-admin-portal-12691.firebaseapp.com", 
+        projectId: "my-admin-portal-12691", 
+        storageBucket: "my-admin-portal-12691.firebasestorage.app", 
+        messagingSenderId: "317015091563", 
+        appId: "1:317015091563:web:baab5171d8e0a58acd442e" 
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-  const currentAgent = localStorage.getItem("cia_agent") || "AGENT_LZ";
-  const input = document.getElementById('mission-input');
-  const actionBtn = document.getElementById('action-btn');
-  const reserveBtn = document.getElementById('reserve-btn');
-  const statusLabel = document.getElementById('mission-status');
-  const weaponList = document.getElementById('weapon-list');
+    const currentAgent = localStorage.getItem("cia_agent") || "AGENT_LZ";
+    const input = document.getElementById('mission-input');
+    const actionBtn = document.getElementById('action-btn');
+    const reserveBtn = document.getElementById('reserve-btn');
+    const terminal = document.getElementById('terminal');
+    const statusLabel = document.getElementById('mission-status');
+    const weaponList = document.getElementById('weapon-list');
 
-  const fullWeaponMap = { "SIG-20452634": "REDMI NOTE 14 PRO", "SIG-5B0D3A5C": "REALME 8 PRO", "SIG-6AC68A2E": "LAPTOP ACER" };
-  let selectedWeaponID = "";
+    const fullWeaponMap = { "SIG-20452634": "REDMI NOTE 14 PRO", "SIG-5B0D3A5C": "REALME 8 PRO", "SIG-6AC68A2E": "LAPTOP ACER" };
+    let selectedWeapon = "";
 
-  document.getElementById('prof-name').innerText = currentAgent;
-  document.getElementById('avatar-init').innerText = currentAgent.charAt(0);
+    // --- LOGS SYSTEM ---
+    async function logActivity(msg, color) {
+        const div = document.createElement('div');
+        div.className = "term-line";
+        div.innerHTML = `<span style="color:#5c7882">[${new Date().toLocaleTimeString()}]</span> <span style="color:${color}">${msg}</span>`;
+        terminal.prepend(div);
+        await addDoc(collection(db, "terminal_logs"), { agent: currentAgent, message: msg, color: color, timestamp: serverTimestamp() });
+    }
 
-  // --- AUTO SEARCH LOGIC ---
-  let lastSearched = "";
-  input.addEventListener('input', async () => {
-    const val = input.value.trim();
-    if (val.length >= 4 && val !== lastSearched) {
-      lastSearched = val;
-      statusLabel.innerHTML = "SCANNING...";
-      
-      // Check Mission Orders
-      const qMission = query(collection(db, "mission_orders"), where("missionID", "==", val));
-      const snapMission = await getDocs(qMission);
+    async function loadLogs() {
+        const q = query(collection(db, "terminal_logs"), where("agent", "==", currentAgent), orderBy("timestamp", "desc"), limit(10));
+        const snap = await getDocs(q);
+        terminal.innerHTML = "";
+        snap.forEach(d => {
+            const data = d.data();
+            const div = document.createElement('div');
+            div.className = "term-line";
+            div.innerHTML = `<span style="color:#5c7882">[LOG]</span> <span style="color:${data.color}">${data.message}</span>`;
+            terminal.appendChild(div);
+        });
+    }
+    loadLogs();
 
-      // Check Reserve List
-      const qReserve = query(collection(db, "reserve_list"), where("missionID", "==", val));
-      const snapReserve = await getDocs(qReserve);
-
-      if (!snapMission.empty) {
-        const data = snapMission.docs[0].data();
-        actionBtn.className = "btn btn-retrieve"; actionBtn.textContent = "RETRIEVE";
-        reserveBtn.classList.remove('active');
+    // --- SEARCH LOGIC ---
+    input.addEventListener('input', async () => {
+        const val = input.value.trim();
+        if (val.length < 4) { statusLabel.innerHTML = ""; return; }
         
-        if (data.vAgentID && data.vAgentID !== "") {
-            statusLabel.innerHTML = '<span class="status-deployed">DEPLOYED</span>';
+        const qM = query(collection(db, "mission_orders"), where("missionID", "==", val));
+        const qR = query(collection(db, "reserve_list"), where("missionID", "==", val));
+        
+        const [snapM, snapR] = await Promise.all([getDocs(qM), getDocs(qR)]);
+
+        if (!snapM.empty) {
+            actionBtn.className = "btn btn-retrieve"; actionBtn.textContent = "RETRIEVE";
+            reserveBtn.classList.remove('active');
+            const data = snapM.docs[0].data();
+            statusLabel.innerHTML = data.vAgentID ? '<span class="status-deployed">DEPLOYED</span>' : "";
+        } else if (!snapR.empty) {
+            actionBtn.className = "btn btn-save"; actionBtn.textContent = "SAVE";
+            reserveBtn.classList.remove('active');
+            statusLabel.innerHTML = '<span class="status-reserved">RESERVED</span>';
         } else {
+            actionBtn.className = "btn btn-save"; actionBtn.textContent = "SAVE";
+            reserveBtn.classList.add('active');
             statusLabel.innerHTML = "";
         }
-      } else if (!snapReserve.empty) {
-        actionBtn.className = "btn btn-save"; actionBtn.textContent = "SAVE";
-        reserveBtn.classList.remove('active');
-        statusLabel.innerHTML = '<span class="status-reserved">RESERVED</span>';
-      } else {
-        actionBtn.className = "btn btn-save"; actionBtn.textContent = "SAVE";
-        reserveBtn.classList.add('active');
-        statusLabel.innerHTML = "";
-      }
-    }
-  });
-
-  // --- SAVE / RETRIEVE BUTTON CLICK ---
-  actionBtn.onclick = async () => {
-    const id = input.value;
-    if (id.length < 4) return;
-
-    // Reset UI
-    document.getElementById('form-ui').style.display = "block";
-    document.getElementById('reserve-ui').style.display = "none";
-    document.getElementById('expense-info').style.display = "none";
-    document.getElementById('modal-submit').innerText = "DEPLOY";
-    document.getElementById('modal-submit').style.background = "var(--green)";
-    document.getElementById('pop-m-id').innerText = `#${id}`;
-    document.getElementById('v-agent-input').value = "";
-    selectedWeaponID = "";
-
-    // Load Devices (Rename logic)
-    weaponList.innerHTML = "Loading Weapons...";
-    const devSnap = await getDocs(collection(db, "devices"));
-    weaponList.innerHTML = "";
-    
-    devSnap.forEach(d => {
-        const dID = d.id;
-        const dName = fullWeaponMap[dID] || dID;
-        const btn = document.createElement('button');
-        btn.className = "weapon-btn";
-        btn.id = `weap-${dID}`;
-        btn.innerText = `> ${dName}`;
-        btn.onclick = () => {
-            document.querySelectorAll('.weapon-btn').forEach(b => b.classList.remove('selected'));
-            btn.classList.add('selected');
-            selectedWeaponID = dID;
-        };
-        weaponList.appendChild(btn);
     });
 
-    // IF RETRIEVE MODE: Load existing data
-    if (actionBtn.textContent === "RETRIEVE") {
-        const docRef = doc(db, "mission_orders", id);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-            document.getElementById('v-agent-input').value = data.vAgentID || "";
-            document.getElementById('expense-info').style.display = "block";
-            document.getElementById('pop-expense').innerText = `₱ ${(data.totalExpenses || 0).toLocaleString()}`;
-            
-            // Highlight assigned weapon
-            if (data.weaponSystem) {
-                setTimeout(() => {
-                    const targetBtn = document.getElementById(`weap-${data.weaponSystem}`);
-                    if (targetBtn) {
-                        targetBtn.classList.add('selected');
-                        selectedWeaponID = data.weaponSystem;
-                        targetBtn.scrollIntoView();
-                    }
-                }, 500);
+    // --- POPUP LOGIC ---
+    actionBtn.onclick = async () => {
+        if (input.value.length < 4) return;
+        const id = input.value;
+        document.getElementById('modal-overlay').style.display = 'flex';
+        document.getElementById('pop-id-display').innerText = `#${id}`;
+        document.getElementById('form-ui').style.display = "block";
+        document.getElementById('reserve-ui').style.display = "none";
+        document.getElementById('v-agent-input').value = "";
+        selectedWeapon = "";
+
+        // Load Weapons
+        weaponList.innerHTML = "";
+        Object.keys(fullWeaponMap).forEach(key => {
+            const b = document.createElement('button');
+            b.className = "weapon-btn";
+            b.id = `w-${key}`;
+            b.innerText = `> ${fullWeaponMap[key]}`;
+            b.onclick = () => {
+                document.querySelectorAll('.weapon-btn').forEach(x => x.classList.remove('selected'));
+                b.classList.add('selected');
+                selectedWeapon = key;
+            };
+            weaponList.appendChild(b);
+        });
+
+        if (actionBtn.textContent === "RETRIEVE") {
+            const dRef = doc(db, "mission_orders", id);
+            const dSnap = await getDoc(dRef);
+            if (dSnap.exists()) {
+                const d = dSnap.data();
+                document.getElementById('v-agent-input').value = d.vAgentID || "";
+                document.getElementById('pop-expense-div').style.display = "block";
+                document.getElementById('pop-total-val').innerText = `₱ ${(d.totalExpenses || 0).toLocaleString()}`;
+                if (d.weaponSystem) {
+                    selectedWeapon = d.weaponSystem;
+                    setTimeout(() => document.getElementById(`w-${d.weaponSystem}`)?.classList.add('selected'), 100);
+                }
             }
         }
-    }
 
-    document.getElementById('modal-overlay').style.display = 'flex';
+        document.getElementById('modal-submit').onclick = async () => {
+            const vID = document.getElementById('v-agent-input').value;
+            if (!vID || !selectedWeapon) return alert("Fill all fields");
+            
+            const dep = new Date();
+            const rel = new Date(); rel.setDate(dep.getDate() + 30);
 
-    // MODAL SUBMIT (SAVE/DEPLOY)
-    document.getElementById('modal-submit').onclick = async () => {
-        const vID = document.getElementById('v-agent-input').value;
-        if (!vID || !selectedWeaponID) { alert("Complete all fields."); return; }
+            await setDoc(doc(db, "mission_orders", id), {
+                missionID: id, agent: currentAgent, vAgentID: vID,
+                weaponSystem: selectedWeapon, deploymentDate: dep.toISOString(),
+                relieveDate: rel.toISOString(), timestamp: serverTimestamp()
+            }, { merge: true });
 
-        const deployDate = new Date();
-        const relieveDate = new Date();
-        relieveDate.setDate(deployDate.getDate() + 30);
-
-        const missionData = {
-            missionID: id,
-            agent: currentAgent,
-            vAgentID: vID,
-            weaponSystem: selectedWeaponID,
-            deploymentDate: deployDate.toISOString(),
-            relieveDate: relieveDate.toISOString(),
-            timestamp: serverTimestamp()
+            await logActivity(`MISSION #${id} DEPLOYED TO ${vID}`, 'var(--green)');
+            closePopup();
+            input.value = "";
         };
-
-        await setDoc(doc(db, "mission_orders", id), missionData, { merge: true });
-        
-        // Record Activity
-        await addDoc(collection(db, "terminal_logs"), {
-            agent: currentAgent,
-            message: `MISSION #${id} DEPLOYED TO ${vID} ON ${fullWeaponMap[selectedWeaponID]}`,
-            color: 'var(--green)',
-            timestamp: serverTimestamp()
-        });
-
-        closePopup();
-        location.reload();
     };
-  };
 
-  // --- RESERVE BUTTON CLICK ---
-  reserveBtn.onclick = () => {
-    const id = input.value;
-    if (id.length < 4) return;
-    document.getElementById('form-ui').style.display = "none";
-    document.getElementById('reserve-ui').style.display = "block";
-    document.getElementById('pop-m-id').innerText = `#${id}`;
-    document.getElementById('modal-submit').innerText = "YES (RESERVE)";
-    document.getElementById('modal-submit').style.background = "var(--yellow)";
-    document.getElementById('modal-overlay').style.display = 'flex';
+    reserveBtn.onclick = () => {
+        const id = input.value;
+        document.getElementById('modal-overlay').style.display = 'flex';
+        document.getElementById('form-ui').style.display = "none";
+        document.getElementById('reserve-ui').style.display = "block";
+        document.getElementById('modal-submit').innerText = "YES";
 
-    document.getElementById('modal-submit').onclick = async () => {
-        await setDoc(doc(db, "reserve_list", id), {
-            missionID: id,
-            agent: currentAgent,
-            timestamp: serverTimestamp()
-        });
-        
-        await addDoc(collection(db, "terminal_logs"), {
-            agent: currentAgent,
-            message: `MISSION #${id} ADDED TO RESERVE LIST`,
-            color: 'var(--yellow)',
-            timestamp: serverTimestamp()
-        });
-
-        closePopup();
-        location.reload();
+        document.getElementById('modal-submit').onclick = async () => {
+            await setDoc(doc(db, "reserve_list", id), { missionID: id, agent: currentAgent, timestamp: serverTimestamp() });
+            await logActivity(`MISSION #${id} RESERVED`, 'var(--yellow)');
+            closePopup();
+            input.value = "";
+        };
     };
-  };
 
-  window.closePopup = () => document.getElementById('modal-overlay').style.display = 'none';
-  setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB'); }, 1000);
+    window.closePopup = () => document.getElementById('modal-overlay').style.display = 'none';
+    setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString(); }, 1000);
 </script>
 </body>
 </html>

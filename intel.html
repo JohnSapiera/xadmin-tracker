@@ -2,15 +2,14 @@
 <html lang="en">
 <head>
   <link rel="manifest" href="manifest.json">
-
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#02080a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#02080a">
   
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>CORE_INTEL_v27.5</title>
+  <title>CORE_INTEL_v28.2</title>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root { 
@@ -33,34 +32,28 @@
     .input-field { width: 100%; background: #000; border: 1px solid var(--border); color: var(--green); font-family: var(--font-mono); font-size: 20px; padding: 12px; text-align: center; outline: none; margin-bottom: 10px; transition: 0.3s; }
     .input-field:focus { border-color: var(--cyan); box-shadow: 0 0 10px rgba(0,243,255,0.2); }
     
-    /* Device Selection Area */
-    .device-grid { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 10px; margin-bottom: 15px; }
-    .dev-btn { background: #08161b; border: 1px solid #1a2f37; color: #5c7882; padding: 12px; font-size: 12px; cursor: pointer; text-align: left; font-family: var(--font-mono); transition: all 0.3s ease; display: flex; justify-content: space-between; }
+    .device-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 10px; margin-bottom: 15px; }
+    .dev-btn { background: #08161b; border: 1px solid #1a2f37; color: #fff; padding: 15px; font-size: 13px; cursor: pointer; text-align: left; font-family: var(--font-mono); transition: 0.3s; position: relative; display: flex; flex-direction: column; gap: 4px; }
     
-    /* Highlight Animation */
-    .dev-btn.active { border-color: var(--cyan); color: var(--cyan); background: rgba(0, 243, 255, 0.05); box-shadow: inset 0 0 15px rgba(0,243,255,0.1); }
-    .dev-btn.active::before { content: '[SELECTED]'; color: var(--green); font-size: 10px; margin-right: 10px; }
+    .dev-btn.active { border-color: var(--cyan); background: rgba(0, 243, 255, 0.08); box-shadow: inset 0 0 15px rgba(0,243,255,0.1); }
+    .dev-btn .agent-tag { font-size: 9px; color: var(--cyan); font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+    .dev-btn .mission-tag { font-size: 10px; color: #5c7882; align-self: flex-end; }
 
-    .btn-save { background: var(--green); color: #000; height: 50px; font-weight: 700; width: 100%; border: none; font-family: var(--font-main); font-size: 16px; cursor: pointer; transition: 0.3s; opacity: 0.5; pointer-events: none; }
+    .btn-save { background: var(--green); color: #000; height: 50px; font-weight: 700; width: 100%; border: none; font-family: var(--font-main); font-size: 16px; cursor: pointer; transition: 0.3s; opacity: 0.3; pointer-events: none; }
     .btn-save.ready { opacity: 1; pointer-events: auto; }
     
-    /* Scanning Animation */
     #scan-status { font-family: var(--font-mono); font-size: 11px; color: var(--yellow); text-align: center; margin-bottom: 10px; min-height: 15px; }
     .blink { animation: blinker 1s linear infinite; }
     @keyframes blinker { 50% { opacity: 0; } }
 
-    /* Processing Animation */
-    .processing { background: var(--yellow) !important; color: #000 !important; cursor: wait !important; }
-
-    /* Bottom Nav */
     .bottom-nav { position: fixed; bottom: 0; width: 100%; height: 65px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr 1fr; z-index: 1000; }
-    .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #5c7882; text-decoration: none; font-size: 10px; font-weight: 700; letter-spacing: 1px; transition: 0.3s; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #5c7882; text-decoration: none; font-size: 10px; font-weight: 700; letter-spacing: 1px; }
     .nav-item.active { color: var(--cyan); background: var(--cyan-dim); border-top: 2px solid var(--cyan); }
   </style>
 </head>
 <body>
 
-<header><span style="font-weight: 700; color: #fff;">CORE_INTEL_v27.5</span></header>
+<header><span style="font-weight: 700; color: #fff;">CORE_INTEL // v28.2</span></header>
 
 <div class="status-bar">
     <div>SYS_TIME: <span id="clock">00:00:00</span></div>
@@ -73,11 +66,10 @@
     <input type="text" id="vagent-input" class="input-field" placeholder="ENTER V_AGENT#" autocomplete="off">
     <div id="scan-status">AWAITING INPUT...</div>
     
-    <div id="device-list" class="device-grid">
-        </div>
+    <div id="device-list" class="device-grid"></div>
   </div>
 
-  <div class="intel-module" id="expense-module" style="opacity: 0.3; pointer-events: none; transition: 0.3s;">
+  <div class="intel-module" id="expense-module" style="opacity: 0.1; pointer-events: none; transition: 0.3s;">
     <div class="module-title">EXPENSE INJECTION</div>
     <input type="number" id="expense-input" class="input-field" placeholder="0.00" autocomplete="off">
     <button id="submit-btn" class="btn-save">EXECUTE OVERRIDE</button>
@@ -91,6 +83,8 @@
 </nav>
 
 <script type="module">
+  // 1. IMPORT REGISTRY
+  import { DEVICE_REGISTRY } from './config.js';
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getFirestore, collection, query, where, getDocs, doc, updateDoc, arrayUnion, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -105,9 +99,6 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  // Weapon Map from previous configuration
-  const fullWeaponMap = { "SIG-20452634": "REDMI NOTE 14 PRO 5G", "SIG-5B0D3A5C": "REALME 8 PRO", "SIG-6AC68A2E": "LAPTOP: ACER" };
-
   const vAgentInput = document.getElementById('vagent-input');
   const scanStatus = document.getElementById('scan-status');
   const deviceList = document.getElementById('device-list');
@@ -116,61 +107,61 @@
   const submitBtn = document.getElementById('submit-btn');
 
   let typingTimer;
-  let selectedMissionDocId = null; // Ito ang ID ng mission_order kung saan i-u-update ang data
+  let selectedMissionDocId = null;
 
-  // --- 1. THE 3-SECOND DELAY SCANNER ---
   vAgentInput.addEventListener('input', () => {
     clearTimeout(typingTimer);
     const val = vAgentInput.value.trim();
     
     deviceList.innerHTML = "";
-    expenseModule.style.opacity = "0.3";
+    expenseModule.style.opacity = "0.1";
     expenseModule.style.pointerEvents = "none";
-    expenseInput.value = "";
     submitBtn.classList.remove('ready');
     selectedMissionDocId = null;
 
     if (val.length > 0) {
         scanStatus.innerHTML = `<span class="blink">[SYSTEM] SCANNING DATABANKS FOR ${val}...</span>`;
-        typingTimer = setTimeout(() => executeSearch(val), 3000); // 3 Seconds Delay
+        typingTimer = setTimeout(() => executeSearch(val), 2000); // 2 Seconds enough
     } else {
         scanStatus.innerHTML = "AWAITING INPUT...";
     }
   });
 
-  // --- 2. SEARCH & RENDER DEVICES ---
   async function executeSearch(agentVal) {
     try {
-        scanStatus.innerHTML = `<span style="color:var(--cyan)">[SYSTEM] RETRIEVING WEAPON SYSTEMS...</span>`;
+        scanStatus.innerHTML = `<span style="color:var(--cyan)">[SYSTEM] ANALYZING MISSION LOGS...</span>`;
         
-        // Hahanapin natin sa mission_orders kung nasaan yung vAgentID na tinype mo
+        // Hahanapin lahat ng missions na nakatali sa vAgentID na iyan
         const q = query(collection(db, "mission_orders"), where("vAgentID", "==", agentVal));
         const snap = await getDocs(q);
 
         if (snap.empty) {
-            scanStatus.innerHTML = `<span style="color:var(--red)">[ERROR] NO RECORDS FOUND FOR ${agentVal}</span>`;
+            scanStatus.innerHTML = `<span style="color:var(--red)">[ERROR] NO ACTIVE MISSIONS FOR ${agentVal}</span>`;
             return;
         }
 
-        scanStatus.innerHTML = `<span style="color:var(--green)">[SUCCESS] TARGET ACQUIRED. SELECT DEVICE.</span>`;
+        scanStatus.innerHTML = `<span style="color:var(--green)">[SUCCESS] ${snap.size} MISSION(S) DETECTED.</span>`;
         
         snap.forEach(d => {
             const data = d.data();
             const btn = document.createElement('button');
             btn.className = "dev-btn";
-            const deviceName = fullWeaponMap[data.weaponSystem] || data.weaponSystem;
             
-            // Format: M-ID (Right side) | Device (Left side)
-            btn.innerHTML = `<span>${deviceName}</span> <span style="color:#5c7882">MISSION: #${data.missionID}</span>`;
+            // Translate SIG via config.js
+            const deviceDisplayName = DEVICE_REGISTRY[data.weaponSystem] || `UNKNOWN [${data.weaponSystem}]`;
+            const ownerAgent = data.agent || "UNKNOWN_AGENT";
+
+            btn.innerHTML = `
+              <span class="agent-tag">OPERATOR: ${ownerAgent}</span>
+              <span style="font-weight:700">> ${deviceDisplayName}</span>
+              <span class="mission-tag">LOG_ID: #${data.missionID}</span>
+            `;
             
-            // Selection Logic with Highlight Animation
             btn.onclick = () => {
                 document.querySelectorAll('.dev-btn').forEach(x => x.classList.remove('active'));
                 btn.classList.add('active');
+                selectedMissionDocId = d.id;
                 
-                selectedMissionDocId = d.id; // I-store ang Document ID para sa Update Mamaya
-                
-                // I-unlock ang Expense Module
                 expenseModule.style.opacity = "1";
                 expenseModule.style.pointerEvents = "auto";
                 submitBtn.classList.add('ready');
@@ -179,69 +170,40 @@
         });
 
     } catch (e) {
-        scanStatus.innerHTML = `<span style="color:var(--red)">[ERROR] DATABASE CONNECTION FAILED</span>`;
+        scanStatus.innerHTML = `<span style="color:var(--red)">[ERROR] SYS_FAILURE: DB_UNREACHABLE</span>`;
     }
   }
 
-  // --- 3. SUBMIT EXPENSE (WITH BREAKDOWN & TOTAL) ---
   submitBtn.onclick = async () => {
     const expenseAmount = parseFloat(expenseInput.value);
+    if (!selectedMissionDocId || isNaN(expenseAmount) || expenseAmount <= 0) return;
 
-    if (!selectedMissionDocId || isNaN(expenseAmount) || expenseAmount <= 0) {
-        alert("INVALID EXPENSE AMOUNT OR NO MISSION SELECTED");
-        return;
-    }
-
-    // Animation During Submission
-    const originalText = submitBtn.innerText;
-    submitBtn.innerText = "UPDATING CORE DATABANK...";
+    submitBtn.innerText = "UPLINKING DATA...";
     submitBtn.classList.add('processing');
-    submitBtn.classList.remove('ready');
 
     try {
         const missionRef = doc(db, "mission_orders", selectedMissionDocId);
-        
-        const timestampNow = new Date().toISOString();
-
-        // Firebase Magik: Idadagdag sa Array at Mag-a-add sa Total
         await updateDoc(missionRef, {
             expensesBreakdown: arrayUnion({
                 amount: expenseAmount,
-                timestamp: timestampNow
+                timestamp: new Date().toISOString()
             }),
             totalExpenses: increment(expenseAmount)
         });
 
-        // Success Animation
-        submitBtn.classList.remove('processing');
+        submitBtn.innerText = "[ OVERRIDE SUCCESS ]";
         submitBtn.style.background = "var(--cyan)";
-        submitBtn.style.color = "#000";
-        submitBtn.innerText = "[ OVERRIDE SUCCESSFUL ]";
 
-        // Reset after 2 seconds
         setTimeout(() => {
-            submitBtn.style.background = "";
-            submitBtn.style.color = "";
-            submitBtn.innerText = originalText;
-            expenseInput.value = "";
-            vAgentInput.value = "";
-            vAgentInput.dispatchEvent(new Event('input')); // I-trigger ang reset
-        }, 2000);
+            location.reload(); // Refresh para malinis
+        }, 1500);
 
     } catch (e) {
-        console.error(e);
-        submitBtn.classList.remove('processing');
+        submitBtn.innerText = "[ FAILED ]";
         submitBtn.style.background = "var(--red)";
-        submitBtn.innerText = "[ ERROR ]";
-        setTimeout(() => {
-            submitBtn.style.background = "";
-            submitBtn.innerText = originalText;
-            submitBtn.classList.add('ready');
-        }, 2000);
     }
   };
 
-  // Clock
   setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB'); }, 1000);
 </script>
 </body>

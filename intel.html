@@ -9,7 +9,7 @@
   
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>CORE_INTEL_v30.1</title>
+  <title>CORE_INTEL_v30.2</title>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root { 
@@ -30,25 +30,25 @@
     
     .input-field { width: 100%; background: #000; border: 1px solid var(--border); color: var(--green); font-family: var(--font-mono); font-size: 20px; padding: 12px; text-align: center; outline: none; margin-bottom: 10px; }
     .device-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 10px; }
-    .dev-btn { background: #08161b; border: 1px solid #1a2f37; color: #fff; padding: 15px; font-size: 13px; text-align: left; font-family: var(--font-mono); display: flex; flex-direction: column; gap: 4px; cursor: pointer; }
+    .dev-btn { background: #08161b; border: 1px solid #1a2f37; color: #fff; padding: 15px; font-size: 13px; text-align: left; font-family: var(--font-mono); display: flex; flex-direction: column; gap: 4px; cursor: pointer; transition: 0.2s; }
     .dev-btn.active { border-color: var(--cyan); background: rgba(0, 243, 255, 0.15); box-shadow: inset 0 0 10px var(--cyan-dim); }
     
-    .btn-save { background: var(--green); color: #000; height: 50px; font-weight: 700; width: 100%; border: none; opacity: 0.3; pointer-events: none; cursor: pointer; transition: 0.3s; }
-    .btn-save.ready { opacity: 1; pointer-events: auto; }
+    .btn-save { background: var(--green); color: #000; height: 50px; font-weight: 700; width: 100%; border: none; opacity: 0.3; pointer-events: none; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
+    .btn-save.ready { opacity: 1; pointer-events: auto; box-shadow: 0 0 15px rgba(5, 255, 161, 0.3); }
     
-    #scan-status { font-family: var(--font-mono); font-size: 11px; color: var(--yellow); text-align: center; margin-bottom: 10px; min-height: 15px; }
+    #scan-status { font-family: var(--font-mono); font-size: 11px; color: var(--yellow); text-align: center; margin-bottom: 10px; min-height: 15px; text-transform: uppercase; }
     
     .bottom-nav { position: fixed; bottom: 0; width: 100%; height: 65px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr 1fr; }
     .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #5c7882; text-decoration: none; font-size: 10px; font-weight: 700; }
     .nav-item.active { color: var(--cyan); background: var(--cyan-dim); border-top: 2px solid var(--cyan); }
     
     .blink { animation: blinker 1s linear infinite; }
-    @keyframes blinker { 50% { opacity: 0; } }
+    @keyframes blinker { 50% { opacity: 0.3; } }
   </style>
 </head>
 <body>
 
-<header><span style="font-weight: 700; color: #fff; letter-spacing: 2px;">CORE_INTEL // v30.1</span></header>
+<header><span style="font-weight: 700; color: #fff; letter-spacing: 2px;">CORE_INTEL // v30.2</span></header>
 
 <div class="status-bar">
     <div>SYS_TIME: <span id="clock">00:00:00</span></div>
@@ -63,9 +63,9 @@
     <div id="device-list" class="device-grid"></div>
   </div>
 
-  <div class="intel-module" id="expense-module" style="opacity: 0.1; pointer-events: none;">
+  <div class="intel-module" id="expense-module" style="opacity: 0.1; pointer-events: none; transition: 0.5s;">
     <div class="module-title">EXPENSE INJECTION</div>
-    <input type="number" id="expense-input" class="input-field" placeholder="0.00">
+    <input type="number" id="expense-input" class="input-field" placeholder="0.00" inputmode="decimal">
     <button id="submit-btn" class="btn-save">EXECUTE OVERRIDE</button>
   </div>
 </main>
@@ -79,7 +79,7 @@
 <script type="module">
   import { DEVICE_REGISTRY } from './config.js';
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, query, where, getDocs, doc, updateDoc, arrayUnion, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, collection, query, where, getDocs, doc, updateDoc, arrayUnion, increment, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = { 
     apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
@@ -101,19 +101,17 @@
   const submitBtn = document.getElementById('submit-btn');
 
   let selectedMissionDocId = null;
+  const currentAgent = localStorage.getItem('cia_agent'); // MATCHED WITH DASHBOARD KEY
 
   // --- STEP 1: IDENTITY SYNC ---
   function establishSession() {
-      // Babasahin ang 'agentName' na in-update sa dashboard.html
-      const currentAgent = localStorage.getItem('agentName');
-
       if (currentAgent) {
           authStatus.innerText = `AGENT: ${currentAgent}`;
           vAgentInput.disabled = false;
           scanStatus.innerText = "READY FOR TARGET IDENTIFICATION";
       } else {
           authStatus.innerHTML = `<span style="color:var(--red)">[ UNAUTHORIZED ]</span>`;
-          scanStatus.innerText = "ACCESS DENIED: GUMAMIT NG DASHBOARD.";
+          scanStatus.innerHTML = "ACCESS DENIED: LOG-IN VIA DASHBOARD.";
       }
   }
   establishSession();
@@ -123,38 +121,36 @@
   vAgentInput.addEventListener('input', () => {
     clearTimeout(typingTimer);
     const vInput = vAgentInput.value.trim();
-    const currentAgent = localStorage.getItem('agentName');
 
     deviceList.innerHTML = "";
     expenseModule.style.opacity = "0.1";
     expenseModule.style.pointerEvents = "none";
     submitBtn.classList.remove('ready');
 
-    if (vInput.length > 0 && currentAgent) {
+    if (vInput.length >= 2 && currentAgent) {
         scanStatus.innerHTML = `<span class="blink">[SCANNING] vAgent# ${vInput}...</span>`;
         typingTimer = setTimeout(() => {
-            performHierarchySearch(vInput, currentAgent);
-        }, 1200);
+            performHierarchySearch(vInput);
+        }, 800);
     }
   });
 
-  async function performHierarchySearch(vInput, agentName) {
+  async function performHierarchySearch(vInput) {
     try {
-        // Multi-stage filter: dapat match ang Agent at ang vAgentID
+        // Query missions matching vAgentID only (Flexible)
         const q = query(
             collection(db, "mission_orders"), 
-            where("agent", "==", agentName), 
             where("vAgentID", "==", vInput)
         );
 
         const snap = await getDocs(q);
 
         if (snap.empty) {
-            scanStatus.innerHTML = `<span style="color:var(--red)">[ERROR] MISSION NOT FOUND FOR ${vInput}</span>`;
+            scanStatus.innerHTML = `<span style="color:var(--red)">[ERROR] TARGET NOT FOUND: ${vInput}</span>`;
             return;
         }
 
-        scanStatus.innerHTML = `<span style="color:var(--green)">[SUCCESS] ${snap.size} UNIT(S) DETECTED.</span>`;
+        scanStatus.innerHTML = `<span style="color:var(--green)">[SUCCESS] ${snap.size} UNIT(S) LOCATED.</span>`;
         
         snap.forEach(d => {
             const data = d.data();
@@ -171,7 +167,7 @@
             btn.onclick = () => {
                 document.querySelectorAll('.dev-btn').forEach(x => x.classList.remove('active'));
                 btn.classList.add('active');
-                selectedMissionDocId = d.id; // Ito ang MissionID string na doc name
+                selectedMissionDocId = data.missionID; // Consistent ID usage
                 expenseModule.style.opacity = "1";
                 expenseModule.style.pointerEvents = "auto";
                 submitBtn.classList.add('ready');
@@ -179,37 +175,48 @@
             deviceList.appendChild(btn);
         });
     } catch (e) {
-        scanStatus.innerHTML = `<span style="color:var(--red)">[SYS ERROR] DB_ACCESS_DENIED</span>`;
-        console.error(e);
+        scanStatus.innerHTML = `<span style="color:var(--red)">[SYS ERROR] DATABASE_OFFLINE</span>`;
     }
   }
 
   // --- STEP 3: DATA INJECTION ---
   submitBtn.onclick = async () => {
-    const amountStr = document.getElementById('expense-input').value;
-    const amount = parseFloat(amountStr);
+    const amount = parseFloat(document.getElementById('expense-input').value);
     
     if (!selectedMissionDocId || isNaN(amount) || amount <= 0) {
-        alert("INPUT ERROR: INVALID AMOUNT OR TARGET.");
+        alert("INPUT ERROR: INVALID AMOUNT.");
         return;
     }
 
+    submitBtn.innerText = "INJECTING...";
+    submitBtn.disabled = true;
+
     try {
         const ref = doc(db, "mission_orders", selectedMissionDocId);
+        
+        // Log activity to terminal_logs
+        await addDoc(collection(db, "terminal_logs"), {
+            agent: currentAgent,
+            message: `OVERRIDE: ₱${amount.toFixed(2)} INJECTED TO #${selectedMissionDocId}`,
+            color: 'var(--yellow)',
+            timestamp: serverTimestamp()
+        });
+
         await updateDoc(ref, {
             expensesBreakdown: arrayUnion({ 
                 amount: amount, 
                 timestamp: new Date().toISOString(),
-                injectedBy: localStorage.getItem('agentName') 
+                injectedBy: currentAgent 
             }),
             totalExpenses: increment(amount)
         });
         
-        alert("SUCCESS: EXPENSE DATA OVERRIDDEN.");
+        alert("OVERRIDE SUCCESSFUL.");
         location.reload();
     } catch (e) { 
         alert("CRITICAL ERROR: DB_UPDATE_FAILED"); 
-        console.error(e);
+        submitBtn.innerText = "EXECUTE OVERRIDE";
+        submitBtn.disabled = false;
     }
   };
 

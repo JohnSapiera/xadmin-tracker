@@ -9,7 +9,7 @@
   
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>CORE_INTEL_v30.4</title>
+  <title>CORE_INTEL_v30.5</title>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root { 
@@ -48,7 +48,7 @@
 </head>
 <body>
 
-<header><span style="font-weight: 700; color: #fff; letter-spacing: 2px;">CORE_INTEL // v30.4</span></header>
+<header><span style="font-weight: 700; color: #fff; letter-spacing: 2px;">CORE_INTEL // v30.5</span></header>
 
 <div class="status-bar">
     <div>SYS_TIME: <span id="clock">00:00:00</span></div>
@@ -103,7 +103,6 @@
   let selectedMissionDocId = null;
   const currentAgent = localStorage.getItem('cia_agent'); 
 
-  // --- IDENTITY SYNC ---
   function establishSession() {
       if (currentAgent) {
           authStatus.innerText = `AGENT: ${currentAgent}`;
@@ -117,7 +116,6 @@
   }
   establishSession();
 
-  // --- LOGGING UTILITY ---
   async function addLog(msg, color) {
       try {
           await addDoc(collection(db, "terminal_logs"), {
@@ -129,7 +127,7 @@
       } catch(e) {}
   }
 
-  // --- DYNAMIC SEARCH LOGIC ---
+  // --- FIXED DYNAMIC SEARCH ---
   let typingTimer;
   vAgentInput.addEventListener('input', () => {
     clearTimeout(typingTimer);
@@ -140,15 +138,17 @@
     expenseModule.style.pointerEvents = "none";
     submitBtn.classList.remove('ready');
 
-    if (vInput.length >= 2 && currentAgent) {
+    // FIXED: Pinalitan ang 'vInput.length >= 2' ng 'vInput.length > 0'
+    if (vInput.length > 0 && currentAgent) {
         scanStatus.innerHTML = `<span class="blink">[VERIFYING IDENTITY] ${vInput}...</span>`;
-        typingTimer = setTimeout(() => performHierarchySearch(vInput), 1000);
+        typingTimer = setTimeout(() => performHierarchySearch(vInput), 800);
+    } else {
+        scanStatus.innerText = "INPUT TARGET vAGENT# FOR VERIFICATION";
     }
   });
 
   async function performHierarchySearch(vInput) {
     try {
-        // STEP 1: Verify Ownership
         const qMatch = query(
             collection(db, "mission_orders"), 
             where("vAgentID", "==", vInput),
@@ -158,7 +158,6 @@
         const snapMatch = await getDocs(qMatch);
 
         if (snapMatch.empty) {
-            // STEP 2: Check if target exists for someone else
             const qGlobal = query(collection(db, "mission_orders"), where("vAgentID", "==", vInput));
             const snapGlobal = await getDocs(qGlobal);
 
@@ -171,7 +170,6 @@
             return;
         }
 
-        // SUCCESS: Retrieve Asset Details
         scanStatus.innerHTML = `<span style="color:var(--green)">[IDENTITY MATCH] RETRIEVING WEAPON SYSTEM...</span>`;
         
         snapMatch.forEach(d => {
@@ -201,7 +199,6 @@
     }
   }
 
-  // --- DATA INJECTION ---
   submitBtn.onclick = async () => {
     const amount = parseFloat(document.getElementById('expense-input').value);
     
@@ -215,7 +212,6 @@
 
     try {
         const ref = doc(db, "mission_orders", selectedMissionDocId);
-        
         await addLog(`OVERRIDE: ₱${amount.toFixed(2)} INJECTED TO #${selectedMissionDocId}`, 'var(--yellow)');
 
         await updateDoc(ref, {
@@ -236,7 +232,6 @@
     }
   };
 
-  // SYS CLOCK
   setInterval(() => { 
     document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB'); 
   }, 1000);

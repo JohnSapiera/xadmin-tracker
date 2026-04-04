@@ -3,106 +3,216 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Via Browser API Tester</title>
+    <title>Custom API Tester</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; background-color: #f0f2f5; color: #333; }
-        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h2 { color: #007bff; font-size: 1.2rem; }
-        
-        label { display: block; margin-bottom: 8px; font-weight: bold; }
-        
-        /* Input para sa API URL */
-        input[type="text"], textarea {
-            width: 100%; padding: 12px; margin-bottom: 20px;
-            border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box;
+        /* Dark Terminal / Technical Minimalist Theme */
+        body {
+            background-color: #0d1117;
+            color: #c9d1d9;
+            font-family: 'Courier New', Courier, monospace;
+            padding: 20px;
+            max-width: 800px;
+            margin: auto;
+        }
+        h2 { color: #58a6ff; border-bottom: 1px solid #30363d; padding-bottom: 10px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #8b949e; font-weight: bold; }
+        input, select, textarea {
+            width: 100%;
+            background-color: #010409;
+            color: #c9d1d9;
+            border: 1px solid #30363d;
+            padding: 10px;
+            border-radius: 4px;
+            box-sizing: border-box;
             font-family: monospace;
         }
-
-        /* Lalagyan ng Raw Request Body */
-        textarea { height: 120px; resize: vertical; }
-
+        input:focus, textarea:focus { border-color: #58a6ff; outline: none; }
+        .row { display: flex; gap: 10px; }
+        .row > div { flex: 1; }
+        
+        .button-group { display: flex; gap: 10px; margin-top: 20px; margin-bottom: 20px; }
         button {
-            width: 100%; padding: 15px; background-color: #007bff; color: white;
-            border: none; border-radius: 8px; font-size: 1rem; font-weight: bold;
-            cursor: pointer; transition: background 0.3s;
+            flex: 1;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            transition: 0.2s;
         }
-        button:hover { background-color: #0056b3; }
-
-        /* Display Area para sa Response */
-        .result-container { margin-top: 25px; }
-        pre {
-            background: #272c34; color: #abb2bf; padding: 15px;
-            border-radius: 8px; overflow-x: auto; font-size: 0.9rem;
-            min-height: 100px; white-space: pre-wrap; word-wrap: break-word;
+        #btnRaw { background-color: #238636; color: white; border: 1px solid #2ea043; }
+        #btnRaw:hover { background-color: #2ea043; }
+        #btnSend { background-color: #1f6feb; color: white; border: 1px solid #388bfd; }
+        #btnSend:hover { background-color: #388bfd; }
+        
+        /* Response Area */
+        .output-box {
+            background-color: #010409;
+            border: 1px solid #30363d;
+            padding: 15px;
+            min-height: 150px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-x: auto;
+            border-radius: 4px;
         }
-        .status-ok { color: #98c379; font-weight: bold; }
-        .status-error { color: #e06c75; font-weight: bold; }
+        .status { margin-top: 10px; font-weight: bold; }
+        .success { color: #3fb950; }
+        .error { color: #f85149; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>🚀 API Request Tester</h2>
+    <h2>[ SYSTEM_API_TESTER ]</h2>
 
-    <label>API Endpoint (URL):</label>
-    <input type="text" id="apiUrl" value="https://jsonplaceholder.typicode.com/posts" placeholder="https://api.example.com/data">
-
-    <label>Raw Request Body (JSON):</label>
-    <textarea id="rawRequest" placeholder='{ "title": "test", "body": "hello", "userId": 1 }'></textarea>
-
-    <button id="sendBtn">SEND REQUEST</button>
-
-    <div class="result-container">
-        <label>Response Body:</label>
-        <div id="statusInfo"></div>
-        <pre id="responseOutput">No data yet. Click the button to send a request.</pre>
+    <div class="row form-group">
+        <div style="flex: 1;">
+            <label>Method</label>
+            <select id="method">
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+            </select>
+        </div>
+        <div style="flex: 4;">
+            <label>Target URL</label>
+            <input type="text" id="url" placeholder="https://api.example.com/data" value="https://httpbin.org/post">
+        </div>
     </div>
-</div>
 
-<script>
-    document.getElementById('sendBtn').addEventListener('click', async () => {
-        const url = document.getElementById('apiUrl').value;
-        const rawBody = document.getElementById('rawRequest').value;
-        const output = document.getElementById('responseOutput');
-        const statusInfo = document.getElementById('statusInfo');
+    <div class="form-group">
+        <label>Headers</label>
+        <div class="row">
+            <div>
+                <input type="text" id="contentType" placeholder="Content-Type" value="application/json">
+            </div>
+            <div>
+                <input type="text" id="cookie" placeholder="Cookie (e.g., cna=xyz; lzd_sid=123)" value="">
+            </div>
+        </div>
+    </div>
 
-        output.innerText = "Processing request... ⏳";
-        statusInfo.innerHTML = "";
+    <div class="form-group">
+        <label>Body (Payload)</label>
+        <textarea id="body" rows="5" placeholder='{"key": "value"}'></textarea>
+    </div>
 
-        try {
-            // I-set up ang options para sa Request
-            const options = {
-                method: 'POST', // Default ay POST dahil may body tayo
-                headers: {
-                    'Content-Type': 'application/json'
+    <div class="button-group">
+        <button id="btnRaw" onclick="convertToRaw()">CONVERT TO RAW</button>
+        <button id="btnSend" onclick="sendRequest()">SEND REQUEST</button>
+    </div>
+
+    <label>Result / Output:</label>
+    <div id="statusIndicator" class="status">Waiting for action...</div>
+    <pre id="output" class="output-box">// Ang resulta o raw code ay lalabas dito...</pre>
+
+    <script>
+        // Kunin ang mga HTML elements
+        const getEl = (id) => document.getElementById(id);
+
+        // Function 1: I-convert ang inputs sa "Raw Text" format
+        function convertToRaw() {
+            const method = getEl('method').value;
+            let urlText = getEl('url').value;
+            const contentType = getEl('contentType').value;
+            const cookie = getEl('cookie').value;
+            const body = getEl('body').value;
+
+            // Extract Host and Path for raw format
+            let host = "unknown-host.com";
+            let path = "/";
+            try {
+                if (urlText) {
+                    const urlObj = new URL(urlText);
+                    host = urlObj.host;
+                    path = urlObj.pathname + urlObj.search;
                 }
-            };
-
-            // Isama ang body kung hindi empty ang textarea
-            if (rawBody.trim() !== "") {
-                options.body = rawBody;
-            } else {
-                options.method = 'GET'; // Kung walang body, gawin nating GET
+            } catch (e) {
+                // Ignore invalid URL formatting for raw view
             }
 
-            const response = await fetch(url, options);
-            const statusColor = response.ok ? "status-ok" : "status-error";
+            // Buuin ang Raw String
+            let rawRequest = `${method} ${path} HTTP/1.1\n`;
+            rawRequest += `Host: ${host}\n`;
+            if (contentType) rawRequest += `Content-Type: ${contentType}\n`;
+            if (cookie) rawRequest += `Cookie: ${cookie}\n`;
+            rawRequest += `User-Agent: System_Tester/1.0\n`;
             
-            // I-display ang HTTP Status (e.g. 200 OK)
-            statusInfo.innerHTML = `<span class="${statusColor}">Status: ${response.status} ${response.statusText}</span>`;
+            if (body) {
+                rawRequest += `Content-Length: ${new Blob([body]).size}\n`;
+                rawRequest += `\n${body}`;
+            } else {
+                rawRequest += `\n`;
+            }
 
-            // Kuhanin ang Response Body bilang JSON
-            const data = await response.json();
-
-            // I-display as "Normal Text" (Pretty JSON)
-            output.innerText = JSON.stringify(data, null, 2);
-
-        } catch (error) {
-            statusInfo.innerHTML = `<span class="status-error">Error: Network failed</span>`;
-            output.innerText = error.message;
+            // I-display sa box
+            getEl('statusIndicator').innerText = "Raw Request Generated";
+            getEl('statusIndicator').className = "status";
+            getEl('output').innerText = rawRequest;
         }
-    });
-</script>
 
+        // Function 2: I-send ang mismong API Request
+        async function sendRequest() {
+            const method = getEl('method').value;
+            const url = getEl('url').value;
+            const contentType = getEl('contentType').value;
+            const cookie = getEl('cookie').value;
+            const body = getEl('body').value;
+
+            const outputBox = getEl('output');
+            const statusBox = getEl('statusIndicator');
+
+            if (!url) {
+                alert("Please enter a Target URL first!");
+                return;
+            }
+
+            outputBox.innerText = "Sending request... Please wait.";
+            statusBox.innerText = "Processing...";
+            statusBox.className = "status";
+
+            // I-setup ang headers
+            let reqHeaders = {};
+            if (contentType) reqHeaders['Content-Type'] = contentType;
+            // Note: Ang mga browsers minsan ay bina-block ang custom "Cookie" header sa fetch dahil sa security, pero ipapasa pa rin natin dito.
+            if (cookie) reqHeaders['Cookie'] = cookie;
+
+            // I-setup ang configuration ng request
+            let config = {
+                method: method,
+                headers: reqHeaders
+            };
+
+            // GET requests ay bawal magkaroon ng body
+            if (method !== 'GET' && body) {
+                config.body = body;
+            }
+
+            try {
+                const response = await fetch(url, config);
+                const isJson = response.headers.get("content-type")?.includes("application/json");
+                
+                // Kunin ang response text o JSON
+                const responseData = isJson ? await response.json() : await response.text();
+
+                // I-display ang Status code
+                statusBox.innerText = `Status: ${response.status} ${response.statusText}`;
+                statusBox.className = response.ok ? "status success" : "status error";
+
+                // I-display ang data nang maayos
+                if (typeof responseData === 'object') {
+                    outputBox.innerText = JSON.stringify(responseData, null, 2);
+                } else {
+                    outputBox.innerText = responseData;
+                }
+
+            } catch (error) {
+                statusBox.innerText = "Request Failed (Check CORS or Network)";
+                statusBox.className = "status error";
+                outputBox.innerText = `Error Details:\n${error.message}\n\nTip: Kapag nag-test ka sa Lazada at nag-CORS error, ibig sabihin hinarang ito ng browser security.`;
+            }
+        }
+    </script>
 </body>
 </html>

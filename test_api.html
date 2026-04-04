@@ -3,38 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>API Test Page</title>
+    <title>Via Browser API Tester</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background-color: #f0f2f5; color: #333; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h2 { color: #007bff; font-size: 1.2rem; }
+        
+        label { display: block; margin-bottom: 8px; font-weight: bold; }
+        
+        /* Input para sa API URL */
+        input[type="text"], textarea {
+            width: 100%; padding: 12px; margin-bottom: 20px;
+            border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box;
+            font-family: monospace;
+        }
+
+        /* Lalagyan ng Raw Request Body */
+        textarea { height: 120px; resize: vertical; }
+
+        button {
+            width: 100%; padding: 15px; background-color: #007bff; color: white;
+            border: none; border-radius: 8px; font-size: 1rem; font-weight: bold;
+            cursor: pointer; transition: background 0.3s;
+        }
+        button:hover { background-color: #0056b3; }
+
+        /* Display Area para sa Response */
+        .result-container { margin-top: 25px; }
+        pre {
+            background: #272c34; color: #abb2bf; padding: 15px;
+            border-radius: 8px; overflow-x: auto; font-size: 0.9rem;
+            min-height: 100px; white-space: pre-wrap; word-wrap: break-word;
+        }
+        .status-ok { color: #98c379; font-weight: bold; }
+        .status-error { color: #e06c75; font-weight: bold; }
+    </style>
 </head>
 <body>
 
-    <h1>My API Tester</h1>
+<div class="container">
+    <h2>🚀 API Request Tester</h2>
 
-    <button id="testBtn" style="padding: 20px; background: #007bff; color: white; border-radius: 8px; border: none; cursor: pointer;">
-      TEST MULTIPLE REQUESTS
-    </button>
+    <label>API Endpoint (URL):</label>
+    <input type="text" id="apiUrl" value="https://jsonplaceholder.typicode.com/posts" placeholder="https://api.example.com/data">
 
-    <script>
-      document.getElementById('testBtn').addEventListener('click', async () => {
-        console.log('Testing started...');
-        
-        const urls = [
-          'https://jsonplaceholder.typicode.com/posts/1',
-          'https://jsonplaceholder.typicode.com/posts/2',
-          'https://jsonplaceholder.typicode.com/posts/3'
-        ];
+    <label>Raw Request Body (JSON):</label>
+    <textarea id="rawRequest" placeholder='{ "title": "test", "body": "hello", "userId": 1 }'></textarea>
+
+    <button id="sendBtn">SEND REQUEST</button>
+
+    <div class="result-container">
+        <label>Response Body:</label>
+        <div id="statusInfo"></div>
+        <pre id="responseOutput">No data yet. Click the button to send a request.</pre>
+    </div>
+</div>
+
+<script>
+    document.getElementById('sendBtn').addEventListener('click', async () => {
+        const url = document.getElementById('apiUrl').value;
+        const rawBody = document.getElementById('rawRequest').value;
+        const output = document.getElementById('responseOutput');
+        const statusInfo = document.getElementById('statusInfo');
+
+        output.innerText = "Processing request... ⏳";
+        statusInfo.innerHTML = "";
 
         try {
-          const promiseArray = urls.map(url => fetch(url));
-          const responses = await Promise.all(promiseArray);
-          
-          // Magpapakita ito sa Console ng Inspect window mo sa PC
-          console.log('Lahat ng requests ay na-send na!', responses);
-          alert('Success! Check mo na ang Network Log sa PC mo.');
-        } catch (err) {
-          console.error('Ops, may error:', err);
+            // I-set up ang options para sa Request
+            const options = {
+                method: 'POST', // Default ay POST dahil may body tayo
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+
+            // Isama ang body kung hindi empty ang textarea
+            if (rawBody.trim() !== "") {
+                options.body = rawBody;
+            } else {
+                options.method = 'GET'; // Kung walang body, gawin nating GET
+            }
+
+            const response = await fetch(url, options);
+            const statusColor = response.ok ? "status-ok" : "status-error";
+            
+            // I-display ang HTTP Status (e.g. 200 OK)
+            statusInfo.innerHTML = `<span class="${statusColor}">Status: ${response.status} ${response.statusText}</span>`;
+
+            // Kuhanin ang Response Body bilang JSON
+            const data = await response.json();
+
+            // I-display as "Normal Text" (Pretty JSON)
+            output.innerText = JSON.stringify(data, null, 2);
+
+        } catch (error) {
+            statusInfo.innerHTML = `<span class="status-error">Error: Network failed</span>`;
+            output.innerText = error.message;
         }
-      });
-    </script>
+    });
+</script>
 
 </body>
 </html>

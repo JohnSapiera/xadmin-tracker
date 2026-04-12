@@ -126,11 +126,6 @@
     padding: 8px;
     border-color: var(--cyan);
 }
-
-:root {
-    --cia-red: #ff003c;
-}
-
     </style>
 </head>
 <body>
@@ -276,43 +271,17 @@
 
         if (!snapM.empty) {
             currentMissionData = snapM.docs[0].data();
-        const missionOwner = currentMissionData.agent; // Kunin ang agent name sa DB
-
-        // CHECK KUNG MATCH SA NAKALOGIN NA AGENT
-        if (missionOwner === currentAgent) {
-            // MATCH: Pwedeng i-retrieve
             actionBtn.textContent = "RETRIEVE";
-            actionBtn.classList.replace('btn-save', 'btn-retrieve');
-            actionBtn.style.pointerEvents = "auto";
-            actionBtn.style.opacity = "1";
+            actionBtn.classList.replace('btn-save', 'btn-retrieve'); // TRANSITION TO BLUE
             reserveBtn.classList.remove('active');
-            statusLabel.innerHTML = currentMissionData.status === "RESERVED" ? 
-                '<span class="status-reserved">STATUS: RESERVED BY YOU</span>' : 
-                '<span class="status-deployed">STATUS: DEPLOYED BY YOU</span>';
+            statusLabel.innerHTML = currentMissionData.status === "RESERVED" ? '<span class="status-reserved">STATUS: RESERVED</span>' : '<span class="status-deployed">STATUS: DEPLOYED</span>';
         } else {
-            // HINDI MATCH: Deployed ng ibang agent
-            statusLabel.innerHTML = `<span style="color:var(--cia-red); font-weight:bold;">ALREADY DEPLOYED BY ${missionOwner}</span>`;
-            
-            // LOCK BUTTONS
-            actionBtn.textContent = "LOCKED";
-            actionBtn.style.pointerEvents = "none"; // Hindi ma-click
-            actionBtn.style.opacity = "0.3"; // Malabo
-            reserveBtn.classList.remove('active'); // Unclickable din ang reserve
-            
-            // SEND TO LIVE TERMINAL LOGS (RED)
-            addLog(`RESTRICTED ACCESS: MISSION #${val} IS OWNED BY ${missionOwner}`, 'var(--cia-red)');
+            currentMissionData = null;
+            actionBtn.textContent = "SAVE";
+            actionBtn.classList.replace('btn-retrieve', 'btn-save'); // TRANSITION TO GREEN
+            statusLabel.innerHTML = '<span style="color:#5c7882">STATUS: AVAILABLE</span>';
+            reserveBtn.classList.add('active');
         }
-    } else {
-        // AVAILABLE: Gana ang dating logic mo
-        currentMissionData = null;
-        actionBtn.textContent = "SAVE";
-        actionBtn.style.pointerEvents = "auto";
-        actionBtn.style.opacity = "1";
-        actionBtn.classList.replace('btn-retrieve', 'btn-save');
-        statusLabel.innerHTML = '<span style="color:#5c7882">STATUS: AVAILABLE</span>';
-        reserveBtn.classList.add('active');
-    }
-});
     });
 
     // OPEN MODAL

@@ -84,6 +84,22 @@
         .page.flipped { transform: rotateY(-180deg); }
         .expense-row { display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(0,0,0,0.3); padding: 8px 0; font-size: 13px; }
         .btn-page { position: absolute; bottom: 15px; right: 20px; font-weight: bold; cursor: pointer; border-bottom: 2px solid #000; font-size: 12px; }
+		
+		/* Font size reduced by 15% for folder labels */
+    .file-label { 
+        font-size: 8.5px; 
+        color: #fff; 
+        text-align: center; 
+        margin-top: 8px; 
+        font-weight: bold; 
+        letter-spacing: 1px;
+    }
+
+    /* Additional style para sa Noir Overlay (yung dating top secret na papel) */
+    #noirOverlay {
+        display: none; position: fixed; inset: 0; z-index: 3000; 
+        background: rgba(0,0,0,0.95); justify-content: center; align-items: center;
+    }
     </style>
 </head>
 <body>
@@ -101,6 +117,20 @@
 
     <div id="memoirsBtnContainer" style="margin-top: 40px; text-align: center;">
         <button onclick="openMemoirs('ALL')" style="background:none; border:1px solid var(--cia-red); color:var(--cia-red); padding:12px 25px; cursor:pointer; font-weight:bold;">[ VIEW_MASTER_MEMOIRS ]</button>
+    </div>
+</div>
+
+<div id="noirOverlay" class="overlay">
+    <div class="paper-sheet" style="background: #e8e2d2; color: #1a1a1a; padding: 25px; font-family: var(--font-noir); width: 85%; position: relative; border: 1px solid #c5b8a0;">
+        <div onclick="closeNoir()" style="position:absolute; top:10px; right:15px; cursor:pointer; font-weight:bold; color:#8b0000;">[ X ]</div>
+        <h3 style="text-align: center; border-bottom: 2px solid #000; margin-bottom: 15px;">vAGENT_DOSSIER</h3>
+        <p><b>DOCUMENT_ID:</b> <span id="n-order">---</span></p>
+        <p><b>vAGENT_ID:</b> <span id="n-vagent" style="background:rgba(0,0,0,0.1); padding: 0 5px;">---</span></p>
+        <div id="n-content" style="margin-top: 20px; min-height: 100px; border-top: 1px dashed #000; padding-top: 10px;">
+            </div>
+        <div style="text-align: right; font-weight: bold; font-size: 18px; margin-top: 10px;">
+            TOTAL: <span id="n-total">₱ 0.00</span>
+        </div>
     </div>
 </div>
 
@@ -228,6 +258,59 @@
     };
 
     window.closeMemoirs = () => document.getElementById('memoirsOverlay').style.display = 'none';
+	
+	window.activateDevice = (name, element) => {
+        element.classList.add('lights-on'); 
+        setTimeout(() => {
+            document.getElementById('deviceSection').style.display = 'none';
+            document.getElementById('vagentSection').style.display = 'grid';
+            document.getElementById('btnBack').style.display = 'block';
+            
+            // I-update ang Memoirs button
+            document.getElementById('memoirsBtnContainer').innerHTML = `
+                <button onclick="openMemoirs('${name}')" style="background:none; border:1px solid var(--cia-red); color:var(--cia-red); padding:10px; width:100%; cursor:pointer;">[ VIEW_${name}_MEMOIRS ]</button>
+            `;
+
+            const sorted = deviceData[name].sort((a,b) => parseInt(a.vAgentID) - parseInt(b.vAgentID));
+            
+            // CLICKABLE FOLDERS FIX
+            document.getElementById('vagentSection').innerHTML = sorted.map(v => `
+                <div class="folder-box" onclick="openNoirModal('${v.id}')">
+                    <div class="paper-sheet"></div>
+                    <div class="folder-main"></div>
+                    <div class="file-label">#${v.vAgentID}</div>
+                </div>
+            `).join('') + `
+                <div class="folder-box shadow-folder">
+                    <div class="paper-sheet"></div>
+                    <div class="folder-main"></div>
+                    <div class="file-label">LOCKED</div>
+                </div>`;
+        }, 1800);
+    };
+
+    // New function para ma-view ang specific folder data
+    window.openNoirModal = (docID) => {
+        const data = allMissions.find(m => m.id === docID);
+        if(data) {
+            document.getElementById('noirOverlay').style.display = 'flex';
+            document.getElementById('n-order').innerText = docID.substring(0,10);
+            document.getElementById('n-vagent').innerText = data.vAgentID || "VACANT";
+            document.getElementById('n-total').innerText = `₱ ${(data.totalExpenses || 0).toLocaleString()}`;
+            
+            // Display expenses if any
+            document.getElementById('n-content').innerHTML = `
+                <div style="font-size: 12px; font-style: italic;">
+                    Field operations and logistics report for vAgent ${data.vAgentID}.
+                    Status: Verified.
+                </div>
+            `;
+        }
+    };
+
+    window.closeNoir = () => document.getElementById('noirOverlay').style.display = 'none';
+
+    // ... (rest of the Memoirs and flip functions) ...
 </script>
 </body>
 </html>

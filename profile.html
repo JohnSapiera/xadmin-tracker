@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -117,6 +118,53 @@
 .folder-box.has-expenses .folder-main {
     box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
 }
+
+/* --- CLASSIFIED PAPER DESIGN --- */
+.book { 
+    width: 95%; max-width: 400px; height: 75vh; 
+    perspective: 2000px; position: relative; 
+}
+
+.page { 
+    width: 100%; height: 100%; position: absolute; 
+    transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1); 
+    transform-origin: left; backface-visibility: hidden; 
+    background: #f0ebe0; /* Off-white/old paper */
+    color: #1a1a1a; padding: 35px 25px; 
+    font-family: 'Special Elite', cursive; 
+    box-shadow: inset 0 0 50px rgba(0,0,0,0.1), 5px 5px 20px rgba(0,0,0,0.5);
+    border: 1px solid #dcd7c9; overflow-y: auto;
+}
+
+/* Background markings para sa Classified look */
+.page::before {
+    content: "CLASSIFIED";
+    position: absolute; top: 10%; left: 50%;
+    transform: translate(-50%, -50%) rotate(-30deg);
+    font-size: 5rem; color: rgba(139, 0, 0, 0.05);
+    pointer-events: none; z-index: 0;
+}
+
+/* Page Flip Classes */
+.page.flipped { transform: rotateY(-180deg); }
+.page-front { z-index: 2; }
+.page-back { transform: rotateY(180deg); z-index: 1; }
+
+/* Close Button Fix */
+.close-dossier {
+    position: absolute; top: 15px; right: 20px;
+    font-size: 18px; font-weight: bold; color: #8b0000;
+    cursor: pointer; z-index: 5000; /* Mataas na z-index para ma-click */
+    padding: 5px; border: 1px solid transparent;
+}
+.close-dossier:hover { border-color: #8b0000; background: rgba(139,0,0,0.1); }
+
+/* Swipe Label */
+.swipe-hint {
+    position: absolute; bottom: 15px; right: 25px;
+    font-size: 10px; color: #8b0000; font-weight: bold;
+    border-bottom: 1px solid #8b0000; cursor: pointer;
+}
     </style>
 </head>
 <body>
@@ -152,35 +200,33 @@
 </div>
 
 <div id="memoirsOverlay" class="overlay">
-    <div class="book">
-        <div id="p1" class="page">
-            <h3 id="memoir-title" style="text-align: center; border-bottom: 2px solid #000; margin-bottom: 10px; font-family: var(--font-noir);">LOGS</h3>
-            <p style="font-size: 9px; margin-bottom: 10px; opacity: 0.7;">NODE_SCOPE: <span id="target-name">---</span></p>
-            
-            <div id="active-list" style="min-height: 320px;"></div>
-            
-            <div class="btn-page" onclick="flip(true)">FINANCIAL SUMMARY >></div>
+    <div class="close-dossier" onclick="closeMemoirs()" style="color: white; top: 20px; right: 20px;">[ CLOSE_SYSTEM ]</div>
+    
+    <div class="book" id="dossierBook">
+        <div id="p1" class="page page-front" onclick="flipPage(true)">
+            <h2 style="text-align:center; border-bottom: 2px solid #000; margin-bottom: 20px;">TOP SECRET</h2>
+            <p style="font-size: 10px; margin-bottom: 15px;">SUBJECT: <span id="target-name">---</span></p>
+            <div id="active-list"></div>
+            <div class="swipe-hint">TAP TO FLIP >></div>
         </div>
 
-        <div id="p2" class="page" style="transform: rotateY(180deg);">
-            <div onclick="closeMemoirs()" style="position:absolute; top:10px; right:15px; cursor:pointer; color:#8b0000; font-weight:bold;">[ X ]</div>
-            <h3 style="text-align: center; border-bottom: 2px solid #000; margin-bottom: 15px; font-family: var(--font-noir);">SUMMARY</h3>
-            
-            <div id="unassigned-section">
-                <h4 style="font-size: 10px; border-bottom: 1px solid #000; margin-bottom: 5px;">UNASSIGNED_EXPENSES</h4>
-                <div id="vacant-list" style="margin-bottom: 20px; font-size: 11px;"></div>
+        <div id="p2" class="page page-back" onclick="flipPage(false)">
+            <h2 style="text-align:center; border-bottom: 2px solid #000; margin-bottom: 20px;">SUMMARY_LOG</h2>
+            <div id="weapon-system-breakdown"></div>
+            <div style="margin-top: 40px; border-top: 3px double #000; padding-top: 15px;">
+                <p style="font-size: 12px; font-weight: bold;">TOTAL EXPENDITURE:</p>
+                <h1 style="font-size: 32px;">₱ <span id="total-val">0.00</span></h1>
             </div>
-
-            <div id="weapon-system-breakdown" style="margin-top: 10px; border-top: 1px solid #000; padding-top: 10px;"></div>
-
-            <div style="margin-top: 20px; padding: 12px; background: rgba(0,0,0,0.05); border: 2px solid #000; text-align: right; transform: rotate(1deg);">
-                <p style="font-size: 9px; opacity: 0.7; font-family: var(--font-noir);">TOTAL_EXPENDITURE</p>
-                <p style="font-weight: bold; font-size: 20px; font-family: var(--font-noir);">₱ <span id="total-val">0.00</span></p>
-            </div>
-            
-            <div class="btn-page" style="left:20px; right:auto;" onclick="flip(false)"><< BACK_TO_LOGS</div>
+            <div class="swipe-hint" style="left: 25px; right: auto;"><< BACK</div>
         </div>
     </div>
+</div>
+
+<div id="noirOverlay" class="overlay">
+    <div class="dossier-paper">
+        <div class="close-dossier" onclick="closeNoir()">[ X ]</div>
+        <h3 id="n-header" style="text-align: center; border-bottom: 2px solid #000; margin-bottom: 15px;">vAGENT_DOSSIER</h3>
+        </div>
 </div>
 
 <script type="module">
@@ -302,80 +348,65 @@
         document.getElementById('n-total').innerText = `₱ ${(data.totalExpenses || 0).toLocaleString()}`;
     };
 
-   window.openMemoirs = (mode) => {
-    const overlay = document.getElementById('memoirsOverlay');
-    overlay.style.display = 'flex';
-    
-    document.getElementById('weapon-system-breakdown').innerHTML = "";
-    document.getElementById('target-name').innerText = mode;
+   // Flip Function
+window.flipPage = (isFlipped) => {
+    const p1 = document.getElementById('p1');
+    const p2 = document.getElementById('p2');
+    if(isFlipped) {
+        p1.classList.add('flipped');
+        p2.style.zIndex = "3";
+        p1.style.zIndex = "1";
+    } else {
+        p1.classList.remove('flipped');
+        p2.style.zIndex = "1";
+        p1.style.zIndex = "3";
+    }
+};
 
-    // 1. RAW DATA FILTERING base sa Weapon System (o ALL para sa Memoirs 3)
+window.openMemoirs = (mode) => {
+    document.getElementById('memoirsOverlay').style.display = 'flex';
+    // Reset page to front whenever opened
+    flipPage(false);
+
     let filtered = (mode === 'ALL') 
         ? allMissions 
         : allMissions.filter(m => (DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem) === mode);
 
-    // 2. STRIKTONG PAGPILI: Dapat may totalExpenses at hindi ito 0.
-    // Kinukuha natin ang data direct base sa presence ng breakdown at value ng total.
-    const validRecords = filtered.filter(m => 
-        (m.totalExpenses && m.totalExpenses > 0) || 
-        (m.expensesBreakdown && m.expensesBreakdown.length > 0)
-    );
-
-    // 3. SORTING: Newest to Oldest (Base sa Firestore ID o Custom Logic)
+    // No-Zero Filter & Sort
+    const validRecords = filtered.filter(m => (m.totalExpenses || 0) > 0);
     validRecords.sort((a, b) => b.id.localeCompare(a.id));
 
-    // 4. PAGE 1: RENDER LOGS (vAgent# o Agent Name kung walang vAgent#)
-    document.getElementById('active-list').innerHTML = validRecords.slice(0, 10).map(m => {
-        // Identifier Logic: Kung walang vAgentID, gamitin ang "AGENT: [Name]"
-        const identity = m.vAgentID ? `vAgent #${m.vAgentID}` : `AGENT: ${m.agent || 'UNKNOWN'}`;
-        const systemTag = mode === 'ALL' ? `<br><span style="font-size:7px; opacity:0.5;">SYS: ${DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem}</span>` : '';
+    // Display Page 1 (Limit 10)
+    document.getElementById('active-list').innerHTML = validRecords.slice(0, 10).map(m => `
+        <div class="expense-row" style="border-bottom: 1px solid rgba(0,0,0,0.2); padding: 10px 0;">
+            <span>
+                <b style="font-size: 9px; color: #8b0000;">REF: ${m.id.substring(0,8)}</b><br>
+                ${m.vAgentID ? 'vAGENT_#' + m.vAgentID : 'AGENT_' + (m.agent || 'SYSTEM')}
+            </span>
+            <b style="font-size: 16px;">₱${m.totalExpenses.toLocaleString()}</b>
+        </div>
+    `).join('') || "<p style='text-align:center; opacity:0.4;'>NO DATA RECORDED</p>";
 
-        return `
-            <div class="expense-row" style="margin-bottom: 10px; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 5px;">
-                <span style="line-height: 1.3;">
-                    <b style="font-size: 8px; opacity: 0.5;">MO#:${m.id.substring(0,10).toUpperCase()}</b>${systemTag}<br>
-                    <span style="font-family: var(--font-noir); font-size: 13px;">${identity}</span>
-                </span>
-                <div style="text-align: right;">
-                    <b style="font-size: 15px; font-family: var(--font-noir);">₱${(m.totalExpenses || 0).toLocaleString()}</b>
-                </div>
-            </div>
-        `;
-    }).join('') || "<p style='text-align:center; opacity:0.3; margin-top:50px;'>[ NO_FINANCIAL_RECORDS ]</p>";
-
-    // 5. PAGE 2: GRAND TOTALS & BREAKDOWN
+    // Calculate Summary Page
     let grandTotal = 0;
-    
-    if (mode === 'ALL') {
-        document.getElementById('memoir-title').innerText = "MASTER_MEMOIRS_III";
-        const systems = {};
-        
-        validRecords.forEach(m => {
-            const sysName = DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem || "UNSPECIFIED";
-            systems[sysName] = (systems[sysName] || 0) + (m.totalExpenses || 0);
-            grandTotal += (m.totalExpenses || 0);
-        });
+    const systems = {};
+    validRecords.forEach(m => {
+        const sys = DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem;
+        systems[sys] = (systems[sys] || 0) + m.totalExpenses;
+        grandTotal += m.totalExpenses;
+    });
 
-        // Pagpapakita ng separation ng totals kada Weapon System sa Memoirs 3
-        document.getElementById('weapon-system-breakdown').innerHTML = Object.keys(systems).map(sys => `
-            <div style="display:flex; justify-content:space-between; font-size:11px; margin-top:5px; font-weight:bold; color:#8b0000; border-bottom: 1px dashed #8b0000;">
-                <span>TOTAL_${sys.toUpperCase()}:</span>
-                <span>₱${systems[sys].toLocaleString()}</span>
-            </div>
-        `).join('');
-        
-        // Itago ang lumang vacant list sa Memoirs 3 dahil isinama na natin sila sa main list (vAgent#/Agent)
-        document.getElementById('unassigned-section').style.display = 'none';
-    } else {
-        // Memoirs 1 o 2 (Specific System)
-        document.getElementById('memoir-title').innerText = `MEMOIRS_${mode.replace(/\s+/g, '_')}`;
-        document.getElementById('unassigned-section').style.display = 'none'; // Clean look
-        validRecords.forEach(m => grandTotal += (m.totalExpenses || 0));
-    }
+    document.getElementById('weapon-system-breakdown').innerHTML = Object.keys(systems).map(s => `
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+            <span>${s.toUpperCase()}:</span>
+            <b>₱${systems[s].toLocaleString()}</b>
+        </div>
+    `).join('');
 
-    // FINAL OUTPUT NG TOTAL
     document.getElementById('total-val').innerText = grandTotal.toLocaleString();
+    document.getElementById('target-name').innerText = mode;
 };
+
 </script>
 </body>
 </html>

@@ -19,5 +19,19 @@ const firebaseConfig = {
     appId: "1:317015091563:web:baab5171d8e0a58acd442e" 
 };
 
+// Idagdag ito sa config.js
+export const INTEL_TERMS = [
+    "INTEL_ACQUISITION",
+    "BLACK_OP_SUBSISTENCE",
+    "FIELD_LOGISTICS",
+    "TACTICAL_RECON",
+    "SIGNAL_ENCRYPTION",
+    "COVERT_SURVEILLANCE",
+    "ASSET_MAINTENANCE",
+    "NETWORK_PENETRATION",
+    "ENCRYPTED_UPLINK",
+    "OPERATIONAL_OVERHEAD"
+];
+
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);

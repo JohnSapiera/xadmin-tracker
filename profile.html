@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CIA_PROFILES // SECURE_ACCESS</title>
+    <title>CIA_PROFILES // TOP_SECRET</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&family=Special+Elite&display=swap" rel="stylesheet">
     <style>
+        /* [DYNAMIC_CSS_RETAINED_FROM_YOUR_CODE] */
         :root {
             --cia-bg: #01080b; --cia-cyan: #00f3ff; --cia-red: #ff003c;
             --font-digital: 'Share Tech Mono', monospace;
@@ -50,17 +51,13 @@
         }
         @keyframes typing { from { width: 0 } to { width: 90% } }
 
-        .status-label { font-size: 9px; color: var(--cia-cyan); margin-top: 10px; transition: 0.3s; }
-        @keyframes uplink-blink { 0%, 100% { opacity: 1; color: var(--cia-cyan); } 50% { opacity: 0.3; } }
-        .uplink-sync { animation: uplink-blink 0.4s infinite; font-weight: bold; }
-
         /* --- FOLDERS --- */
         .vagent-grid { display: none; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px; }
         .folder-box { display: flex; flex-direction: column; align-items: center; cursor: pointer; position: relative; padding-top: 15px; }
         .folder-main { width: 50px; height: 35px; background: var(--cia-cyan); border-radius: 0 4px 4px 4px; z-index: 2; clip-path: polygon(0 0, 40% 0, 50% 15%, 100% 15%, 100% 100%, 0 100%); }
         .paper-sheet { position: absolute; top: 8px; width: 38px; height: 32px; background: #fff; border: 1px solid #ccc; z-index: 1; transition: 0.3s; }
         .folder-box:hover .paper-sheet { transform: translateY(-10px); }
-        .file-label { font-size: 8.5px; color: #fff; text-align: center; margin-top: 8px; font-weight: bold; }
+        .file-label { font-size: 8.5px; color: #fff; text-align: center; margin-top: 8px; font-weight: bold; letter-spacing: 1px; }
 
         /* --- OVERLAYS --- */
         .overlay { display: none; position: fixed; inset: 0; z-index: 4000; background: rgba(0,0,0,0.9); justify-content: center; align-items: center; backdrop-filter: blur(4px); }
@@ -69,18 +66,34 @@
             font-family: var(--font-noir); position: relative; border: 1px solid #c5b8a0;
             box-shadow: 0 0 40px rgba(0,0,0,0.8); transform: rotate(-0.5deg);
         }
-        .btn-terminate { background: none; border: 2px solid #8b0000; color: #8b0000; padding: 8px 15px; font-family: var(--font-noir); font-weight: bold; cursor: pointer; transition: 0.3s; transform: rotate(-2deg); }
-        .btn-terminate:hover { background: #8b0000; color: #e8e2d2; }
 
-        /* Memoirs */
+        .secure-marker { background: #1a1a1a; color: #1a1a1a; padding: 0 5px; border-radius: 2px; cursor: pointer; transition: 0.2s; user-select: all; }
+        .secure-marker:active { background: transparent; }
+
         .book { width: 90%; max-width: 400px; height: 70vh; perspective: 1500px; }
         .page { 
             width: 100%; height: 100%; background: #e8e2d2; color: #1a1a1a; padding: 30px; 
-            font-family: var(--font-noir); position: absolute; transition: 0.8s; 
+            font-family: var(--font-noir); position: absolute; transition: transform 0.8s; 
             transform-origin: left; backface-visibility: hidden; overflow-y: auto; border: 1px solid #c5b8a0;
         }
         .page.flipped { transform: rotateY(-180deg); }
         .expense-row { display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(0,0,0,0.3); padding: 8px 0; font-size: 13px; }
+        .btn-page { position: absolute; bottom: 15px; right: 20px; font-weight: bold; cursor: pointer; border-bottom: 2px solid #000; font-size: 12px; }
+        
+        .shadow-folder { filter: brightness(0.2) grayscale(1) opacity(0.3); cursor: default !important; pointer-events: none; }
+        .shadow-folder .folder-main { background: #1a2a30 !important; }
+        .shadow-folder .paper-sheet { display: none; }
+
+        @keyframes uplink-blink { 0%, 100% { opacity: 1; color: var(--cia-cyan); } 50% { opacity: 0.3; } }
+        .uplink-sync { animation: uplink-blink 0.4s infinite; font-weight: bold; }
+        .status-label { font-size: 9px; color: var(--cia-cyan); margin-top: 10px; transition: all 0.3s ease; }
+
+        .btn-terminate {
+            background: none; border: 2px solid #8b0000; color: #8b0000; padding: 8px 15px;
+            font-family: var(--font-noir); font-weight: bold; cursor: pointer; transition: 0.3s;
+            text-transform: uppercase; transform: rotate(-2deg);
+        }
+        .btn-terminate:hover { background: #8b0000; color: #e8e2d2; }
     </style>
 </head>
 <body>
@@ -94,7 +107,7 @@
     <div id="deviceSection" class="device-grid"></div>
     <div id="vagentSection" class="vagent-grid"></div>
 
-    <button id="btnBack" onclick="location.reload()" style="display:none; background:none; border:1px solid var(--cia-cyan); color:var(--cia-cyan); padding:10px; width:100%; margin-top:20px; cursor:pointer;">[ EXIT_SYSTEM ]</button>
+    <button id="btnBack" onclick="location.reload()" style="display:none; background:none; border:1px solid var(--cia-cyan); color:var(--cia-cyan); padding:10px; width:100%; margin-top:20px; cursor:pointer;">[ EXIT_DEVICE_SYSTEM ]</button>
 
     <div id="memoirsBtnContainer" style="margin-top: 40px; text-align: center;">
         <button onclick="openMemoirs('ALL')" style="background:none; border:1px solid var(--cia-red); color:var(--cia-red); padding:12px 25px; cursor:pointer; font-weight:bold;">[ VIEW_MASTER_MEMOIRS ]</button>
@@ -104,11 +117,12 @@
 <div id="noirOverlay" class="overlay">
     <div class="dossier-paper">
         <div onclick="closeNoir()" style="position:absolute; top:10px; right:15px; cursor:pointer; font-weight:bold; color:#8b0000;">[ X ]</div>
-        <h3 style="text-align: center; border-bottom: 2px solid #000; margin-bottom: 15px;">vAGENT_DOSSIER</h3>
-        <p style="font-size: 11px;"><b>MO#:</b> <span id="n-order">---</span></p>
-        <p style="font-size: 11px;"><b>vAgent#:</b> <span id="n-vagent" style="background:rgba(0,0,0,0.1); padding:0 5px;">---</span></p>
+        <h3 style="text-align: center; border-bottom: 2px solid #000; margin-bottom: 15px; letter-spacing: 1px;">vAGENT_DOSSIER</h3>
+        <p style="font-size: 11px; margin-bottom: 4px;"><b>MO#:</b> <span id="n-order">---</span></p>
+        <p style="font-size: 11px; margin-bottom: 4px;"><b>vAgent#:</b> <span id="n-vagent" style="background:rgba(0,0,0,0.1); padding: 0 5px;">---</span></p>
         <div id="n-content" style="margin-top: 15px; border-top: 1px dashed #000; padding-top: 10px;"></div>
         <div style="text-align: right; margin-top: 20px; border-top: 2px solid #000; padding-top: 8px;">
+            <p style="font-size: 9px; opacity: 0.7; margin-bottom: 2px;">TOTAL_OPERATIONAL_COST</p>
             <p style="font-weight: bold; font-size: 18px;">Total: <span id="n-total">₱ 0.00</span></p>
         </div>
     </div>
@@ -120,34 +134,35 @@
             <h3 style="text-align: center; border-bottom: 2px solid #000; margin-bottom: 15px;">MASTER_REPORT</h3>
             <p style="font-size: 10px; margin-bottom: 20px;">NODE: <span id="target-name">ALL</span></p>
             <div id="active-list"></div>
-            <div style="position: absolute; bottom: 15px; right: 20px; cursor: pointer;" onclick="flip(true)">NEXT >></div>
+            <div class="btn-page" onclick="flip(true)">NEXT PAGE >></div>
         </div>
         <div id="p2" class="page" style="transform: rotateY(180deg);">
-            <h4>SUMMARY</h4>
+            <h4 style="border-bottom: 1px solid #000; margin-bottom: 10px;">VACANT_LOGS</h4>
             <div id="vacant-list"></div>
-            <div style="margin-top: 30px; border-top: 2px solid #000; text-align: right; font-weight:bold;">TOTAL: <span id="total-val">₱ 0.00</span></div>
+            <div style="margin-top: 30px; border-top: 2px solid #000; text-align: right; font-weight: bold; font-size: 18px;">
+                TOTAL: <span id="total-val">₱ 0.00</span>
+            </div>
+            <div class="btn-page" style="left:20px; right:auto;" onclick="flip(false)"><< PREV</div>
             <div onclick="closeMemoirs()" style="position:absolute; top:10px; right:15px; cursor:pointer; color:#8b0000; font-weight:bold;">[ CLOSE ]</div>
         </div>
     </div>
 </div>
 
 <script type="module">
+    // IMPLEMENTATION OF CONFIG.JS & PRIVACY
     import { db, DEVICE_REGISTRY } from "./config.js"; 
     import { collection, query, where, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    // PRIVACY: Only access current logged in agent
-    const currentAgent = localStorage.getItem("cia_agent");
+    // AGENT PRIVACY: Get identity from localStorage
+    const currentAgent = localStorage.getItem("cia_agent") || "UNKNOWN_AGENT";
+    document.getElementById('display-agent').innerText = currentAgent;
+
     let deviceData = {};
     let allMissions = [];
 
+    // ONLOAD: SECURE DATA FETCHING
     window.onload = async () => {
-        if (!currentAgent) {
-            window.location.href = "index.html"; 
-            return;
-        }
-        document.getElementById('display-agent').innerText = currentAgent;
-
-        // PRIVACY FILTER: Firebase query ensures no other agent's data is leaked
+        // Only fetch missions belonging to the LOGGED IN AGENT
         const q = query(collection(db, "mission_orders"), where("agent", "==", currentAgent));
         const snap = await getDocs(q);
         
@@ -156,15 +171,18 @@
 
         snap.forEach(d => {
             const data = d.data();
-            // FILTER: Huwag i-display kung walang vAgentID (Considered Blacklist/Hidden)
-            if (!data.vAgentID) return;
-
-            const docWithID = {...data, id: d.id};
-            allMissions.push(docWithID);
             
-            const name = DEVICE_REGISTRY[data.weaponSystem] || data.weaponSystem;
-            if(!deviceData[name]) deviceData[name] = [];
-            deviceData[name].push(docWithID);
+            // SECURITY: Only display if it has a vAgentID (Active)
+            if (data.vAgentID) {
+                const docWithID = {...data, id: d.id};
+                allMissions.push(docWithID);
+                
+                // Map system code to Name using config.js
+                const deviceName = DEVICE_REGISTRY[data.weaponSystem] || data.weaponSystem;
+                
+                if(!deviceData[deviceName]) deviceData[deviceName] = [];
+                deviceData[deviceName].push(docWithID);
+            }
         });
         renderDevices();
     };
@@ -172,10 +190,12 @@
     function renderDevices() {
         const grid = document.getElementById('deviceSection');
         const keys = Object.keys(deviceData);
-        if(keys.length === 0) { 
-            grid.innerHTML = "<p style='grid-column: 1/-1; text-align:center; opacity:0.5;'>[ NO_ACTIVE_AGENTS_FOUND ]</p>"; 
-            return; 
+        
+        if (keys.length === 0) {
+            grid.innerHTML = `<p style="grid-column: 1/-1; text-align:center; opacity:0.5;">[ NO_ACTIVE_DATA_FOR_AGENT ]</p>`;
+            return;
         }
+
         grid.innerHTML = keys.map(name => `
             <div class="phone-wrapper" onclick="activateDevice('${name}', this)">
                 <div class="phone-body"><div class="phone-screen"><div class="typing-text">WELCOME<br>NODE_${name}</div></div></div>
@@ -186,69 +206,86 @@
 
     window.activateDevice = (name, element) => {
         element.classList.add('lights-on'); 
-        const lbl = element.querySelector('.status-label');
-        lbl.innerText = "[ UPLINK_SYNC_DATA ]"; lbl.classList.add('uplink-sync');
+        const statusLabel = element.querySelector('.status-label');
+        statusLabel.innerHTML = "[ UPLINK_SYNC_DATA ]";
+        statusLabel.classList.add('uplink-sync');
 
         setTimeout(() => {
             document.getElementById('deviceSection').style.display = 'none';
             document.getElementById('vagentSection').style.display = 'grid';
             document.getElementById('btnBack').style.display = 'block';
             
-            // FILTER & SORT: Missions for this specific device only
+            document.getElementById('memoirsBtnContainer').innerHTML = `
+                <button onclick="openMemoirs('${name}')" style="background:none; border:1px solid var(--cia-red); color:var(--cia-red); padding:10px; width:100%; cursor:pointer;">[ VIEW_${name}_MEMOIRS ]</button>
+            `;
+
             const sorted = deviceData[name].sort((a,b) => parseInt(a.vAgentID) - parseInt(b.vAgentID));
+            
             document.getElementById('vagentSection').innerHTML = sorted.map(v => `
                 <div class="folder-box" onclick="openNoirModal('${v.id}')">
                     <div class="paper-sheet"></div><div class="folder-main"></div><div class="file-label">#${v.vAgentID}</div>
                 </div>
-            `).join('');
-        }, 1500);
+            `).join('') + `
+                <div class="folder-box shadow-folder"><div class="folder-main"></div><div class="file-label">LOCKED</div></div>
+            `;
+        }, 1800);
     };
 
     window.openNoirModal = (docID) => {
         const data = allMissions.find(m => m.id === docID);
         if(!data) return;
+
         document.getElementById('noirOverlay').style.display = 'flex';
-        document.getElementById('n-order').innerText = docID.substring(0,10).toUpperCase();
+        document.getElementById('n-order').innerText = docID.substring(0,12).toUpperCase();
         document.getElementById('n-vagent').innerText = data.vAgentID;
 
         let expHTML = (data.expensesBreakdown || []).map(e => `
-            <div class="expense-row"><span>${e.description}</span><b>₱${(e.amount || 0).toLocaleString()}</b></div>
-        `).join('') || "NO_HISTORY";
+            <div class="expense-row"><span>${e.description || 'Logistics'}</span><b>₱${(e.amount || 0).toLocaleString()}</b></div>
+        `).join('') || "<p style='font-size:10px; opacity:0.5;'>NO_LOGS</p>";
 
         document.getElementById('n-content').innerHTML = `
-            <p style="font-size:11px;"><b>Marker:</b> ${data.marker || '---'}</p>
-            <p style="font-size:11px; margin-bottom:10px;"><b>Deployment:</b> ${data.deploymentDate || '---'}</p>
-            <div style="max-height:140px; overflow-y:auto; border-top:1px dashed #000; padding-top:10px;">${expHTML}</div>
-            <center><button onclick="terminateAgent('${docID}')" class="btn-terminate" style="margin-top:15px;">TERMINATE_AGENT</button></center>
+            <div style="font-size:11px; margin-bottom:12px;">
+                <p><b>SecureLine:</b> <span class="secure-marker">${data.marker || 'SECRET'}</span></p>
+                <p><b>Deployment:</b> ${data.deploymentDate || 'TBD'}</p>
+            </div>
+            <p style="font-size:10px; font-weight:bold; border-top:1px solid #000; padding-top:10px;">EXPENSES_HISTORY:</p>
+            <div style="max-height:140px; overflow-y:auto; margin-bottom:15px;">${expHTML}</div>
+            <center><button onclick="terminateAgent('${docID}')" class="btn-terminate">TERMINATE_AGENT</button></center>
         `;
         document.getElementById('n-total').innerText = `₱ ${(data.totalExpenses || 0).toLocaleString()}`;
     };
 
     window.terminateAgent = async (docID) => {
         const data = allMissions.find(m => m.id === docID);
-        if(!confirm(`TERMINATE AGENT #${data.vAgentID}?`)) return;
+        if(!confirm(`TERMINATE AGENT #${data.vAgentID}? This is irreversible.`)) return;
+        
         try {
             await addDoc(collection(db, "blacklist"), {
-                mo_ref: docID, vAgentID: data.vAgentID, marker: data.marker, 
+                mo_ref: docID, vAgentID: data.vAgentID, marker: data.marker,
                 agent_handler: currentAgent, timestamp: new Date().toISOString()
             });
-            alert("SUCCESS: AGENT BLACKLISTED"); location.reload();
-        } catch (e) { alert("ERROR"); }
+            alert("SUCCESS: DATA_MOVED_TO_BLACKLIST");
+            location.reload();
+        } catch (e) { alert("ERROR: TERMINATION_FAILED"); }
     };
 
-    window.closeNoir = () => document.getElementById('noirOverlay').style.display = 'none';
     window.openMemoirs = (mode) => {
         document.getElementById('memoirsOverlay').style.display = 'flex';
         let total = 0;
         let filtered = (mode === 'ALL') ? allMissions : allMissions.filter(m => (DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem) === mode);
-        document.getElementById('active-list').innerHTML = filtered.map(m => { 
-            total += (m.totalExpenses || 0); 
-            return `<div class="expense-row"><span>#${m.vAgentID}</span><b>₱${(m.totalExpenses || 0).toLocaleString()}</b></div>`; 
-        }).join('') || "NONE";
+
+        document.getElementById('active-list').innerHTML = filtered.map(m => {
+            total += (m.totalExpenses || 0);
+            return `<div class="expense-row"><span>vAgent #${m.vAgentID}</span><b>₱${(m.totalExpenses || 0).toLocaleString()}</b></div>`;
+        }).join('') || "NO_DATA";
+
+        document.getElementById('target-name').innerText = mode;
         document.getElementById('total-val').innerText = `₱ ${total.toLocaleString()}`;
     };
-    window.flip = (n) => document.getElementById('p1').classList.toggle('flipped', n);
+
+    window.closeNoir = () => document.getElementById('noirOverlay').style.display = 'none';
     window.closeMemoirs = () => document.getElementById('memoirsOverlay').style.display = 'none';
+    window.flip = (n) => document.getElementById('p1').classList.toggle('flipped', n);
 </script>
 </body>
 </html>

@@ -69,6 +69,7 @@
         .secure-marker { background: #1a1a1a; color: #1a1a1a; padding: 0 5px; border-radius: 2px; cursor: pointer; transition: 0.2s; user-select: all; }
         .secure-marker:active { background: transparent; }
 
+        /* --- BOOK EFFECT --- */
         .book { width: 90%; max-width: 400px; height: 70vh; perspective: 1500px; }
         .page { 
             width: 100%; height: 100%; background: #e8e2d2; color: #1a1a1a; padding: 30px; 
@@ -79,19 +80,43 @@
         .expense-row { display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(0,0,0,0.3); padding: 8px 0; font-size: 13px; }
         .btn-page { position: absolute; bottom: 15px; right: 20px; font-weight: bold; cursor: pointer; border-bottom: 2px solid #000; font-size: 12px; }
         
-        .shadow-folder { filter: brightness(0.2) grayscale(1) opacity(0.3); cursor: default !important; pointer-events: none; }
-        .shadow-folder .folder-main { background: #1a2a30 !important; }
-
-        @keyframes uplink-blink { 0%, 100% { opacity: 1; color: var(--cia-cyan); } 50% { opacity: 0.3; } }
-        .uplink-sync { animation: uplink-blink 0.4s infinite; font-weight: bold; }
-        .status-label { font-size: 9px; color: var(--cia-cyan); margin-top: 10px; transition: all 0.3s ease; }
-
+        /* --- TERMINATE DESIGN (ORIGINAL) --- */
         .btn-terminate {
             background: none; border: 2px solid #8b0000; color: #8b0000; padding: 8px 15px;
             font-family: var(--font-noir); font-weight: bold; cursor: pointer; transition: 0.3s;
-            text-transform: uppercase; margin-top: 10px;
+            text-transform: uppercase; transform: rotate(-2deg); margin-top: 15px;
         }
         .btn-terminate:hover { background: #8b0000; color: #e8e2d2; }
+
+        /* --- MISC --- */
+        .shadow-folder { filter: brightness(0.2) grayscale(1) opacity(0.3); cursor: default !important; pointer-events: none; }
+        @keyframes uplink-blink { 0%, 100% { opacity: 1; color: var(--cia-cyan); } 50% { opacity: 0.3; } }
+        .uplink-sync { animation: uplink-blink 0.4s infinite; font-weight: bold; }
+        .status-label { font-size: 9px; color: var(--cia-cyan); margin-top: 10px; transition: all 0.3s ease; }
+		
+		/* --- CIA FOLDER STAMP --- */
+.folder-box.has-expenses .folder-main::after {
+    content: "CIA";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-15deg);
+    font-family: var(--font-noir);
+    font-size: 10px;
+    font-weight: bold;
+    color: rgba(0, 0, 0, 0.7); /* Ink black color */
+    border: 1.5px solid rgba(0, 0, 0, 0.7);
+    padding: 1px 3px;
+    border-radius: 2px;
+    pointer-events: none;
+    letter-spacing: 1px;
+    z-index: 5;
+}
+
+/* Optional: Gawing medyo "used" ang look ng folder na may laman */
+.folder-box.has-expenses .folder-main {
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+}
     </style>
 </head>
 <body>
@@ -156,11 +181,9 @@
     let deviceData = {};
     let allMissions = [];
 
-    // --- DATA FETCHING ---
     window.onload = async () => {
         const q = query(collection(db, "mission_orders"), where("agent", "==", currentAgent));
         const snap = await getDocs(q);
-        
         allMissions = [];
         deviceData = {};
 
@@ -169,7 +192,6 @@
             if (data.vAgentID) {
                 const docWithID = {...data, id: d.id};
                 allMissions.push(docWithID);
-                
                 const deviceName = DEVICE_REGISTRY[data.weaponSystem] || data.weaponSystem;
                 if(!deviceData[deviceName]) deviceData[deviceName] = [];
                 deviceData[deviceName].push(docWithID);
@@ -178,16 +200,13 @@
         renderDevices();
     };
 
-    // --- UI RENDERING ---
     window.renderDevices = () => {
         const grid = document.getElementById('deviceSection');
         const keys = Object.keys(deviceData);
-        
         if (keys.length === 0) {
             grid.innerHTML = `<p style="grid-column: 1/-1; text-align:center; opacity:0.5;">[ NO_ACTIVE_DATA ]</p>`;
             return;
         }
-
         grid.innerHTML = keys.map(name => `
             <div class="phone-wrapper" onclick="activateDevice('${name}', this)">
                 <div class="phone-body"><div class="phone-screen"><div class="typing-text">WELCOME<br>NODE_${name}</div></div></div>
@@ -206,22 +225,29 @@
             document.getElementById('deviceSection').style.display = 'none';
             document.getElementById('vagentSection').style.display = 'grid';
             document.getElementById('btnBack').style.display = 'block';
-            
             document.getElementById('memoirsBtnContainer').innerHTML = `
                 <button onclick="openMemoirs('${name}')" style="background:none; border:1px solid var(--cia-red); color:var(--cia-red); padding:10px; width:100%; cursor:pointer;">[ VIEW_${name}_MEMOIRS ]</button>
             `;
-
-            const sorted = deviceData[name].sort((a,b) => parseInt(a.vAgentID) - parseInt(b.vAgentID));
             
-            document.getElementById('vagentSection').innerHTML = sorted.map(v => `
-                <div class="folder-box" onclick="openNoirModal('${v.id}')">
-                    <div class="paper-sheet"></div><div class="folder-main"></div><div class="file-label">#${v.vAgentID}</div>
-                </div>
-            `).join('') + `<div class="folder-box shadow-folder"><div class="folder-main"></div><div class="file-label">LOCKED</div></div>`;
+            const sorted = deviceData[name].sort((a,b) => parseInt(a.vAgentID) - parseInt(b.vAgentID));
+
+            // --- ETO YUNG BINAGO: NILAGYAN NG HAS-EXPENSES CHECK ---
+            document.getElementById('vagentSection').innerHTML = sorted.map(v => {
+                // Check kung may laman ang listahan ng gastos
+                const hasHistory = v.expensesBreakdown && v.expensesBreakdown.length > 0;
+                
+                return `
+                    <div class="folder-box ${hasHistory ? 'has-expenses' : ''}" onclick="openNoirModal('${v.id}')">
+                        <div class="paper-sheet"></div>
+                        <div class="folder-main"></div>
+                        <div class="file-label">#${v.vAgentID}</div>
+                    </div>
+                `;
+            }).join('') + `<div class="folder-box shadow-folder"><div class="folder-main"></div><div class="file-label">LOCKED</div></div>`;
+            
         }, 1800);
     };
 
-    // --- MODAL & LOGIC ---
     window.openNoirModal = (docID) => {
         const data = allMissions.find(m => m.id === docID);
         if(!data) return;
@@ -233,15 +259,11 @@
         let expHTML = "";
         if(data.expensesBreakdown && Array.isArray(data.expensesBreakdown)) {
             const sorted = data.expensesBreakdown.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
-            
             expHTML = sorted.map(e => {
                 const d = e.timestamp ? new Date(e.timestamp) : new Date();
                 const displayDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).replace(',', ' /');
-                
-                // RANDOMIZER: Use DB desc OR random term from config
                 const randomIndex = Math.floor(Math.random() * INTEL_TERMS.length);
                 const intelDesc = e.description || INTEL_TERMS[randomIndex];
-                
                 return `
                     <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:6px; border-bottom: 1px dotted rgba(0,0,0,0.3); padding-bottom: 2px;">
                         <span><span style="opacity:0.6;">${displayDate}</span> — ${intelDesc}</span>
@@ -261,7 +283,9 @@
             <div style="max-height:160px; overflow-y:auto; margin-bottom:15px; padding-right:5px;">
                 ${expHTML}
             </div>
-            <center><button onclick="alert('System Locked: Auth Required')" class="btn-terminate">TERMINATE_AGENT</button></center>
+            <center>
+                <button onclick="alert('System Locked: Auth Required')" class="btn-terminate">TERMINATE_AGENT</button>
+            </center>
         `;
         document.getElementById('n-total').innerText = `₱ ${(data.totalExpenses || 0).toLocaleString()}`;
     };
@@ -270,12 +294,10 @@
         document.getElementById('memoirsOverlay').style.display = 'flex';
         let total = 0;
         let filtered = (mode === 'ALL') ? allMissions : allMissions.filter(m => (DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem) === mode);
-
         document.getElementById('active-list').innerHTML = filtered.map(m => {
             total += (m.totalExpenses || 0);
             return `<div class="expense-row"><span>vAgent #${m.vAgentID}</span><b>₱${(m.totalExpenses || 0).toLocaleString()}</b></div>`;
         }).join('') || "NO_DATA";
-
         document.getElementById('target-name').innerText = mode;
         document.getElementById('total-val').innerText = `₱ ${total.toLocaleString()}`;
     };

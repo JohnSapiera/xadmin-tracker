@@ -21,85 +21,65 @@
 
         .container { max-width: 500px; margin: 0 auto; padding: 20px; padding-bottom: 120px; }
 
-        /* --- DEVICE DESIGN --- */
+        /* --- DEVICE GRID --- */
         .device-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px; }
         .phone-wrapper { cursor: pointer; text-align: center; transition: 0.4s; }
-        
-        /* Pre-click movement logic */
-        .phone-wrapper:nth-child(odd):hover { transform: translateX(10px); }
-        .phone-wrapper:nth-child(even):hover { transform: translateX(-10px); }
-
         .phone-body {
             width: 130px; height: 240px; background: #050a0c; margin: 0 auto;
             border-radius: 18px; border: 2px solid #1a2a30; position: relative;
-            filter: grayscale(1) brightness(0.3);
-            transition: all 0.5s ease;
+            filter: grayscale(1) brightness(0.3); transition: all 0.5s ease;
         }
 
-        /* --- THE "WHITE SCREEN" LIGHTS ON --- */
+        /* LIGHTS ON EFFECT */
         .phone-wrapper.lights-on .phone-body {
-            filter: grayscale(0) brightness(1);
-            border-color: var(--cia-cyan);
+            filter: grayscale(0) brightness(1); border-color: var(--cia-cyan);
             box-shadow: 0 0 40px rgba(0, 243, 255, 0.6);
         }
-
         .phone-screen {
             position: absolute; inset: 5px; background: #000; border-radius: 12px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: background 0.3s ease-in; /* Bibilis ang pagputi */
-            overflow: hidden;
+            transition: background 0.3s ease-in; overflow: hidden;
         }
+        .phone-wrapper.lights-on .phone-screen { background: #ffffff; }
 
-        /* Pag-click, magiging PURE WHITE */
-        .phone-wrapper.lights-on .phone-screen {
-            background: #ffffff; 
-            box-shadow: inset 0 0 20px rgba(255,255,255,1);
-        }
-
-        /* Ang text ay lalabas pagkatapos mag-white screen */
         .typing-text {
             display: none; color: #000; font-size: 11px; font-weight: bold;
-            width: 0; overflow: hidden; white-space: nowrap; 
-            border-right: 2px solid #000;
+            width: 0; overflow: hidden; white-space: nowrap; border-right: 2px solid #000;
         }
-
         .phone-wrapper.lights-on .typing-text {
-            display: block;
-            animation: typing 0.8s steps(15) 0.4s forwards; /* Delay para makita muna ang white screen */
+            display: block; animation: typing 0.8s steps(15) 0.4s forwards;
         }
-
         @keyframes typing { from { width: 0 } to { width: 90% } }
 
-        /* --- FOLDERS & MEMOIRS (SAME LOGIC) --- */
+        /* --- FOLDERS --- */
         .vagent-grid { display: none; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px; }
         .folder-box { display: flex; flex-direction: column; align-items: center; cursor: pointer; position: relative; padding-top: 15px; }
         .folder-main { width: 50px; height: 35px; background: var(--cia-cyan); border-radius: 0 4px 4px 4px; z-index: 2; clip-path: polygon(0 0, 40% 0, 50% 15%, 100% 15%, 100% 100%, 0 100%); }
         .paper-sheet { position: absolute; top: 8px; width: 38px; height: 32px; background: #fff; border: 1px solid #ccc; z-index: 1; transition: 0.3s; }
         .folder-box:hover .paper-sheet { transform: translateY(-10px); }
+        .file-label { font-size: 8.5px; color: #fff; text-align: center; margin-top: 8px; font-weight: bold; letter-spacing: 1px; }
 
-        /* OVERLAYS & PAGE FLIP */
-        .overlay { display: none; position: fixed; inset: 0; z-index: 2000; background: rgba(0,0,0,0.9); justify-content: center; align-items: center; }
-        .book { width: 90%; max-width: 400px; height: 75vh; perspective: 1500px; }
-        .page { width: 100%; height: 100%; background: #e8e2d2; color: #1a1a1a; padding: 30px; font-family: var(--font-noir); position: absolute; box-shadow: 0 0 15px rgba(0,0,0,0.5); transition: transform 0.8s; transform-origin: left; backface-visibility: hidden; overflow-y: auto; border: 1px solid #c5b8a0; }
+        /* --- OVERLAYS --- */
+        .overlay { display: none; position: fixed; inset: 0; z-index: 4000; background: rgba(0,0,0,0.9); justify-content: center; align-items: center; backdrop-filter: blur(4px); }
+        
+        /* Individual Dossier Paper */
+        .dossier-paper {
+            width: 85%; max-width: 350px; background: #e8e2d2; color: #1a1a1a; padding: 30px 20px;
+            font-family: var(--font-noir); position: relative; border: 1px solid #c5b8a0;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5); transform: rotate(-1deg);
+        }
+
+        /* Memoirs Book */
+        .book { width: 90%; max-width: 400px; height: 70vh; perspective: 1500px; }
+        .page { 
+            width: 100%; height: 100%; background: #e8e2d2; color: #1a1a1a; padding: 30px; 
+            font-family: var(--font-noir); position: absolute; transition: transform 0.8s; 
+            transform-origin: left; backface-visibility: hidden; overflow-y: auto; border: 1px solid #c5b8a0;
+        }
         .page.flipped { transform: rotateY(-180deg); }
         .expense-row { display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(0,0,0,0.3); padding: 8px 0; font-size: 13px; }
         .btn-page { position: absolute; bottom: 15px; right: 20px; font-weight: bold; cursor: pointer; border-bottom: 2px solid #000; font-size: 12px; }
-		
-		/* Font size reduced by 15% for folder labels */
-    .file-label { 
-        font-size: 8.5px; 
-        color: #fff; 
-        text-align: center; 
-        margin-top: 8px; 
-        font-weight: bold; 
-        letter-spacing: 1px;
-    }
-
-    /* Additional style para sa Noir Overlay (yung dating top secret na papel) */
-    #noirOverlay {
-        display: none; position: fixed; inset: 0; z-index: 3000; 
-        background: rgba(0,0,0,0.95); justify-content: center; align-items: center;
-    }
+        .redacted { background: #000; color: #000; padding: 0 3px; }
     </style>
 </head>
 <body>
@@ -121,14 +101,13 @@
 </div>
 
 <div id="noirOverlay" class="overlay">
-    <div class="paper-sheet" style="background: #e8e2d2; color: #1a1a1a; padding: 25px; font-family: var(--font-noir); width: 85%; position: relative; border: 1px solid #c5b8a0;">
+    <div class="dossier-paper">
         <div onclick="closeNoir()" style="position:absolute; top:10px; right:15px; cursor:pointer; font-weight:bold; color:#8b0000;">[ X ]</div>
         <h3 style="text-align: center; border-bottom: 2px solid #000; margin-bottom: 15px;">vAGENT_DOSSIER</h3>
-        <p><b>DOCUMENT_ID:</b> <span id="n-order">---</span></p>
-        <p><b>vAGENT_ID:</b> <span id="n-vagent" style="background:rgba(0,0,0,0.1); padding: 0 5px;">---</span></p>
-        <div id="n-content" style="margin-top: 20px; min-height: 100px; border-top: 1px dashed #000; padding-top: 10px;">
-            </div>
-        <div style="text-align: right; font-weight: bold; font-size: 18px; margin-top: 10px;">
+        <p style="font-size: 12px; margin-bottom: 5px;"><b>ID:</b> <span id="n-order">---</span></p>
+        <p style="font-size: 12px; margin-bottom: 5px;"><b>TARGET:</b> <span id="n-vagent" style="background:rgba(0,0,0,0.1); padding: 0 5px;">---</span></p>
+        <div id="n-content" style="margin-top: 15px; min-height: 100px; border-top: 1px dashed #000; padding-top: 10px; font-size: 13px;"></div>
+        <div style="text-align: right; font-weight: bold; font-size: 18px; margin-top: 15px; border-top: 2px solid #000;">
             TOTAL: <span id="n-total">₱ 0.00</span>
         </div>
     </div>
@@ -137,8 +116,8 @@
 <div id="memoirsOverlay" class="overlay">
     <div class="book">
         <div id="p1" class="page">
-            <h3 style="text-align: center; border-bottom: 2px solid #000; margin-bottom: 15px;">CLASSIFIED REPORT</h3>
-            <p style="font-size: 10px; margin-bottom: 20px;">TARGET: <span id="target-name">MASTER_LEDGER</span></p>
+            <h3 style="text-align: center; border-bottom: 2px solid #000; margin-bottom: 15px;">MASTER_REPORT</h3>
+            <p style="font-size: 10px; margin-bottom: 20px;">NODE: <span id="target-name">ALL</span></p>
             <div id="active-list"></div>
             <div class="btn-page" onclick="flip(true)">NEXT PAGE >></div>
         </div>
@@ -205,32 +184,48 @@
     }
 
     window.activateDevice = (name, element) => {
-        element.classList.add('lights-on'); // TRIGGER WHITE SCREEN
+        element.classList.add('lights-on'); 
         setTimeout(() => {
             document.getElementById('deviceSection').style.display = 'none';
             document.getElementById('vagentSection').style.display = 'grid';
             document.getElementById('btnBack').style.display = 'block';
+            
             document.getElementById('memoirsBtnContainer').innerHTML = `
                 <button onclick="openMemoirs('${name}')" style="background:none; border:1px solid var(--cia-red); color:var(--cia-red); padding:10px; width:100%; cursor:pointer;">[ VIEW_${name}_MEMOIRS ]</button>
             `;
 
             const sorted = deviceData[name].sort((a,b) => parseInt(a.vAgentID) - parseInt(b.vAgentID));
             document.getElementById('vagentSection').innerHTML = sorted.map(v => `
-                <div class="folder-box">
+                <div class="folder-box" onclick="openNoirModal('${v.id}')">
                     <div class="paper-sheet"></div>
                     <div class="folder-main"></div>
                     <div class="file-label">#${v.vAgentID}</div>
                 </div>
-            `).join('');
-        }, 1800); // 1.8s duration para masulit ang white flare
+            `).join('') + `<div class="folder-box shadow-folder"><div class="paper-sheet"></div><div class="folder-main"></div><div class="file-label">LOCKED</div></div>`;
+        }, 1800);
     };
+
+    window.openNoirModal = (docID) => {
+        const data = allMissions.find(m => m.id === docID);
+        if(data) {
+            document.getElementById('noirOverlay').style.display = 'flex';
+            document.getElementById('n-order').innerText = docID.substring(0,12).toUpperCase();
+            document.getElementById('n-vagent').innerText = "AGENT_#" + data.vAgentID;
+            document.getElementById('n-total').innerText = `₱ ${(data.totalExpenses || 0).toLocaleString()}`;
+            document.getElementById('n-content').innerHTML = `
+                <p>Operational log verified. Status: <span class="redacted">CLEARED</span>.</p>
+                <p style="margin-top:10px; font-style:italic;">Resource allocation for node ${data.weaponSystem} completed.</p>
+            `;
+        }
+    };
+
+    window.closeNoir = () => document.getElementById('noirOverlay').style.display = 'none';
 
     window.openMemoirs = (mode) => {
         document.getElementById('memoirsOverlay').style.display = 'flex';
         const activeList = document.getElementById('active-list');
         const vacantList = document.getElementById('vacant-list');
         let total = 0;
-
         let filtered = (mode === 'ALL') ? allMissions : allMissions.filter(m => (fullWeaponMap[m.weaponSystem] || m.weaponSystem) === mode);
 
         const active = filtered.filter(m => m.vAgentID && m.totalExpenses > 0);
@@ -258,59 +253,6 @@
     };
 
     window.closeMemoirs = () => document.getElementById('memoirsOverlay').style.display = 'none';
-	
-	window.activateDevice = (name, element) => {
-        element.classList.add('lights-on'); 
-        setTimeout(() => {
-            document.getElementById('deviceSection').style.display = 'none';
-            document.getElementById('vagentSection').style.display = 'grid';
-            document.getElementById('btnBack').style.display = 'block';
-            
-            // I-update ang Memoirs button
-            document.getElementById('memoirsBtnContainer').innerHTML = `
-                <button onclick="openMemoirs('${name}')" style="background:none; border:1px solid var(--cia-red); color:var(--cia-red); padding:10px; width:100%; cursor:pointer;">[ VIEW_${name}_MEMOIRS ]</button>
-            `;
-
-            const sorted = deviceData[name].sort((a,b) => parseInt(a.vAgentID) - parseInt(b.vAgentID));
-            
-            // CLICKABLE FOLDERS FIX
-            document.getElementById('vagentSection').innerHTML = sorted.map(v => `
-                <div class="folder-box" onclick="openNoirModal('${v.id}')">
-                    <div class="paper-sheet"></div>
-                    <div class="folder-main"></div>
-                    <div class="file-label">#${v.vAgentID}</div>
-                </div>
-            `).join('') + `
-                <div class="folder-box shadow-folder">
-                    <div class="paper-sheet"></div>
-                    <div class="folder-main"></div>
-                    <div class="file-label">LOCKED</div>
-                </div>`;
-        }, 1800);
-    };
-
-    // New function para ma-view ang specific folder data
-    window.openNoirModal = (docID) => {
-        const data = allMissions.find(m => m.id === docID);
-        if(data) {
-            document.getElementById('noirOverlay').style.display = 'flex';
-            document.getElementById('n-order').innerText = docID.substring(0,10);
-            document.getElementById('n-vagent').innerText = data.vAgentID || "VACANT";
-            document.getElementById('n-total').innerText = `₱ ${(data.totalExpenses || 0).toLocaleString()}`;
-            
-            // Display expenses if any
-            document.getElementById('n-content').innerHTML = `
-                <div style="font-size: 12px; font-style: italic;">
-                    Field operations and logistics report for vAgent ${data.vAgentID}.
-                    Status: Verified.
-                </div>
-            `;
-        }
-    };
-
-    window.closeNoir = () => document.getElementById('noirOverlay').style.display = 'none';
-
-    // ... (rest of the Memoirs and flip functions) ...
 </script>
 </body>
 </html>

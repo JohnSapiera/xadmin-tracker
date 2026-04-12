@@ -154,19 +154,31 @@
 <div id="memoirsOverlay" class="overlay">
     <div class="book">
         <div id="p1" class="page">
-            <h3 style="text-align: center; border-bottom: 2px solid #000; margin-bottom: 15px;">MASTER_REPORT</h3>
-            <p style="font-size: 10px; margin-bottom: 20px;">NODE: <span id="target-name">ALL</span></p>
-            <div id="active-list"></div>
-            <div class="btn-page" onclick="flip(true)">NEXT PAGE >></div>
+            <h3 id="memoir-title" style="text-align: center; border-bottom: 2px solid #000; margin-bottom: 10px; font-family: var(--font-noir);">LOGS</h3>
+            <p style="font-size: 9px; margin-bottom: 10px; opacity: 0.7;">NODE_SCOPE: <span id="target-name">---</span></p>
+            
+            <div id="active-list" style="min-height: 320px;"></div>
+            
+            <div class="btn-page" onclick="flip(true)">FINANCIAL SUMMARY >></div>
         </div>
+
         <div id="p2" class="page" style="transform: rotateY(180deg);">
-            <h4 style="border-bottom: 1px solid #000; margin-bottom: 10px;">VACANT_LOGS</h4>
-            <div id="vacant-list"></div>
-            <div style="margin-top: 30px; border-top: 2px solid #000; text-align: right; font-weight: bold; font-size: 18px;">
-                TOTAL: <span id="total-val">₱ 0.00</span>
+            <div onclick="closeMemoirs()" style="position:absolute; top:10px; right:15px; cursor:pointer; color:#8b0000; font-weight:bold;">[ X ]</div>
+            <h3 style="text-align: center; border-bottom: 2px solid #000; margin-bottom: 15px; font-family: var(--font-noir);">SUMMARY</h3>
+            
+            <div id="unassigned-section">
+                <h4 style="font-size: 10px; border-bottom: 1px solid #000; margin-bottom: 5px;">UNASSIGNED_EXPENSES</h4>
+                <div id="vacant-list" style="margin-bottom: 20px; font-size: 11px;"></div>
             </div>
-            <div class="btn-page" style="left:20px; right:auto;" onclick="flip(false)"><< PREV</div>
-            <div onclick="closeMemoirs()" style="position:absolute; top:10px; right:15px; cursor:pointer; color:#8b0000; font-weight:bold;">[ CLOSE ]</div>
+
+            <div id="weapon-system-breakdown" style="margin-top: 10px; border-top: 1px solid #000; padding-top: 10px;"></div>
+
+            <div style="margin-top: 20px; padding: 12px; background: rgba(0,0,0,0.05); border: 2px solid #000; text-align: right; transform: rotate(1deg);">
+                <p style="font-size: 9px; opacity: 0.7; font-family: var(--font-noir);">TOTAL_EXPENDITURE</p>
+                <p style="font-weight: bold; font-size: 20px; font-family: var(--font-noir);">₱ <span id="total-val">0.00</span></p>
+            </div>
+            
+            <div class="btn-page" style="left:20px; right:auto;" onclick="flip(false)"><< BACK_TO_LOGS</div>
         </div>
     </div>
 </div>
@@ -291,20 +303,72 @@
     };
 
     window.openMemoirs = (mode) => {
-        document.getElementById('memoirsOverlay').style.display = 'flex';
-        let total = 0;
-        let filtered = (mode === 'ALL') ? allMissions : allMissions.filter(m => (DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem) === mode);
-        document.getElementById('active-list').innerHTML = filtered.map(m => {
-            total += (m.totalExpenses || 0);
-            return `<div class="expense-row"><span>vAgent #${m.vAgentID}</span><b>₱${(m.totalExpenses || 0).toLocaleString()}</b></div>`;
-        }).join('') || "NO_DATA";
-        document.getElementById('target-name').innerText = mode;
-        document.getElementById('total-val').innerText = `₱ ${total.toLocaleString()}`;
-    };
+    const overlay = document.getElementById('memoirsOverlay');
+    overlay.style.display = 'flex';
+    
+    // Reset views
+    document.getElementById('weapon-system-breakdown').innerHTML = "";
+    document.getElementById('target-name').innerText = mode;
 
-    window.closeNoir = () => document.getElementById('noirOverlay').style.display = 'none';
-    window.closeMemoirs = () => document.getElementById('memoirsOverlay').style.display = 'none';
-    window.flip = (n) => document.getElementById('p1').classList.toggle('flipped', n);
+    // 1. DATA FILTERING
+    // Kung ALL (Memoirs 3), kunin lahat. Kung Dev 1/2 (Memoirs 1/2), filter specific system.
+    let filtered = (mode === 'ALL') 
+        ? allMissions 
+        : allMissions.filter(m => (DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem) === mode);
+
+    // Sort: Newest to Oldest (Based sa id/timestamp)
+    filtered.sort((a, b) => b.id.localeCompare(a.id));
+
+    // 2. PAGE 1: RENDER ACTIVE OPERATIVES (May vAgentID)
+    const activeOperatives = filtered.filter(m => m.vAgentID);
+    // Limit to 10 items for pagination
+    document.getElementById('active-list').innerHTML = activeOperatives.slice(0, 10).map(m => `
+        <div class="expense-row" style="margin-bottom: 8px;">
+            <span style="line-height: 1.2;">
+                <b style="font-size: 8px; opacity: 0.6;">MO#:${m.id.substring(0,10).toUpperCase()}</b><br>
+                <span style="font-family: var(--font-noir); font-size: 12px;">vAgent #${m.vAgentID}</span>
+            </span>
+            <b style="font-size: 14px;">₱${(m.totalExpenses || 0).toLocaleString()}</b>
+        </div>
+    `).join('') || "<p style='text-align:center; opacity:0.3; margin-top:50px;'>NO_ACTIVE_OPERATIVES_FOUND</p>";
+
+    // 3. PAGE 2: UNASSIGNED & SYSTEM TOTALS
+    const unassigned = filtered.filter(m => !m.vAgentID);
+    document.getElementById('vacant-list').innerHTML = unassigned.map(m => `
+        <div class="expense-row" style="opacity: 0.7; font-size: 10px;">
+            <span>MO#:${m.id.substring(0,8).toUpperCase()} (NO_VAGENT)</span>
+            <b>₱${(m.totalExpenses || 0).toLocaleString()}</b>
+        </div>
+    `).join('') || "<p style='opacity:0.4; font-size: 10px;'>NO_UNASSIGNED_DATA</p>";
+
+    // 4. MEMOIRS 3 LOGIC (OVERALL TOTALS BY SYSTEM)
+    let grandTotal = 0;
+    if (mode === 'ALL') {
+        document.getElementById('memoir-title').innerText = "MASTER_MEMOIRS_III";
+        const systems = {};
+        
+        filtered.forEach(m => {
+            const sysName = DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem || "UNKNOWN";
+            systems[sysName] = (systems[sysName] || 0) + (m.totalExpenses || 0);
+            grandTotal += (m.totalExpenses || 0);
+        });
+
+        // I-display ang breakdown ng Dev 1 at Dev 2 sa Memoirs 3
+        document.getElementById('weapon-system-breakdown').innerHTML = Object.keys(systems).map(sys => `
+            <div style="display:flex; justify-content:space-between; font-size:11px; margin-top:4px; font-weight:bold; color:#8b0000;">
+                <span>SYSTEM_${sys.toUpperCase()}_TOTAL:</span>
+                <span>₱${systems[sys].toLocaleString()}</span>
+            </div>
+        `).join('');
+    } else {
+        // Memoirs 1 or 2
+        document.getElementById('memoir-title').innerText = `MEMOIRS_LOG_${mode.replace(' ', '_')}`;
+        filtered.forEach(m => grandTotal += (m.totalExpenses || 0));
+    }
+
+    // 5. SET GRAND TOTAL
+    document.getElementById('total-val').innerText = grandTotal.toLocaleString();
+};
 </script>
 </body>
 </html>

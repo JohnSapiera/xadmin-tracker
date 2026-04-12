@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -38,7 +37,7 @@
         .phone-screen {
             position: absolute; inset: 5px; background: #000; border-radius: 12px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: background 0.3s ease-in; overflow: hidden;
+            overflow: hidden;
         }
         .phone-wrapper.lights-on .phone-screen { background: #ffffff; }
 
@@ -59,29 +58,54 @@
         .folder-box:hover .paper-sheet { transform: translateY(-10px); }
         .file-label { font-size: 8.5px; color: #fff; text-align: center; margin-top: 8px; font-weight: bold; letter-spacing: 1px; }
 
+        .folder-box.has-expenses .folder-main::after {
+            content: "CIA"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg);
+            font-family: var(--font-noir); font-size: 10px; font-weight: bold; color: rgba(0, 0, 0, 0.7);
+            border: 1.5px solid rgba(0, 0, 0, 0.7); padding: 1px 3px; border-radius: 2px;
+        }
+
         /* --- OVERLAYS --- */
         .overlay { display: none; position: fixed; inset: 0; z-index: 4000; background: rgba(0,0,0,0.9); justify-content: center; align-items: center; backdrop-filter: blur(4px); }
+        
+        /* --- CLASSIFIED DOSSIER DESIGN --- */
+        .book { width: 95%; max-width: 400px; height: 80vh; perspective: 2000px; position: relative; z-index: 100; }
+        .page { 
+            width: 100%; height: 100%; position: absolute; transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1); 
+            transform-origin: left; backface-visibility: hidden; background: #e8e2d2; color: #1a1a1a; padding: 40px 25px; 
+            font-family: var(--font-noir); box-shadow: inset 0 0 30px rgba(0,0,0,0.1), 10px 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid #c5b8a0; overflow: hidden; display: flex; flex-direction: column;
+        }
+        .page::after {
+            content: "CLASSIFIED"; position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%) rotate(-35deg);
+            font-size: 3.5rem; color: rgba(139, 0, 0, 0.08); border: 4px solid rgba(139, 0, 0, 0.08); padding: 10px; pointer-events: none; z-index: 0;
+        }
+        .page.flipped { transform: rotateY(-180deg); }
+        .page-front { z-index: 10; }
+        .page-back { transform: rotateY(180deg); z-index: 5; }
+
+        /* --- BUTTONS --- */
+        .close-btn {
+            position: absolute; top: 10px; right: 15px; background: #8b0000; color: white; border: none;
+            width: 32px; height: 32px; border-radius: 50%; cursor: pointer; z-index: 9999; font-weight: bold;
+            display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+        }
+        .swipe-hint {
+            margin-top: auto; padding-top: 15px; text-align: center; font-size: 11px; font-weight: bold; color: #8b0000; 
+            border-top: 1px dashed #8b0000; cursor: pointer; z-index: 5;
+        }
+        .audit-list { flex-grow: 1; overflow-y: auto; padding-right: 5px; z-index: 2; position: relative; }
+        .expense-row { display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(0,0,0,0.3); padding: 10px 0; font-size: 13px; align-items: center; }
+        .audit-separator { border-top: 2px double #8b0000; margin: 20px 0; text-align: center; font-size: 9px; color: #8b0000; letter-spacing: 2px; }
+        
         .dossier-paper {
             width: 88%; max-width: 360px; background: #e8e2d2; color: #1a1a1a; padding: 25px 20px;
             font-family: var(--font-noir); position: relative; border: 1px solid #c5b8a0;
-            box-shadow: 0 0 40px rgba(0,0,0,0.8); transform: rotate(-0.5deg);
+            box-shadow: 0 0 40px rgba(0,0,0,0.8);
         }
 
         .secure-marker { background: #1a1a1a; color: #1a1a1a; padding: 0 5px; border-radius: 2px; cursor: pointer; transition: 0.2s; user-select: all; }
         .secure-marker:active { background: transparent; }
 
-        /* --- BOOK EFFECT --- */
-        .book { width: 90%; max-width: 400px; height: 70vh; perspective: 1500px; }
-        .page { 
-            width: 100%; height: 100%; background: #e8e2d2; color: #1a1a1a; padding: 30px; 
-            font-family: var(--font-noir); position: absolute; transition: transform 0.8s; 
-            transform-origin: left; backface-visibility: hidden; overflow-y: auto; border: 1px solid #c5b8a0;
-        }
-        .page.flipped { transform: rotateY(-180deg); }
-        .expense-row { display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(0,0,0,0.3); padding: 8px 0; font-size: 13px; }
-        .btn-page { position: absolute; bottom: 15px; right: 20px; font-weight: bold; cursor: pointer; border-bottom: 2px solid #000; font-size: 12px; }
-        
-        /* --- TERMINATE DESIGN (ORIGINAL) --- */
         .btn-terminate {
             background: none; border: 2px solid #8b0000; color: #8b0000; padding: 8px 15px;
             font-family: var(--font-noir); font-weight: bold; cursor: pointer; transition: 0.3s;
@@ -89,82 +113,9 @@
         }
         .btn-terminate:hover { background: #8b0000; color: #e8e2d2; }
 
-        /* --- MISC --- */
-        .shadow-folder { filter: brightness(0.2) grayscale(1) opacity(0.3); cursor: default !important; pointer-events: none; }
+        .status-label { font-size: 9px; color: var(--cia-cyan); margin-top: 10px; transition: all 0.3s ease; }
         @keyframes uplink-blink { 0%, 100% { opacity: 1; color: var(--cia-cyan); } 50% { opacity: 0.3; } }
         .uplink-sync { animation: uplink-blink 0.4s infinite; font-weight: bold; }
-        .status-label { font-size: 9px; color: var(--cia-cyan); margin-top: 10px; transition: all 0.3s ease; }
-		
-		/* --- CIA FOLDER STAMP --- */
-.folder-box.has-expenses .folder-main::after {
-    content: "CIA";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) rotate(-15deg);
-    font-family: var(--font-noir);
-    font-size: 10px;
-    font-weight: bold;
-    color: rgba(0, 0, 0, 0.7); /* Ink black color */
-    border: 1.5px solid rgba(0, 0, 0, 0.7);
-    padding: 1px 3px;
-    border-radius: 2px;
-    pointer-events: none;
-    letter-spacing: 1px;
-    z-index: 5;
-}
-
-/* Optional: Gawing medyo "used" ang look ng folder na may laman */
-.folder-box.has-expenses .folder-main {
-    box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
-}
-
-/* --- CLASSIFIED PAPER DESIGN --- */
-.book { 
-    width: 95%; max-width: 400px; height: 75vh; 
-    perspective: 2000px; position: relative; 
-}
-
-.page { 
-    width: 100%; height: 100%; position: absolute; 
-    transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1); 
-    transform-origin: left; backface-visibility: hidden; 
-    background: #f0ebe0; /* Off-white/old paper */
-    color: #1a1a1a; padding: 35px 25px; 
-    font-family: 'Special Elite', cursive; 
-    box-shadow: inset 0 0 50px rgba(0,0,0,0.1), 5px 5px 20px rgba(0,0,0,0.5);
-    border: 1px solid #dcd7c9; overflow-y: auto;
-}
-
-/* Background markings para sa Classified look */
-.page::before {
-    content: "CLASSIFIED";
-    position: absolute; top: 10%; left: 50%;
-    transform: translate(-50%, -50%) rotate(-30deg);
-    font-size: 5rem; color: rgba(139, 0, 0, 0.05);
-    pointer-events: none; z-index: 0;
-}
-
-/* Page Flip Classes */
-.page.flipped { transform: rotateY(-180deg); }
-.page-front { z-index: 2; }
-.page-back { transform: rotateY(180deg); z-index: 1; }
-
-/* Close Button Fix */
-.close-dossier {
-    position: absolute; top: 15px; right: 20px;
-    font-size: 18px; font-weight: bold; color: #8b0000;
-    cursor: pointer; z-index: 5000; /* Mataas na z-index para ma-click */
-    padding: 5px; border: 1px solid transparent;
-}
-.close-dossier:hover { border-color: #8b0000; background: rgba(139,0,0,0.1); }
-
-/* Swipe Label */
-.swipe-hint {
-    position: absolute; bottom: 15px; right: 25px;
-    font-size: 10px; color: #8b0000; font-weight: bold;
-    border-bottom: 1px solid #8b0000; cursor: pointer;
-}
     </style>
 </head>
 <body>
@@ -187,46 +138,38 @@
 
 <div id="noirOverlay" class="overlay">
     <div class="dossier-paper">
-        <div onclick="closeNoir()" style="position:absolute; top:10px; right:15px; cursor:pointer; font-weight:bold; color:#8b0000;">[ X ]</div>
+        <button class="close-btn" onclick="closeNoir()" style="top: -10px; right: -10px;">X</button>
         <h3 style="text-align: center; border-bottom: 2px solid #000; margin-bottom: 15px; letter-spacing: 1px;">vAGENT_DOSSIER</h3>
         <p style="font-size: 11px; margin-bottom: 4px;"><b>MO#:</b> <span id="n-order">---</span></p>
         <p style="font-size: 11px; margin-bottom: 4px;"><b>vAgent#:</b> <span id="n-vagent" style="background:rgba(0,0,0,0.1); padding: 0 5px;">---</span></p>
         <div id="n-content" style="margin-top: 15px; border-top: 1px dashed #000; padding-top: 10px;"></div>
         <div style="text-align: right; margin-top: 20px; border-top: 2px solid #000; padding-top: 8px;">
-            <p style="font-size: 9px; opacity: 0.7; margin-bottom: 2px;">TOTAL_OPERATIONAL_COST</p>
             <p style="font-weight: bold; font-size: 18px;">Total: <span id="n-total">₱ 0.00</span></p>
         </div>
     </div>
 </div>
 
 <div id="memoirsOverlay" class="overlay">
-    <div class="close-dossier" onclick="closeMemoirs()" style="color: white; top: 20px; right: 20px;">[ CLOSE_SYSTEM ]</div>
-    
     <div class="book" id="dossierBook">
-        <div id="p1" class="page page-front" onclick="flipPage(true)">
-            <h2 style="text-align:center; border-bottom: 2px solid #000; margin-bottom: 20px;">TOP SECRET</h2>
-            <p style="font-size: 10px; margin-bottom: 15px;">SUBJECT: <span id="target-name">---</span></p>
-            <div id="active-list"></div>
-            <div class="swipe-hint">TAP TO FLIP >></div>
+        <div id="p1" class="page page-front">
+            <button class="close-btn" onclick="closeMemoirs()">X</button>
+            <h3 style="text-align:center; border-bottom: 2px solid #000; margin-bottom: 10px;">TOP_SECRET_AUDIT</h3>
+            <p style="font-size: 9px; margin-bottom: 10px; opacity: 0.6;">SUBJECT: <span id="target-name">---</span></p>
+            <div id="active-list" class="audit-list"></div>
+            <div class="swipe-hint" onclick="flipPage(true)">[ TAP_FOR_SUMMARY ] >></div>
         </div>
 
-        <div id="p2" class="page page-back" onclick="flipPage(false)">
-            <h2 style="text-align:center; border-bottom: 2px solid #000; margin-bottom: 20px;">SUMMARY_LOG</h2>
+        <div id="p2" class="page page-back">
+            <button class="close-btn" onclick="closeMemoirs()">X</button>
+            <h3 style="text-align:center; border-bottom: 2px solid #000; margin-bottom: 20px;">FINANCIAL_SUMMARY</h3>
             <div id="weapon-system-breakdown"></div>
             <div style="margin-top: 40px; border-top: 3px double #000; padding-top: 15px;">
-                <p style="font-size: 12px; font-weight: bold;">TOTAL EXPENDITURE:</p>
+                <p style="font-size: 12px; font-weight: bold;">GRAND TOTAL EXPENDITURE:</p>
                 <h1 style="font-size: 32px;">₱ <span id="total-val">0.00</span></h1>
             </div>
-            <div class="swipe-hint" style="left: 25px; right: auto;"><< BACK</div>
+            <div class="swipe-hint" onclick="flipPage(false)" style="text-align: left;"><< [ BACK_TO_LOGS ]</div>
         </div>
     </div>
-</div>
-
-<div id="noirOverlay" class="overlay">
-    <div class="dossier-paper">
-        <div class="close-dossier" onclick="closeNoir()">[ X ]</div>
-        <h3 id="n-header" style="text-align: center; border-bottom: 2px solid #000; margin-bottom: 15px;">vAGENT_DOSSIER</h3>
-        </div>
 </div>
 
 <script type="module">
@@ -239,6 +182,10 @@
     let deviceData = {};
     let allMissions = [];
 
+    // Global Functions
+    window.closeNoir = () => document.getElementById('noirOverlay').style.display = 'none';
+    window.closeMemoirs = () => document.getElementById('memoirsOverlay').style.display = 'none';
+
     window.onload = async () => {
         const q = query(collection(db, "mission_orders"), where("agent", "==", currentAgent));
         const snap = await getDocs(q);
@@ -247,9 +194,10 @@
 
         snap.forEach(d => {
             const data = d.data();
+            const docWithID = {...data, id: d.id};
+            allMissions.push(docWithID);
+            
             if (data.vAgentID) {
-                const docWithID = {...data, id: d.id};
-                allMissions.push(docWithID);
                 const deviceName = DEVICE_REGISTRY[data.weaponSystem] || data.weaponSystem;
                 if(!deviceData[deviceName]) deviceData[deviceName] = [];
                 deviceData[deviceName].push(docWithID);
@@ -288,12 +236,8 @@
             `;
             
             const sorted = deviceData[name].sort((a,b) => parseInt(a.vAgentID) - parseInt(b.vAgentID));
-
-            // --- ETO YUNG BINAGO: NILAGYAN NG HAS-EXPENSES CHECK ---
             document.getElementById('vagentSection').innerHTML = sorted.map(v => {
-                // Check kung may laman ang listahan ng gastos
                 const hasHistory = v.expensesBreakdown && v.expensesBreakdown.length > 0;
-                
                 return `
                     <div class="folder-box ${hasHistory ? 'has-expenses' : ''}" onclick="openNoirModal('${v.id}')">
                         <div class="paper-sheet"></div>
@@ -302,7 +246,6 @@
                     </div>
                 `;
             }).join('') + `<div class="folder-box shadow-folder"><div class="folder-main"></div><div class="file-label">LOCKED</div></div>`;
-            
         }, 1800);
     };
 
@@ -312,16 +255,15 @@
 
         document.getElementById('noirOverlay').style.display = 'flex';
         document.getElementById('n-order').innerText = docID.substring(0,12).toUpperCase();
-        document.getElementById('n-vagent').innerText = data.vAgentID;
+        document.getElementById('n-vagent').innerText = data.vAgentID || "N/A";
 
         let expHTML = "";
         if(data.expensesBreakdown && Array.isArray(data.expensesBreakdown)) {
             const sorted = data.expensesBreakdown.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
             expHTML = sorted.map(e => {
                 const d = e.timestamp ? new Date(e.timestamp) : new Date();
-                const displayDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).replace(',', ' /');
-                const randomIndex = Math.floor(Math.random() * INTEL_TERMS.length);
-                const intelDesc = e.description || INTEL_TERMS[randomIndex];
+                const displayDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                const intelDesc = e.description || "FIELD_OPERATION";
                 return `
                     <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:6px; border-bottom: 1px dotted rgba(0,0,0,0.3); padding-bottom: 2px;">
                         <span><span style="opacity:0.6;">${displayDate}</span> — ${intelDesc}</span>
@@ -335,78 +277,72 @@
         document.getElementById('n-content').innerHTML = `
             <div style="font-size:11px; margin-bottom:12px;">
                 <p><b>SecureLine:</b> <span class="secure-marker">${data.marker || 'SECRET_LINE'}</span></p>
-                <p><b>Deployment:</b> ${data.deploymentDate || 'TBD'}</p>
             </div>
             <p style="font-size:10px; font-weight:bold; border-top:1px solid #000; padding-top:10px; margin-bottom:8px; letter-spacing:1.5px;">OPERATIONAL_LOGS:</p>
-            <div style="max-height:160px; overflow-y:auto; margin-bottom:15px; padding-right:5px;">
-                ${expHTML}
-            </div>
-            <center>
-                <button onclick="alert('System Locked: Auth Required')" class="btn-terminate">TERMINATE_AGENT</button>
-            </center>
+            <div style="max-height:160px; overflow-y:auto; margin-bottom:15px; padding-right:5px;">${expHTML}</div>
+            <center><button class="btn-terminate" onclick="alert('Auth Required')">TERMINATE_AGENT</button></center>
         `;
         document.getElementById('n-total').innerText = `₱ ${(data.totalExpenses || 0).toLocaleString()}`;
     };
 
-   // Flip Function
-window.flipPage = (isFlipped) => {
-    const p1 = document.getElementById('p1');
-    const p2 = document.getElementById('p2');
-    if(isFlipped) {
-        p1.classList.add('flipped');
-        p2.style.zIndex = "3";
-        p1.style.zIndex = "1";
-    } else {
-        p1.classList.remove('flipped');
-        p2.style.zIndex = "1";
-        p1.style.zIndex = "3";
-    }
-};
+    window.flipPage = (isFlipped) => {
+        const p1 = document.getElementById('p1');
+        const p2 = document.getElementById('p2');
+        if(isFlipped) {
+            p1.classList.add('flipped');
+            setTimeout(() => { p1.style.zIndex = "1"; p2.style.zIndex = "10"; }, 300);
+        } else {
+            p1.classList.remove('flipped');
+            setTimeout(() => { p1.style.zIndex = "10"; p2.style.zIndex = "1"; }, 300);
+        }
+    };
 
-window.openMemoirs = (mode) => {
-    document.getElementById('memoirsOverlay').style.display = 'flex';
-    // Reset page to front whenever opened
-    flipPage(false);
+    window.openMemoirs = (mode) => {
+        document.getElementById('memoirsOverlay').style.display = 'flex';
+        flipPage(false);
 
-    let filtered = (mode === 'ALL') 
-        ? allMissions 
-        : allMissions.filter(m => (DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem) === mode);
+        let filtered = (mode === 'ALL') 
+            ? allMissions 
+            : allMissions.filter(m => (DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem) === mode);
 
-    // No-Zero Filter & Sort
-    const validRecords = filtered.filter(m => (m.totalExpenses || 0) > 0);
-    validRecords.sort((a, b) => b.id.localeCompare(a.id));
+        const valid = filtered.filter(m => (m.totalExpenses || 0) > 0);
+        valid.sort((a, b) => b.id.localeCompare(a.id));
 
-    // Display Page 1 (Limit 10)
-    document.getElementById('active-list').innerHTML = validRecords.slice(0, 10).map(m => `
-        <div class="expense-row" style="border-bottom: 1px solid rgba(0,0,0,0.2); padding: 10px 0;">
-            <span>
-                <b style="font-size: 9px; color: #8b0000;">REF: ${m.id.substring(0,8)}</b><br>
-                ${m.vAgentID ? 'vAGENT_#' + m.vAgentID : 'AGENT_' + (m.agent || 'SYSTEM')}
-            </span>
-            <b style="font-size: 16px;">₱${m.totalExpenses.toLocaleString()}</b>
-        </div>
-    `).join('') || "<p style='text-align:center; opacity:0.4;'>NO DATA RECORDED</p>";
+        let logsHTML = "";
+        valid.forEach((m, index) => {
+            const identity = m.vAgentID ? `vAgent #${m.vAgentID}` : `AGENT: ${m.agent || 'SYSTEM'}`;
+            logsHTML += `
+                <div class="expense-row">
+                    <span>
+                        <b style="font-size: 8px; color: #8b0000;">MO# ${m.id.substring(0,10)}</b><br>
+                        ${identity}
+                    </span>
+                    <b style="font-size: 15px;">₱${m.totalExpenses.toLocaleString()}</b>
+                </div>`;
+            if ((index + 1) % 10 === 0 && (index + 1) < valid.length) {
+                logsHTML += `<div class="audit-separator">--- AUDIT_PAGE_BREAK ---</div>`;
+            }
+        });
 
-    // Calculate Summary Page
-    let grandTotal = 0;
-    const systems = {};
-    validRecords.forEach(m => {
-        const sys = DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem;
-        systems[sys] = (systems[sys] || 0) + m.totalExpenses;
-        grandTotal += m.totalExpenses;
-    });
+        document.getElementById('active-list').innerHTML = logsHTML || "<center style='margin-top:50px; opacity:0.3;'>[ NO_RECORDS ]</center>";
 
-    document.getElementById('weapon-system-breakdown').innerHTML = Object.keys(systems).map(s => `
-        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-            <span>${s.toUpperCase()}:</span>
-            <b>₱${systems[s].toLocaleString()}</b>
-        </div>
-    `).join('');
+        let grandTotal = 0;
+        const sysTotals = {};
+        valid.forEach(m => {
+            const sys = DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem;
+            sysTotals[sys] = (sysTotals[sys] || 0) + m.totalExpenses;
+            grandTotal += m.totalExpenses;
+        });
 
-    document.getElementById('total-val').innerText = grandTotal.toLocaleString();
-    document.getElementById('target-name').innerText = mode;
-};
+        document.getElementById('weapon-system-breakdown').innerHTML = Object.keys(sysTotals).map(s => `
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom: 1px dotted #000;">
+                <span>${s.toUpperCase()}:</span>
+                <b>₱${sysTotals[s].toLocaleString()}</b>
+            </div>`).join('');
 
+        document.getElementById('total-val').innerText = grandTotal.toLocaleString();
+        document.getElementById('target-name').innerText = mode;
+    };
 </script>
 </body>
 </html>

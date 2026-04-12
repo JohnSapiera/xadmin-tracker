@@ -30,7 +30,6 @@
             filter: grayscale(1) brightness(0.3); transition: all 0.5s ease;
         }
 
-        /* LIGHTS ON EFFECT */
         .phone-wrapper.lights-on .phone-body {
             filter: grayscale(0) brightness(1); border-color: var(--cia-cyan);
             box-shadow: 0 0 40px rgba(0, 243, 255, 0.6);
@@ -62,14 +61,20 @@
         /* --- OVERLAYS --- */
         .overlay { display: none; position: fixed; inset: 0; z-index: 4000; background: rgba(0,0,0,0.9); justify-content: center; align-items: center; backdrop-filter: blur(4px); }
         
-        /* Individual Dossier Paper */
+        /* vAgent Dossier Styling */
         .dossier-paper {
-            width: 85%; max-width: 350px; background: #e8e2d2; color: #1a1a1a; padding: 30px 20px;
+            width: 88%; max-width: 360px; background: #e8e2d2; color: #1a1a1a; padding: 25px 20px;
             font-family: var(--font-noir); position: relative; border: 1px solid #c5b8a0;
-            box-shadow: 0 0 30px rgba(0,0,0,0.5); transform: rotate(-1deg);
+            box-shadow: 0 0 40px rgba(0,0,0,0.8); transform: rotate(-0.5deg);
         }
 
-        /* Memoirs Book */
+        .secure-marker {
+            background: #1a1a1a; color: #1a1a1a; padding: 0 5px; border-radius: 2px;
+            cursor: pointer; transition: 0.2s; user-select: all;
+        }
+        .secure-marker:active, .secure-marker::selection { background: transparent; color: #1a1a1a; }
+
+        /* Memoirs Book Styling */
         .book { width: 90%; max-width: 400px; height: 70vh; perspective: 1500px; }
         .page { 
             width: 100%; height: 100%; background: #e8e2d2; color: #1a1a1a; padding: 30px; 
@@ -79,7 +84,72 @@
         .page.flipped { transform: rotateY(-180deg); }
         .expense-row { display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(0,0,0,0.3); padding: 8px 0; font-size: 13px; }
         .btn-page { position: absolute; bottom: 15px; right: 20px; font-weight: bold; cursor: pointer; border-bottom: 2px solid #000; font-size: 12px; }
-        .redacted { background: #000; color: #000; padding: 0 3px; }
+		
+		/* Silhouette / Shadow Folder Design */
+.shadow-folder {
+    filter: brightness(0.2) grayscale(1) opacity(0.3); /* Magmumulang anino */
+    cursor: default !important;
+    pointer-events: none; /* Hindi maki-click */
+}
+
+.shadow-folder .folder-main {
+    background: #1a2a30 !important; /* Dark color para sa silhouette */
+}
+
+.shadow-folder .paper-sheet {
+    display: none; /* Alisin ang papel sa loob para mukhang empty shell lang */
+}
+
+.shadow-folder .file-label {
+    color: rgba(255, 255, 255, 0.2);
+    text-transform: uppercase;
+}
+
+/* Animation para sa pag-blink ng Uplink */
+@keyframes uplink-blink {
+    0% { opacity: 1; color: var(--cia-cyan); }
+    50% { opacity: 0.3; color: #fff; text-shadow: 0 0 10px var(--cia-cyan); }
+    100% { opacity: 1; color: var(--cia-cyan); }
+}
+
+.uplink-sync {
+    animation: uplink-blink 0.4s infinite;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+/* Base style para sa status label sa ilalim ng phone */
+.status-label {
+    font-size: 9px; 
+    color: var(--cia-cyan); 
+    margin-top: 10px;
+    transition: all 0.3s ease;
+}
+
+.btn-terminate {
+    background: none;
+    border: 2px solid #8b0000;
+    color: #8b0000;
+    padding: 8px 15px;
+    font-family: var(--font-noir);
+    font-weight: bold;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.3s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transform: rotate(-2deg); /* Mukhang rubber stamp */
+}
+
+.btn-terminate:hover {
+    background: #8b0000;
+    color: #e8e2d2;
+    box-shadow: 0 0 10px rgba(139, 0, 0, 0.5);
+}
+
+.btn-terminate:active {
+    transform: scale(0.95) rotate(-2deg);
+}
     </style>
 </head>
 <body>
@@ -103,12 +173,17 @@
 <div id="noirOverlay" class="overlay">
     <div class="dossier-paper">
         <div onclick="closeNoir()" style="position:absolute; top:10px; right:15px; cursor:pointer; font-weight:bold; color:#8b0000;">[ X ]</div>
-        <h3 style="text-align: center; border-bottom: 2px solid #000; margin-bottom: 15px;">vAGENT_DOSSIER</h3>
-        <p style="font-size: 12px; margin-bottom: 5px;"><b>ID:</b> <span id="n-order">---</span></p>
-        <p style="font-size: 12px; margin-bottom: 5px;"><b>TARGET:</b> <span id="n-vagent" style="background:rgba(0,0,0,0.1); padding: 0 5px;">---</span></p>
-        <div id="n-content" style="margin-top: 15px; min-height: 100px; border-top: 1px dashed #000; padding-top: 10px; font-size: 13px;"></div>
-        <div style="text-align: right; font-weight: bold; font-size: 18px; margin-top: 15px; border-top: 2px solid #000;">
-            TOTAL: <span id="n-total">₱ 0.00</span>
+        <h3 style="text-align: center; border-bottom: 2px solid #000; margin-bottom: 15px; letter-spacing: 1px;">vAGENT_DOSSIER</h3>
+        
+        <p style="font-size: 11px; margin-bottom: 4px;"><b>MO#:</b> <span id="n-order">---</span></p>
+        <p style="font-size: 11px; margin-bottom: 4px;"><b>vAgent#:</b> <span id="n-vagent" style="background:rgba(0,0,0,0.1); padding: 0 5px;">---</span></p>
+        
+        <div id="n-content" style="margin-top: 15px; border-top: 1px dashed #000; padding-top: 10px;">
+            </div>
+
+        <div style="text-align: right; margin-top: 20px; border-top: 2px solid #000; padding-top: 8px;">
+            <p style="font-size: 9px; opacity: 0.7; margin-bottom: 2px;">TOTAL_OPERATIONAL_COST</p>
+            <p style="font-weight: bold; font-size: 18px;">Total: <span id="n-total">₱ 0.00</span></p>
         </div>
     </div>
 </div>
@@ -134,6 +209,37 @@
 </div>
 
 <script type="module">
+	// Import addDoc para makapagsave sa blacklist
+    import { addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    window.terminateAgent = async (docID) => {
+        const data = allMissions.find(m => m.id === docID);
+        if(!data) return;
+
+        const confirmAction = confirm(`ARE YOU SURE? This will blacklist vAgent #${data.vAgentID}.`);
+        
+        if(confirmAction) {
+            try {
+                // I-send ang data sa 'blacklist' collection
+                await addDoc(collection(db, "blacklist"), {
+                    mo_ref: docID,
+                    vAgentID: data.vAgentID,
+                    marker: data.marker,
+                    agent_handler: currentAgent,
+                    reason: "TERMINATED_BY_AGENT",
+                    timestamp: new Date().toISOString()
+                });
+
+                alert("AGENT_TERMINATED: Data moved to Blacklist.");
+                closeNoir();
+                // Optional: Reload page para mawala na ang folder kung kailangan
+                // location.reload();
+            } catch (error) {
+                console.error("Error blacklisting agent:", error);
+                alert("TERMINATION_FAILED: Check Connection.");
+            }
+        }
+    };
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -178,13 +284,20 @@
                         <div class="typing-text">WELCOME<br>NODE_${name}</div>
                     </div>
                 </div>
-                <div style="font-size:9px; color:var(--cia-cyan); margin-top:10px;">[ STANDBY_LINK ]</div>
+                <div class="status-label">[ STANDBY_LINK ]</div>
             </div>
         `).join('');
     }
 
     window.activateDevice = (name, element) => {
+        // 1. Simulan ang Lights On
         element.classList.add('lights-on'); 
+        
+        // 2. Hanapin ang status label at palitan ang text + add blink effect
+        const statusLabel = element.querySelector('.status-label');
+        statusLabel.innerHTML = "[ UPLINK_SYNC_DATA ]";
+        statusLabel.classList.add('uplink-sync');
+
         setTimeout(() => {
             document.getElementById('deviceSection').style.display = 'none';
             document.getElementById('vagentSection').style.display = 'grid';
@@ -195,14 +308,20 @@
             `;
 
             const sorted = deviceData[name].sort((a,b) => parseInt(a.vAgentID) - parseInt(b.vAgentID));
+            
             document.getElementById('vagentSection').innerHTML = sorted.map(v => `
                 <div class="folder-box" onclick="openNoirModal('${v.id}')">
                     <div class="paper-sheet"></div>
                     <div class="folder-main"></div>
                     <div class="file-label">#${v.vAgentID}</div>
                 </div>
-            `).join('') + `<div class="folder-box shadow-folder"><div class="paper-sheet"></div><div class="folder-main"></div><div class="file-label">LOCKED</div></div>`;
-        }, 1800);
+            `).join('') + `
+                <div class="folder-box shadow-folder">
+                    <div class="folder-main"></div>
+                    <div class="file-label">LOCKED</div>
+                </div>
+            `;
+        }, 1800); // Ang transition ay tatagal habang naka-blink ang Uplink
     };
 
     window.openNoirModal = (docID) => {
@@ -210,12 +329,42 @@
         if(data) {
             document.getElementById('noirOverlay').style.display = 'flex';
             document.getElementById('n-order').innerText = docID.substring(0,12).toUpperCase();
-            document.getElementById('n-vagent').innerText = "AGENT_#" + data.vAgentID;
-            document.getElementById('n-total').innerText = `₱ ${(data.totalExpenses || 0).toLocaleString()}`;
+            document.getElementById('n-vagent').innerText = data.vAgentID || "VACANT";
+            
+            let expHTML = "";
+            if(data.expensesBreakdown && Array.isArray(data.expensesBreakdown)) {
+                const sorted = data.expensesBreakdown.sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
+                expHTML = sorted.map(e => {
+                    const d = e.timestamp ? new Date(e.timestamp) : new Date();
+                    const displayDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    return `<div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px; border-bottom: 1px dotted rgba(0,0,0,0.2);">
+                        <span>${displayDate} - ${e.description || 'Logistics'}</span>
+                        <b>₱${(e.amount || 0).toLocaleString()}</b>
+                    </div>`;
+                }).join('');
+            } else {
+                expHTML = "<p style='font-size:10px; opacity:0.5;'>NO_EXPENSE_HISTORY_AVAILABLE</p>";
+            }
+
             document.getElementById('n-content').innerHTML = `
-                <p>Operational log verified. Status: <span class="redacted">CLEARED</span>.</p>
-                <p style="margin-top:10px; font-style:italic;">Resource allocation for node ${data.weaponSystem} completed.</p>
+                <div style="font-size:11px; margin-bottom:12px;">
+                    <p><b>SecureLine:</b> <span class="secure-marker">${data.marker || '09XXXXXXXXX'}</span></p>
+                    <p style="margin-top:4px;"><b>Deployment Date:</b> ${data.deploymentDate || 'TBD'}</p>
+                    <p><b>Relieve Date:</b> ${data.relieveDate || 'ACTIVE'}</p>
+                </div>
+                
+                <p style="font-size:10px; font-weight:bold; border-top:1px solid #000; padding-top:10px; margin-bottom:8px;">EXPENSES_HISTORY:</p>
+                <div style="max-height:140px; overflow-y:auto; padding-right:5px; margin-bottom:15px;">
+                    ${expHTML}
+                </div>
+
+                <div style="text-align:center; margin-top:20px;">
+                    <button onclick="terminateAgent('${docID}')" class="btn-terminate">TERMINATE_AGENT</button>
+                    <p style="font-size:8px; color:red; margin-top:5px; font-family:var(--font-digital);">* AUTHORIZED ACCESS ONLY</p>
+                </div>
             `;
+            
+            document.getElementById('n-total').innerText = `₱ ${(data.totalExpenses || 0).toLocaleString()}`;
         }
     };
 

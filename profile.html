@@ -232,42 +232,49 @@
     };
 
     window.openNoirModal = (docID) => {
-        const data = allMissions.find(m => m.id === docID);
-        if(!data) return;
+    const data = allMissions.find(m => m.id === docID);
+    if(!data) return;
 
-        document.getElementById('noirOverlay').style.display = 'flex';
-        document.getElementById('n-order').innerText = docID.substring(0,12).toUpperCase();
-        document.getElementById('n-vagent').innerText = data.vAgentID;
+    document.getElementById('noirOverlay').style.display = 'flex';
+    document.getElementById('n-order').innerText = docID.substring(0,12).toUpperCase();
+    document.getElementById('n-vagent').innerText = data.vAgentID;
 
-        let expHTML = (data.expensesBreakdown || []).map(e => `
-            <div class="expense-row"><span>${e.description || 'Logistics'}</span><b>₱${(e.amount || 0).toLocaleString()}</b></div>
-        `).join('') || "<p style='font-size:10px; opacity:0.5;'>NO_LOGS</p>";
-
-        document.getElementById('n-content').innerHTML = `
-            <div style="font-size:11px; margin-bottom:12px;">
-                <p><b>SecureLine:</b> <span class="secure-marker">${data.marker || 'SECRET'}</span></p>
-                <p><b>Deployment:</b> ${data.deploymentDate || 'TBD'}</p>
-            </div>
-            <p style="font-size:10px; font-weight:bold; border-top:1px solid #000; padding-top:10px;">EXPENSES_HISTORY:</p>
-            <div style="max-height:140px; overflow-y:auto; margin-bottom:15px;">${expHTML}</div>
-            <center><button onclick="terminateAgent('${docID}')" class="btn-terminate">TERMINATE_AGENT</button></center>
-        `;
-        document.getElementById('n-total').innerText = `₱ ${(data.totalExpenses || 0).toLocaleString()}`;
-    };
-
-    window.terminateAgent = async (docID) => {
-        const data = allMissions.find(m => m.id === docID);
-        if(!confirm(`TERMINATE AGENT #${data.vAgentID}? This is irreversible.`)) return;
+    // Expenses History Logic with Month / Day format
+    let expHTML = "";
+    if(data.expensesBreakdown && Array.isArray(data.expensesBreakdown)) {
+        // I-sort natin by date (latest first)
+        const sorted = data.expensesBreakdown.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
         
-        try {
-            await addDoc(collection(db, "blacklist"), {
-                mo_ref: docID, vAgentID: data.vAgentID, marker: data.marker,
-                agent_handler: currentAgent, timestamp: new Date().toISOString()
-            });
-            alert("SUCCESS: DATA_MOVED_TO_BLACKLIST");
-            location.reload();
-        } catch (e) { alert("ERROR: TERMINATION_FAILED"); }
-    };
+        expHTML = sorted.map(e => {
+            const d = e.timestamp ? new Date(e.timestamp) : new Date();
+            // Format to "Month / Day" (e.g., Apr / 13)
+            const displayDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).replace(',', ' /');
+            
+            return `
+                <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:6px; border-bottom: 1px dotted rgba(0,0,0,0.2); padding-bottom: 2px;">
+                    <span><span style="opacity:0.6;">${displayDate}</span> — ${e.description || 'NO_DESC'}</span>
+                    <b>₱${(e.amount || 0).toLocaleString()}</b>
+                </div>`;
+        }).join('');
+    } else {
+        expHTML = "<p style='font-size:10px; opacity:0.5; text-align:center;'>[ NO_ENTRY_FOUND ]</p>";
+    }
+
+    document.getElementById('n-content').innerHTML = `
+        <div style="font-size:11px; margin-bottom:12px;">
+            <p><b>SecureLine:</b> <span class="secure-marker">${data.marker || 'SECRET'}</span></p>
+            <p><b>Deployment:</b> ${data.deploymentDate || 'TBD'}</p>
+        </div>
+        <p style="font-size:10px; font-weight:bold; border-top:1px solid #000; padding-top:10px; margin-bottom:8px; letter-spacing:1px;">EXPENSES_HISTORY:</p>
+        <div style="max-height:160px; overflow-y:auto; margin-bottom:15px; padding-right:5px;">
+            ${expHTML}
+        </div>
+        <center>
+            <button onclick="terminateAgent('${docID}')" class="btn-terminate">TERMINATE_AGENT</button>
+        </center>
+    `;
+    document.getElementById('n-total').innerText = `₱ ${(data.totalExpenses || 0).toLocaleString()}`;
+};
 
     window.openMemoirs = (mode) => {
         document.getElementById('memoirsOverlay').style.display = 'flex';

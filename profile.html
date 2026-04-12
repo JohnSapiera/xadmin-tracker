@@ -6,7 +6,6 @@
     <title>CIA_PROFILES // TOP_SECRET</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&family=Special+Elite&display=swap" rel="stylesheet">
     <style>
-        /* [DYNAMIC_CSS_RETAINED_FROM_YOUR_CODE] */
         :root {
             --cia-bg: #01080b; --cia-cyan: #00f3ff; --cia-red: #ff003c;
             --font-digital: 'Share Tech Mono', monospace;
@@ -82,7 +81,6 @@
         
         .shadow-folder { filter: brightness(0.2) grayscale(1) opacity(0.3); cursor: default !important; pointer-events: none; }
         .shadow-folder .folder-main { background: #1a2a30 !important; }
-        .shadow-folder .paper-sheet { display: none; }
 
         @keyframes uplink-blink { 0%, 100% { opacity: 1; color: var(--cia-cyan); } 50% { opacity: 0.3; } }
         .uplink-sync { animation: uplink-blink 0.4s infinite; font-weight: bold; }
@@ -91,7 +89,7 @@
         .btn-terminate {
             background: none; border: 2px solid #8b0000; color: #8b0000; padding: 8px 15px;
             font-family: var(--font-noir); font-weight: bold; cursor: pointer; transition: 0.3s;
-            text-transform: uppercase; transform: rotate(-2deg);
+            text-transform: uppercase; margin-top: 10px;
         }
         .btn-terminate:hover { background: #8b0000; color: #e8e2d2; }
     </style>
@@ -149,20 +147,17 @@
 </div>
 
 <script type="module">
-    // IMPLEMENTATION OF CONFIG.JS & PRIVACY
-    import { db, DEVICE_REGISTRY } from "./config.js"; 
-    import { collection, query, where, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { db, DEVICE_REGISTRY, INTEL_TERMS } from "./config.js"; 
+    import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    // AGENT PRIVACY: Get identity from localStorage
     const currentAgent = localStorage.getItem("cia_agent") || "UNKNOWN_AGENT";
     document.getElementById('display-agent').innerText = currentAgent;
 
     let deviceData = {};
     let allMissions = [];
 
-    // ONLOAD: SECURE DATA FETCHING
+    // --- DATA FETCHING ---
     window.onload = async () => {
-        // Only fetch missions belonging to the LOGGED IN AGENT
         const q = query(collection(db, "mission_orders"), where("agent", "==", currentAgent));
         const snap = await getDocs(q);
         
@@ -171,15 +166,11 @@
 
         snap.forEach(d => {
             const data = d.data();
-            
-            // SECURITY: Only display if it has a vAgentID (Active)
             if (data.vAgentID) {
                 const docWithID = {...data, id: d.id};
                 allMissions.push(docWithID);
                 
-                // Map system code to Name using config.js
                 const deviceName = DEVICE_REGISTRY[data.weaponSystem] || data.weaponSystem;
-                
                 if(!deviceData[deviceName]) deviceData[deviceName] = [];
                 deviceData[deviceName].push(docWithID);
             }
@@ -187,12 +178,13 @@
         renderDevices();
     };
 
-    function renderDevices() {
+    // --- UI RENDERING ---
+    window.renderDevices = () => {
         const grid = document.getElementById('deviceSection');
         const keys = Object.keys(deviceData);
         
         if (keys.length === 0) {
-            grid.innerHTML = `<p style="grid-column: 1/-1; text-align:center; opacity:0.5;">[ NO_ACTIVE_DATA_FOR_AGENT ]</p>`;
+            grid.innerHTML = `<p style="grid-column: 1/-1; text-align:center; opacity:0.5;">[ NO_ACTIVE_DATA ]</p>`;
             return;
         }
 
@@ -202,7 +194,7 @@
                 <div class="status-label">[ STANDBY_LINK ]</div>
             </div>
         `).join('');
-    }
+    };
 
     window.activateDevice = (name, element) => {
         element.classList.add('lights-on'); 
@@ -225,56 +217,54 @@
                 <div class="folder-box" onclick="openNoirModal('${v.id}')">
                     <div class="paper-sheet"></div><div class="folder-main"></div><div class="file-label">#${v.vAgentID}</div>
                 </div>
-            `).join('') + `
-                <div class="folder-box shadow-folder"><div class="folder-main"></div><div class="file-label">LOCKED</div></div>
-            `;
+            `).join('') + `<div class="folder-box shadow-folder"><div class="folder-main"></div><div class="file-label">LOCKED</div></div>`;
         }, 1800);
     };
 
+    // --- MODAL & LOGIC ---
     window.openNoirModal = (docID) => {
-    const data = allMissions.find(m => m.id === docID);
-    if(!data) return;
+        const data = allMissions.find(m => m.id === docID);
+        if(!data) return;
 
-    document.getElementById('noirOverlay').style.display = 'flex';
-    document.getElementById('n-order').innerText = docID.substring(0,12).toUpperCase();
-    document.getElementById('n-vagent').innerText = data.vAgentID;
+        document.getElementById('noirOverlay').style.display = 'flex';
+        document.getElementById('n-order').innerText = docID.substring(0,12).toUpperCase();
+        document.getElementById('n-vagent').innerText = data.vAgentID;
 
-    // Expenses History Logic with Month / Day format
-    let expHTML = "";
-    if(data.expensesBreakdown && Array.isArray(data.expensesBreakdown)) {
-        // I-sort natin by date (latest first)
-        const sorted = data.expensesBreakdown.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
-        
-        expHTML = sorted.map(e => {
-            const d = e.timestamp ? new Date(e.timestamp) : new Date();
-            // Format to "Month / Day" (e.g., Apr / 13)
-            const displayDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).replace(',', ' /');
+        let expHTML = "";
+        if(data.expensesBreakdown && Array.isArray(data.expensesBreakdown)) {
+            const sorted = data.expensesBreakdown.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
             
-            return `
-                <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:6px; border-bottom: 1px dotted rgba(0,0,0,0.2); padding-bottom: 2px;">
-                    <span><span style="opacity:0.6;">${displayDate}</span> — ${e.description || 'NO_DESC'}</span>
-                    <b>₱${(e.amount || 0).toLocaleString()}</b>
-                </div>`;
-        }).join('');
-    } else {
-        expHTML = "<p style='font-size:10px; opacity:0.5; text-align:center;'>[ NO_ENTRY_FOUND ]</p>";
-    }
+            expHTML = sorted.map(e => {
+                const d = e.timestamp ? new Date(e.timestamp) : new Date();
+                const displayDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).replace(',', ' /');
+                
+                // RANDOMIZER: Use DB desc OR random term from config
+                const randomIndex = Math.floor(Math.random() * INTEL_TERMS.length);
+                const intelDesc = e.description || INTEL_TERMS[randomIndex];
+                
+                return `
+                    <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:6px; border-bottom: 1px dotted rgba(0,0,0,0.3); padding-bottom: 2px;">
+                        <span><span style="opacity:0.6;">${displayDate}</span> — ${intelDesc}</span>
+                        <b>₱${(e.amount || 0).toLocaleString()}</b>
+                    </div>`;
+            }).join('');
+        } else {
+            expHTML = "<p style='font-size:10px; opacity:0.5; text-align:center;'>[ NO_OPERATIONAL_LOGS ]</p>";
+        }
 
-    document.getElementById('n-content').innerHTML = `
-        <div style="font-size:11px; margin-bottom:12px;">
-            <p><b>SecureLine:</b> <span class="secure-marker">${data.marker || 'SECRET'}</span></p>
-            <p><b>Deployment:</b> ${data.deploymentDate || 'TBD'}</p>
-        </div>
-        <p style="font-size:10px; font-weight:bold; border-top:1px solid #000; padding-top:10px; margin-bottom:8px; letter-spacing:1px;">EXPENSES_HISTORY:</p>
-        <div style="max-height:160px; overflow-y:auto; margin-bottom:15px; padding-right:5px;">
-            ${expHTML}
-        </div>
-        <center>
-            <button onclick="terminateAgent('${docID}')" class="btn-terminate">TERMINATE_AGENT</button>
-        </center>
-    `;
-    document.getElementById('n-total').innerText = `₱ ${(data.totalExpenses || 0).toLocaleString()}`;
-};
+        document.getElementById('n-content').innerHTML = `
+            <div style="font-size:11px; margin-bottom:12px;">
+                <p><b>SecureLine:</b> <span class="secure-marker">${data.marker || 'SECRET_LINE'}</span></p>
+                <p><b>Deployment:</b> ${data.deploymentDate || 'TBD'}</p>
+            </div>
+            <p style="font-size:10px; font-weight:bold; border-top:1px solid #000; padding-top:10px; margin-bottom:8px; letter-spacing:1.5px;">OPERATIONAL_LOGS:</p>
+            <div style="max-height:160px; overflow-y:auto; margin-bottom:15px; padding-right:5px;">
+                ${expHTML}
+            </div>
+            <center><button onclick="alert('System Locked: Auth Required')" class="btn-terminate">TERMINATE_AGENT</button></center>
+        `;
+        document.getElementById('n-total').innerText = `₱ ${(data.totalExpenses || 0).toLocaleString()}`;
+    };
 
     window.openMemoirs = (mode) => {
         document.getElementById('memoirsOverlay').style.display = 'flex';

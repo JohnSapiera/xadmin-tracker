@@ -209,40 +209,11 @@
 </div>
 
 <script type="module">
-	// Import addDoc para makapagsave sa blacklist
-    import { addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-    window.terminateAgent = async (docID) => {
-        const data = allMissions.find(m => m.id === docID);
-        if(!data) return;
-
-        const confirmAction = confirm(`ARE YOU SURE? This will blacklist vAgent #${data.vAgentID}.`);
-        
-        if(confirmAction) {
-            try {
-                // I-send ang data sa 'blacklist' collection
-                await addDoc(collection(db, "blacklist"), {
-                    mo_ref: docID,
-                    vAgentID: data.vAgentID,
-                    marker: data.marker,
-                    agent_handler: currentAgent,
-                    reason: "TERMINATED_BY_AGENT",
-                    timestamp: new Date().toISOString()
-                });
-
-                alert("AGENT_TERMINATED: Data moved to Blacklist.");
-                closeNoir();
-                // Optional: Reload page para mawala na ang folder kung kailangan
-                // location.reload();
-            } catch (error) {
-                console.error("Error blacklisting agent:", error);
-                alert("TERMINATION_FAILED: Check Connection.");
-            }
-        }
-    };
+    // 1. PINAGSAMANG IMPORTS
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, query, where, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+    // 2. FIREBASE INITIALIZATION
     const firebaseConfig = { 
         apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
         authDomain: "my-admin-portal-12691.firebaseapp.com", 
@@ -260,6 +231,34 @@
     let deviceData = {};
     let allMissions = [];
 
+    // 3. TERMINATE FUNCTION (Naka-attach sa window para ma-call ng button)
+    window.terminateAgent = async (docID) => {
+        const data = allMissions.find(m => m.id === docID);
+        if(!data) return;
+
+        const confirmAction = confirm(`ARE YOU SURE? This will blacklist vAgent #${data.vAgentID}.`);
+        
+        if(confirmAction) {
+            try {
+                await addDoc(collection(db, "blacklist"), {
+                    mo_ref: docID,
+                    vAgentID: data.vAgentID,
+                    marker: data.marker,
+                    agent_handler: currentAgent,
+                    reason: "TERMINATED_BY_AGENT",
+                    timestamp: new Date().toISOString()
+                });
+
+                alert("AGENT_TERMINATED: Data moved to Blacklist.");
+                window.closeNoir();
+            } catch (error) {
+                console.error("Error blacklisting agent:", error);
+                alert("TERMINATION_FAILED: Check Connection.");
+            }
+        }
+    };
+
+    // 4. WINDOW ONLOAD & OTHER FUNCTIONS
     window.onload = async () => {
         const q = query(collection(db, "mission_orders"), where("agent", "==", currentAgent));
         const snap = await getDocs(q);
@@ -290,10 +289,7 @@
     }
 
     window.activateDevice = (name, element) => {
-        // 1. Simulan ang Lights On
         element.classList.add('lights-on'); 
-        
-        // 2. Hanapin ang status label at palitan ang text + add blink effect
         const statusLabel = element.querySelector('.status-label');
         statusLabel.innerHTML = "[ UPLINK_SYNC_DATA ]";
         statusLabel.classList.add('uplink-sync');
@@ -321,7 +317,7 @@
                     <div class="file-label">LOCKED</div>
                 </div>
             `;
-        }, 1800); // Ang transition ay tatagal habang naka-blink ang Uplink
+        }, 1800);
     };
 
     window.openNoirModal = (docID) => {

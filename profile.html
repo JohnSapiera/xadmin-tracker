@@ -94,6 +94,7 @@
         }
         .page.flipped { transform: rotateY(-180deg); }
         .expense-row { display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(0,0,0,0.3); padding: 8px 0; font-size: 13px; }
+        .btn-page { position: absolute; bottom: 15px; right: 20px; font-weight: bold; cursor: pointer; border-bottom: 2px solid #000; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -123,7 +124,7 @@
         <div id="n-content" style="margin-top: 15px; border-top: 1px dashed #000; padding-top: 10px;"></div>
         <div style="text-align: right; margin-top: 20px; border-top: 2px solid #000; padding-top: 8px;">
             <p style="font-size: 9px; opacity: 0.7;">TOTAL_OPERATIONAL_COST</p>
-            <p style="font-weight: bold; font-size: 18px;"><span id="n-total">₱ 0.00</span></p>
+            <p style="font-weight: bold; font-size: 18px;">Total: <span id="n-total">₱ 0.00</span></p>
         </div>
     </div>
 </div>
@@ -131,68 +132,82 @@
 <div id="memoirsOverlay" class="overlay">
     <div class="book">
         <div id="p1" class="page">
-            <h3 style="text-align: center; border-bottom: 2px solid #000;">MASTER_REPORT</h3>
+            <h3 style="text-align: center; border-bottom: 2px solid #000; margin-bottom: 15px;">MASTER_REPORT</h3>
             <p style="font-size: 10px; margin-bottom: 20px;">NODE: <span id="target-name">ALL</span></p>
             <div id="active-list"></div>
-            <div style="position: absolute; bottom: 15px; right: 20px; cursor: pointer; border-bottom: 2px solid #000;" onclick="flip(true)">NEXT PAGE >></div>
+            <div class="btn-page" onclick="flip(true)">NEXT PAGE >></div>
         </div>
         <div id="p2" class="page" style="transform: rotateY(180deg);">
             <h4>VACANT_LOGS</h4>
             <div id="vacant-list"></div>
-            <div style="margin-top: 30px; border-top: 2px solid #000; text-align: right;">TOTAL: <span id="total-val">₱ 0.00</span></div>
-            <div style="position: absolute; bottom: 15px; left: 20px; cursor: pointer; border-bottom: 2px solid #000;" onclick="flip(false)"><< PREV</div>
-            <div onclick="closeMemoirs()" style="position:absolute; top:10px; right:15px; cursor:pointer; color:#8b0000;">[ CLOSE ]</div>
+            <div style="margin-top: 30px; border-top: 2px solid #000; text-align: right; font-weight:bold;">TOTAL: <span id="total-val">₱ 0.00</span></div>
+            <div class="btn-page" style="left:20px; right:auto;" onclick="flip(false)"><< PREV</div>
+            <div onclick="closeMemoirs()" style="position:absolute; top:10px; right:15px; cursor:pointer; color:#8b0000; font-weight:bold;">[ CLOSE ]</div>
         </div>
     </div>
 </div>
 
 <script type="module">
-    // 1. IMPORT FROM CONFIG & FIREBASE
-    import { db, currentAgent, fullWeaponMap } from "./config.js";
-    import { collection, query, where, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, query, where, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    // FIREBASE CONFIG
+    const firebaseConfig = { 
+        apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
+        authDomain: "my-admin-portal-12691.firebaseapp.com", 
+        projectId: "my-admin-portal-12691", 
+        storageBucket: "my-admin-portal-12691.firebasestorage.app", 
+        messagingSenderId: "317015091563", 
+        appId: "1:317015091563:web:baab5171d8e0a58acd442e" 
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const fullWeaponMap = { "SIG-20452634": "REDMI NOTE 14 PRO", "SIG-5B0D3A5C": "REALME 8 PRO", "SIG-121B8F43": "Techno Camon 40 PRO 5G" };
+    const currentAgent = localStorage.getItem("cia_agent") || "AGENT_LZ";
 
     let deviceData = {};
     let allMissions = [];
 
-    // --- TERMINATE LOGIC ---
+    // TERMINATE
     window.terminateAgent = async (docID) => {
         const data = allMissions.find(m => m.id === docID);
-        if(!data) return;
-        if(confirm(`TERMINATE vAgent #${data.vAgentID}? Data will be blacklisted.`)) {
-            try {
-                await addDoc(collection(db, "blacklist"), {
-                    mo_ref: docID,
-                    vAgentID: data.vAgentID,
-                    marker: data.marker,
-                    agent_handler: currentAgent,
-                    timestamp: new Date().toISOString()
-                });
-                alert("TERMINATED.");
-                window.closeNoir();
-            } catch (e) { alert("FAILED."); }
-        }
+        if(!data || !confirm(`TERMINATE vAgent #${data.vAgentID}?`)) return;
+        try {
+            await addDoc(collection(db, "blacklist"), {
+                mo_ref: docID, vAgentID: data.vAgentID, marker: data.marker, 
+                agent_handler: currentAgent, timestamp: new Date().toISOString()
+            });
+            alert("TERMINATED."); window.closeNoir();
+        } catch (e) { alert("FAILED."); }
     };
 
-    // --- LOAD DATA ---
+    // ONLOAD
     window.onload = async () => {
         document.getElementById('display-agent').innerText = currentAgent;
         const q = query(collection(db, "mission_orders"), where("agent", "==", currentAgent));
         const snap = await getDocs(q);
+        
         snap.forEach(d => {
             const data = d.data();
-            allMissions.push({...data, id: d.id});
+            const docWithID = {...data, id: d.id};
+            allMissions.push(docWithID);
+            
             const name = fullWeaponMap[data.weaponSystem] || data.weaponSystem;
-            if(data.vAgentID) {
-                if(!deviceData[name]) deviceData[name] = [];
-                deviceData[name].push({...data, id: d.id});
-            }
+            if(!deviceData[name]) deviceData[name] = [];
+            
+            // Isama lahat, kahit vacant (walang vAgentID)
+            deviceData[name].push(docWithID);
         });
         renderDevices();
     };
 
     function renderDevices() {
         const grid = document.getElementById('deviceSection');
-        grid.innerHTML = Object.keys(deviceData).map(name => `
+        const keys = Object.keys(deviceData);
+        if(keys.length === 0) { grid.innerHTML = "<p>NO_DEVICES_FOUND</p>"; return; }
+        
+        grid.innerHTML = keys.map(name => `
             <div class="phone-wrapper" onclick="activateDevice('${name}', this)">
                 <div class="phone-body"><div class="phone-screen"><div class="typing-text">WELCOME<br>NODE_${name}</div></div></div>
                 <div class="status-label">[ STANDBY_LINK ]</div>
@@ -202,9 +217,8 @@
 
     window.activateDevice = (name, element) => {
         element.classList.add('lights-on'); 
-        const label = element.querySelector('.status-label');
-        label.innerText = "[ UPLINK_SYNC_DATA ]";
-        label.classList.add('uplink-sync');
+        const lbl = element.querySelector('.status-label');
+        lbl.innerText = "[ UPLINK_SYNC_DATA ]"; lbl.classList.add('uplink-sync');
 
         setTimeout(() => {
             document.getElementById('deviceSection').style.display = 'none';
@@ -212,7 +226,9 @@
             document.getElementById('btnBack').style.display = 'block';
             document.getElementById('memoirsBtnContainer').innerHTML = `<button onclick="openMemoirs('${name}')" style="background:none; border:1px solid var(--cia-red); color:var(--cia-red); padding:10px; width:100%; cursor:pointer;">[ VIEW_${name}_MEMOIRS ]</button>`;
 
-            const sorted = deviceData[name].sort((a,b) => parseInt(a.vAgentID) - parseInt(b.vAgentID));
+            // Filter out vacant missions for the folder display (or show as locked)
+            const sorted = deviceData[name].filter(m => m.vAgentID).sort((a,b) => parseInt(a.vAgentID) - parseInt(b.vAgentID));
+            
             document.getElementById('vagentSection').innerHTML = sorted.map(v => `
                 <div class="folder-box" onclick="openNoirModal('${v.id}')">
                     <div class="paper-sheet"></div><div class="folder-main"></div><div class="file-label">#${v.vAgentID}</div>
@@ -225,26 +241,17 @@
         const data = allMissions.find(m => m.id === docID);
         if(!data) return;
         document.getElementById('noirOverlay').style.display = 'flex';
-        document.getElementById('n-order').innerText = docID.substring(0,8).toUpperCase();
-        document.getElementById('n-vagent').innerText = data.vAgentID;
+        document.getElementById('n-order').innerText = docID.substring(0,12).toUpperCase();
+        document.getElementById('n-vagent').innerText = data.vAgentID || "VACANT";
 
-        let expHTML = "";
-        if(data.expensesBreakdown) {
-            const sorted = data.expensesBreakdown.sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
-            expHTML = sorted.map(e => `
-                <div class="expense-row">
-                    <span>${new Date(e.timestamp).toLocaleDateString('en-US',{month:'short',day:'numeric'})} - ${e.description || 'Logistics'}</span>
-                    <b>₱${(e.amount || 0).toLocaleString()}</b>
-                </div>
-            `).join('');
-        }
+        let expHTML = (data.expensesBreakdown || []).map(e => `
+            <div class="expense-row"><span>${new Date(e.timestamp).toLocaleDateString('en-US',{month:'short',day:'numeric'})} - ${e.description}</span><b>₱${(e.amount || 0).toLocaleString()}</b></div>
+        `).join('') || "NO_HISTORY";
 
         document.getElementById('n-content').innerHTML = `
-            <div style="font-size:11px; margin-bottom:10px;">
-                <p><b>SecureLine:</b> ${data.marker || '---'}</p>
-                <p><b>Deployment:</b> ${data.deploymentDate || '---'}</p>
-            </div>
-            <div style="max-height:120px; overflow-y:auto;">${expHTML}</div>
+            <p style="font-size:11px;"><b>SecureLine:</b> ${data.marker || '---'}</p>
+            <p style="font-size:11px; margin-bottom:10px;"><b>Deployment:</b> ${data.deploymentDate || '---'}</p>
+            <div style="max-height:140px; overflow-y:auto;">${expHTML}</div>
             <center><button onclick="terminateAgent('${docID}')" class="btn-terminate">TERMINATE_AGENT</button></center>
         `;
         document.getElementById('n-total').innerText = `₱ ${(data.totalExpenses || 0).toLocaleString()}`;
@@ -255,11 +262,12 @@
         document.getElementById('memoirsOverlay').style.display = 'flex';
         let total = 0;
         let filtered = (mode === 'ALL') ? allMissions : allMissions.filter(m => (fullWeaponMap[m.weaponSystem] || m.weaponSystem) === mode);
+        
         const active = filtered.filter(m => m.vAgentID && m.totalExpenses > 0);
         const vacant = filtered.filter(m => !m.vAgentID && m.totalExpenses > 0);
 
-        document.getElementById('active-list').innerHTML = active.map(m => { total += m.totalExpenses; return `<div class="expense-row"><span>#${m.vAgentID}</span><b>₱${m.totalExpenses.toLocaleString()}</b></div>`; }).join('');
-        document.getElementById('vacant-list').innerHTML = vacant.map(m => { total += m.totalExpenses; return `<div class="expense-row"><span>ID:${m.id.substring(0,5)}</span><b>₱${m.totalExpenses.toLocaleString()}</b></div>`; }).join('');
+        document.getElementById('active-list').innerHTML = active.map(m => { total += m.totalExpenses; return `<div class="expense-row"><span>#${m.vAgentID}</span><b>₱${m.totalExpenses.toLocaleString()}</b></div>`; }).join('') || "NONE";
+        document.getElementById('vacant-list').innerHTML = vacant.map(m => { total += m.totalExpenses; return `<div class="expense-row"><span>ID:${m.id.substring(0,5)}</span><b>₱${m.totalExpenses.toLocaleString()}</b></div>`; }).join('') || "NONE";
         document.getElementById('target-name').innerText = mode;
         document.getElementById('total-val').innerText = `₱ ${total.toLocaleString()}`;
     };

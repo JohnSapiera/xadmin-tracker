@@ -30,24 +30,12 @@
             filter: grayscale(1) brightness(0.3); transition: all 0.5s ease;
         }
 
-        .phone-wrapper.lights-on .phone-body {
-            filter: grayscale(0) brightness(1); border-color: var(--cia-cyan);
-            box-shadow: 0 0 40px rgba(0, 243, 255, 0.6);
-        }
-        .phone-screen {
-            position: absolute; inset: 5px; background: #000; border-radius: 12px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            overflow: hidden;
-        }
+        .phone-wrapper.lights-on .phone-body { filter: grayscale(0) brightness(1); border-color: var(--cia-cyan); box-shadow: 0 0 40px rgba(0, 243, 255, 0.6); }
+        .phone-screen { position: absolute; inset: 5px; background: #000; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
         .phone-wrapper.lights-on .phone-screen { background: #ffffff; }
 
-        .typing-text {
-            display: none; color: #000; font-size: 11px; font-weight: bold;
-            width: 0; overflow: hidden; white-space: nowrap; border-right: 2px solid #000;
-        }
-        .phone-wrapper.lights-on .typing-text {
-            display: block; animation: typing 0.8s steps(15) 0.4s forwards;
-        }
+        .typing-text { display: none; color: #000; font-size: 11px; font-weight: bold; width: 0; overflow: hidden; white-space: nowrap; border-right: 2px solid #000; }
+        .phone-wrapper.lights-on .typing-text { display: block; animation: typing 0.8s steps(15) 0.4s forwards; }
         @keyframes typing { from { width: 0 } to { width: 90% } }
 
         /* --- FOLDERS --- */
@@ -67,8 +55,8 @@
         /* --- OVERLAYS --- */
         .overlay { display: none; position: fixed; inset: 0; z-index: 4000; background: rgba(0,0,0,0.9); justify-content: center; align-items: center; backdrop-filter: blur(4px); }
         
-        /* --- CLASSIFIED DOSSIER DESIGN --- */
-        .book { width: 95%; max-width: 400px; height: 80vh; perspective: 2000px; position: relative; z-index: 100; }
+        /* --- CLASSIFIED BOOK DESIGN --- */
+        .book { width: 95%; max-width: 400px; height: 82vh; perspective: 2000px; position: relative; z-index: 100; }
         .page { 
             width: 100%; height: 100%; position: absolute; transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1); 
             transform-origin: left; backface-visibility: hidden; background: #e8e2d2; color: #1a1a1a; padding: 40px 25px; 
@@ -83,37 +71,22 @@
         .page-front { z-index: 10; }
         .page-back { transform: rotateY(180deg); z-index: 5; }
 
-        /* --- BUTTONS --- */
+        /* --- BUTTONS & LISTS --- */
         .close-btn {
             position: absolute; top: 10px; right: 15px; background: #8b0000; color: white; border: none;
             width: 32px; height: 32px; border-radius: 50%; cursor: pointer; z-index: 9999; font-weight: bold;
             display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(0,0,0,0.4);
         }
-        .swipe-hint {
-            margin-top: auto; padding-top: 15px; text-align: center; font-size: 11px; font-weight: bold; color: #8b0000; 
-            border-top: 1px dashed #8b0000; cursor: pointer; z-index: 5;
-        }
+        .swipe-hint { margin-top: auto; padding-top: 15px; font-size: 11px; font-weight: bold; color: #8b0000; border-top: 1px dashed #8b0000; cursor: pointer; z-index: 5; }
         .audit-list { flex-grow: 1; overflow-y: auto; padding-right: 5px; z-index: 2; position: relative; }
-        .expense-row { display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(0,0,0,0.3); padding: 10px 0; font-size: 13px; align-items: center; }
-        .audit-separator { border-top: 2px double #8b0000; margin: 20px 0; text-align: center; font-size: 9px; color: #8b0000; letter-spacing: 2px; }
+        .expense-row { display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(0,0,0,0.2); padding: 8px 0; font-size: 12px; align-items: center; }
+        .audit-separator { border-top: 2px double #8b0000; margin: 15px 0 5px 0; text-align: center; font-size: 9px; color: #8b0000; letter-spacing: 2px; }
         
-        .dossier-paper {
-            width: 88%; max-width: 360px; background: #e8e2d2; color: #1a1a1a; padding: 25px 20px;
-            font-family: var(--font-noir); position: relative; border: 1px solid #c5b8a0;
-            box-shadow: 0 0 40px rgba(0,0,0,0.8);
-        }
-
-        .secure-marker { background: #1a1a1a; color: #1a1a1a; padding: 0 5px; border-radius: 2px; cursor: pointer; transition: 0.2s; user-select: all; }
+        .dossier-paper { width: 88%; max-width: 360px; background: #e8e2d2; color: #1a1a1a; padding: 25px 20px; font-family: var(--font-noir); position: relative; border: 1px solid #c5b8a0; }
+        .secure-marker { background: #1a1a1a; color: #1a1a1a; padding: 0 5px; border-radius: 2px; cursor: pointer; }
         .secure-marker:active { background: transparent; }
 
-        .btn-terminate {
-            background: none; border: 2px solid #8b0000; color: #8b0000; padding: 8px 15px;
-            font-family: var(--font-noir); font-weight: bold; cursor: pointer; transition: 0.3s;
-            text-transform: uppercase; transform: rotate(-2deg); margin-top: 15px;
-        }
-        .btn-terminate:hover { background: #8b0000; color: #e8e2d2; }
-
-        .status-label { font-size: 9px; color: var(--cia-cyan); margin-top: 10px; transition: all 0.3s ease; }
+        .status-label { font-size: 9px; color: var(--cia-cyan); margin-top: 10px; }
         @keyframes uplink-blink { 0%, 100% { opacity: 1; color: var(--cia-cyan); } 50% { opacity: 0.3; } }
         .uplink-sync { animation: uplink-blink 0.4s infinite; font-weight: bold; }
     </style>
@@ -138,10 +111,10 @@
 
 <div id="noirOverlay" class="overlay">
     <div class="dossier-paper">
-        <button class="close-btn" onclick="closeNoir()" style="top: -10px; right: -10px;">X</button>
-        <h3 style="text-align: center; border-bottom: 2px solid #000; margin-bottom: 15px; letter-spacing: 1px;">vAGENT_DOSSIER</h3>
-        <p style="font-size: 11px; margin-bottom: 4px;"><b>MO#:</b> <span id="n-order">---</span></p>
-        <p style="font-size: 11px; margin-bottom: 4px;"><b>vAgent#:</b> <span id="n-vagent" style="background:rgba(0,0,0,0.1); padding: 0 5px;">---</span></p>
+        <button class="close-btn" onclick="closeNoir()">X</button>
+        <h3 style="text-align: center; border-bottom: 2px solid #000; margin-bottom: 15px;">vAGENT_DOSSIER</h3>
+        <p style="font-size: 11px;"><b>MO#:</b> <span id="n-order">---</span></p>
+        <p style="font-size: 11px;"><b>vAgent#:</b> <span id="n-vagent" style="background:rgba(0,0,0,0.1); padding: 0 2px;">---</span></p>
         <div id="n-content" style="margin-top: 15px; border-top: 1px dashed #000; padding-top: 10px;"></div>
         <div style="text-align: right; margin-top: 20px; border-top: 2px solid #000; padding-top: 8px;">
             <p style="font-weight: bold; font-size: 18px;">Total: <span id="n-total">₱ 0.00</span></p>
@@ -154,9 +127,9 @@
         <div id="p1" class="page page-front">
             <button class="close-btn" onclick="closeMemoirs()">X</button>
             <h3 style="text-align:center; border-bottom: 2px solid #000; margin-bottom: 10px;">TOP_SECRET_AUDIT</h3>
-            <p style="font-size: 9px; margin-bottom: 10px; opacity: 0.6;">SUBJECT: <span id="target-name">---</span></p>
+            <p style="font-size: 9px; margin-bottom: 5px; opacity: 0.6;">SUBJECT: <span id="target-name">---</span></p>
             <div id="active-list" class="audit-list"></div>
-            <div class="swipe-hint" onclick="flipPage(true)">[ TAP_FOR_SUMMARY ] >></div>
+            <div class="swipe-hint" id="flipNextBtn" onclick="flipPage(true)" style="text-align: right;">[ TAP_FOR_SUMMARY ] >></div>
         </div>
 
         <div id="p2" class="page page-back">
@@ -167,7 +140,7 @@
                 <p style="font-size: 12px; font-weight: bold;">GRAND TOTAL EXPENDITURE:</p>
                 <h1 style="font-size: 32px;">₱ <span id="total-val">0.00</span></h1>
             </div>
-            <div class="swipe-hint" onclick="flipPage(false)" style="text-align: left;"><< [ BACK_TO_LOGS ]</div>
+            <div class="swipe-hint" onclick="flipPage(false)" style="text-align: left;"><< [ FLIP_BACK_TO_LOGS ]</div>
         </div>
     </div>
 </div>
@@ -182,21 +155,17 @@
     let deviceData = {};
     let allMissions = [];
 
-    // Global Functions
     window.closeNoir = () => document.getElementById('noirOverlay').style.display = 'none';
     window.closeMemoirs = () => document.getElementById('memoirsOverlay').style.display = 'none';
 
     window.onload = async () => {
         const q = query(collection(db, "mission_orders"), where("agent", "==", currentAgent));
         const snap = await getDocs(q);
-        allMissions = [];
-        deviceData = {};
-
+        allMissions = []; deviceData = {};
         snap.forEach(d => {
             const data = d.data();
             const docWithID = {...data, id: d.id};
             allMissions.push(docWithID);
-            
             if (data.vAgentID) {
                 const deviceName = DEVICE_REGISTRY[data.weaponSystem] || data.weaponSystem;
                 if(!deviceData[deviceName]) deviceData[deviceName] = [];
@@ -209,10 +178,6 @@
     window.renderDevices = () => {
         const grid = document.getElementById('deviceSection');
         const keys = Object.keys(deviceData);
-        if (keys.length === 0) {
-            grid.innerHTML = `<p style="grid-column: 1/-1; text-align:center; opacity:0.5;">[ NO_ACTIVE_DATA ]</p>`;
-            return;
-        }
         grid.innerHTML = keys.map(name => `
             <div class="phone-wrapper" onclick="activateDevice('${name}', this)">
                 <div class="phone-body"><div class="phone-screen"><div class="typing-text">WELCOME<br>NODE_${name}</div></div></div>
@@ -223,124 +188,83 @@
 
     window.activateDevice = (name, element) => {
         element.classList.add('lights-on'); 
-        const statusLabel = element.querySelector('.status-label');
-        statusLabel.innerHTML = "[ UPLINK_SYNC_DATA ]";
-        statusLabel.classList.add('uplink-sync');
-
+        element.querySelector('.status-label').classList.add('uplink-sync');
         setTimeout(() => {
             document.getElementById('deviceSection').style.display = 'none';
             document.getElementById('vagentSection').style.display = 'grid';
             document.getElementById('btnBack').style.display = 'block';
-            document.getElementById('memoirsBtnContainer').innerHTML = `
-                <button onclick="openMemoirs('${name}')" style="background:none; border:1px solid var(--cia-red); color:var(--cia-red); padding:10px; width:100%; cursor:pointer;">[ VIEW_${name}_MEMOIRS ]</button>
-            `;
-            
+            document.getElementById('memoirsBtnContainer').innerHTML = `<button onclick="openMemoirs('${name}')" style="background:none; border:1px solid var(--cia-red); color:var(--cia-red); padding:10px; width:100%; cursor:pointer;">[ VIEW_${name}_MEMOIRS ]</button>`;
             const sorted = deviceData[name].sort((a,b) => parseInt(a.vAgentID) - parseInt(b.vAgentID));
-            document.getElementById('vagentSection').innerHTML = sorted.map(v => {
-                const hasHistory = v.expensesBreakdown && v.expensesBreakdown.length > 0;
-                return `
-                    <div class="folder-box ${hasHistory ? 'has-expenses' : ''}" onclick="openNoirModal('${v.id}')">
-                        <div class="paper-sheet"></div>
-                        <div class="folder-main"></div>
-                        <div class="file-label">#${v.vAgentID}</div>
-                    </div>
-                `;
-            }).join('') + `<div class="folder-box shadow-folder"><div class="folder-main"></div><div class="file-label">LOCKED</div></div>`;
-        }, 1800);
+            document.getElementById('vagentSection').innerHTML = sorted.map(v => `
+                <div class="folder-box ${v.expensesBreakdown?.length > 0 ? 'has-expenses' : ''}" onclick="openNoirModal('${v.id}')">
+                    <div class="paper-sheet"></div><div class="folder-main"></div><div class="file-label">#${v.vAgentID}</div>
+                </div>`).join('');
+        }, 1500);
     };
 
     window.openNoirModal = (docID) => {
         const data = allMissions.find(m => m.id === docID);
         if(!data) return;
-
         document.getElementById('noirOverlay').style.display = 'flex';
-        document.getElementById('n-order').innerText = docID.substring(0,12).toUpperCase();
+        document.getElementById('n-order').innerText = docID.substring(0,10);
         document.getElementById('n-vagent').innerText = data.vAgentID || "N/A";
-
-        let expHTML = "";
-        if(data.expensesBreakdown && Array.isArray(data.expensesBreakdown)) {
-            const sorted = data.expensesBreakdown.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
-            expHTML = sorted.map(e => {
-                const d = e.timestamp ? new Date(e.timestamp) : new Date();
-                const displayDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                const intelDesc = e.description || "FIELD_OPERATION";
-                return `
-                    <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:6px; border-bottom: 1px dotted rgba(0,0,0,0.3); padding-bottom: 2px;">
-                        <span><span style="opacity:0.6;">${displayDate}</span> — ${intelDesc}</span>
-                        <b>₱${(e.amount || 0).toLocaleString()}</b>
-                    </div>`;
-            }).join('');
-        } else {
-            expHTML = "<p style='font-size:10px; opacity:0.5; text-align:center;'>[ NO_OPERATIONAL_LOGS ]</p>";
-        }
-
-        document.getElementById('n-content').innerHTML = `
-            <div style="font-size:11px; margin-bottom:12px;">
-                <p><b>SecureLine:</b> <span class="secure-marker">${data.marker || 'SECRET_LINE'}</span></p>
-            </div>
-            <p style="font-size:10px; font-weight:bold; border-top:1px solid #000; padding-top:10px; margin-bottom:8px; letter-spacing:1.5px;">OPERATIONAL_LOGS:</p>
-            <div style="max-height:160px; overflow-y:auto; margin-bottom:15px; padding-right:5px;">${expHTML}</div>
-            <center><button class="btn-terminate" onclick="alert('Auth Required')">TERMINATE_AGENT</button></center>
-        `;
+        let expHTML = (data.expensesBreakdown || []).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)).map(e => `
+            <div class="expense-row"><span>${new Date(e.timestamp).toLocaleDateString()} — ${e.description || 'OP'}</span><b>₱${(e.amount || 0).toLocaleString()}</b></div>`).join('');
+        document.getElementById('n-content').innerHTML = `<div style="max-height:160px; overflow-y:auto;">${expHTML || 'NO_LOGS'}</div>`;
         document.getElementById('n-total').innerText = `₱ ${(data.totalExpenses || 0).toLocaleString()}`;
     };
 
     window.flipPage = (isFlipped) => {
-        const p1 = document.getElementById('p1');
-        const p2 = document.getElementById('p2');
-        if(isFlipped) {
-            p1.classList.add('flipped');
-            setTimeout(() => { p1.style.zIndex = "1"; p2.style.zIndex = "10"; }, 300);
-        } else {
-            p1.classList.remove('flipped');
-            setTimeout(() => { p1.style.zIndex = "10"; p2.style.zIndex = "1"; }, 300);
-        }
+        const p1 = document.getElementById('p1'), p2 = document.getElementById('p2');
+        if(isFlipped) { p1.classList.add('flipped'); setTimeout(() => { p1.style.zIndex="1"; p2.style.zIndex="10"; }, 300); }
+        else { p1.classList.remove('flipped'); setTimeout(() => { p1.style.zIndex="10"; p2.style.zIndex="1"; }, 300); }
     };
 
     window.openMemoirs = (mode) => {
         document.getElementById('memoirsOverlay').style.display = 'flex';
         flipPage(false);
-
-        let filtered = (mode === 'ALL') 
-            ? allMissions 
-            : allMissions.filter(m => (DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem) === mode);
-
+        const filtered = (mode === 'ALL') ? allMissions : allMissions.filter(m => (DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem) === mode);
         const valid = filtered.filter(m => (m.totalExpenses || 0) > 0);
-        valid.sort((a, b) => b.id.localeCompare(a.id));
 
-        let logsHTML = "";
-        valid.forEach((m, index) => {
-            const identity = m.vAgentID ? `vAgent #${m.vAgentID}` : `AGENT: ${m.agent || 'SYSTEM'}`;
-            logsHTML += `
-                <div class="expense-row">
-                    <span>
-                        <b style="font-size: 8px; color: #8b0000;">MO# ${m.id.substring(0,10)}</b><br>
-                        ${identity}
-                    </span>
-                    <b style="font-size: 15px;">₱${m.totalExpenses.toLocaleString()}</b>
-                </div>`;
-            if ((index + 1) % 10 === 0 && (index + 1) < valid.length) {
-                logsHTML += `<div class="audit-separator">--- AUDIT_PAGE_BREAK ---</div>`;
-            }
-        });
+        // LOCK FLIP IF EMPTY
+        const flipBtn = document.getElementById('flipNextBtn');
+        if(valid.length === 0) { flipBtn.style.opacity="0.2"; flipBtn.style.pointerEvents="none"; flipBtn.innerText="[ NO_DATA ]"; }
+        else { flipBtn.style.opacity="1"; flipBtn.style.pointerEvents="auto"; flipBtn.innerText="[ TAP_FOR_SUMMARY ] >>"; }
 
-        document.getElementById('active-list').innerHTML = logsHTML || "<center style='margin-top:50px; opacity:0.3;'>[ NO_RECORDS ]</center>";
+        const withV = valid.filter(m => m.vAgentID).sort((a,b) => b.id.localeCompare(a.id));
+        const withoutV = valid.filter(m => !m.vAgentID).sort((a,b) => b.totalExpenses - a.totalExpenses);
 
-        let grandTotal = 0;
-        const sysTotals = {};
+        let logsHTML = "", vST = 0, aST = 0;
+        const vLim = (mode === 'ALL') ? 7 : withV.length;
+        const aLim = (mode === 'ALL') ? 3 : withoutV.length;
+
+        if(withV.length > 0) {
+            logsHTML += `<div style="font-size:10px; font-weight:bold; border-bottom:1px solid #000;">vAGENT_OPERATIONS</div>`;
+            withV.slice(0, vLim).forEach(m => {
+                vST += m.totalExpenses;
+                logsHTML += `<div class="expense-row"><span>MO# ${m.id.substring(0,8)}<br>vAgent #${m.vAgentID}</span><b>₱${m.totalExpenses.toLocaleString()}</b></div>`;
+            });
+            logsHTML += `<div style="text-align:right; font-size:11px; font-weight:bold; margin-bottom:10px;">SUBTOTAL: ₱${vST.toLocaleString()}</div>`;
+        }
+
+        if(withoutV.length > 0) {
+            logsHTML += `<div class="audit-separator">--- UNASSIGNED_LOGS ---</div>`;
+            withoutV.slice(0, aLim).forEach(m => {
+                aST += m.totalExpenses;
+                logsHTML += `<div class="expense-row"><span>REF: ${m.id.substring(0,6)}<br>AGENT: ${m.agent}</span><b>₱${m.totalExpenses.toLocaleString()}</b></div>`;
+            });
+            logsHTML += `<div style="text-align:right; font-size:11px; font-weight:bold;">SUBTOTAL: ₱${aST.toLocaleString()}</div>`;
+        }
+
+        document.getElementById('active-list').innerHTML = logsHTML || "NO_RECORDS";
+
+        let grand = 0, sysT = {};
         valid.forEach(m => {
-            const sys = DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem;
-            sysTotals[sys] = (sysTotals[sys] || 0) + m.totalExpenses;
-            grandTotal += m.totalExpenses;
+            const s = DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem;
+            sysT[s] = (sysT[s] || 0) + m.totalExpenses; grand += m.totalExpenses;
         });
-
-        document.getElementById('weapon-system-breakdown').innerHTML = Object.keys(sysTotals).map(s => `
-            <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom: 1px dotted #000;">
-                <span>${s.toUpperCase()}:</span>
-                <b>₱${sysTotals[s].toLocaleString()}</b>
-            </div>`).join('');
-
-        document.getElementById('total-val').innerText = grandTotal.toLocaleString();
+        document.getElementById('weapon-system-breakdown').innerHTML = Object.keys(sysT).map(s => `<div style="display:flex; justify-content:space-between;"><span>${s}:</span><b>₱${sysT[s].toLocaleString()}</b></div>`).join('');
+        document.getElementById('total-val').innerText = grand.toLocaleString();
         document.getElementById('target-name').innerText = mode;
     };
 </script>

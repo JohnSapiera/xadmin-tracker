@@ -302,71 +302,78 @@
         document.getElementById('n-total').innerText = `₱ ${(data.totalExpenses || 0).toLocaleString()}`;
     };
 
-    window.openMemoirs = (mode) => {
+   window.openMemoirs = (mode) => {
     const overlay = document.getElementById('memoirsOverlay');
     overlay.style.display = 'flex';
     
-    // Reset views
     document.getElementById('weapon-system-breakdown').innerHTML = "";
     document.getElementById('target-name').innerText = mode;
 
-    // 1. DATA FILTERING
-    // Kung ALL (Memoirs 3), kunin lahat. Kung Dev 1/2 (Memoirs 1/2), filter specific system.
+    // 1. RAW DATA FILTERING base sa Weapon System (o ALL para sa Memoirs 3)
     let filtered = (mode === 'ALL') 
         ? allMissions 
         : allMissions.filter(m => (DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem) === mode);
 
-    // Sort: Newest to Oldest (Based sa id/timestamp)
-    filtered.sort((a, b) => b.id.localeCompare(a.id));
+    // 2. STRIKTONG PAGPILI: Dapat may totalExpenses at hindi ito 0.
+    // Kinukuha natin ang data direct base sa presence ng breakdown at value ng total.
+    const validRecords = filtered.filter(m => 
+        (m.totalExpenses && m.totalExpenses > 0) || 
+        (m.expensesBreakdown && m.expensesBreakdown.length > 0)
+    );
 
-    // 2. PAGE 1: RENDER ACTIVE OPERATIVES (May vAgentID)
-    const activeOperatives = filtered.filter(m => m.vAgentID);
-    // Limit to 10 items for pagination
-    document.getElementById('active-list').innerHTML = activeOperatives.slice(0, 10).map(m => `
-        <div class="expense-row" style="margin-bottom: 8px;">
-            <span style="line-height: 1.2;">
-                <b style="font-size: 8px; opacity: 0.6;">MO#:${m.id.substring(0,10).toUpperCase()}</b><br>
-                <span style="font-family: var(--font-noir); font-size: 12px;">vAgent #${m.vAgentID}</span>
-            </span>
-            <b style="font-size: 14px;">₱${(m.totalExpenses || 0).toLocaleString()}</b>
-        </div>
-    `).join('') || "<p style='text-align:center; opacity:0.3; margin-top:50px;'>NO_ACTIVE_OPERATIVES_FOUND</p>";
+    // 3. SORTING: Newest to Oldest (Base sa Firestore ID o Custom Logic)
+    validRecords.sort((a, b) => b.id.localeCompare(a.id));
 
-    // 3. PAGE 2: UNASSIGNED & SYSTEM TOTALS
-    const unassigned = filtered.filter(m => !m.vAgentID);
-    document.getElementById('vacant-list').innerHTML = unassigned.map(m => `
-        <div class="expense-row" style="opacity: 0.7; font-size: 10px;">
-            <span>MO#:${m.id.substring(0,8).toUpperCase()} (NO_VAGENT)</span>
-            <b>₱${(m.totalExpenses || 0).toLocaleString()}</b>
-        </div>
-    `).join('') || "<p style='opacity:0.4; font-size: 10px;'>NO_UNASSIGNED_DATA</p>";
+    // 4. PAGE 1: RENDER LOGS (vAgent# o Agent Name kung walang vAgent#)
+    document.getElementById('active-list').innerHTML = validRecords.slice(0, 10).map(m => {
+        // Identifier Logic: Kung walang vAgentID, gamitin ang "AGENT: [Name]"
+        const identity = m.vAgentID ? `vAgent #${m.vAgentID}` : `AGENT: ${m.agent || 'UNKNOWN'}`;
+        const systemTag = mode === 'ALL' ? `<br><span style="font-size:7px; opacity:0.5;">SYS: ${DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem}</span>` : '';
 
-    // 4. MEMOIRS 3 LOGIC (OVERALL TOTALS BY SYSTEM)
+        return `
+            <div class="expense-row" style="margin-bottom: 10px; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 5px;">
+                <span style="line-height: 1.3;">
+                    <b style="font-size: 8px; opacity: 0.5;">MO#:${m.id.substring(0,10).toUpperCase()}</b>${systemTag}<br>
+                    <span style="font-family: var(--font-noir); font-size: 13px;">${identity}</span>
+                </span>
+                <div style="text-align: right;">
+                    <b style="font-size: 15px; font-family: var(--font-noir);">₱${(m.totalExpenses || 0).toLocaleString()}</b>
+                </div>
+            </div>
+        `;
+    }).join('') || "<p style='text-align:center; opacity:0.3; margin-top:50px;'>[ NO_FINANCIAL_RECORDS ]</p>";
+
+    // 5. PAGE 2: GRAND TOTALS & BREAKDOWN
     let grandTotal = 0;
+    
     if (mode === 'ALL') {
         document.getElementById('memoir-title').innerText = "MASTER_MEMOIRS_III";
         const systems = {};
         
-        filtered.forEach(m => {
-            const sysName = DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem || "UNKNOWN";
+        validRecords.forEach(m => {
+            const sysName = DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem || "UNSPECIFIED";
             systems[sysName] = (systems[sysName] || 0) + (m.totalExpenses || 0);
             grandTotal += (m.totalExpenses || 0);
         });
 
-        // I-display ang breakdown ng Dev 1 at Dev 2 sa Memoirs 3
+        // Pagpapakita ng separation ng totals kada Weapon System sa Memoirs 3
         document.getElementById('weapon-system-breakdown').innerHTML = Object.keys(systems).map(sys => `
-            <div style="display:flex; justify-content:space-between; font-size:11px; margin-top:4px; font-weight:bold; color:#8b0000;">
-                <span>SYSTEM_${sys.toUpperCase()}_TOTAL:</span>
+            <div style="display:flex; justify-content:space-between; font-size:11px; margin-top:5px; font-weight:bold; color:#8b0000; border-bottom: 1px dashed #8b0000;">
+                <span>TOTAL_${sys.toUpperCase()}:</span>
                 <span>₱${systems[sys].toLocaleString()}</span>
             </div>
         `).join('');
+        
+        // Itago ang lumang vacant list sa Memoirs 3 dahil isinama na natin sila sa main list (vAgent#/Agent)
+        document.getElementById('unassigned-section').style.display = 'none';
     } else {
-        // Memoirs 1 or 2
-        document.getElementById('memoir-title').innerText = `MEMOIRS_LOG_${mode.replace(' ', '_')}`;
-        filtered.forEach(m => grandTotal += (m.totalExpenses || 0));
+        // Memoirs 1 o 2 (Specific System)
+        document.getElementById('memoir-title').innerText = `MEMOIRS_${mode.replace(/\s+/g, '_')}`;
+        document.getElementById('unassigned-section').style.display = 'none'; // Clean look
+        validRecords.forEach(m => grandTotal += (m.totalExpenses || 0));
     }
 
-    // 5. SET GRAND TOTAL
+    // FINAL OUTPUT NG TOTAL
     document.getElementById('total-val').innerText = grandTotal.toLocaleString();
 };
 </script>

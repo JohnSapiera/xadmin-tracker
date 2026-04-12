@@ -50,6 +50,14 @@
         }
         @keyframes typing { from { width: 0 } to { width: 90% } }
 
+        .status-label { font-size: 9px; color: var(--cia-cyan); margin-top: 10px; transition: 0.3s; }
+        @keyframes uplink-blink {
+            0% { opacity: 1; color: var(--cia-cyan); }
+            50% { opacity: 0.3; color: #fff; text-shadow: 0 0 10px var(--cia-cyan); }
+            100% { opacity: 1; color: var(--cia-cyan); }
+        }
+        .uplink-sync { animation: uplink-blink 0.4s infinite; font-weight: bold; }
+
         /* --- FOLDERS --- */
         .vagent-grid { display: none; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px; }
         .folder-box { display: flex; flex-direction: column; align-items: center; cursor: pointer; position: relative; padding-top: 15px; }
@@ -58,23 +66,26 @@
         .folder-box:hover .paper-sheet { transform: translateY(-10px); }
         .file-label { font-size: 8.5px; color: #fff; text-align: center; margin-top: 8px; font-weight: bold; letter-spacing: 1px; }
 
+        .shadow-folder { filter: brightness(0.2) grayscale(1) opacity(0.3); cursor: default !important; pointer-events: none; }
+        .shadow-folder .folder-main { background: #1a2a30 !important; }
+        .shadow-folder .paper-sheet { display: none; }
+
         /* --- OVERLAYS --- */
         .overlay { display: none; position: fixed; inset: 0; z-index: 4000; background: rgba(0,0,0,0.9); justify-content: center; align-items: center; backdrop-filter: blur(4px); }
-        
-        /* vAgent Dossier Styling */
         .dossier-paper {
             width: 88%; max-width: 360px; background: #e8e2d2; color: #1a1a1a; padding: 25px 20px;
             font-family: var(--font-noir); position: relative; border: 1px solid #c5b8a0;
             box-shadow: 0 0 40px rgba(0,0,0,0.8); transform: rotate(-0.5deg);
         }
 
-        .secure-marker {
-            background: #1a1a1a; color: #1a1a1a; padding: 0 5px; border-radius: 2px;
-            cursor: pointer; transition: 0.2s; user-select: all;
+        .btn-terminate {
+            background: none; border: 2px solid #8b0000; color: #8b0000; padding: 8px 15px;
+            font-family: var(--font-noir); font-weight: bold; font-size: 14px; cursor: pointer;
+            transition: 0.3s; text-transform: uppercase; transform: rotate(-2deg); margin-top: 15px;
         }
-        .secure-marker:active, .secure-marker::selection { background: transparent; color: #1a1a1a; }
+        .btn-terminate:hover { background: #8b0000; color: #e8e2d2; }
 
-        /* Memoirs Book Styling */
+        /* Memoirs */
         .book { width: 90%; max-width: 400px; height: 70vh; perspective: 1500px; }
         .page { 
             width: 100%; height: 100%; background: #e8e2d2; color: #1a1a1a; padding: 30px; 
@@ -83,73 +94,6 @@
         }
         .page.flipped { transform: rotateY(-180deg); }
         .expense-row { display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(0,0,0,0.3); padding: 8px 0; font-size: 13px; }
-        .btn-page { position: absolute; bottom: 15px; right: 20px; font-weight: bold; cursor: pointer; border-bottom: 2px solid #000; font-size: 12px; }
-		
-		/* Silhouette / Shadow Folder Design */
-.shadow-folder {
-    filter: brightness(0.2) grayscale(1) opacity(0.3); /* Magmumulang anino */
-    cursor: default !important;
-    pointer-events: none; /* Hindi maki-click */
-}
-
-.shadow-folder .folder-main {
-    background: #1a2a30 !important; /* Dark color para sa silhouette */
-}
-
-.shadow-folder .paper-sheet {
-    display: none; /* Alisin ang papel sa loob para mukhang empty shell lang */
-}
-
-.shadow-folder .file-label {
-    color: rgba(255, 255, 255, 0.2);
-    text-transform: uppercase;
-}
-
-/* Animation para sa pag-blink ng Uplink */
-@keyframes uplink-blink {
-    0% { opacity: 1; color: var(--cia-cyan); }
-    50% { opacity: 0.3; color: #fff; text-shadow: 0 0 10px var(--cia-cyan); }
-    100% { opacity: 1; color: var(--cia-cyan); }
-}
-
-.uplink-sync {
-    animation: uplink-blink 0.4s infinite;
-    font-weight: bold;
-    letter-spacing: 1px;
-}
-
-/* Base style para sa status label sa ilalim ng phone */
-.status-label {
-    font-size: 9px; 
-    color: var(--cia-cyan); 
-    margin-top: 10px;
-    transition: all 0.3s ease;
-}
-
-.btn-terminate {
-    background: none;
-    border: 2px solid #8b0000;
-    color: #8b0000;
-    padding: 8px 15px;
-    font-family: var(--font-noir);
-    font-weight: bold;
-    font-size: 14px;
-    cursor: pointer;
-    transition: 0.3s;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    transform: rotate(-2deg); /* Mukhang rubber stamp */
-}
-
-.btn-terminate:hover {
-    background: #8b0000;
-    color: #e8e2d2;
-    box-shadow: 0 0 10px rgba(139, 0, 0, 0.5);
-}
-
-.btn-terminate:active {
-    transform: scale(0.95) rotate(-2deg);
-}
     </style>
 </head>
 <body>
@@ -173,17 +117,13 @@
 <div id="noirOverlay" class="overlay">
     <div class="dossier-paper">
         <div onclick="closeNoir()" style="position:absolute; top:10px; right:15px; cursor:pointer; font-weight:bold; color:#8b0000;">[ X ]</div>
-        <h3 style="text-align: center; border-bottom: 2px solid #000; margin-bottom: 15px; letter-spacing: 1px;">vAGENT_DOSSIER</h3>
-        
-        <p style="font-size: 11px; margin-bottom: 4px;"><b>MO#:</b> <span id="n-order">---</span></p>
-        <p style="font-size: 11px; margin-bottom: 4px;"><b>vAgent#:</b> <span id="n-vagent" style="background:rgba(0,0,0,0.1); padding: 0 5px;">---</span></p>
-        
-        <div id="n-content" style="margin-top: 15px; border-top: 1px dashed #000; padding-top: 10px;">
-            </div>
-
+        <h3 style="text-align: center; border-bottom: 2px solid #000; margin-bottom: 15px;">vAGENT_DOSSIER</h3>
+        <p style="font-size: 11px;"><b>MO#:</b> <span id="n-order">---</span></p>
+        <p style="font-size: 11px;"><b>vAgent#:</b> <span id="n-vagent" style="background:rgba(0,0,0,0.1); padding:0 5px;">---</span></p>
+        <div id="n-content" style="margin-top: 15px; border-top: 1px dashed #000; padding-top: 10px;"></div>
         <div style="text-align: right; margin-top: 20px; border-top: 2px solid #000; padding-top: 8px;">
-            <p style="font-size: 9px; opacity: 0.7; margin-bottom: 2px;">TOTAL_OPERATIONAL_COST</p>
-            <p style="font-weight: bold; font-size: 18px;">Total: <span id="n-total">₱ 0.00</span></p>
+            <p style="font-size: 9px; opacity: 0.7;">TOTAL_OPERATIONAL_COST</p>
+            <p style="font-weight: bold; font-size: 18px;"><span id="n-total">₱ 0.00</span></p>
         </div>
     </div>
 </div>
@@ -191,75 +131,51 @@
 <div id="memoirsOverlay" class="overlay">
     <div class="book">
         <div id="p1" class="page">
-            <h3 style="text-align: center; border-bottom: 2px solid #000; margin-bottom: 15px;">MASTER_REPORT</h3>
+            <h3 style="text-align: center; border-bottom: 2px solid #000;">MASTER_REPORT</h3>
             <p style="font-size: 10px; margin-bottom: 20px;">NODE: <span id="target-name">ALL</span></p>
             <div id="active-list"></div>
-            <div class="btn-page" onclick="flip(true)">NEXT PAGE >></div>
+            <div style="position: absolute; bottom: 15px; right: 20px; cursor: pointer; border-bottom: 2px solid #000;" onclick="flip(true)">NEXT PAGE >></div>
         </div>
         <div id="p2" class="page" style="transform: rotateY(180deg);">
-            <h4 style="border-bottom: 1px solid #000; margin-bottom: 10px;">VACANT_LOGS</h4>
+            <h4>VACANT_LOGS</h4>
             <div id="vacant-list"></div>
-            <div style="margin-top: 30px; border-top: 2px solid #000; text-align: right; font-weight: bold; font-size: 18px;">
-                TOTAL: <span id="total-val">₱ 0.00</span>
-            </div>
-            <div class="btn-page" style="left:20px; right:auto;" onclick="flip(false)"><< PREV</div>
-            <div onclick="closeMemoirs()" style="position:absolute; top:10px; right:15px; cursor:pointer; color:#8b0000; font-weight:bold;">[ CLOSE ]</div>
+            <div style="margin-top: 30px; border-top: 2px solid #000; text-align: right;">TOTAL: <span id="total-val">₱ 0.00</span></div>
+            <div style="position: absolute; bottom: 15px; left: 20px; cursor: pointer; border-bottom: 2px solid #000;" onclick="flip(false)"><< PREV</div>
+            <div onclick="closeMemoirs()" style="position:absolute; top:10px; right:15px; cursor:pointer; color:#8b0000;">[ CLOSE ]</div>
         </div>
     </div>
 </div>
 
 <script type="module">
-    // 1. PINAGSAMANG IMPORTS
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, query, where, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-    // 2. FIREBASE INITIALIZATION
-    const firebaseConfig = { 
-        apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
-        authDomain: "my-admin-portal-12691.firebaseapp.com", 
-        projectId: "my-admin-portal-12691", 
-        storageBucket: "my-admin-portal-12691.firebasestorage.app", 
-        messagingSenderId: "317015091563", 
-        appId: "1:317015091563:web:baab5171d8e0a58acd442e" 
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const fullWeaponMap = { "SIG-20452634": "REDMI NOTE 14 PRO", "SIG-5B0D3A5C": "REALME 8 PRO", "SIG-121B8F43": "Techno Camon 40 PRO 5G" };
-    const currentAgent = localStorage.getItem("cia_agent") || "AGENT_LZ";
+    // 1. IMPORT FROM CONFIG & FIREBASE
+    import { db, currentAgent, fullWeaponMap } from "./config.js";
+    import { collection, query, where, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     let deviceData = {};
     let allMissions = [];
 
-    // 3. TERMINATE FUNCTION (Naka-attach sa window para ma-call ng button)
+    // --- TERMINATE LOGIC ---
     window.terminateAgent = async (docID) => {
         const data = allMissions.find(m => m.id === docID);
         if(!data) return;
-
-        const confirmAction = confirm(`ARE YOU SURE? This will blacklist vAgent #${data.vAgentID}.`);
-        
-        if(confirmAction) {
+        if(confirm(`TERMINATE vAgent #${data.vAgentID}? Data will be blacklisted.`)) {
             try {
                 await addDoc(collection(db, "blacklist"), {
                     mo_ref: docID,
                     vAgentID: data.vAgentID,
                     marker: data.marker,
                     agent_handler: currentAgent,
-                    reason: "TERMINATED_BY_AGENT",
                     timestamp: new Date().toISOString()
                 });
-
-                alert("AGENT_TERMINATED: Data moved to Blacklist.");
+                alert("TERMINATED.");
                 window.closeNoir();
-            } catch (error) {
-                console.error("Error blacklisting agent:", error);
-                alert("TERMINATION_FAILED: Check Connection.");
-            }
+            } catch (e) { alert("FAILED."); }
         }
     };
 
-    // 4. WINDOW ONLOAD & OTHER FUNCTIONS
+    // --- LOAD DATA ---
     window.onload = async () => {
+        document.getElementById('display-agent').innerText = currentAgent;
         const q = query(collection(db, "mission_orders"), where("agent", "==", currentAgent));
         const snap = await getDocs(q);
         snap.forEach(d => {
@@ -278,11 +194,7 @@
         const grid = document.getElementById('deviceSection');
         grid.innerHTML = Object.keys(deviceData).map(name => `
             <div class="phone-wrapper" onclick="activateDevice('${name}', this)">
-                <div class="phone-body">
-                    <div class="phone-screen">
-                        <div class="typing-text">WELCOME<br>NODE_${name}</div>
-                    </div>
-                </div>
+                <div class="phone-body"><div class="phone-screen"><div class="typing-text">WELCOME<br>NODE_${name}</div></div></div>
                 <div class="status-label">[ STANDBY_LINK ]</div>
             </div>
         `).join('');
@@ -290,113 +202,68 @@
 
     window.activateDevice = (name, element) => {
         element.classList.add('lights-on'); 
-        const statusLabel = element.querySelector('.status-label');
-        statusLabel.innerHTML = "[ UPLINK_SYNC_DATA ]";
-        statusLabel.classList.add('uplink-sync');
+        const label = element.querySelector('.status-label');
+        label.innerText = "[ UPLINK_SYNC_DATA ]";
+        label.classList.add('uplink-sync');
 
         setTimeout(() => {
             document.getElementById('deviceSection').style.display = 'none';
             document.getElementById('vagentSection').style.display = 'grid';
             document.getElementById('btnBack').style.display = 'block';
-            
-            document.getElementById('memoirsBtnContainer').innerHTML = `
-                <button onclick="openMemoirs('${name}')" style="background:none; border:1px solid var(--cia-red); color:var(--cia-red); padding:10px; width:100%; cursor:pointer;">[ VIEW_${name}_MEMOIRS ]</button>
-            `;
+            document.getElementById('memoirsBtnContainer').innerHTML = `<button onclick="openMemoirs('${name}')" style="background:none; border:1px solid var(--cia-red); color:var(--cia-red); padding:10px; width:100%; cursor:pointer;">[ VIEW_${name}_MEMOIRS ]</button>`;
 
             const sorted = deviceData[name].sort((a,b) => parseInt(a.vAgentID) - parseInt(b.vAgentID));
-            
             document.getElementById('vagentSection').innerHTML = sorted.map(v => `
                 <div class="folder-box" onclick="openNoirModal('${v.id}')">
-                    <div class="paper-sheet"></div>
-                    <div class="folder-main"></div>
-                    <div class="file-label">#${v.vAgentID}</div>
+                    <div class="paper-sheet"></div><div class="folder-main"></div><div class="file-label">#${v.vAgentID}</div>
                 </div>
-            `).join('') + `
-                <div class="folder-box shadow-folder">
-                    <div class="folder-main"></div>
-                    <div class="file-label">LOCKED</div>
-                </div>
-            `;
+            `).join('') + `<div class="folder-box shadow-folder"><div class="folder-main"></div><div class="file-label">LOCKED</div></div>`;
         }, 1800);
     };
 
     window.openNoirModal = (docID) => {
         const data = allMissions.find(m => m.id === docID);
-        if(data) {
-            document.getElementById('noirOverlay').style.display = 'flex';
-            document.getElementById('n-order').innerText = docID.substring(0,12).toUpperCase();
-            document.getElementById('n-vagent').innerText = data.vAgentID || "VACANT";
-            
-            let expHTML = "";
-            if(data.expensesBreakdown && Array.isArray(data.expensesBreakdown)) {
-                const sorted = data.expensesBreakdown.sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
-                expHTML = sorted.map(e => {
-                    const d = e.timestamp ? new Date(e.timestamp) : new Date();
-                    const displayDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                    return `<div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px; border-bottom: 1px dotted rgba(0,0,0,0.2);">
-                        <span>${displayDate} - ${e.description || 'Logistics'}</span>
-                        <b>₱${(e.amount || 0).toLocaleString()}</b>
-                    </div>`;
-                }).join('');
-            } else {
-                expHTML = "<p style='font-size:10px; opacity:0.5;'>NO_EXPENSE_HISTORY_AVAILABLE</p>";
-            }
+        if(!data) return;
+        document.getElementById('noirOverlay').style.display = 'flex';
+        document.getElementById('n-order').innerText = docID.substring(0,8).toUpperCase();
+        document.getElementById('n-vagent').innerText = data.vAgentID;
 
-            document.getElementById('n-content').innerHTML = `
-                <div style="font-size:11px; margin-bottom:12px;">
-                    <p><b>SecureLine:</b> <span class="secure-marker">${data.marker || '09XXXXXXXXX'}</span></p>
-                    <p style="margin-top:4px;"><b>Deployment Date:</b> ${data.deploymentDate || 'TBD'}</p>
-                    <p><b>Relieve Date:</b> ${data.relieveDate || 'ACTIVE'}</p>
+        let expHTML = "";
+        if(data.expensesBreakdown) {
+            const sorted = data.expensesBreakdown.sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
+            expHTML = sorted.map(e => `
+                <div class="expense-row">
+                    <span>${new Date(e.timestamp).toLocaleDateString('en-US',{month:'short',day:'numeric'})} - ${e.description || 'Logistics'}</span>
+                    <b>₱${(e.amount || 0).toLocaleString()}</b>
                 </div>
-                
-                <p style="font-size:10px; font-weight:bold; border-top:1px solid #000; padding-top:10px; margin-bottom:8px;">EXPENSES_HISTORY:</p>
-                <div style="max-height:140px; overflow-y:auto; padding-right:5px; margin-bottom:15px;">
-                    ${expHTML}
-                </div>
-
-                <div style="text-align:center; margin-top:20px;">
-                    <button onclick="terminateAgent('${docID}')" class="btn-terminate">TERMINATE_AGENT</button>
-                    <p style="font-size:8px; color:red; margin-top:5px; font-family:var(--font-digital);">* AUTHORIZED ACCESS ONLY</p>
-                </div>
-            `;
-            
-            document.getElementById('n-total').innerText = `₱ ${(data.totalExpenses || 0).toLocaleString()}`;
+            `).join('');
         }
+
+        document.getElementById('n-content').innerHTML = `
+            <div style="font-size:11px; margin-bottom:10px;">
+                <p><b>SecureLine:</b> ${data.marker || '---'}</p>
+                <p><b>Deployment:</b> ${data.deploymentDate || '---'}</p>
+            </div>
+            <div style="max-height:120px; overflow-y:auto;">${expHTML}</div>
+            <center><button onclick="terminateAgent('${docID}')" class="btn-terminate">TERMINATE_AGENT</button></center>
+        `;
+        document.getElementById('n-total').innerText = `₱ ${(data.totalExpenses || 0).toLocaleString()}`;
     };
 
     window.closeNoir = () => document.getElementById('noirOverlay').style.display = 'none';
-
     window.openMemoirs = (mode) => {
         document.getElementById('memoirsOverlay').style.display = 'flex';
-        const activeList = document.getElementById('active-list');
-        const vacantList = document.getElementById('vacant-list');
         let total = 0;
         let filtered = (mode === 'ALL') ? allMissions : allMissions.filter(m => (fullWeaponMap[m.weaponSystem] || m.weaponSystem) === mode);
-
         const active = filtered.filter(m => m.vAgentID && m.totalExpenses > 0);
         const vacant = filtered.filter(m => !m.vAgentID && m.totalExpenses > 0);
 
-        activeList.innerHTML = active.map(m => {
-            total += m.totalExpenses;
-            return `<div class="expense-row"><span>vAgent #${m.vAgentID}</span><b>₱ ${m.totalExpenses.toLocaleString()}</b></div>`;
-        }).join('') || "NO_DATA";
-
-        vacantList.innerHTML = vacant.map(m => {
-            total += m.totalExpenses;
-            return `<div class="expense-row"><span>ID:${m.id.substring(0,5)}</span><b>₱ ${m.totalExpenses.toLocaleString()}</b></div>`;
-        }).join('') || "NO_DATA";
-
+        document.getElementById('active-list').innerHTML = active.map(m => { total += m.totalExpenses; return `<div class="expense-row"><span>#${m.vAgentID}</span><b>₱${m.totalExpenses.toLocaleString()}</b></div>`; }).join('');
+        document.getElementById('vacant-list').innerHTML = vacant.map(m => { total += m.totalExpenses; return `<div class="expense-row"><span>ID:${m.id.substring(0,5)}</span><b>₱${m.totalExpenses.toLocaleString()}</b></div>`; }).join('');
         document.getElementById('target-name').innerText = mode;
-        document.getElementById('total-val').innerText = `₱ ${total.toLocaleString(undefined, {minimumFractionDigits:2})}`;
+        document.getElementById('total-val').innerText = `₱ ${total.toLocaleString()}`;
     };
-
-    window.flip = (next) => {
-        const p1 = document.getElementById('p1');
-        const p2 = document.getElementById('p2');
-        if(next) { p1.classList.add('flipped'); p2.style.transform = "rotateY(0deg)"; }
-        else { p1.classList.remove('flipped'); p2.style.transform = "rotateY(180deg)"; }
-    };
-
+    window.flip = (n) => { document.getElementById('p1').classList.toggle('flipped', n); document.getElementById('p2').style.transform = n ? "rotateY(0deg)" : "rotateY(180deg)"; };
     window.closeMemoirs = () => document.getElementById('memoirsOverlay').style.display = 'none';
 </script>
 </body>

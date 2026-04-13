@@ -3,90 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CORE_DASH_v30.5</title>
+    <title>CORE_DASH</title>
     
-    <!-- PWA MANIFEST -->
     <link rel="manifest" href="manifest.json">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#02080a">
     
-    <!-- EXTERNAL CSS -->
     <link rel="stylesheet" href="styles/dbintel.css">
-    
-    <!-- GOOGLE FONTS -->
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <!-- HEADER -->
-    <header>
-        <span>CORE_DASH // v30.5</span>
-    </header>
+<header>
+    <span style="font-weight: 700; color: #fff; letter-spacing: 2px;">CORE_DASH</span>
+</header>
 
-    <!-- STATUS BAR -->
-    <div class="status-bar">
-        <div>SYS_TIME: <span id="clock">00:00:00</span></div>
-        <div>UPLINK_STABLE</div>
-    </div>
+<div class="status-bar">
+    <div>SYS_TIME: <span id="clock">00:00:00</span></div>
+    <div style="color: var(--green);">UPLINK_STABLE</div>
+</div>
 
-    <!-- MAIN CONTENT -->
-    <main>
-        <!-- COMMAND MODULE -->
-        <div class="command-module">
-            <input type="tel" id="mission-input" placeholder="0000" maxlength="5" autocomplete="off">
-            <div id="mission-status"></div>
-            <div class="btn-row">
-                <button id="action-btn" class="btn btn-save">SAVE</button>
-                <button id="reserve-btn" class="btn btn-reserve">RESERVE</button>
-            </div>
-        </div>
-
-        <!-- TERMINAL -->
-        <div id="terminal"></div>
-
-        <!-- PROFILE MINI -->
-        <div class="profile-mini">
-            <div class="avatar" id="avatar-init">?</div>
-            <div class="profile-info">
-                <div id="prof-name">AGENT_PENDING</div>
-                <div>AUTH_LEVEL: OMEGA</div>
-            </div>
-        </div>
-    </main>
-
-    <!-- MODAL OVERLAY -->
-    <div class="overlay" id="modal-overlay">
-        <div class="popup">
-            <div id="pop-header">#0000</div>
-            <span>vAGENT_IDENTIFIER:</span>
-            <input type="text" id="v-agent-input" class="pop-input" placeholder="V_ID_REQUIRED">
-            
-            <div class="secure-line-wrapper">
-                <span id="add-secure-btn">+add Secure Line</span>
-                <input type="tel" id="secure-input-field" maxlength="11" placeholder="09XXXXXXXXX">
-            </div>
-
-            <span>SYSTEM_LINK:</span>
-            <div class="weapon-selector" id="weapon-list"></div>
-
-            <div class="btn-row">
-                <button id="modal-submit" class="btn btn-save">CONFIRM</button>
-                <button id="modal-close" class="btn">ABORT</button>
-            </div>
+<main>
+    <div class="command-module">
+        <input type="tel" id="mission-input" placeholder="0000" maxlength="5" autocomplete="off">
+        <div id="mission-status"></div>
+        <div class="btn-row">
+            <button id="action-btn" class="btn btn-save">SAVE</button>
+            <button id="reserve-btn" class="btn btn-reserve">RESERVE</button>
         </div>
     </div>
-
-    <!-- BOTTOM NAVIGATION -->
-    <nav class="bottom-nav">
-        <a href="#" class="nav-item active">DASHBOARD</a>
-        <a href="intel.html" class="nav-item">INTEL</a>
-        <a href="profile.html" class="nav-item">PROFILE</a>
-    </nav>
-
-    <!-- EXTERNAL JAVASCRIPT -->
-    <script type="module" src="js/dbintel_script.js"></script>
+    <div id="terminal"></div>
     
+    <div class="profile-mini" style="background: #051014; border: 1px solid var(--border); padding: 12px; display: flex; align-items: center; gap: 15px;">
+        <div class="avatar" id="avatar-init" style="width: 40px; height: 40px; background: var(--cyan-dim); border: 1px solid var(--cyan); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--cyan); font-weight: bold;">?</div>
+        <div class="profile-info">
+            <div id="prof-name" style="color: var(--cyan); font-weight: 700;">AGENT_PENDING</div>
+            <div style="color: #5c7882; font-size: 10px;">AUTH_LEVEL: OMEGA</div>
+        </div>
+    </div>
+</main>
+
+<div class="overlay" id="modal-overlay">
+    <div class="popup">
+        <div id="pop-header" style="color:var(--cyan); text-align:center; margin-bottom:18px; font-size:26px; font-weight:700; font-family:var(--font-mono);">#0000</div>
+        <span style="font-size: 10px; color: var(--cyan); display: block; margin-bottom: 5px;">vAGENT_IDENTIFIER:</span>
+        <input type="text" id="v-agent-input" class="pop-input" placeholder="V_ID_REQUIRED">
+        
+        <div class="secure-line-wrapper">
+            <span id="add-secure-btn">+add Secure Line</span>
+            <input type="tel" id="secure-input-field" maxlength="11" placeholder="09XXXXXXXXX">
+        </div>
+
+        <span style="font-size: 10px; color: var(--cyan); display: block; margin-bottom: 5px;" id="weapon-label">SYSTEM_LINK:</span>
+        <div class="weapon-selector" id="weapon-list"></div>
+
+        <div class="btn-row">
+            <button id="modal-submit" class="btn btn-save">CONFIRM</button>
+            <button id="modal-close" class="btn" style="background:#222; color:#fff;">ABORT</button>
+        </div>
+    </div>
+</div>
+
+<nav class="bottom-nav">
+    <a href="#" class="nav-item active">DASHBOARD</a>
+    <a href="intel.html" class="nav-item">INTEL</a>
+    <a href="profile.html" class="nav-item">PROFILE</a>
+</nav>
+
+<script type="module" src="js/dbintel_script.js"></script>
+
 </body>
 </html>

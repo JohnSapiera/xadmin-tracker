@@ -43,69 +43,201 @@ body {
   max-width: 400px;
 }
 
+
+/* ====== IPHONE 17 PRO MAX REALISTIC DESIGN ====== */
+
+/* Phone Wrapper */
 .phone-wrapper {
+  perspective: 1200px;
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
+/* iPhone 17 Pro Max Body */
 .phone-body {
-  width: 100%;
-  max-width: 120px;
-  height: 240px;
-  aspect-ratio: 9 / 16;
-  background: #050a0c;
+  width: 130px;
+  height: 260px;
+  background: linear-gradient(145deg, #2a2f38, #1a1f28);
+  border-radius: 38px;
   margin: 0 auto;
-  border-radius: 18px;
-  border: 2px solid #1a2a30;
   position: relative;
-  filter: grayscale(1) brightness(0.3);
-  transition: all 0.5s ease;
+  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  cursor: pointer;
+  box-shadow: 0 20px 35px -10px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
 }
 
-.phone-wrapper.lights-on .phone-body {
-  filter: grayscale(0) brightness(1);
-  border-color: var(--cia-cyan);
-  box-shadow: 0 0 40px rgba(0, 243, 255, 0.6);
+/* Titanium Frame Effect */
+.phone-body::before {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  background: linear-gradient(145deg, #3a4048, #1a1f25);
+  border-radius: 36px;
+  z-index: 0;
 }
 
+/* Phone Screen (Super Retina XDR) */
 .phone-screen {
   position: absolute;
-  inset: 5px;
+  top: 12px;
+  left: 6px;
+  right: 6px;
+  bottom: 12px;
   background: #000;
-  border-radius: 12px;
+  border-radius: 32px;
+  overflow: hidden;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
 }
 
-.phone-wrapper.lights-on .phone-screen {
-  background: #ffffff;
+/* Dynamic Island (iPhone 17 style) */
+.phone-screen::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 32px;
+  background: #000;
+  border-radius: 24px;
+  z-index: 10;
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.1), 0 2px 5px rgba(0,0,0,0.3);
 }
 
+/* Camera Lens */
+.phone-screen::after {
+  content: '';
+  position: absolute;
+  top: 18px;
+  right: 25px;
+  width: 10px;
+  height: 10px;
+  background: radial-gradient(circle, #1a3a6e, #0a1a3e);
+  border-radius: 50%;
+  z-index: 11;
+  box-shadow: 0 0 2px #00f3ff;
+}
+
+/* Side Buttons (Titanium) */
+.phone-body .power-btn {
+  position: absolute;
+  right: -2px;
+  top: 100px;
+  width: 3px;
+  height: 40px;
+  background: linear-gradient(90deg, #6a7078, #3a4048);
+  border-radius: 2px;
+  z-index: 5;
+}
+
+.phone-body .volume-up {
+  position: absolute;
+  left: -2px;
+  top: 70px;
+  width: 3px;
+  height: 30px;
+  background: linear-gradient(90deg, #6a7078, #3a4048);
+  border-radius: 2px;
+  z-index: 5;
+}
+
+.phone-body .volume-down {
+  position: absolute;
+  left: -2px;
+  top: 110px;
+  width: 3px;
+  height: 30px;
+  background: linear-gradient(90deg, #6a7078, #3a4048);
+  border-radius: 2px;
+  z-index: 5;
+}
+
+/* Action Button (New iPhone 17 feature) */
+.phone-body .action-btn {
+  position: absolute;
+  left: -2px;
+  top: 150px;
+  width: 3px;
+  height: 25px;
+  background: linear-gradient(90deg, #8a3030, #5a2020);
+  border-radius: 2px;
+  z-index: 5;
+}
+
+/* Glass Reflection */
+.phone-body::after {
+  content: '';
+  position: absolute;
+  top: 5%;
+  left: 10%;
+  width: 80%;
+  height: 25%;
+  background: radial-gradient(ellipse at top, rgba(255,255,255,0.2), transparent);
+  border-radius: 30px;
+  pointer-events: none;
+  z-index: 6;
+}
+
+/* Neon Glow (subtle, not overpowering) */
+.phone-wrapper[data-neon="1"] .phone-body { box-shadow: 0 0 20px rgba(0,243,255,0.3), 0 20px 35px -10px black; }
+.phone-wrapper[data-neon="2"] .phone-body { box-shadow: 0 0 20px rgba(255,0,255,0.3), 0 20px 35px -10px black; }
+.phone-wrapper[data-neon="3"] .phone-body { box-shadow: 0 0 20px rgba(0,255,136,0.3), 0 20px 35px -10px black; }
+.phone-wrapper[data-neon="4"] .phone-body { box-shadow: 0 0 20px rgba(255,102,0,0.3), 0 20px 35px -10px black; }
+.phone-wrapper[data-neon="5"] .phone-body { box-shadow: 0 0 20px rgba(255,0,102,0.3), 0 20px 35px -10px black; }
+.phone-wrapper[data-neon="6"] .phone-body { box-shadow: 0 0 20px rgba(255,255,0,0.3), 0 20px 35px -10px black; }
+
+/* 3D Hover Effects */
+.phone-wrapper.left-phone .phone-body:hover {
+  transform: rotateY(-12deg) rotateX(3deg) translateX(10px) translateZ(15px);
+}
+
+.phone-wrapper.right-phone .phone-body:hover {
+  transform: rotateY(12deg) rotateX(3deg) translateX(-10px) translateZ(15px);
+}
+
+.phone-wrapper.center-phone .phone-body:hover {
+  transform: rotateX(3deg) translateZ(20px);
+}
+
+/* Screen Content */
 .typing-text {
   display: none;
-  color: #000;
-  font-size: 11px;
+  color: #fff;
+  font-size: 10px;
   font-weight: bold;
-  width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  border-right: 2px solid #000;
+  text-align: center;
+  font-family: monospace;
+  z-index: 5;
+  background: rgba(0,0,0,0.7);
+  padding: 8px;
+  border-radius: 12px;
 }
 
 .phone-wrapper.lights-on .typing-text {
   display: block;
-  animation: typing 0.8s steps(15) 0.4s forwards;
+  animation: fadeIn 0.5s ease;
 }
 
-@keyframes typing {
-  from { width: 0; }
-  to { width: 90%; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
 }
+
+.phone-wrapper.lights-on .phone-screen {
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+}
+
+.phone-wrapper.lights-on .phone-screen::before {
+  background: #1a1a2e;
+}
+ 
 
 /* ====== FOLDER GRID ====== */
 .vagent-grid {

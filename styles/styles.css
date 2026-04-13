@@ -31,8 +31,8 @@ body {
 
 /* ====== DEVICE GRID ====== */
 .device-grid {
-  display: grid !important;
-  grid-template-columns: repeat(2, 1fr) !important;  
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 20px;
   width: 100%;
   max-width: 360px;

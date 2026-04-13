@@ -195,24 +195,31 @@
     <div class="book" id="dossierBook">
         <div id="p1" class="page page-front">
             <button class="close-btn" onclick="closeMemoirs()">X</button>
-            <h3 style="text-align:center; border-bottom: 2px solid #000; margin-bottom: 10px;">TOP_SECRET_AUDIT</h3>
-            <p style="font-size: 9px; margin-bottom: 10px; opacity: 0.6;">SUBJECT: <span id="target-name">---</span></p>
-            <div id="active-list" class="audit-list"></div>
-            <div class="swipe-hint" onclick="flipPage(true)">[ TAP_FOR_SUMMARY ] >></div>
+            <h3 style="text-align:center; border-bottom: 2px solid #000; margin-bottom: 10px;">AUDIT_REPORT</h3>
+            <p style="font-size: 9px; margin-bottom: 10px; opacity: 0.6;">NODE: <span id="target-name">---</span></p>
+            
+            <div id="active-list" class="audit-list" style="height: 60%; overflow-y: auto;"></div>
+            
+            <div style="margin-top: auto; border-top: 3px double #000; padding-top: 10px;">
+                <p style="font-size: 10px; font-weight: bold; color: #8b0000;">TOTAL_EXPENDITURE:</p>
+                <h1 style="font-size: 26px; color: #000;">₱ <span id="total-val">0.00</span></h1>
+            </div>
+
+            <div id="flipNextBtn" class="swipe-hint" onclick="flipPage(true)" style="display:none;">[ VIEW_SUMMARY ] >></div>
         </div>
 
         <div id="p2" class="page page-back">
-    <button class="close-btn" onclick="closeMemoirs()">X</button>
-    <h3 style="text-align:center; border-bottom: 2px solid #000; margin-bottom: 20px;">AUDIT_CONTINUATION</h3>
-    
-    <div id="weapon-system-breakdown" class="audit-list"></div>
-    
-    <div style="margin-top: auto; border-top: 3px double #000; padding-top: 10px;">
-        <p style="font-size: 10px; font-weight: bold;">GRAND_TOTAL_EXPENSES:</p>
-        <h1 style="font-size: 24px;">₱ <span id="total-val-p2">0.00</span></h1>
-    </div>
-    <div class="swipe-hint" onclick="flipPage(false)" style="text-align: left;"><< BACK</div>
-</div>
+            <button class="close-btn" onclick="closeMemoirs()">X</button>
+            <h3 style="text-align:center; border-bottom: 2px solid #000; margin-bottom: 20px;">SUMMARY_CONTINUATION</h3>
+            
+            <div id="weapon-system-breakdown" class="audit-list"></div>
+            
+            <div style="margin-top: auto; border-top: 3px double #000; padding-top: 10px;">
+                <p style="font-size: 10px; font-weight: bold;">GRAND_TOTAL_EXPENSES:</p>
+                <h1 style="font-size: 26px; color: #000;">₱ <span id="total-val-p2">0.00</span></h1>
+            </div>
+            <div class="swipe-hint" onclick="flipPage(false)" style="text-align: left;"><< BACK</div>
+        </div>
     </div>
 </div>
 
@@ -342,10 +349,11 @@
     };
 
     window.openMemoirs = (mode) => {
-    document.getElementById('memoirsOverlay').style.display = 'flex';
+    const overlay = document.getElementById('memoirsOverlay');
+    overlay.style.display = 'flex';
     flipPage(false);
 
-    // 1. FILTERING base sa mode
+    // 1. FILTERING
     let filtered = (mode === 'ALL') 
         ? allMissions 
         : allMissions.filter(m => (DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem) === mode);
@@ -356,32 +364,38 @@
     const withV = valid.filter(m => m.vAgentID && m.vAgentID !== "");
     const withoutV = valid.filter(m => !m.vAgentID);
 
-    // vAgents Sort: Latest Timestamp (Newest first)
+    // vAgents: Newest Timestamp First
     withV.sort((a, b) => {
         const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
         const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
         return timeB - timeA;
     });
 
-    // Unassigned Sort: Greatest to Lowest Amount
+    // Unassigned: Highest Amount First
     withoutV.sort((a, b) => (b.totalExpenses || 0) - (a.totalExpenses || 0));
 
-    // Pagsamahin sa isang listahan para sa display
     const masterList = [...withV.map(m => ({...m, isV: true})), ...withoutV.map(m => ({...m, isV: false}))];
 
     let p1HTML = "";
     let p2HTML = "";
-    let overallTotal = 0; // Ito ang mag-iipon ng totalExpenses
+    let overallTotal = 0; 
 
-    // 3. RENDER FUNCTION
-    const renderRow = (m) => {
-        // I-add ang totalExpenses ng entry na ito sa overall total
-        overallTotal += (m.totalExpenses || 0);
+    // 3. RENDER LOOP
+    masterList.forEach((m, index) => {
+        overallTotal += (m.totalExpenses || 0); // KINUKUHA ANG TOTAL DITO
 
         const missionRef = m.id.substring(0, 10).toUpperCase();
         const agentName = m.agent || "UNKNOWN_OPERATIVE";
 
-        return `
+        let rowContent = "";
+        
+        // Separation Label
+        const isFirstUnassigned = !m.isV && (index === 0 || masterList[index-1].isV);
+        if (isFirstUnassigned) {
+            rowContent += `<div class="audit-separator" style="margin: 15px 0 10px 0; border-top: 1px solid #000; font-size: 9px; text-align: center; font-weight: bold;">--- UNASSIGNED_RECORDS ---</div>`;
+        }
+
+        rowContent += `
             <div class="expense-row" style="padding: 10px 0; border-bottom: 1px dashed rgba(0,0,0,0.2);">
                 <div style="flex-grow: 1;">
                     <div style="font-size: 11px; font-weight: bold; color: #000;">
@@ -396,21 +410,8 @@
                     <b style="font-size: 14px; color: #000;">₱${(m.totalExpenses || 0).toLocaleString()}</b>
                 </div>
             </div>`;
-    };
 
-    // 4. DISPLAY ENGINE
-    masterList.forEach((m, index) => {
-        let rowContent = "";
-        
-        // Separation Label para sa Unassigned
-        const isFirstUnassigned = !m.isV && (index === 0 || masterList[index-1].isV);
-        if (isFirstUnassigned) {
-            rowContent += `<div class="audit-separator" style="margin: 15px 0 10px 0; border-top: 1px solid #000; font-size: 9px; text-align: center; font-weight: bold;">--- UNASSIGNED_RECORDS ---</div>`;
-        }
-
-        rowContent += renderRow(m);
-
-        // Memoir 3 (ALL) handles 10 items per page, others display all on Page 1
+        // PAGHATI NG PAGES
         if (mode !== 'ALL') {
             p1HTML += rowContent;
         } else {
@@ -419,29 +420,30 @@
         }
     });
 
-    // 5. UI MAPPING
+    // 4. DISPLAY MAPPING (DITO ANG CRITICAL PART)
     document.getElementById('active-list').innerHTML = p1HTML || "<center style='opacity:0.5; padding-top:20px;'>NO_RECORDS</center>";
     document.getElementById('target-name').innerText = mode;
     
-    // I-display ang kinalkulang Overall Total (Para sa Memoirs 1, 2, at 3)
-    const totalValP1 = document.getElementById('total-val');
-    if (totalValP1) totalValP1.innerText = overallTotal.toLocaleString();
+    // IPAPAKITA ANG TOTAL SA PAGE 1
+    const totalDisplayP1 = document.getElementById('total-val');
+    if (totalDisplayP1) {
+        totalDisplayP1.innerText = overallTotal.toLocaleString();
+    }
 
-    // Page 2 Handling (Summary/Overflow)
+    // HANDLING PAGE 2
     const p2Area = document.getElementById('weapon-system-breakdown');
-    if (mode === 'ALL' && p2HTML !== "") {
-        p2Area.innerHTML = `<p style="font-size:9px; font-weight:bold; color:#8b0000;">[ OVERFLOW_DATA_LOGS ]</p>` + p2HTML;
-        document.getElementById('flipNextBtn').style.display = 'block';
-    } else if (mode === 'ALL') {
-        p2Area.innerHTML = `<center style="margin-top:50px; font-size:10px; opacity:0.5;">[ NO_OVERFLOW_DATA ]</center>`;
+    if (mode === 'ALL') {
+        p2Area.innerHTML = p2HTML || `<center style="margin-top:50px; font-size:10px; opacity:0.5;">[ NO_OVERFLOW_DATA ]</center>`;
         document.getElementById('flipNextBtn').style.display = 'block';
     } else {
         document.getElementById('flipNextBtn').style.display = 'none';
     }
 
-    // Grand Total sa Page 2
-    const totalValP2 = document.getElementById('total-val-p2');
-    if (totalValP2) totalValP2.innerText = overallTotal.toLocaleString();
+    // IPAPAKITA ANG TOTAL SA PAGE 2 (GRAND TOTAL)
+    const totalDisplayP2 = document.getElementById('total-val-p2');
+    if (totalDisplayP2) {
+        totalDisplayP2.innerText = overallTotal.toLocaleString();
+    }
 };
 </script>
 </body>

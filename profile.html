@@ -39,7 +39,7 @@
 
         /* --- FOLDERS (CLICKABLE FIX) --- */
         .vagent-grid { display: none; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px; position: relative; z-index: 10; }
-        .folder-box { display: flex; flex-direction: column; align-items: center; cursor: pointer; position: relative; padding-top: 15px; z-index: 20; pointer-events: auto; }
+        .folder-box { display: flex; flex-direction: column; align-items: center; cursor: pointer; position: relative; padding-top: 15px; z-index: 20; }
         .folder-main { width: 50px; height: 35px; background: var(--cia-cyan); border-radius: 0 4px 4px 4px; z-index: 2; clip-path: polygon(0 0, 40% 0, 50% 15%, 100% 15%, 100% 100%, 0 100%); pointer-events: none; }
         .paper-sheet { position: absolute; top: 8px; width: 38px; height: 32px; background: #fff; border: 1px solid #ccc; z-index: 1; transition: 0.3s; pointer-events: none; }
         .folder-box:hover .paper-sheet { transform: translateY(-10px); }
@@ -51,10 +51,19 @@
             border: 1.5px solid rgba(0, 0, 0, 0.7); padding: 1px 3px; border-radius: 2px;
         }
 
-        /* --- BOOK OVERLAY SYSTEM --- */
+        /* --- OVERLAYS --- */
         .overlay { display: none; position: fixed; inset: 0; z-index: 5000; background: rgba(0,0,0,0.9); justify-content: center; align-items: center; backdrop-filter: blur(4px); }
-        .book { width: 95%; max-width: 400px; height: 82vh; perspective: 2000px; position: relative; }
         
+        /* --- DOSSIER POPUP DESIGN --- */
+        .dossier-paper { 
+            width: 90%; max-width: 360px; max-height: 85vh; background: #e8e2d2; color: #1a1a1a; padding: 35px 25px; 
+            font-family: var(--font-noir); border: 1px solid #c5b8a0; position: relative; display: flex; flex-direction: column;
+            box-shadow: 20px 20px 60px rgba(0,0,0,0.8);
+        }
+        .dossier-paper::before { content: "TOP SECRET"; position: absolute; top: 10px; left: 20px; font-size: 10px; color: #8b0000; border: 1px solid #8b0000; padding: 2px 5px; font-weight: bold; }
+
+        /* --- BOOK SYSTEM --- */
+        .book { width: 95%; max-width: 400px; height: 82vh; perspective: 2000px; position: relative; }
         .page { 
             width: 100%; height: 100%; position: absolute; transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1); 
             transform-origin: left; backface-visibility: hidden; background: #e8e2d2; color: #1a1a1a; padding: 40px 25px; 
@@ -65,22 +74,20 @@
         .page-back { z-index: 5; transform: rotateY(0deg); display: none; }
         .page.flipped { transform: rotateY(-180deg); }
 
-        .audit-list { flex-grow: 1; overflow-y: auto; padding-right: 5px; margin-top: 10px; border-top: 1px solid rgba(0,0,0,0.1); }
-        .expense-row { display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(0,0,0,0.2); padding: 8px 0; font-size: 11px; align-items: center; }
-        .audit-separator { border-top: 2px double #8b0000; margin: 15px 0 5px 0; text-align: center; font-size: 9px; color: #8b0000; letter-spacing: 2px; font-weight: bold; }
-
+        .audit-list { flex-grow: 1; overflow-y: auto; padding-right: 5px; margin-top: 10px; border-top: 2px solid #000; }
+        .expense-row { display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(0,0,0,0.3); padding: 8px 0; font-size: 11px; align-items: center; }
+        
         .close-btn {
             position: absolute; top: 10px; right: 15px; background: #8b0000; color: white; border: none;
             width: 32px; height: 32px; border-radius: 50%; cursor: pointer; z-index: 9999; font-weight: bold;
             display: flex; align-items: center; justify-content: center;
         }
-        .swipe-hint { margin-top: auto; padding-top: 15px; font-size: 11px; font-weight: bold; color: #8b0000; border-top: 1px dashed #8b0000; cursor: pointer; position: relative; z-index: 20; }
-        
+        .swipe-hint { margin-top: auto; padding-top: 15px; font-size: 11px; font-weight: bold; color: #8b0000; border-top: 1px dashed #8b0000; cursor: pointer; }
+        .total-stamp { text-align: right; padding: 10px; background: rgba(0,0,0,0.05); border: 2px solid #1a1a1a; transform: rotate(-2deg); margin-top: 10px; }
+
         .status-label { font-size: 9px; color: var(--cia-cyan); margin-top: 10px; }
         @keyframes uplink-blink { 0%, 100% { opacity: 1; color: var(--cia-cyan); } 50% { opacity: 0.3; } }
         .uplink-sync { animation: uplink-blink 0.4s infinite; font-weight: bold; }
-
-        .dossier-paper { width: 88%; max-height: 80vh; background: #e8e2d2; color: #1a1a1a; padding: 30px 20px; font-family: var(--font-noir); border: 1px solid #c5b8a0; position: relative; display: flex; flex-direction: column; }
     </style>
 </head>
 <body>
@@ -94,7 +101,7 @@
     <div id="deviceSection" class="device-grid"></div>
     <div id="vagentSection" class="vagent-grid"></div>
 
-    <button id="btnBack" onclick="location.reload()" style="display:none; background:none; border:1px solid var(--cia-cyan); color:var(--cia-cyan); padding:12px; width:100%; margin-top:20px; cursor:pointer; font-family: var(--font-digital);">[ EXIT_DEVICE_SYSTEM ]</button>
+    <button id="btnBack" onclick="location.reload()" style="display:none; background:none; border:1px solid var(--cia-cyan); color:var(--cia-cyan); padding:12px; width:100%; margin-top:20px; cursor:pointer; font-family: var(--font-digital);">[ EXIT_SYSTEM ]</button>
 
     <div id="memoirsBtnContainer" style="margin-top: 40px; text-align: center;">
         <button onclick="openMemoirs('ALL')" style="background:none; border:1px solid var(--cia-red); color:var(--cia-red); padding:12px 25px; cursor:pointer; font-weight:bold; font-family: var(--font-digital);">[ VIEW_MASTER_MEMOIRS ]</button>
@@ -104,26 +111,33 @@
 <div id="noirOverlay" class="overlay">
     <div class="dossier-paper">
         <button class="close-btn" onclick="closeNoir()">X</button>
-        <h3 style="text-align: center; border-bottom: 2px solid #000; margin-bottom: 15px;">vAGENT_DOSSIER</h3>
-        <p style="font-size: 11px;"><b>vAgent#:</b> <span id="n-vagent">---</span></p>
+        <h2 style="text-align: center; text-transform: uppercase;">Field Dossier</h2>
+        <p style="font-size: 10px; text-align: center; opacity: 0.7;">ASSET_EXPENDITURE_REPORT</p>
+        
+        <div style="margin-top: 15px;">
+            <p style="font-size: 11px;"><b>ASSET_ID:</b> <span id="n-vagent" style="background:#000; color:#fff; padding:0 5px;">---</span></p>
+        </div>
+
         <div id="n-content" class="audit-list"></div>
-        <div style="text-align: right; border-top: 2px solid #000; padding-top: 10px; margin-top: 10px;">
-            <p style="font-weight: bold; font-size: 20px;">TOTAL: <span id="n-total">₱ 0.00</span></p>
+
+        <div class="total-stamp">
+            <p style="font-size: 9px; font-weight: bold; margin: 0;">CERTIFIED_TOTAL:</p>
+            <span id="n-total" style="font-size: 22px; font-weight: 900;">₱ 0.00</span>
         </div>
     </div>
 </div>
 
 <div id="memoirsOverlay" class="overlay">
-    <div class="book" id="dossierBook">
+    <div class="book">
         <button class="close-btn" onclick="closeMemoirs()">X</button>
         
         <div id="p1" class="page page-front">
             <h3 style="text-align:center; border-bottom: 2px solid #000; margin-bottom: 10px;">AUDIT_MEMOIRS</h3>
-            <p style="font-size: 9px; opacity: 0.6;">SUBJECT: <span id="target-name">---</span></p>
+            <p style="font-size: 9px; opacity: 0.6;">MODE: <span id="target-name">---</span></p>
             <div id="active-list" class="audit-list"></div>
             
             <div id="p1-total-box" style="display:none; border-top: 2px solid #000; padding-top: 5px;">
-                <p style="font-size: 10px; font-weight: bold;">OVERALL TOTAL:</p>
+                <p style="font-size: 10px; font-weight: bold;">TOTAL EXPENDITURE:</p>
                 <h2 id="total-val-p1">₱ 0.00</h2>
             </div>
             
@@ -198,10 +212,14 @@
 
     window.openNoirModal = (id) => {
         const d = allMissions.find(m => m.id === id);
+        if(!d) return;
         document.getElementById('noirOverlay').style.display = 'flex';
         document.getElementById('n-vagent').innerText = d.vAgentID || "N/A";
         document.getElementById('n-content').innerHTML = (d.expensesBreakdown || []).map(e => `
-            <div class="expense-row"><span>${e.description}</span><b>₱${e.amount.toLocaleString()}</b></div>`).join('');
+            <div class="expense-row">
+                <span><b>${e.description}</b><br><small>${new Date(e.timestamp).toLocaleDateString()}</small></span>
+                <b>₱${e.amount.toLocaleString()}</b>
+            </div>`).join('');
         document.getElementById('n-total').innerText = `₱ ${d.totalExpenses.toLocaleString()}`;
     };
 
@@ -220,7 +238,7 @@
         const withV = valid.filter(m => m.vAgentID).sort((a,b) => b.id.localeCompare(a.id));
         const withoutV = valid.filter(m => !m.vAgentID).sort((a,b) => b.totalExpenses - a.totalExpenses);
 
-        let p1H = "", p2H = "", vSub = 0, uSub = 0, grand = 0;
+        let p1H = "", p2H = "", grand = 0;
         const getRow = (m, isV) => `
             <div class="expense-row">
                 <span><b>${isV ? '#vAgent '+m.vAgentID : 'AGENT: '+m.agent}</b><br><i style="font-size:8px;">REF: ${m.id.substring(0,8)}</i></span>
@@ -228,22 +246,14 @@
             </div>`;
 
         withV.forEach((m, i) => {
-            vSub += m.totalExpenses; grand += m.totalExpenses;
+            grand += m.totalExpenses;
             if(i < 10) p1H += getRow(m, true); else p2H += getRow(m, true);
         });
-        const vSHTML = `<div style="text-align:right; font-weight:bold; font-size:10px; margin-bottom:10px;">vAGENT_SUB: ₱${vSub.toLocaleString()}</div>`;
-        if(withV.length > 0) { if(withV.length <= 10) p1H += vSHTML; else p2H += vSHTML; }
 
-        if(withoutV.length > 0) {
-            const sep = `<div class="audit-separator">--- UNASSIGNED ---</div>`;
-            if(withV.length < 10) p1H += sep; else p2H += sep;
-            withoutV.forEach((m, i) => {
-                uSub += m.totalExpenses; grand += m.totalExpenses;
-                if((withV.length + i) < 10) p1H += getRow(m, false); else p2H += getRow(m, false);
-            });
-            const uSHTML = `<div style="text-align:right; font-weight:bold; font-size:10px; color:#8b0000;">UN_SUB: ₱${uSub.toLocaleString()}</div>`;
-            if((withV.length + withoutV.length) <= 10) p1H += uSHTML; else p2H += uSHTML;
-        }
+        withoutV.forEach((m, i) => {
+            grand += m.totalExpenses;
+            if((withV.length + i) < 10) p1H += getRow(m, false); else p2H += getRow(m, false);
+        });
 
         document.getElementById('active-list').innerHTML = p1H || "NO_RECORDS";
         document.getElementById('overflow-list').innerHTML = p2H;

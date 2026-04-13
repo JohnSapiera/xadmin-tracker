@@ -202,15 +202,17 @@
         </div>
 
         <div id="p2" class="page page-back">
-            <button class="close-btn" onclick="closeMemoirs()">X</button>
-            <h3 style="text-align:center; border-bottom: 2px solid #000; margin-bottom: 20px;">FINANCIAL_SUMMARY</h3>
-            <div id="weapon-system-breakdown"></div>
-            <div style="margin-top: 40px; border-top: 3px double #000; padding-top: 15px;">
-                <p style="font-size: 12px; font-weight: bold;">GRAND TOTAL EXPENDITURE:</p>
-                <h1 style="font-size: 32px;">₱ <span id="total-val">0.00</span></h1>
-            </div>
-            <div class="swipe-hint" onclick="flipPage(false)" style="text-align: left;"><< [ BACK_TO_LOGS ]</div>
-        </div>
+    <button class="close-btn" onclick="closeMemoirs()">X</button>
+    <h3 style="text-align:center; border-bottom: 2px solid #000; margin-bottom: 20px;">AUDIT_CONTINUATION</h3>
+    
+    <div id="weapon-system-breakdown" class="audit-list"></div>
+    
+    <div style="margin-top: auto; border-top: 3px double #000; padding-top: 10px;">
+        <p style="font-size: 10px; font-weight: bold;">GRAND_TOTAL_EXPENSES:</p>
+        <h1 style="font-size: 24px;">₱ <span id="total-val-p2">0.00</span></h1>
+    </div>
+    <div class="swipe-hint" onclick="flipPage(false)" style="text-align: left;"><< BACK</div>
+</div>
     </div>
 </div>
 
@@ -340,53 +342,106 @@
     };
 
     window.openMemoirs = (mode) => {
-        document.getElementById('memoirsOverlay').style.display = 'flex';
-        flipPage(false);
+    document.getElementById('memoirsOverlay').style.display = 'flex';
+    flipPage(false);
 
-        const filtered = (mode === 'ALL') ? allMissions : allMissions.filter(m => (DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem) === mode);
-        const valid = filtered.filter(m => (m.totalExpenses || 0) > 0);
+    // 1. FILTERING
+    let filtered = (mode === 'ALL') 
+        ? allMissions 
+        : allMissions.filter(m => (DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem) === mode);
 
-        const withV = valid.filter(m => m.vAgentID).sort((a,b) => b.id.localeCompare(a.id));
-        const withoutV = valid.filter(m => !m.vAgentID).sort((a,b) => b.totalExpenses - a.totalExpenses);
+    const valid = filtered.filter(m => (m.totalExpenses || 0) > 0);
 
-        let p1HTML = "", p2HTML = "", vSub = 0, uSub = 0, grand = 0;
-        const getRow = (m, isV) => `
+    // 2. CATEGORIZATION & SORTING
+    const withV = valid.filter(m => m.vAgentID && m.vAgentID !== "");
+    const withoutV = valid.filter(m => !m.vAgentID);
+
+    // Sort vAgents: Latest to Oldest
+    withV.sort((a, b) => {
+        const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+        const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+        return timeB - timeA;
+    });
+
+    // Sort Unassigned: Greatest to Lowest Amount
+    withoutV.sort((a, b) => (b.totalExpenses || 0) - (a.totalExpenses || 0));
+
+    // 3. MERGING FOR MASTER LIST
+    // Pagsamahin ang dalawang listahan para sa pagination logic
+    const masterList = [...withV.map(m => ({...m, isV: true})), ...withoutV.map(m => ({...m, isV: false}))];
+
+    let p1HTML = "";
+    let p2HTML = "";
+    let overallTotal = 0;
+    const deviceTotals = {};
+
+    // Helper function para sa rows
+    const renderRow = (m) => {
+        overallTotal += m.totalExpenses;
+        const dName = DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem;
+        deviceTotals[dName] = (deviceTotals[dName] || 0) + m.totalExpenses;
+
+        const missionRef = m.id.substring(0, 10).toUpperCase();
+        return `
             <div class="expense-row">
-                <span><b>${isV ? '#vAgent '+m.vAgentID : 'AGENT: '+m.agent}</b><br><i style="font-size:8px;">REF: ${m.id.substring(0,8)}</i></span>
-                <b>₱${m.totalExpenses.toLocaleString()}</b>
+                <div style="flex-grow: 1;">
+                    <div style="font-size: 11px; font-weight: bold;">
+                        ${m.isV ? `vAgent#: <span style="color:#8b0000;">${m.vAgentID}</span>` : `AGENT: ${m.agent}`}
+                    </div>
+                    <div style="font-size: 8px; color: var(--cia-cyan);">MO#: ${missionRef}</div>
+                </div>
+                <div style="text-align: right;"><b style="font-size: 14px;">₱${m.totalExpenses.toLocaleString()}</b></div>
             </div>`;
-
-        // Process vAgents
-        withV.forEach((m, i) => {
-            vSub += m.totalExpenses; grand += m.totalExpenses;
-            if (i < 10) p1HTML += getRow(m, true); else p2HTML += getRow(m, true);
-        });
-        if (withV.length > 0) {
-            const vSHTML = `<div style="text-align:right; font-weight:bold; font-size:10px; margin-bottom:10px;">vAGENT_SUBTOTAL: ₱${vSub.toLocaleString()}</div>`;
-            if (withV.length <= 10) p1HTML += vSHTML; else p2HTML += vSHTML;
-        }
-
-        // Process Unassigned
-        if (withoutV.length > 0) {
-            const sep = `<div class="audit-separator">--- UNASSIGNED_LOGS ---</div>`;
-            if (withV.length < 10) p1HTML += sep; else p2HTML += sep;
-            withoutV.forEach((m, i) => {
-                uSub += m.totalExpenses; grand += m.totalExpenses;
-                if ((withV.length + i) < 10) p1HTML += getRow(m, false); else p2HTML += getRow(m, false);
-            });
-            const uSHTML = `<div style="text-align:right; font-weight:bold; font-size:10px; color:#8b0000;">UNASSIGNED_SUBTOTAL: ₱${uSub.toLocaleString()}</div>`;
-            if ((withV.length + withoutV.length) <= 10) p1HTML += uSHTML; else p2HTML += uSHTML;
-        }
-
-        document.getElementById('active-list').innerHTML = p1HTML || "NO_RECORDS";
-        document.getElementById('overflow-list').innerHTML = p2HTML || "NO_OVERFLOW";
-        document.getElementById('total-val-p1').innerText = `₱ ${grand.toLocaleString()}`;
-        document.getElementById('total-val-p2').innerText = `₱ ${grand.toLocaleString()}`;
-        document.getElementById('target-name').innerText = mode;
-
-        document.getElementById('flipNextBtn').style.display = p2HTML ? "block" : "none";
-        document.getElementById('p1-total-box').style.display = p2HTML ? "none" : "block";
     };
+
+    // 4. RENDER ENGINE (With 10-Limit Logic for Master Memoirs)
+    masterList.forEach((m, index) => {
+        // Maglagay ng separation line bago ang unang Unassigned agent
+        let rowContent = "";
+        const isFirstUnassigned = !m.isV && (index === 0 || masterList[index-1].isV);
+        
+        if (isFirstUnassigned) {
+            rowContent += `<div class="audit-separator">--- UNASSIGNED_RECORDS ---</div>`;
+        }
+
+        rowContent += renderRow(m);
+
+        // Paghati ng data: Memoirs 1 & 2 vs Memoirs 3 (Master)
+        if (mode !== 'ALL') {
+            p1HTML += rowContent; // Rekta display lahat
+        } else {
+            // Master Memoirs Logic: 10 items lang sa Page 1
+            if (index < 10) p1HTML += rowContent;
+            else p2HTML += rowContent;
+        }
+    });
+
+    // 5. UPDATE UI
+    document.getElementById('active-list').innerHTML = p1HTML || "[ NO_DATA ]";
+    
+    // Page 2 Logic (Overflow)
+    const p2Area = document.getElementById('overflow-list') || document.getElementById('weapon-system-breakdown');
+    if (mode === 'ALL' && p2HTML !== "") {
+        p2Area.innerHTML = `<p style="font-size:9px; color:#8b0000; margin-bottom:10px;">[ OVERFLOW_LOGS_CONTINUED ]</p>` + p2HTML;
+        document.getElementById('flipNextBtn').style.display = 'block';
+    } else if (mode === 'ALL') {
+        // Kung walang overflow, ipakita ang summary breakdown sa Page 2
+        let summary = `<p style="font-size:10px; margin-bottom:10px;">SYSTEM_SUMMARY:</p>`;
+        for (const [sys, total] of Object.entries(deviceTotals)) {
+            summary += `<div class="summary-row"><span>${sys}</span><b>₱${total.toLocaleString()}</b></div>`;
+        }
+        p2Area.innerHTML = summary;
+        document.getElementById('flipNextBtn').style.display = 'block';
+    } else {
+        document.getElementById('flipNextBtn').style.display = 'none';
+    }
+
+    document.getElementById('target-name').innerText = mode;
+    document.getElementById('total-val').innerText = overallTotal.toLocaleString();
+    if(document.getElementById('total-val-p2')) {
+        document.getElementById('total-val-p2').innerText = overallTotal.toLocaleString();
+    }
+};
 </script>
 </body>
 </html>

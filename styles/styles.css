@@ -34,7 +34,7 @@ body {
 .device-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
+  gap: 10px;
   width: 100%;
   max-width: 400px;
 }
@@ -469,8 +469,8 @@ header p {
   }
 
   .device-grid {
-    grid-template-columns: 1fr;
-    gap: 15px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
   }
 
   .book {

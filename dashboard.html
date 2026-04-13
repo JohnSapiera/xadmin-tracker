@@ -15,24 +15,27 @@
     <!-- EXTERNAL CSS -->
     <link rel="stylesheet" href="styles/dbintel.css">
     
-    <!-- FONTS -->
+    <!-- GOOGLE FONTS -->
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
+    <!-- HEADER -->
     <header>
         <span>CORE_DASH // v30.5</span>
     </header>
 
+    <!-- STATUS BAR -->
     <div class="status-bar">
         <div>SYS_TIME: <span id="clock">00:00:00</span></div>
         <div>UPLINK_STABLE</div>
     </div>
 
+    <!-- MAIN CONTENT -->
     <main>
         <!-- COMMAND MODULE -->
         <div class="command-module">
-            <input type="tel" id="mission-input" placeholder="0000" maxlength="5">
+            <input type="tel" id="mission-input" placeholder="0000" maxlength="5" autocomplete="off">
             <div id="mission-status"></div>
             <div class="btn-row">
                 <button id="action-btn" class="btn btn-save">SAVE</button>
@@ -53,7 +56,7 @@
         </div>
     </main>
 
-    <!-- MODAL -->
+    <!-- MODAL OVERLAY -->
     <div class="overlay" id="modal-overlay">
         <div class="popup">
             <div id="pop-header">#0000</div>
@@ -83,7 +86,7 @@
     </nav>
 
     <!-- EXTERNAL JAVASCRIPT -->
-    <script type="module" src="js/dbintel_scripts.js"></script>
+    <script type="module" src="js/dbintel_script.js"></script>
     
 </body>
 </html>

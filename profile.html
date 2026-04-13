@@ -210,18 +210,63 @@
         }, 1500);
     };
 
-    window.openNoirModal = (id) => {
-        const d = allMissions.find(m => m.id === id);
-        if(!d) return;
+    window.openNoirModal = (docID) => {
+        const data = allMissions.find(m => m.id === docID);
+        if(!data) return;
+
         document.getElementById('noirOverlay').style.display = 'flex';
-        document.getElementById('n-vagent').innerText = d.vAgentID || "N/A";
-        document.getElementById('n-content').innerHTML = (d.expensesBreakdown || []).map(e => `
-            <div class="expense-row">
-                <span><b>${e.description}</b><br><small>${new Date(e.timestamp).toLocaleDateString()}</small></span>
-                <b>₱${e.amount.toLocaleString()}</b>
-            </div>`).join('');
-        document.getElementById('n-total').innerText = `₱ ${d.totalExpenses.toLocaleString()}`;
+        document.getElementById('n-order').innerText = docID.substring(0,12).toUpperCase();
+        document.getElementById('n-vagent').innerText = data.vAgentID;
+
+        let expHTML = "";
+        if(data.expensesBreakdown && Array.isArray(data.expensesBreakdown)) {
+            const sorted = data.expensesBreakdown.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+            expHTML = sorted.map(e => {
+                const d = e.timestamp ? new Date(e.timestamp) : new Date();
+                const displayDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).replace(',', ' /');
+                const randomIndex = Math.floor(Math.random() * INTEL_TERMS.length);
+                const intelDesc = e.description || INTEL_TERMS[randomIndex];
+                return `
+                    <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:6px; border-bottom: 1px dotted rgba(0,0,0,0.3); padding-bottom: 2px;">
+                        <span><span style="opacity:0.6;">${displayDate}</span> — ${intelDesc}</span>
+                        <b>₱${(e.amount || 0).toLocaleString()}</b>
+                    </div>`;
+            }).join('');
+        } else {
+            expHTML = "<p style='font-size:10px; opacity:0.5; text-align:center;'>[ NO_OPERATIONAL_LOGS ]</p>";
+        }
+
+        document.getElementById('n-content').innerHTML = `
+            <div style="font-size:11px; margin-bottom:12px;">
+                <p><b>SecureLine:</b> <span class="secure-marker">${data.marker || 'SECRET_LINE'}</span></p>
+                <p><b>Deployment:</b> ${data.deploymentDate || 'TBD'}</p>
+            </div>
+            <p style="font-size:10px; font-weight:bold; border-top:1px solid #000; padding-top:10px; margin-bottom:8px; letter-spacing:1.5px;">OPERATIONAL_LOGS:</p>
+            <div style="max-height:160px; overflow-y:auto; margin-bottom:15px; padding-right:5px;">
+                ${expHTML}
+            </div>
+            <center>
+                <button onclick="alert('System Locked: Auth Required')" class="btn-terminate">TERMINATE_AGENT</button>
+            </center>
+        `;
+        document.getElementById('n-total').innerText = `₱ ${(data.totalExpenses || 0).toLocaleString()}`;
     };
+
+    window.openMemoirs = (mode) => {
+        document.getElementById('memoirsOverlay').style.display = 'flex';
+        let total = 0;
+        let filtered = (mode === 'ALL') ? allMissions : allMissions.filter(m => (DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem) === mode);
+        document.getElementById('active-list').innerHTML = filtered.map(m => {
+            total += (m.totalExpenses || 0);
+            return `<div class="expense-row"><span>vAgent #${m.vAgentID}</span><b>₱${(m.totalExpenses || 0).toLocaleString()}</b></div>`;
+        }).join('') || "NO_DATA";
+        document.getElementById('target-name').innerText = mode;
+        document.getElementById('total-val').innerText = `₱ ${total.toLocaleString()}`;
+    };
+
+    window.closeNoir = () => document.getElementById('noirOverlay').style.display = 'none';
+    window.closeMemoirs = () => document.getElementById('memoirsOverlay').style.display = 'none';
+    window.flip = (n) => document.getElementById('p1').classList.toggle('flipped', n);
 
     window.flipPage = (f) => {
         const p1 = document.getElementById('p1'), p2 = document.getElementById('p2');

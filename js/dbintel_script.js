@@ -1,34 +1,24 @@
-// js/script.js
-// CIA Profiles Main Logic
-// ========================================
-
-// ⭐ IMPORT FROM SAME FOLDER (js/)
-import { db, DEVICE_REGISTRY, INTEL_TERMS } from "./config.js";
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-console.log("✅ Modules loaded successfully");
-console.log("DB:", db);
-console.log("DEVICE_REGISTRY:", DEVICE_REGISTRY);
-
-// ====== GLOBAL STATE ======
-let deviceData = {};
-let allMissions = [];
-const currentAgent = localStorage.getItem("cia_agent") || "UNKNOWN_AGENT";
-
-console.log("Current Agent:", currentAgent);
-
-// dashboard.js - CORE DASHBOARD v30.5
+// dbintel_script.js - CORE DASHBOARD v30.5
 
 import { DEVICE_REGISTRY } from './config.js';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, query, where, getDocs, doc, setDoc, addDoc, serverTimestamp, getDoc, onSnapshot, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { 
+    getFirestore, 
+    collection, 
+    query, 
+    where, 
+    getDocs, 
+    doc, 
+    setDoc, 
+    addDoc, 
+    serverTimestamp, 
+    getDoc, 
+    onSnapshot, 
+    orderBy, 
+    limit 
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// Firebase Configuration
+// ========== FIREBASE CONFIGURATION ==========
 const firebaseConfig = { 
     apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
     authDomain: "my-admin-portal-12691.firebaseapp.com", 
@@ -42,7 +32,13 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// DOM Elements
+// ========== GLOBAL STATE ==========
+const currentAgent = localStorage.getItem("cia_agent") || "AGENT_LZ";
+let selectedWeaponID = "";
+let agentSignatures = []; 
+let currentMissionData = null;
+
+// ========== DOM ELEMENTS ==========
 const input = document.getElementById('mission-input');
 const actionBtn = document.getElementById('action-btn');
 const reserveBtn = document.getElementById('reserve-btn');
@@ -59,14 +55,11 @@ const clockSpan = document.getElementById('clock');
 const profName = document.getElementById('prof-name');
 const avatarInit = document.getElementById('avatar-init');
 
-// State Variables
-let selectedWeaponID = "";
-let agentSignatures = []; 
-let currentMissionData = null;
-const currentAgent = localStorage.getItem("cia_agent") || "AGENT_LZ";
-
 // ========== INITIALIZATION ==========
 function init() {
+    console.log("🚀 DASHBOARD INITIALIZED");
+    console.log("Agent:", currentAgent);
+    
     // Set agent info
     profName.innerText = currentAgent;
     avatarInit.innerText = currentAgent.charAt(0).toUpperCase();
@@ -89,24 +82,31 @@ function updateClock() {
 
 // ========== TERMINAL LOGS ==========
 function setupTerminalListener() {
-    onSnapshot(query(collection(db, "terminal_logs"), orderBy("timestamp", "desc"), limit(15)), (snap) => {
-        terminal.innerHTML = "";
-        snap.forEach(doc => {
-            const d = doc.data();
-            const time = d.timestamp ? new Date(d.timestamp.seconds * 1000).toLocaleTimeString('en-GB') : "--";
-            terminal.innerHTML += `<div class="term-line"><span style="color:#5c7882">[${time}]</span> <span style="color:${d.color}">${d.message}</span></div>`;
-        });
-    });
+    onSnapshot(
+        query(collection(db, "terminal_logs"), orderBy("timestamp", "desc"), limit(15)), 
+        (snap) => {
+            terminal.innerHTML = "";
+            snap.forEach(doc => {
+                const d = doc.data();
+                const time = d.timestamp ? new Date(d.timestamp.seconds * 1000).toLocaleTimeString('en-GB') : "--";
+                terminal.innerHTML += `<div class="term-line"><span style="color:#5c7882">[${time}]</span> <span style="color:${d.color}">${d.message}</span></div>`;
+            });
+        }
+    );
 }
 
 // ========== ADD LOG ==========
 async function addLog(msg, color) {
-    await addDoc(collection(db, "terminal_logs"), { 
-        agent: currentAgent, 
-        message: msg, 
-        color: color, 
-        timestamp: serverTimestamp() 
-    });
+    try {
+        await addDoc(collection(db, "terminal_logs"), { 
+            agent: currentAgent, 
+            message: msg, 
+            color: color, 
+            timestamp: serverTimestamp() 
+        });
+    } catch(e) {
+        console.error("Log error:", e);
+    }
 }
 
 // ========== RESET UI ==========
@@ -231,7 +231,7 @@ async function submitMission() {
         return;
     }
     if (sLine !== "" && !sLine.startsWith("09")) {
-        alert("INVALID PHONE");
+        alert("INVALID PHONE NUMBER (must start with 09)");
         return;
     }
 
@@ -271,4 +271,3 @@ function setupEventListeners() {
 
 // ========== START APP ==========
 init();
-

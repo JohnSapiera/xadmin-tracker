@@ -1,4 +1,4 @@
-// js/script.js - CIA Profiles Main Logic (Original Working)
+// js/script.js - CIA Profiles Main Logic with Sounds
 // ========================================
 
 import SoundFX from './sound.js';
@@ -32,6 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // ====== DATA LOADING ======
 async function loadMissionData() {
   console.log("📡 Loading mission data for agent:", currentAgent);
+  SoundFX.terminalUpdate(); // Scanning sound
   try {
     const q = query(
       collection(db, "mission_orders"),
@@ -60,8 +61,15 @@ async function loadMissionData() {
 
     console.log("Device Data:", deviceData);
     renderDevices();
+    
+    if (snap.size > 0) {
+      SoundFX.success(); // Data loaded successfully
+    } else {
+      SoundFX.beep(600, 0.2, 0.2); // No data sound
+    }
   } catch (error) {
     console.error("❌ Error loading mission data:", error);
+    SoundFX.error(); // Error sound
     renderDevices();
   }
 }
@@ -121,6 +129,8 @@ function renderDevices() {
 // ====== DEVICE ACTIVATION ======
 window.activateDevice = (name, element) => {
   console.log("🎯 Activating device:", name);
+  SoundFX.success(); // Device activation success sound
+  
   element.classList.add("lights-on");
   const statusLabel = element.querySelector(".status-label");
   statusLabel.innerHTML = "[ UPLINK_SYNC_DATA ]";
@@ -160,6 +170,7 @@ window.activateDevice = (name, element) => {
 const btnBack = document.getElementById("btnBack");
 if (btnBack) {
   btnBack.addEventListener("click", () => {
+    SoundFX.click(); // Button click sound
     document.getElementById("vagentSection").style.display = "none";
     document.getElementById("deviceSection").style.display = "grid";
     btnBack.style.display = "none";
@@ -169,9 +180,12 @@ if (btnBack) {
 // ====== NOIR MODAL ======
 window.openNoirModal = (docID) => {
   console.log("📋 Opening noir modal for:", docID);
+  SoundFX.folderOpen(); // Folder open sound
+  
   const data = allMissions.find((m) => m.id === docID);
   if (!data) {
     console.error("Document not found:", docID);
+    SoundFX.error();
     return;
   }
 
@@ -225,12 +239,15 @@ window.openNoirModal = (docID) => {
 
 window.closeNoir = () => {
   console.log("🔐 Closing noir modal");
+  SoundFX.click(); // Close sound
   document.getElementById("noirOverlay").style.display = "none";
 };
 
 // ====== MEMOIRS FUNCTIONS ======
 window.flipPage = (forward) => {
   console.log("📖 Flipping page:", forward ? "forward" : "backward");
+  SoundFX.pageFlip(); // Page flip sound
+  
   const p1 = document.getElementById("p1");
   const p2 = document.getElementById("p2");
 
@@ -247,11 +264,14 @@ window.flipPage = (forward) => {
 
 window.closeMemoirs = () => {
   console.log("📚 Closing memoirs");
+  SoundFX.click(); // Close sound
   document.getElementById("memoirsOverlay").style.display = "none";
 };
 
 window.openMemoirs = (mode) => {
   console.log("📚 Opening memoirs for mode:", mode);
+  SoundFX.folderOpen(); // Opening memoirs sound
+  
   const overlay = document.getElementById("memoirsOverlay");
   overlay.style.display = "flex";
   flipPage(false);
@@ -354,4 +374,5 @@ window.openMemoirs = (mode) => {
     overallTotal.toLocaleString();
 
   console.log("✅ Memoirs rendered successfully");
+  SoundFX.success(); // Success sound after rendering
 };

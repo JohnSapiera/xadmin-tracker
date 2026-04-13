@@ -1,5 +1,6 @@
-// js/jsdash.js - CORE DASHBOARD v30.5
+// js/jsdash.js - CORE DASHBOARD v30.5 with Sounds
 
+import SoundFX from './sound.js';
 import { DEVICE_REGISTRY } from '../config.js';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { 
@@ -53,6 +54,7 @@ const profName = document.getElementById('prof-name');
 const avatarInit = document.getElementById('avatar-init');
 
 function init() {
+    SoundFX.success(); // Dashboard initialized sound
     profName.innerText = currentAgent;
     avatarInit.innerText = currentAgent.charAt(0).toUpperCase();
     updateClock();
@@ -78,6 +80,7 @@ function setupTerminalListener() {
 
 async function addLog(msg, color) {
     try {
+        SoundFX.terminalUpdate(); // Terminal update sound
         await addDoc(collection(db, "terminal_logs"), { agent: currentAgent, message: msg, color: color, timestamp: serverTimestamp() });
     } catch(e) { console.error("Log error:", e); }
 }
@@ -95,6 +98,7 @@ async function searchMission() {
     const val = input.value.trim();
     if (val.length < 4) { resetUI(); return; }
     
+    SoundFX.terminalUpdate(); // Scanning sound
     statusLabel.innerHTML = "SCANNING DATABASE...";
     const qM = query(collection(db, "mission_orders"), where("missionID", "==", val));
     const snapM = await getDocs(qM);
@@ -103,12 +107,14 @@ async function searchMission() {
         currentMissionData = snapM.docs[0].data();
         const owner = currentMissionData.agent;
         if (owner === currentAgent) {
+            SoundFX.success(); // Your mission sound
             actionBtn.textContent = "RETRIEVE";
             actionBtn.className = "btn btn-retrieve";
             actionBtn.style.pointerEvents = "auto";
             reserveBtn.classList.remove('active');
             statusLabel.innerHTML = `<span class="status-deployed">STATUS: YOUR MISSION</span>`;
         } else {
+            SoundFX.error(); // Access denied sound
             statusLabel.innerHTML = `<span style="color:var(--red);">ALREADY DEPLOYED BY ${owner}</span>`;
             actionBtn.textContent = "LOCKED";
             actionBtn.className = "btn btn-locked";
@@ -117,6 +123,7 @@ async function searchMission() {
             addLog(`RESTRICTED: ${currentAgent} SCANNED ${owner}'S MISSION`, 'var(--red)');
         }
     } else {
+        SoundFX.beep(600, 0.2, 0.2); // Mission available sound
         currentMissionData = null;
         actionBtn.textContent = "SAVE";
         actionBtn.className = "btn btn-save";
@@ -138,6 +145,7 @@ function renderWeapons() {
         b.className = "weapon-btn" + (sig === selectedWeaponID ? " selected" : "");
         b.innerText = `> ${DEVICE_REGISTRY[sig] || sig}`;
         b.onclick = () => {
+            SoundFX.click(); // Weapon select sound
             document.querySelectorAll('.weapon-btn').forEach(x => x.classList.remove('selected'));
             b.classList.add('selected');
             selectedWeaponID = sig;
@@ -148,6 +156,7 @@ function renderWeapons() {
 
 async function openModal() {
     if (input.value.length < 4) return;
+    SoundFX.click(); // Modal open sound
     modalOverlay.style.display = 'flex';
     document.getElementById('pop-header').innerText = `#${input.value}`;
     
@@ -175,16 +184,26 @@ async function openModal() {
 }
 
 function closeModal() {
+    SoundFX.click(); // Close sound
     modalOverlay.style.display = 'none';
 }
 
 async function submitMission() {
+    SoundFX.click(); // Submit button sound
+    
     const vID = vAgentInput.value.trim();
     const sLine = secureField.value.trim();
-    if (!vID || !selectedWeaponID) return alert("INCOMPLETE DATA");
-    if (sLine !== "" && !sLine.startsWith("09")) return alert("INVALID PHONE");
+    if (!vID || !selectedWeaponID) {
+        SoundFX.error(); // Incomplete data sound
+        return alert("INCOMPLETE DATA");
+    }
+    if (sLine !== "" && !sLine.startsWith("09")) {
+        SoundFX.error(); // Invalid phone sound
+        return alert("INVALID PHONE");
+    }
 
     try {
+        SoundFX.terminalUpdate(); // Saving mission sound
         await setDoc(doc(db, "mission_orders", input.value), {
             missionID: input.value,
             agent: currentAgent,
@@ -194,12 +213,41 @@ async function submitMission() {
             status: "DEPLOYED",
             timestamp: serverTimestamp()
         }, { merge: true });
+        
+        SoundFX.success(); // Mission saved sound
         addLog(`MISSION #${input.value} UPDATED BY ${currentAgent}`, 'var(--green)');
         closeModal();
         input.value = "";
         resetUI();
-    } catch(e) { console.error(e); alert("ERROR SUBMITTING MISSION"); }
+    } catch(e) { 
+        SoundFX.error(); // Error sound
+        console.error(e); 
+        alert("ERROR SUBMITTING MISSION"); 
+    }
 }
+
+// Keypad sounds for mission input
+input.addEventListener('keypress', (e) => {
+    if (e.key >= '0' && e.key <= '9') {
+        SoundFX.keypadTone(e.key);
+    }
+});
+
+// Keypad sounds for vAgent input in modal
+vAgentInput.addEventListener('keypress', (e) => {
+    if (e.key >= '0' && e.key <= '9') {
+        SoundFX.keypadTone(e.key);
+    } else if (e.key >= 'a' && e.key <= 'z') {
+        SoundFX.beep(700, 0.05, 0.1); // Letter typing sound
+    }
+});
+
+// Keypad sounds for secure field
+secureField.addEventListener('keypress', (e) => {
+    if (e.key >= '0' && e.key <= '9') {
+        SoundFX.keypadTone(e.key);
+    }
+});
 
 function setupEventListeners() {
     input.addEventListener('input', searchMission);
@@ -207,6 +255,7 @@ function setupEventListeners() {
     modalSubmit.onclick = submitMission;
     modalClose.onclick = closeModal;
     secureBtn.onclick = () => {
+        SoundFX.click(); // Add secure line sound
         secureBtn.style.display = 'none';
         secureField.classList.add('show');
         secureField.focus();

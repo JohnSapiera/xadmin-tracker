@@ -1,314 +1,82 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="manifest" href="manifest.json">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#02080a">
-    
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CORE_DASH_v30.5</title>
+    
+    <!-- EXTERNAL CSS -->
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- FONTS -->
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root { 
-            --bg: #02080a; --panel: rgba(5, 15, 20, 0.9); --cyan: #00f3ff; 
-            --cyan-dim: rgba(0, 243, 255, 0.1); --red: #ff003c; --blue: #007bff; 
-            --green: #05ffa1; --yellow: #ffbd00; --border: rgba(0, 243, 255, 0.2);
-            --font-mono: 'Share Tech Mono', monospace; --font-main: 'Rajdhani', sans-serif;
-            --cia-red: #ff003c;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: #e1f5f9; font-family: var(--font-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-        
-        header { padding: 15px 20px; background: #000; border-bottom: 2px solid var(--cyan); display: flex; justify-content: space-between; align-items: center; z-index: 10; }
-        .status-bar { font-size: 11px; padding: 8px 20px; background: rgba(0,243,255,0.05); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; color: var(--cyan); font-family: var(--font-mono); }
-        
-        main { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 80px; }
-        
-        /* COMMAND MODULE */
-        .command-module { background: var(--panel); border: 1px solid var(--border); padding: 20px; border-radius: 4px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
-        #mission-input { width: 100%; background: transparent; border: none; border-bottom: 2px solid var(--cyan); color: #fff; font-family: var(--font-mono); font-size: 45px; text-align: center; outline: none; margin-bottom: 5px; letter-spacing: 5px; }
-        
-        #mission-status { font-family: var(--font-mono); font-size: 12px; text-align: center; height: 18px; margin-bottom: 15px; font-weight: bold; text-transform: uppercase; }
-        .status-reserved { color: var(--yellow); animation: blink 1s infinite; }
-        .status-deployed { color: var(--green); }
-        @keyframes blink { 50% { opacity: 0.3; } }
-
-        /* BUTTONS */
-        .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .btn { height: 50px; font-weight: 700; text-transform: uppercase; border: none; cursor: pointer; font-family: var(--font-main); font-size: 14px; transition: 0.3s; }
-        .btn:active { transform: scale(0.95); }
-        
-        .btn-save { background: var(--green); color: #000; }
-        .btn-retrieve { background: var(--blue); color: #fff; }
-        .btn-locked { background: #1a0000; color: var(--red); border: 1px solid var(--red); cursor: not-allowed; }
-        
-        .btn-reserve { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.1); opacity: 0.2; pointer-events: none; }
-        .btn-reserve.active { opacity: 1; pointer-events: auto; border-color: var(--yellow); color: var(--yellow); }
-
-        /* TERMINAL */
-        #terminal { background: rgba(0,0,0,0.9); border-left: 3px solid var(--cyan); padding: 12px; font-family: var(--font-mono); font-size: 10px; height: 160px; overflow-y: auto; color: #9ab4bc; }
-        .term-line { margin-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.03); }
-
-        /* MODALS */
-        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.96); z-index: 9999; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); }
-        .popup { width: 100%; max-width: 360px; background: #051014; border: 1px solid var(--cyan); padding: 25px; }
-        .pop-input { width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 12px; text-align: center; font-size: 20px; margin-bottom: 15px; font-family: var(--font-mono); outline: none; }
-        
-        /* SECURE LINE UI */
-        .secure-line-wrapper { text-align: right; margin-top: -10px; margin-bottom: 15px; min-height: 40px; display: flex; justify-content: flex-end; align-items: center; }
-        #add-secure-btn { font-size: 11px; color: var(--cyan); cursor: pointer; text-decoration: underline; font-family: var(--font-mono); opacity: 0.7; }
-        #secure-input-field { width: 0; opacity: 0; overflow: hidden; transition: 0.5s; background: #000; border: 1px solid var(--border); color: var(--yellow); padding: 0; text-align: center; font-family: var(--font-mono); outline: none; }
-        #secure-input-field.show { width: 100%; opacity: 1; padding: 8px; border-color: var(--cyan); }
-
-        .weapon-selector { display: grid; gap: 8px; margin-bottom: 20px; max-height: 140px; overflow-y: auto; }
-        .weapon-btn { background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: #fff; padding: 12px; font-size: 11px; cursor: pointer; font-family: var(--font-mono); text-align: left; }
-        .weapon-btn.selected { background: var(--cyan-dim); border-color: var(--cyan); color: var(--cyan); box-shadow: inset 0 0 10px var(--cyan); }
-
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; height: 65px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr 1fr; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #5c7882; text-decoration: none; font-size: 10px; font-weight: 700; }
-        .nav-item.active { color: var(--cyan); background: var(--cyan-dim); border-top: 2px solid var(--cyan); }
-    </style>
 </head>
 <body>
 
-<header><span style="font-weight: 700; color: #fff; letter-spacing: 2px;">CORE_DASH // v30.5</span></header>
+    <header>
+        <span>CORE_DASH // v30.5</span>
+    </header>
 
-<div class="status-bar">
-    <div>SYS_TIME: <span id="clock">00:00:00</span></div>
-    <div style="color: var(--green);">UPLINK_STABLE</div>
-</div>
+    <div class="status-bar">
+        <div>SYS_TIME: <span id="clock">00:00:00</span></div>
+        <div>UPLINK_STABLE</div>
+    </div>
 
-<main>
-    <div class="command-module">
-        <input type="tel" id="mission-input" placeholder="0000" maxlength="5" autocomplete="off">
-        <div id="mission-status"></div>
-        <div class="btn-row">
-            <button id="action-btn" class="btn btn-save">SAVE</button>
-            <button id="reserve-btn" class="btn btn-reserve">RESERVE</button>
+    <main>
+        <!-- COMMAND MODULE -->
+        <div class="command-module">
+            <input type="tel" id="mission-input" placeholder="0000" maxlength="5">
+            <div id="mission-status"></div>
+            <div class="btn-row">
+                <button id="action-btn" class="btn btn-save">SAVE</button>
+                <button id="reserve-btn" class="btn btn-reserve">RESERVE</button>
+            </div>
+        </div>
+
+        <!-- TERMINAL -->
+        <div id="terminal"></div>
+
+        <!-- PROFILE MINI -->
+        <div class="profile-mini">
+            <div class="avatar" id="avatar-init">?</div>
+            <div class="profile-info">
+                <div id="prof-name">AGENT_PENDING</div>
+                <div>AUTH_LEVEL: OMEGA</div>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL -->
+    <div class="overlay" id="modal-overlay">
+        <div class="popup">
+            <div id="pop-header">#0000</div>
+            <span>vAGENT_IDENTIFIER:</span>
+            <input type="text" id="v-agent-input" class="pop-input" placeholder="V_ID_REQUIRED">
+            
+            <div class="secure-line-wrapper">
+                <span id="add-secure-btn">+add Secure Line</span>
+                <input type="tel" id="secure-input-field" maxlength="11" placeholder="09XXXXXXXXX">
+            </div>
+
+            <span>SYSTEM_LINK:</span>
+            <div class="weapon-selector" id="weapon-list"></div>
+
+            <div class="btn-row">
+                <button id="modal-submit" class="btn btn-save">CONFIRM</button>
+                <button id="modal-close" class="btn">ABORT</button>
+            </div>
         </div>
     </div>
-    <div id="terminal"></div>
-    <div class="profile-mini" style="background: #051014; border: 1px solid var(--border); padding: 12px; display: flex; align-items: center; gap: 15px;">
-        <div class="avatar" id="avatar-init" style="width: 40px; height: 40px; background: var(--cyan-dim); border: 1px solid var(--cyan); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--cyan); font-weight: bold;">?</div>
-        <div class="profile-info">
-            <div style="color: var(--cyan); font-weight: 700;" id="prof-name">AGENT_PENDING</div>
-            <div style="color: #5c7882; font-size: 10px;">AUTH_LEVEL: OMEGA</div>
-        </div>
-    </div>
-</main>
 
-<div class="overlay" id="modal-overlay">
-    <div class="popup">
-        <div id="pop-header" style="color:var(--cyan); text-align:center; margin-bottom:18px; font-size:26px; font-weight:700; font-family:var(--font-mono);">#0000</div>
-        <span style="font-size: 10px; color: var(--cyan); display: block; margin-bottom: 5px;">vAGENT_IDENTIFIER:</span>
-        <input type="text" id="v-agent-input" class="pop-input" placeholder="V_ID_REQUIRED">
-        
-        <div class="secure-line-wrapper">
-            <span id="add-secure-btn">+add Secure Line</span>
-            <input type="tel" id="secure-input-field" maxlength="11" placeholder="09XXXXXXXXX">
-        </div>
+    <!-- BOTTOM NAVIGATION -->
+    <nav class="bottom-nav">
+        <a href="#" class="nav-item active">DASHBOARD</a>
+        <a href="intel.html" class="nav-item">INTEL</a>
+        <a href="profile.html" class="nav-item">PROFILE</a>
+    </nav>
 
-        <span style="font-size: 10px; color: var(--cyan); display: block; margin-bottom: 5px;" id="weapon-label">SYSTEM_LINK:</span>
-        <div class="weapon-selector" id="weapon-list"></div>
-
-        <div class="btn-row">
-            <button id="modal-submit" class="btn btn-save">CONFIRM</button>
-            <button id="modal-close" class="btn" style="background:#222; color:#fff;">ABORT</button>
-        </div>
-    </div>
-</div>
-
-<nav class="bottom-nav">
-    <a href="#" class="nav-item active">DASHBOARD</a>
-    <a href="intel.html" class="nav-item">INTEL</a>
-    <a href="profile.html" class="nav-item">PROFILE</a>
-</nav>
-
-<script type="module">
-    import { DEVICE_REGISTRY } from './config.js';
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, query, where, getDocs, doc, setDoc, addDoc, serverTimestamp, getDoc, onSnapshot, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-    const firebaseConfig = { 
-        apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
-        authDomain: "my-admin-portal-12691.firebaseapp.com", 
-        projectId: "my-admin-portal-12691", 
-        storageBucket: "my-admin-portal-12691.firebasestorage.app", 
-        messagingSenderId: "317015091563", 
-        appId: "1:317015091563:web:baab5171d8e0a58acd442e" 
-    };
+    <!-- EXTERNAL JAVASCRIPT -->
+    <script type="module" src="dashboard.js"></script>
     
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    // --- AGENT DATA SYNC ---
-    const currentAgent = localStorage.getItem("cia_agent") || "AGENT_LZ";
-    document.getElementById('prof-name').innerText = currentAgent;
-    document.getElementById('avatar-init').innerText = currentAgent.charAt(0).toUpperCase();
-
-    const input = document.getElementById('mission-input');
-    const actionBtn = document.getElementById('action-btn');
-    const reserveBtn = document.getElementById('reserve-btn');
-    const statusLabel = document.getElementById('mission-status');
-    const terminal = document.getElementById('terminal');
-    const vAgentInput = document.getElementById('v-agent-input');
-    const modalSubmit = document.getElementById('modal-submit');
-    const weaponList = document.getElementById('weapon-list');
-    const secureField = document.getElementById('secure-input-field');
-    const secureBtn = document.getElementById('add-secure-btn');
-
-    let selectedWeaponID = "";
-    let agentSignatures = []; 
-    let currentMissionData = null;
-
-    // Terminal Monitor
-    onSnapshot(query(collection(db, "terminal_logs"), orderBy("timestamp", "desc"), limit(15)), (snap) => {
-        terminal.innerHTML = "";
-        snap.forEach(doc => {
-            const d = doc.data();
-            const time = d.timestamp ? new Date(d.timestamp.seconds * 1000).toLocaleTimeString('en-GB') : "--";
-            terminal.innerHTML += `<div class="term-line"><span style="color:#5c7882">[${time}]</span> <span style="color:${d.color}">${d.message}</span></div>`;
-        });
-    });
-
-    async function addLog(msg, color) {
-        await addDoc(collection(db, "terminal_logs"), { agent: currentAgent, message: msg, color: color, timestamp: serverTimestamp() });
-    }
-
-    // SEARCH LOGIC
-    input.addEventListener('input', async () => {
-        const val = input.value.trim();
-        if (val.length < 4) { resetUI(); return; }
-        
-        statusLabel.innerHTML = "SCANNING DATABASE...";
-        const qM = query(collection(db, "mission_orders"), where("missionID", "==", val));
-        const snapM = await getDocs(qM);
-
-        if (!snapM.empty) {
-            currentMissionData = snapM.docs[0].data();
-            const owner = currentMissionData.agent; // Ito yung "agent" field sa DB
-
-            if (owner === currentAgent) {
-                actionBtn.textContent = "RETRIEVE";
-                actionBtn.className = "btn btn-retrieve";
-                actionBtn.style.pointerEvents = "auto";
-                actionBtn.style.opacity = "1";
-                reserveBtn.classList.remove('active');
-                statusLabel.innerHTML = `<span class="status-deployed">STATUS: YOUR MISSION</span>`;
-            } else {
-                statusLabel.innerHTML = `<span style="color:var(--red);">ALREADY DEPLOYED BY ${owner}</span>`;
-                actionBtn.textContent = "LOCKED";
-                actionBtn.className = "btn btn-locked";
-                actionBtn.style.pointerEvents = "none";
-                actionBtn.style.opacity = "0.5";
-                reserveBtn.classList.remove('active');
-                addLog(`RESTRICTED: ${currentAgent} SCANNED ${owner}'S MISSION`, 'var(--red)');
-            }
-        } else {
-            currentMissionData = null;
-            actionBtn.textContent = "SAVE";
-            actionBtn.className = "btn btn-save";
-            actionBtn.style.pointerEvents = "auto";
-            actionBtn.style.opacity = "1";
-            statusLabel.innerHTML = 'STATUS: AVAILABLE';
-            reserveBtn.classList.add('active');
-        }
-    });
-
-    function resetUI() {
-        statusLabel.innerHTML = "";
-        actionBtn.textContent = "SAVE";
-        actionBtn.className = "btn btn-save";
-        actionBtn.style.opacity = "1";
-        actionBtn.style.pointerEvents = "auto";
-        reserveBtn.classList.remove('active');
-    }
-
-    // OPEN MODAL
-    actionBtn.onclick = async () => {
-        if (input.value.length < 4) return;
-        document.getElementById('modal-overlay').style.display = 'flex';
-        document.getElementById('pop-header').innerText = `#${input.value}`;
-        
-        const snap = await getDoc(doc(db, "agents", currentAgent));
-        agentSignatures = snap.exists() ? snap.data().linkedSignatures || [] : Object.keys(DEVICE_REGISTRY);
-
-        if (currentMissionData) {
-            vAgentInput.value = currentMissionData.vAgentID || "";
-            selectedWeaponID = currentMissionData.weaponSystem || "";
-            if (currentMissionData.SecureLine) {
-                secureField.value = currentMissionData.SecureLine;
-                secureField.classList.add('show');
-                secureBtn.style.display = 'none';
-            } else { resetSecureUI(); }
-            modalSubmit.textContent = "UPDATE";
-            modalSubmit.className = "btn btn-retrieve";
-        } else {
-            vAgentInput.value = "";
-            selectedWeaponID = "";
-            resetSecureUI();
-            modalSubmit.textContent = "CONFIRM";
-            modalSubmit.className = "btn btn-save";
-        }
-        renderWeapons();
-    };
-
-    function resetSecureUI() {
-        secureField.value = "";
-        secureField.classList.remove('show');
-        secureBtn.style.display = 'block';
-    }
-
-    secureBtn.onclick = () => {
-        secureBtn.style.display = 'none';
-        secureField.classList.add('show');
-        secureField.focus();
-    };
-
-    function renderWeapons() {
-        weaponList.innerHTML = "";
-        agentSignatures.forEach(sig => {
-            const b = document.createElement('button');
-            b.className = "weapon-btn" + (sig === selectedWeaponID ? " selected" : "");
-            b.innerText = `> ${DEVICE_REGISTRY[sig] || sig}`;
-            b.onclick = () => {
-                document.querySelectorAll('.weapon-btn').forEach(x => x.classList.remove('selected'));
-                b.classList.add('selected');
-                selectedWeaponID = sig;
-            };
-            weaponList.appendChild(b);
-        });
-    }
-
-    modalSubmit.onclick = async () => {
-        const vID = vAgentInput.value.trim();
-        const sLine = secureField.value.trim();
-        if (!vID || !selectedWeaponID) return alert("INCOMPLETE DATA");
-        if (sLine !== "" && !sLine.startsWith("09")) return alert("INVALID PHONE");
-
-        try {
-            await setDoc(doc(db, "mission_orders", input.value), {
-                missionID: input.value,
-                agent: currentAgent,
-                vAgentID: vID,
-                weaponSystem: selectedWeaponID,
-                SecureLine: sLine,
-                status: "DEPLOYED",
-                timestamp: serverTimestamp()
-            }, { merge: true });
-
-            addLog(`MISSION #${input.value} UPDATED BY ${currentAgent}`, 'var(--green)');
-            document.getElementById('modal-overlay').style.display = 'none';
-            input.value = "";
-            resetUI();
-        } catch(e) { console.error(e); }
-    };
-
-    document.getElementById('modal-close').onclick = () => document.getElementById('modal-overlay').style.display = 'none';
-    setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB'); }, 1000);
-</script>
 </body>
 </html>

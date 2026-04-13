@@ -135,6 +135,29 @@
     padding-top: 15px;
     background: rgba(139, 0, 0, 0.03);
 }
+
+/* --- BOOK OVERLAY SYSTEM --- */
+        .overlay { display: none; position: fixed; inset: 0; z-index: 5000; background: rgba(0,0,0,0.9); justify-content: center; align-items: center; }
+        .book { width: 90%; max-width: 380px; height: 80vh; position: relative; perspective: 1500px; }
+        
+        .page { 
+            position: absolute; width: 100%; height: 100%; top: 0; left: 0;
+            background: #e8e2d2; color: #1a1a1a; padding: 40px 20px; font-family: var(--font-noir);
+            box-shadow: 5px 5px 20px rgba(0,0,0,0.5); transition: transform 0.6s;
+            transform-origin: left; backface-visibility: hidden; display: flex; flex-direction: column;
+        }
+        .page-front { z-index: 5002; }
+        .page-back { z-index: 5001; transform: rotateY(0deg); display: none; } /* Default hide */
+        
+        .page.flipped { transform: rotateY(-180deg); }
+
+        .audit-list { flex-grow: 1; overflow-y: auto; margin: 10px 0; border-top: 1px solid #000; padding-top: 10px; }
+        .expense-row { display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(0,0,0,0.2); padding: 5px 0; font-size: 11px; }
+        .audit-separator { border-top: 2px double #8b0000; margin: 10px 0; text-align: center; font-size: 9px; color: #8b0000; font-weight: bold; }
+
+        .close-btn { position: absolute; top: 10px; right: 10px; background: #8b0000; color: #fff; border: none; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; z-index: 6000; font-weight: bold; }
+        .swipe-hint { padding: 10px; font-size: 11px; font-weight: bold; color: #8b0000; text-align: right; cursor: pointer; border-top: 1px solid rgba(0,0,0,0.1); }
+		
     </style>
 </head>
 <body>
@@ -304,68 +327,66 @@
         document.getElementById('n-total').innerText = `₱ ${(data.totalExpenses || 0).toLocaleString()}`;
     };
 
-    window.flipPage = (isFlipped) => {
+    window.flipPage = (forward) => {
         const p1 = document.getElementById('p1');
         const p2 = document.getElementById('p2');
-        if(isFlipped) {
+        if (forward) {
             p1.classList.add('flipped');
-            setTimeout(() => { p1.style.zIndex = "1"; p2.style.zIndex = "10"; }, 300);
+            p2.style.display = 'flex';
         } else {
             p1.classList.remove('flipped');
-            setTimeout(() => { p1.style.zIndex = "10"; p2.style.zIndex = "1"; }, 300);
+            setTimeout(() => { p2.style.display = 'none'; }, 600);
         }
     };
 
     window.openMemoirs = (mode) => {
-    document.getElementById('memoirsOverlay').style.display = 'flex';
-    flipPage(false);
+        document.getElementById('memoirsOverlay').style.display = 'flex';
+        flipPage(false);
 
-    let filtered = (mode === 'ALL') 
-        ? allMissions 
-        : allMissions.filter(m => (DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem) === mode);
+        const filtered = (mode === 'ALL') ? allMissions : allMissions.filter(m => (DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem) === mode);
+        const valid = filtered.filter(m => (m.totalExpenses || 0) > 0);
 
-    const valid = filtered.filter(m => (m.totalExpenses || 0) > 0);
-    valid.sort((a, b) => b.id.localeCompare(a.id));
+        const withV = valid.filter(m => m.vAgentID).sort((a,b) => b.id.localeCompare(a.id));
+        const withoutV = valid.filter(m => !m.vAgentID).sort((a,b) => b.totalExpenses - a.totalExpenses);
 
-    let logsHTML = "";
-    let grandTotal = 0;
-    const sysTotals = {}; 
+        let p1HTML = "", p2HTML = "", vSub = 0, uSub = 0, grand = 0;
+        const getRow = (m, isV) => `
+            <div class="expense-row">
+                <span><b>${isV ? '#vAgent '+m.vAgentID : 'AGENT: '+m.agent}</b><br><i style="font-size:8px;">REF: ${m.id.substring(0,8)}</i></span>
+                <b>₱${m.totalExpenses.toLocaleString()}</b>
+            </div>`;
 
-    if (valid.length === 0) {
-        logsHTML = `<center style='margin-top:100px; opacity:0.3;'>[ NO_INTEL_LOGS_FOUND ]</center>`;
-    } else {
-        valid.forEach((m) => {
-            const systemName = DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem;
-            grandTotal += m.totalExpenses;
-            sysTotals[systemName] = (sysTotals[systemName] || 0) + m.totalExpenses;
-
-            logsHTML += `
-                <div class="expense-row">
-                    <span>
-                        <b style="font-size: 8px; color: #8b0000;">ID: ${m.id.substring(0,10).toUpperCase()}</b><br>
-                        vUNIT_${m.vAgentID || 'X'} // ${systemName}
-                    </span>
-                    <b style="font-size: 14px;">₱${m.totalExpenses.toLocaleString()}</b>
-                </div>`;
+        // Process vAgents
+        withV.forEach((m, i) => {
+            vSub += m.totalExpenses; grand += m.totalExpenses;
+            if (i < 10) p1HTML += getRow(m, true); else p2HTML += getRow(m, true);
         });
-    }
-    document.getElementById('active-list').innerHTML = logsHTML;
+        if (withV.length > 0) {
+            const vSHTML = `<div style="text-align:right; font-weight:bold; font-size:10px; margin-bottom:10px;">vAGENT_SUBTOTAL: ₱${vSub.toLocaleString()}</div>`;
+            if (withV.length <= 10) p1HTML += vSHTML; else p2HTML += vSHTML;
+        }
 
-    // PAGE 2: ASSET VALUATION (Dito natin aayusin ang labels)
-    document.getElementById('weapon-system-breakdown').innerHTML = Object.keys(sysTotals).map(sys => `
-        <div class="summary-row">
-            <span>SYS_NODE: ${sys.toUpperCase()}</span>
-            <b>₱${sysTotals[sys].toLocaleString()}</b>
-        </div>
-    `).join('');
+        // Process Unassigned
+        if (withoutV.length > 0) {
+            const sep = `<div class="audit-separator">--- UNASSIGNED_LOGS ---</div>`;
+            if (withV.length < 10) p1HTML += sep; else p2HTML += sep;
+            withoutV.forEach((m, i) => {
+                uSub += m.totalExpenses; grand += m.totalExpenses;
+                if ((withV.length + i) < 10) p1HTML += getRow(m, false); else p2HTML += getRow(m, false);
+            });
+            const uSHTML = `<div style="text-align:right; font-weight:bold; font-size:10px; color:#8b0000;">UNASSIGNED_SUBTOTAL: ₱${uSub.toLocaleString()}</div>`;
+            if ((withV.length + withoutV.length) <= 10) p1HTML += uSHTML; else p2HTML += uSHTML;
+        }
 
-    // Update labels sa HTML para CIA-ready
-    document.querySelector('#p2 h3').innerText = "RESOURCE_ALLOCATION"; 
-    document.querySelector('#p2 p').innerText = "TOTAL_OPERATION_DRAIN:";
-    
-    document.getElementById('total-val').innerText = grandTotal.toLocaleString();
-    document.getElementById('target-name').innerText = mode;
-};
+        document.getElementById('active-list').innerHTML = p1HTML || "NO_RECORDS";
+        document.getElementById('overflow-list').innerHTML = p2HTML || "NO_OVERFLOW";
+        document.getElementById('total-val-p1').innerText = `₱ ${grand.toLocaleString()}`;
+        document.getElementById('total-val-p2').innerText = `₱ ${grand.toLocaleString()}`;
+        document.getElementById('target-name').innerText = mode;
+
+        document.getElementById('flipNextBtn').style.display = p2HTML ? "block" : "none";
+        document.getElementById('p1-total-box').style.display = p2HTML ? "none" : "block";
+    };
 </script>
 </body>
 </html>

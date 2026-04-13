@@ -86,10 +86,23 @@ function renderDevices() {
     wrapper.className = "phone-wrapper";
     wrapper.setAttribute("data-neon", neonNumber);
     
+    // Assign position class
+    if (idx === 0) {
+      wrapper.classList.add('left-phone');
+    } else if (idx === keys.length - 1) {
+      wrapper.classList.add('right-phone');
+    } else {
+      wrapper.classList.add('center-phone');
+    }
+    
     wrapper.innerHTML = `
       <div class="phone-body">
+        <div class="power-btn"></div>
+        <div class="volume-up"></div>
+        <div class="volume-down"></div>
+        <div class="action-btn"></div>
         <div class="phone-screen">
-          <div class="typing-text">WELCOME<br>NODE_${name}</div>
+          <div class="typing-text">WELCOME<br>${name}</div>
         </div>
       </div>
       <div class="status-label">[ STANDBY_LINK ]</div>

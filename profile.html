@@ -345,7 +345,7 @@
     document.getElementById('memoirsOverlay').style.display = 'flex';
     flipPage(false);
 
-    // 1. FILTERING
+    // 1. FILTERING base sa mode
     let filtered = (mode === 'ALL') 
         ? allMissions 
         : allMissions.filter(m => (DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem) === mode);
@@ -356,91 +356,92 @@
     const withV = valid.filter(m => m.vAgentID && m.vAgentID !== "");
     const withoutV = valid.filter(m => !m.vAgentID);
 
-    // Sort vAgents: Latest to Oldest
+    // vAgents Sort: Latest Timestamp (Newest first)
     withV.sort((a, b) => {
         const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
         const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
         return timeB - timeA;
     });
 
-    // Sort Unassigned: Greatest to Lowest Amount
+    // Unassigned Sort: Greatest to Lowest Amount
     withoutV.sort((a, b) => (b.totalExpenses || 0) - (a.totalExpenses || 0));
 
-    // 3. MERGING FOR MASTER LIST
-    // Pagsamahin ang dalawang listahan para sa pagination logic
+    // Pagsamahin sa isang listahan para sa display
     const masterList = [...withV.map(m => ({...m, isV: true})), ...withoutV.map(m => ({...m, isV: false}))];
 
     let p1HTML = "";
     let p2HTML = "";
-    let overallTotal = 0;
-    const deviceTotals = {};
+    let overallTotal = 0; // Ito ang mag-iipon ng totalExpenses
 
-    // Helper function para sa rows
+    // 3. RENDER FUNCTION
     const renderRow = (m) => {
-        overallTotal += m.totalExpenses;
-        const dName = DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem;
-        deviceTotals[dName] = (deviceTotals[dName] || 0) + m.totalExpenses;
+        // I-add ang totalExpenses ng entry na ito sa overall total
+        overallTotal += (m.totalExpenses || 0);
 
         const missionRef = m.id.substring(0, 10).toUpperCase();
+        const agentName = m.agent || "UNKNOWN_OPERATIVE";
+
         return `
-            <div class="expense-row">
+            <div class="expense-row" style="padding: 10px 0; border-bottom: 1px dashed rgba(0,0,0,0.2);">
                 <div style="flex-grow: 1;">
-                    <div style="font-size: 11px; font-weight: bold;">
-                        ${m.isV ? `vAgent#: <span style="color:#8b0000;">${m.vAgentID}</span>` : `AGENT: ${m.agent}`}
+                    <div style="font-size: 11px; font-weight: bold; color: #000;">
+                        ${m.isV ? `vAgent#: <span style="color:#8b0000;">${m.vAgentID}</span>` : `AGENT: ${agentName}`}
                     </div>
-                    <div style="font-size: 8px; color: var(--cia-cyan);">MO#: ${missionRef}</div>
+                    ${m.isV ? `<div style="font-size: 9px; opacity: 0.7;">OPERATOR: ${agentName}</div>` : ''}
+                    <div style="font-size: 8px; color: #000; font-weight: bold; margin-top: 2px;">
+                        MO#: ${missionRef}
+                    </div>
                 </div>
-                <div style="text-align: right;"><b style="font-size: 14px;">₱${m.totalExpenses.toLocaleString()}</b></div>
+                <div style="text-align: right;">
+                    <b style="font-size: 14px; color: #000;">₱${(m.totalExpenses || 0).toLocaleString()}</b>
+                </div>
             </div>`;
     };
 
-    // 4. RENDER ENGINE (With 10-Limit Logic for Master Memoirs)
+    // 4. DISPLAY ENGINE
     masterList.forEach((m, index) => {
-        // Maglagay ng separation line bago ang unang Unassigned agent
         let rowContent = "";
-        const isFirstUnassigned = !m.isV && (index === 0 || masterList[index-1].isV);
         
+        // Separation Label para sa Unassigned
+        const isFirstUnassigned = !m.isV && (index === 0 || masterList[index-1].isV);
         if (isFirstUnassigned) {
-            rowContent += `<div class="audit-separator">--- UNASSIGNED_RECORDS ---</div>`;
+            rowContent += `<div class="audit-separator" style="margin: 15px 0 10px 0; border-top: 1px solid #000; font-size: 9px; text-align: center; font-weight: bold;">--- UNASSIGNED_RECORDS ---</div>`;
         }
 
         rowContent += renderRow(m);
 
-        // Paghati ng data: Memoirs 1 & 2 vs Memoirs 3 (Master)
+        // Memoir 3 (ALL) handles 10 items per page, others display all on Page 1
         if (mode !== 'ALL') {
-            p1HTML += rowContent; // Rekta display lahat
+            p1HTML += rowContent;
         } else {
-            // Master Memoirs Logic: 10 items lang sa Page 1
             if (index < 10) p1HTML += rowContent;
             else p2HTML += rowContent;
         }
     });
 
-    // 5. UPDATE UI
-    document.getElementById('active-list').innerHTML = p1HTML || "[ NO_DATA ]";
+    // 5. UI MAPPING
+    document.getElementById('active-list').innerHTML = p1HTML || "<center style='opacity:0.5; padding-top:20px;'>NO_RECORDS</center>";
+    document.getElementById('target-name').innerText = mode;
     
-    // Page 2 Logic (Overflow)
-    const p2Area = document.getElementById('overflow-list') || document.getElementById('weapon-system-breakdown');
+    // I-display ang kinalkulang Overall Total (Para sa Memoirs 1, 2, at 3)
+    const totalValP1 = document.getElementById('total-val');
+    if (totalValP1) totalValP1.innerText = overallTotal.toLocaleString();
+
+    // Page 2 Handling (Summary/Overflow)
+    const p2Area = document.getElementById('weapon-system-breakdown');
     if (mode === 'ALL' && p2HTML !== "") {
-        p2Area.innerHTML = `<p style="font-size:9px; color:#8b0000; margin-bottom:10px;">[ OVERFLOW_LOGS_CONTINUED ]</p>` + p2HTML;
+        p2Area.innerHTML = `<p style="font-size:9px; font-weight:bold; color:#8b0000;">[ OVERFLOW_DATA_LOGS ]</p>` + p2HTML;
         document.getElementById('flipNextBtn').style.display = 'block';
     } else if (mode === 'ALL') {
-        // Kung walang overflow, ipakita ang summary breakdown sa Page 2
-        let summary = `<p style="font-size:10px; margin-bottom:10px;">SYSTEM_SUMMARY:</p>`;
-        for (const [sys, total] of Object.entries(deviceTotals)) {
-            summary += `<div class="summary-row"><span>${sys}</span><b>₱${total.toLocaleString()}</b></div>`;
-        }
-        p2Area.innerHTML = summary;
+        p2Area.innerHTML = `<center style="margin-top:50px; font-size:10px; opacity:0.5;">[ NO_OVERFLOW_DATA ]</center>`;
         document.getElementById('flipNextBtn').style.display = 'block';
     } else {
         document.getElementById('flipNextBtn').style.display = 'none';
     }
 
-    document.getElementById('target-name').innerText = mode;
-    document.getElementById('total-val').innerText = overallTotal.toLocaleString();
-    if(document.getElementById('total-val-p2')) {
-        document.getElementById('total-val-p2').innerText = overallTotal.toLocaleString();
-    }
+    // Grand Total sa Page 2
+    const totalValP2 = document.getElementById('total-val-p2');
+    if (totalValP2) totalValP2.innerText = overallTotal.toLocaleString();
 };
 </script>
 </body>

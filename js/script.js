@@ -1,8 +1,6 @@
-// js/script.js
-// CIA Profiles Main Logic with 4D Realistic Phones
+// js/script.js - CIA PROFILES (same agent retrieval as dashboard)
 // ========================================
 
-// ⭐ IMPORT FROM SAME FOLDER (js/)
 import { db, DEVICE_REGISTRY, INTEL_TERMS } from "./config.js";
 import {
   collection,
@@ -12,13 +10,12 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 console.log("✅ Modules loaded successfully");
-console.log("DB:", db);
-console.log("DEVICE_REGISTRY:", DEVICE_REGISTRY);
 
 // ====== GLOBAL STATE ======
 let deviceData = {};
 let allMissions = [];
-const currentAgent = localStorage.getItem("agent") || localStorage.getItem("cia_agent") || "UNKNOWN_AGENT";
+// ⭐ SAME AS DASHBOARD
+const currentAgent = localStorage.getItem("agent") || localStorage.getItem("cia_agent") || "AGENT_LZ";
 
 console.log("Current Agent:", currentAgent);
 

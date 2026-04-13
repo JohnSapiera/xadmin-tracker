@@ -78,20 +78,30 @@ function renderDevices() {
     return;
   }
 
-  grid.innerHTML = keys
-    .map(
-      (name) => `
-      <div class="phone-wrapper" onclick="activateDevice('${name}', this)">
-        <div class="phone-body">
-          <div class="phone-screen">
-            <div class="typing-text">WELCOME<br>NODE_${name}</div>
-          </div>
+  grid.innerHTML = "";
+  
+  keys.forEach((name, idx) => {
+    const neonNumber = (idx % 6) + 1;
+    const wrapper = document.createElement("div");
+    wrapper.className = "phone-wrapper";
+    wrapper.setAttribute("data-neon", neonNumber);
+    
+    wrapper.innerHTML = `
+      <div class="phone-body">
+        <div class="phone-screen">
+          <div class="typing-text">WELCOME<br>NODE_${name}</div>
         </div>
-        <div class="status-label">[ STANDBY_LINK ]</div>
       </div>
-    `
-    )
-    .join("");
+      <div class="status-label">[ STANDBY_LINK ]</div>
+    `;
+    
+    wrapper.addEventListener("click", (e) => {
+      e.stopPropagation();
+      activateDevice(name, wrapper);
+    });
+    
+    grid.appendChild(wrapper);
+  });
 }
 
 // ====== DEVICE ACTIVATION ======

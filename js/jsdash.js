@@ -31,10 +31,15 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// ====== GET AGENT FROM LOCALSTORAGE ======
 const currentAgent = localStorage.getItem("agent") || localStorage.getItem("cia_agent") || "AGENT_LZ";
+
+console.log("🔐 Current Agent from localStorage:", currentAgent);
+
 let selectedWeaponID = "";
 let agentSignatures = []; 
 let currentMissionData = null;
+let isAgentVerified = false;
 
 // DOM Elements
 const input = document.getElementById('mission-input');
@@ -53,14 +58,87 @@ const clockSpan = document.getElementById('clock');
 const profName = document.getElementById('prof-name');
 const avatarInit = document.getElementById('avatar-init');
 
+// ====== VERIFY AGENT IN DATABASE ======
+async function verifyAgent() {
+    console.log("🔍 Verifying agent in database:", currentAgent);
+    
+    try {
+        // Check if agent exists in database
+        const agentRef = doc(db, "agents", currentAgent);
+        const agentSnap = await getDoc(agentRef);
+        
+        if (agentSnap.exists()) {
+            const agentData = agentSnap.data();
+            console.log("✅ Agent verified:", agentData);
+            isAgentVerified = true;
+            
+            // Get linked signatures
+            agentSignatures = agentData.linkedSignatures || Object.keys(DEVICE_REGISTRY);
+            console.log("📱 Linked signatures:", agentSignatures);
+            
+            SoundFX.success();
+            return true;
+        } else {
+            console.log("❌ Agent not found in database:", currentAgent);
+            SoundFX.error();
+            alert(`AGENT "${currentAgent}" NOT FOUND IN DATABASE.\nPlease check your login.`);
+            return false;
+        }
+    } catch (error) {
+        console.error("❌ Agent verification error:", error);
+        SoundFX.error();
+        return false;
+    }
+}
+
 function init() {
-    SoundFX.success();
+    console.log("🚀 Initializing Dashboard...");
+    
+    // Display agent name from localStorage
     profName.innerText = currentAgent;
     avatarInit.innerText = currentAgent.charAt(0).toUpperCase();
+    
     updateClock();
     setInterval(updateClock, 1000);
     setupTerminalListener();
-    setupEventListeners();
+    
+    // Verify agent first before loading missions
+    verifyAgent().then(verified => {
+        if (verified) {
+            console.log("✅ Agent verified, loading missions...");
+            loadMissions();
+            setupEventListeners();
+        } else {
+            console.log("❌ Agent verification failed");
+            statusLabel.innerHTML = "<span style='color:var(--red)'>AGENT VERIFICATION FAILED</span>";
+        }
+    });
+}
+
+// ====== LOAD MISSIONS FOR VERIFIED AGENT ======
+async function loadMissions() {
+    console.log("📡 Loading missions for agent:", currentAgent);
+    SoundFX.terminalUpdate();
+    
+    try {
+        const q = query(
+            collection(db, "mission_orders"),
+            where("agent", "==", currentAgent)
+        );
+        const snap = await getDocs(q);
+        console.log(`📋 Found ${snap.size} missions`);
+        
+        // Store missions data if needed
+        snap.forEach(doc => {
+            console.log("  - Mission:", doc.data().missionID, "vAgent:", doc.data().vAgentID);
+        });
+        
+        if (snap.size > 0) {
+            SoundFX.success();
+        }
+    } catch (error) {
+        console.error("Error loading missions:", error);
+    }
 }
 
 function updateClock() {
@@ -157,12 +235,14 @@ function renderWeapons() {
 
 async function openModal() {
     if (input.value.length < 4) return;
+    if (!isAgentVerified) {
+        alert("AGENT NOT VERIFIED. Please reload.");
+        return;
+    }
+    
     SoundFX.click();
     modalOverlay.style.display = 'flex';
     document.getElementById('pop-header').innerText = `#${input.value}`;
-    
-    const snap = await getDoc(doc(db, "agents", currentAgent));
-    agentSignatures = snap.exists() ? snap.data().linkedSignatures || [] : Object.keys(DEVICE_REGISTRY);
 
     if (currentMissionData) {
         vAgentInput.value = currentMissionData.vAgentID || "";
@@ -263,27 +343,11 @@ function setupEventListeners() {
         secureField.focus();
     };
     
-    // ⭐ FIXED: Direct assignment for modal submit
     if (modalSubmit) {
         modalSubmit.onclick = submitMission;
         console.log("✅ Modal submit event attached");
-    } else {
-        console.log("❌ Modal submit element not found!");
     }
 }
 
-// ⭐ EMERGENCY FALLBACK: Check if modal button exists after DOM load
-document.addEventListener('DOMContentLoaded', () => {
-    const checkModal = setInterval(() => {
-        const btn = document.getElementById('modal-submit');
-        if (btn) {
-            clearInterval(checkModal);
-            if (!btn.onclick) {
-                btn.onclick = submitMission;
-                console.log("✅ Emergency modal submit attached");
-            }
-        }
-    }, 500);
-});
-
+// Start the app
 init();

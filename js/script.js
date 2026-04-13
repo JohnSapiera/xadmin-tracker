@@ -1,5 +1,5 @@
 // script.js - CIA Profiles Main Logic
-import { db, DEVICE_REGISTRY, INTEL_TERMS } from "config.js";
+import { db, DEVICE_REGISTRY, INTEL_TERMS } from "./config.js";
 import {
   collection,
   query,

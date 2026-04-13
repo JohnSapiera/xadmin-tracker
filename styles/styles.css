@@ -27,37 +27,33 @@ body {
   max-width: 500px;
   margin: 0 auto;
   padding: 20px;
+  padding-bottom: 120px;
 }
 
 /* ====== DEVICE GRID ====== */
 .device-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: 1fr 1fr;
   gap: 20px;
-  width: 100%;
-  max-width: 360px;
-  margin: 30px auto;
+  margin-top: 30px;
 }
 
 .phone-wrapper {
-  width: 100%; 
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  cursor: pointer;
+  text-align: center;
+  transition: 0.4s;
 }
 
 .phone-body {
-  width: 100%; 
-  max-width: 130px;
-  aspect-ratio: 9 / 16;
+  width: 130px;
+  height: 240px;
   background: #050a0c;
-  margin: 0;
-  border-radius: 15px;
+  margin: 0 auto;
+  border-radius: 18px;
   border: 2px solid #1a2a30;
   position: relative;
   filter: grayscale(1) brightness(0.3);
   transition: all 0.5s ease;
-  overflow: hidden;
 }
 
 .phone-wrapper.lights-on .phone-body {
@@ -480,4 +476,4 @@ header p {
   .page {
     padding: 30px 15px;
   }
-                        }
+  }

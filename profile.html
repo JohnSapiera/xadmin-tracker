@@ -116,6 +116,25 @@
         .status-label { font-size: 9px; color: var(--cia-cyan); margin-top: 10px; transition: all 0.3s ease; }
         @keyframes uplink-blink { 0%, 100% { opacity: 1; color: var(--cia-cyan); } 50% { opacity: 0.3; } }
         .uplink-sync { animation: uplink-blink 0.4s infinite; font-weight: bold; }
+		
+		/* Para sa Page 2 Summary */
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    border-bottom: 1px dotted rgba(0,0,0,0.4);
+    padding-bottom: 4px;
+    font-size: 13px;
+}
+.summary-row b {
+    color: #8b0000;
+}
+.grand-total-box {
+    margin-top: auto;
+    border-top: 3px double #000;
+    padding-top: 15px;
+    background: rgba(139, 0, 0, 0.03);
+}
     </style>
 </head>
 <body>
@@ -298,51 +317,55 @@
     };
 
     window.openMemoirs = (mode) => {
-        document.getElementById('memoirsOverlay').style.display = 'flex';
-        flipPage(false);
+    document.getElementById('memoirsOverlay').style.display = 'flex';
+    flipPage(false);
 
-        let filtered = (mode === 'ALL') 
-            ? allMissions 
-            : allMissions.filter(m => (DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem) === mode);
+    let filtered = (mode === 'ALL') 
+        ? allMissions 
+        : allMissions.filter(m => (DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem) === mode);
 
-        const valid = filtered.filter(m => (m.totalExpenses || 0) > 0);
-        valid.sort((a, b) => b.id.localeCompare(a.id));
+    const valid = filtered.filter(m => (m.totalExpenses || 0) > 0);
+    valid.sort((a, b) => b.id.localeCompare(a.id));
 
-        let logsHTML = "";
-        valid.forEach((m, index) => {
-            const identity = m.vAgentID ? `vAgent #${m.vAgentID}` : `AGENT: ${m.agent || 'SYSTEM'}`;
+    let logsHTML = "";
+    let grandTotal = 0;
+    const sysTotals = {}; 
+
+    if (valid.length === 0) {
+        logsHTML = `<center style='margin-top:100px; opacity:0.3;'>[ NO_INTEL_LOGS_FOUND ]</center>`;
+    } else {
+        valid.forEach((m) => {
+            const systemName = DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem;
+            grandTotal += m.totalExpenses;
+            sysTotals[systemName] = (sysTotals[systemName] || 0) + m.totalExpenses;
+
             logsHTML += `
                 <div class="expense-row">
                     <span>
-                        <b style="font-size: 8px; color: #8b0000;">MO# ${m.id.substring(0,10)}</b><br>
-                        ${identity}
+                        <b style="font-size: 8px; color: #8b0000;">ID: ${m.id.substring(0,10).toUpperCase()}</b><br>
+                        vUNIT_${m.vAgentID || 'X'} // ${systemName}
                     </span>
-                    <b style="font-size: 15px;">₱${m.totalExpenses.toLocaleString()}</b>
+                    <b style="font-size: 14px;">₱${m.totalExpenses.toLocaleString()}</b>
                 </div>`;
-            if ((index + 1) % 10 === 0 && (index + 1) < valid.length) {
-                logsHTML += `<div class="audit-separator">--- AUDIT_PAGE_BREAK ---</div>`;
-            }
         });
+    }
+    document.getElementById('active-list').innerHTML = logsHTML;
 
-        document.getElementById('active-list').innerHTML = logsHTML || "<center style='margin-top:50px; opacity:0.3;'>[ NO_RECORDS ]</center>";
+    // PAGE 2: ASSET VALUATION (Dito natin aayusin ang labels)
+    document.getElementById('weapon-system-breakdown').innerHTML = Object.keys(sysTotals).map(sys => `
+        <div class="summary-row">
+            <span>SYS_NODE: ${sys.toUpperCase()}</span>
+            <b>₱${sysTotals[sys].toLocaleString()}</b>
+        </div>
+    `).join('');
 
-        let grandTotal = 0;
-        const sysTotals = {};
-        valid.forEach(m => {
-            const sys = DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem;
-            sysTotals[sys] = (sysTotals[sys] || 0) + m.totalExpenses;
-            grandTotal += m.totalExpenses;
-        });
-
-        document.getElementById('weapon-system-breakdown').innerHTML = Object.keys(sysTotals).map(s => `
-            <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom: 1px dotted #000;">
-                <span>${s.toUpperCase()}:</span>
-                <b>₱${sysTotals[s].toLocaleString()}</b>
-            </div>`).join('');
-
-        document.getElementById('total-val').innerText = grandTotal.toLocaleString();
-        document.getElementById('target-name').innerText = mode;
-    };
+    // Update labels sa HTML para CIA-ready
+    document.querySelector('#p2 h3').innerText = "RESOURCE_ALLOCATION"; 
+    document.querySelector('#p2 p').innerText = "TOTAL_OPERATION_DRAIN:";
+    
+    document.getElementById('total-val').innerText = grandTotal.toLocaleString();
+    document.getElementById('target-name').innerText = mode;
+};
 </script>
 </body>
 </html>

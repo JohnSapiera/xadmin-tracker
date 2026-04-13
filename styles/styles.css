@@ -27,16 +27,16 @@ body {
   max-width: 500px;
   margin: 0 auto;
   padding: 20px;
-  padding-bottom: 120px;
 }
 
 /* ====== DEVICE GRID ====== */
 .device-grid {
   display: grid;
-  grid-template-columns: 1, 1fr; 
-  gap: 20px; 
+  grid-template-columns: repeat(2, 1fr);  
+  gap: 15px; 
   margin-top: 30px; 
-  width: 100%;
+    width: 100%;
+    align-items: start;
 }
 
 .phone-wrapper {
@@ -48,9 +48,10 @@ body {
 
 .phone-body {
   width: 100%;
+  max-width: 130px;
   aspect-ratio: 9 / 16;
   background: #050a0c;
-  margin: 0 auto;
+  margin: 0;
   border-radius: 15px;
   border: 2px solid #1a2a30;
   position: relative;

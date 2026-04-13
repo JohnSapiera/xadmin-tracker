@@ -294,3 +294,24 @@ body {
   position: absolute;
   top: 50%;
   left: 50%;
+}
+
+/* ====== RESPONSIVE ====== */
+@media (max-width: 600px) {
+  .container {
+    padding: 15px;
+  }
+
+  .device-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .book {
+    height: 90vh;
+  }
+
+  .page {
+    padding: 30px 15px;
+  }
+}

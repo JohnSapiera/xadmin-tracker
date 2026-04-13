@@ -7,154 +7,186 @@
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&family=Special+Elite&display=swap" rel="stylesheet">
     <style>
         :root {
-            --cia-bg: #01080b; 
-            --cia-cyan: #00f3ff; 
-            --cia-red: #ff003c;
-            --paper-base: #e8e2d2;
+            --cia-bg: #01080b; --cia-cyan: #00f3ff; --cia-red: #ff003c;
             --font-digital: 'Share Tech Mono', monospace;
             --font-noir: 'Special Elite', cursive;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        
         body { 
-            background: var(--cia-bg); 
-            color: #fff; 
-            font-family: var(--font-digital); 
-            height: 100vh; 
-            overflow-x: hidden;
-            background-image: 
-                radial-gradient(circle at center, #0a1f29 0%, #01080b 100%),
-                url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
+            background: var(--cia-bg); color: #fff; font-family: var(--font-digital); 
+            height: 100vh; overflow-x: hidden;
+            background-image: radial-gradient(circle at center, #0a1f29 0%, #01080b 100%);
         }
 
         .container { max-width: 500px; margin: 0 auto; padding: 20px; padding-bottom: 120px; }
 
-        /* --- HEADER ENHANCEMENT --- */
-        header { border-left: 4px solid var(--cia-cyan); padding-left: 15px; margin-bottom: 30px; }
-        .uplink-dot { display: inline-block; width: 8px; height: 8px; background: var(--cia-cyan); border-radius: 50%; margin-right: 8px; animation: blink 1s infinite; }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
-
-        /* --- HARDWARE DEVICE GRID --- */
+        /* --- DEVICE GRID --- */
         .device-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px; }
-        .phone-wrapper { cursor: pointer; text-align: center; perspective: 1000px; }
-        
+        .phone-wrapper { cursor: pointer; text-align: center; transition: 0.4s; }
         .phone-body {
-            width: 140px; height: 250px; background: #050a0c; margin: 0 auto;
-            border-radius: 20px; border: 2px solid #1a2a30; position: relative;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            overflow: hidden;
-        }
-
-        /* Scanning Line Effect */
-        .phone-body::before {
-            content: ""; position: absolute; top: -100%; left: 0; width: 100%; height: 40%;
-            background: linear-gradient(to bottom, transparent, rgba(0, 243, 255, 0.05), transparent);
-            z-index: 2; transition: 0.5s;
+            width: 130px; height: 240px; background: #050a0c; margin: 0 auto;
+            border-radius: 18px; border: 2px solid #1a2a30; position: relative;
+            filter: grayscale(1) brightness(0.3); transition: all 0.5s ease;
         }
 
         .phone-wrapper.lights-on .phone-body {
-            border-color: var(--cia-cyan);
-            box-shadow: 0 0 40px rgba(0, 243, 255, 0.4);
-            transform: translateY(-10px) scale(1.02);
+            filter: grayscale(0) brightness(1); border-color: var(--cia-cyan);
+            box-shadow: 0 0 40px rgba(0, 243, 255, 0.6);
         }
-
-        .phone-wrapper.lights-on .phone-body::before { animation: scan 2s infinite linear; }
-        @keyframes scan { from { top: -100%; } to { top: 100%; } }
-
         .phone-screen {
-            position: absolute; inset: 8px; background: #000; border-radius: 12px;
+            position: absolute; inset: 5px; background: #000; border-radius: 12px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
+            overflow: hidden;
         }
-        .phone-wrapper.lights-on .phone-screen { background: #fff; border: 2px solid #000; }
+        .phone-wrapper.lights-on .phone-screen { background: #ffffff; }
 
-        /* --- FOLDER SYSTEM --- */
+        .typing-text {
+            display: none; color: #000; font-size: 11px; font-weight: bold;
+            width: 0; overflow: hidden; white-space: nowrap; border-right: 2px solid #000;
+        }
+        .phone-wrapper.lights-on .typing-text {
+            display: block; animation: typing 0.8s steps(15) 0.4s forwards;
+        }
+        @keyframes typing { from { width: 0 } to { width: 90% } }
+
+        /* --- FOLDERS --- */
         .vagent-grid { display: none; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px; }
-        .folder-box { display: flex; flex-direction: column; align-items: center; cursor: pointer; position: relative; }
-        
-        .folder-main { 
-            width: 60px; height: 45px; background: #c5b8a0; border-radius: 0 4px 4px 4px; z-index: 2; 
-            clip-path: polygon(0 0, 40% 0, 45% 15%, 100% 15%, 100% 100%, 0 100%);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3); position: relative;
-        }
-        
-        /* vAgent Folder Stamp */
+        .folder-box { display: flex; flex-direction: column; align-items: center; cursor: pointer; position: relative; padding-top: 15px; }
+        .folder-main { width: 50px; height: 35px; background: var(--cia-cyan); border-radius: 0 4px 4px 4px; z-index: 2; clip-path: polygon(0 0, 40% 0, 50% 15%, 100% 15%, 100% 100%, 0 100%); }
+        .paper-sheet { position: absolute; top: 8px; width: 38px; height: 32px; background: #fff; border: 1px solid #ccc; z-index: 1; transition: 0.3s; }
+        .folder-box:hover .paper-sheet { transform: translateY(-10px); }
+        .file-label { font-size: 8.5px; color: #fff; text-align: center; margin-top: 8px; font-weight: bold; letter-spacing: 1px; }
+
         .folder-box.has-expenses .folder-main::after {
-            content: "AUDITED"; position: absolute; bottom: 5px; right: 5px;
-            font-family: var(--font-noir); font-size: 7px; color: rgba(139, 0, 0, 0.6);
-            border: 1px solid rgba(139, 0, 0, 0.6); transform: rotate(-15deg); padding: 1px;
+            content: "CIA"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg);
+            font-family: var(--font-noir); font-size: 10px; font-weight: bold; color: rgba(0, 0, 0, 0.7);
+            border: 1.5px solid rgba(0, 0, 0, 0.7); padding: 1px 3px; border-radius: 2px;
         }
 
-        .paper-sheet { position: absolute; top: 5px; width: 50px; height: 40px; background: #fff; z-index: 1; transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        .folder-box:hover .paper-sheet { transform: translateY(-12px) rotate(5deg); }
-
-        /* --- DOSSIER PAPER STYLING --- */
-        .page {
-            background-color: var(--paper-base);
-            background-image: url('https://www.transparenttextures.com/patterns/paper-fibers.png');
-            box-shadow: inset 0 0 50px rgba(0,0,0,0.1), 10px 10px 40px rgba(0,0,0,0.6);
+        /* --- OVERLAYS --- */
+        .overlay { display: none; position: fixed; inset: 0; z-index: 4000; background: rgba(0,0,0,0.9); justify-content: center; align-items: center; backdrop-filter: blur(4px); }
+        
+        /* --- CLASSIFIED DOSSIER DESIGN --- */
+        .book { width: 95%; max-width: 400px; height: 80vh; perspective: 2000px; position: relative; z-index: 100; }
+        .page { 
+            width: 100%; height: 100%; position: absolute; transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1); 
+            transform-origin: left; backface-visibility: hidden; background: #e8e2d2; color: #1a1a1a; padding: 40px 25px; 
+            font-family: var(--font-noir); box-shadow: inset 0 0 30px rgba(0,0,0,0.1), 10px 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid #c5b8a0; overflow: hidden; display: flex; flex-direction: column;
         }
-
-        .audit-list::-webkit-scrollbar { width: 4px; }
-        .audit-list::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 10px; }
-
-        .expense-row {
-            border-bottom: 1px dashed rgba(0,0,0,0.15) !important;
-            padding: 12px 0 !important;
+        .page::after {
+            content: "CLASSIFIED"; position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%) rotate(-35deg);
+            font-size: 3.5rem; color: rgba(139, 0, 0, 0.08); border: 4px solid rgba(139, 0, 0, 0.08); padding: 10px; pointer-events: none; z-index: 0;
         }
-
-        .mo-badge {
-            background: #000; color: #fff; padding: 2px 6px; font-size: 8px; border-radius: 2px;
-            display: inline-block; margin-top: 4px; letter-spacing: 1px;
-        }
+        .page.flipped { transform: rotateY(-180deg); }
+        .page-front { z-index: 10; }
+        .page-back { transform: rotateY(180deg); z-index: 5; }
 
         /* --- BUTTONS --- */
-        .btn-master {
-            background: var(--cia-red); color: #fff; border: none; padding: 15px; width: 100%;
-            font-family: var(--font-noir); font-size: 14px; font-weight: bold; cursor: pointer;
-            box-shadow: 0 5px 15px rgba(255, 0, 60, 0.3); transition: 0.3s;
+        .close-btn {
+            position: absolute; top: 10px; right: 15px; background: #8b0000; color: white; border: none;
+            width: 32px; height: 32px; border-radius: 50%; cursor: pointer; z-index: 9999; font-weight: bold;
+            display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(0,0,0,0.4);
         }
-        .btn-master:active { transform: scale(0.98); }
+        .swipe-hint {
+            margin-top: auto; padding-top: 15px; text-align: center; font-size: 11px; font-weight: bold; color: #8b0000; 
+            border-top: 1px dashed #8b0000; cursor: pointer; z-index: 5;
+        }
+        .audit-list { flex-grow: 1; overflow-y: auto; padding-right: 5px; z-index: 2; position: relative; }
+        .expense-row { display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(0,0,0,0.3); padding: 10px 0; font-size: 13px; align-items: center; }
+        .audit-separator { border-top: 2px double #8b0000; margin: 20px 0; text-align: center; font-size: 9px; color: #8b0000; letter-spacing: 2px; }
+        
+        .dossier-paper {
+            width: 88%; max-width: 360px; background: #e8e2d2; color: #1a1a1a; padding: 25px 20px;
+            font-family: var(--font-noir); position: relative; border: 1px solid #c5b8a0;
+            box-shadow: 0 0 40px rgba(0,0,0,0.8);
+        }
 
-        /* Redaction Effect */
-        .redacted { background: #000; color: #000; cursor: help; transition: 0.2s; }
-        .redacted:hover { background: transparent; }
+        .secure-marker { background: #1a1a1a; color: #1a1a1a; padding: 0 5px; border-radius: 2px; cursor: pointer; transition: 0.2s; user-select: all; }
+        .secure-marker:active { background: transparent; }
 
+        .btn-terminate {
+            background: none; border: 2px solid #8b0000; color: #8b0000; padding: 8px 15px;
+            font-family: var(--font-noir); font-weight: bold; cursor: pointer; transition: 0.3s;
+            text-transform: uppercase; transform: rotate(-2deg); margin-top: 15px;
+        }
+        .btn-terminate:hover { background: #8b0000; color: #e8e2d2; }
+
+        .status-label { font-size: 9px; color: var(--cia-cyan); margin-top: 10px; transition: all 0.3s ease; }
+        @keyframes uplink-blink { 0%, 100% { opacity: 1; color: var(--cia-cyan); } 50% { opacity: 0.3; } }
+        .uplink-sync { animation: uplink-blink 0.4s infinite; font-weight: bold; }
+		
+		/* Para sa Page 2 Summary */
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    border-bottom: 1px dotted rgba(0,0,0,0.4);
+    padding-bottom: 4px;
+    font-size: 13px;
+}
+.summary-row b {
+    color: #8b0000;
+}
+.grand-total-box {
+    margin-top: auto;
+    border-top: 3px double #000;
+    padding-top: 15px;
+    background: rgba(139, 0, 0, 0.03);
+}
+
+/* --- BOOK OVERLAY SYSTEM --- */
+        .overlay { display: none; position: fixed; inset: 0; z-index: 5000; background: rgba(0,0,0,0.9); justify-content: center; align-items: center; }
+        .book { width: 90%; max-width: 380px; height: 80vh; position: relative; perspective: 1500px; }
+        
+        .page { 
+            position: absolute; width: 100%; height: 100%; top: 0; left: 0;
+            background: #e8e2d2; color: #1a1a1a; padding: 40px 20px; font-family: var(--font-noir);
+            box-shadow: 5px 5px 20px rgba(0,0,0,0.5); transition: transform 0.6s;
+            transform-origin: left; backface-visibility: hidden; display: flex; flex-direction: column;
+        }
+        .page-front { z-index: 5002; }
+        .page-back { z-index: 5001; transform: rotateY(0deg); display: none; } /* Default hide */
+        
+        .page.flipped { transform: rotateY(-180deg); }
+
+        .audit-list { flex-grow: 1; overflow-y: auto; margin: 10px 0; border-top: 1px solid #000; padding-top: 10px; }
+        .expense-row { display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(0,0,0,0.2); padding: 5px 0; font-size: 11px; }
+        .audit-separator { border-top: 2px double #8b0000; margin: 10px 0; text-align: center; font-size: 9px; color: #8b0000; font-weight: bold; }
+
+        .close-btn { position: absolute; top: 10px; right: 10px; background: #8b0000; color: #fff; border: none; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; z-index: 6000; font-weight: bold; }
+        .swipe-hint { padding: 10px; font-size: 11px; font-weight: bold; color: #8b0000; text-align: right; cursor: pointer; border-top: 1px solid rgba(0,0,0,0.1); }
+		
     </style>
 </head>
 <body>
 
 <div class="container">
     <header>
-        <h2 id="display-agent"><span class="uplink-dot"></span>AUTHENTICATING...</h2>
-        <p style="font-size: 9px; opacity: 0.5; letter-spacing: 2px;">FILE_ACCESS: CLASSIFIED_LEVEL_4</p>
+        <h2 id="display-agent" style="color: var(--cia-cyan); letter-spacing: 2px;">AUTHENTICATING...</h2>
+        <p style="font-size: 9px; opacity: 0.5;">MEMOIRS_PROTOCOL_ACTIVE</p>
     </header>
 
     <div id="deviceSection" class="device-grid"></div>
     <div id="vagentSection" class="vagent-grid"></div>
 
-    <button id="btnBack" onclick="location.reload()" style="display:none; background:none; border:1px solid var(--cia-cyan); color:var(--cia-cyan); padding:12px; width:100%; margin-top:20px; cursor:pointer; font-family:var(--font-digital);">[ << RETURN_TO_SYSTEM_HUB ]</button>
+    <button id="btnBack" onclick="location.reload()" style="display:none; background:none; border:1px solid var(--cia-cyan); color:var(--cia-cyan); padding:10px; width:100%; margin-top:20px; cursor:pointer;">[ EXIT_DEVICE_SYSTEM ]</button>
 
-    <div id="memoirsBtnContainer" style="margin-top: 40px;">
-        <button class="btn-master" onclick="openMemoirs('ALL')">VIEW_MASTER_AUDIT_MEMOIRS</button>
+    <div id="memoirsBtnContainer" style="margin-top: 40px; text-align: center;">
+        <button onclick="openMemoirs('ALL')" style="background:none; border:1px solid var(--cia-red); color:var(--cia-red); padding:12px 25px; cursor:pointer; font-weight:bold;">[ VIEW_MASTER_MEMOIRS ]</button>
     </div>
 </div>
 
-<div id="noirOverlay" class="overlay" style="background: rgba(0,0,0,0.95);">
-    <div class="dossier-paper" style="border-radius: 2px; transform: rotate(-1deg);">
-        <button class="close-btn" onclick="closeNoir()" style="top: -15px; right: -15px; background:#000;">X</button>
-        <div style="border: 2px solid #000; padding: 20px;">
-            <h3 style="text-align: center; border-bottom: 2px solid #000; margin-bottom: 15px; font-family: var(--font-noir);">vAGENT_DOSSIER</h3>
-            <p style="font-size: 11px;"><b>MO#:</b> <span id="n-order" class="redacted">---</span></p>
-            <p style="font-size: 11px;"><b>STATUS:</b> <span style="color: #8b0000; font-weight: bold;">ACTIVE_MONITORING</span></p>
-            
-            <div id="n-content" style="margin-top: 15px; min-height: 100px;"></div>
-            
-            <div style="text-align: right; margin-top: 20px; border-top: 3px double #000; padding-top: 10px;">
-                <p style="font-size: 10px; opacity: 0.7;">TOTAL_FUNDS_ALLOCATED:</p>
-                <h2 id="n-total" style="font-family: var(--font-noir); font-size: 24px;">₱ 0.00</h2>
-            </div>
+<div id="noirOverlay" class="overlay">
+    <div class="dossier-paper">
+        <button class="close-btn" onclick="closeNoir()" style="top: -10px; right: -10px;">X</button>
+        <h3 style="text-align: center; border-bottom: 2px solid #000; margin-bottom: 15px; letter-spacing: 1px;">vAGENT_DOSSIER</h3>
+        <p style="font-size: 11px; margin-bottom: 4px;"><b>MO#:</b> <span id="n-order">---</span></p>
+        <p style="font-size: 11px; margin-bottom: 4px;"><b>vAgent#:</b> <span id="n-vagent" style="background:rgba(0,0,0,0.1); padding: 0 5px;">---</span></p>
+        <div id="n-content" style="margin-top: 15px; border-top: 1px dashed #000; padding-top: 10px;"></div>
+        <div style="text-align: right; margin-top: 20px; border-top: 2px solid #000; padding-top: 8px;">
+            <p style="font-weight: bold; font-size: 18px;">Total: <span id="n-total">₱ 0.00</span></p>
         </div>
     </div>
 </div>
@@ -163,39 +195,30 @@
     <div class="book" id="dossierBook">
         <div id="p1" class="page page-front">
             <button class="close-btn" onclick="closeMemoirs()">X</button>
-            <div style="border: 1px solid rgba(0,0,0,0.1); padding: 10px; height: 100%; display: flex; flex-direction: column;">
-                <h3 style="text-align:center; border-bottom: 2px solid #000; padding-bottom: 5px;">AUDIT_PROTOCOL</h3>
-                <div style="display:flex; justify-content: space-between; font-size: 9px; margin: 10px 0;">
-                    <span>REF_NODE: <b id="target-name">---</b></span>
-                    <span>LEVEL: TOP_SECRET</span>
-                </div>
-                
-                <div id="active-list" class="audit-list"></div>
-                
-                <div class="grand-total-box">
-                    <p style="font-size: 9px; font-weight: bold; color: #8b0000;">ACCUMULATED_EXPENDITURE:</p>
-                    <h1 style="font-size: 28px; letter-spacing: -1px;">₱ <span id="total-val">0.00</span></h1>
-                </div>
-
-                <div id="flipNextBtn" class="swipe-hint" onclick="flipPage(true)" style="display:none;">
-                    PROCEED_TO_SUMMARY_BREAKDOWN >>
-                </div>
+            <h3 style="text-align:center; border-bottom: 2px solid #000; margin-bottom: 10px;">AUDIT_REPORT</h3>
+            <p style="font-size: 9px; margin-bottom: 10px; opacity: 0.6;">NODE: <span id="target-name">---</span></p>
+            
+            <div id="active-list" class="audit-list" style="height: 60%; overflow-y: auto;"></div>
+            
+            <div style="margin-top: auto; border-top: 3px double #000; padding-top: 10px;">
+                <p style="font-size: 10px; font-weight: bold; color: #8b0000;">TOTAL_EXPENDITURE:</p>
+                <h1 style="font-size: 26px; color: #000;">₱ <span id="total-val">0.00</span></h1>
             </div>
+
+            <div id="flipNextBtn" class="swipe-hint" onclick="flipPage(true)" style="display:none;">[ VIEW_SUMMARY ] >></div>
         </div>
 
         <div id="p2" class="page page-back">
             <button class="close-btn" onclick="closeMemoirs()">X</button>
-            <div style="border: 1px solid rgba(0,0,0,0.1); padding: 10px; height: 100%; display: flex; flex-direction: column;">
-                <h3 style="text-align:center; border-bottom: 2px solid #000; padding-bottom: 5px;">DATA_CONTINUATION</h3>
-                
-                <div id="weapon-system-breakdown" class="audit-list"></div>
-                
-                <div class="grand-total-box">
-                    <p style="font-size: 9px; font-weight: bold;">TOTAL_AUDIT_VALUE:</p>
-                    <h1 style="font-size: 28px;">₱ <span id="total-val-p2">0.00</span></h1>
-                </div>
-                <div class="swipe-hint" onclick="flipPage(false)" style="text-align: left;"><< RETURN_TO_LOGS</div>
+            <h3 style="text-align:center; border-bottom: 2px solid #000; margin-bottom: 20px;">SUMMARY_CONTINUATION</h3>
+            
+            <div id="weapon-system-breakdown" class="audit-list"></div>
+            
+            <div style="margin-top: auto; border-top: 3px double #000; padding-top: 10px;">
+                <p style="font-size: 10px; font-weight: bold;">GRAND_TOTAL_EXPENSES:</p>
+                <h1 style="font-size: 26px; color: #000;">₱ <span id="total-val-p2">0.00</span></h1>
             </div>
+            <div class="swipe-hint" onclick="flipPage(false)" style="text-align: left;"><< BACK</div>
         </div>
     </div>
 </div>

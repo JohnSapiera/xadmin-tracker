@@ -263,3 +263,76 @@ function setupEventListeners() {
 }
 
 init();
+
+// ====== EMERGENCY FIX FOR MODAL BUTTON ======
+document.addEventListener('DOMContentLoaded', () => {
+    console.log("🔧 DOM fully loaded - checking modal button");
+    
+    const checkModalButton = setInterval(() => {
+        const modalBtn = document.getElementById('modal-submit');
+        if (modalBtn) {
+            clearInterval(checkModalButton);
+            console.log("✅ Modal submit button found");
+            
+            // Force remove any existing listeners and add new one
+            const newModalBtn = modalBtn.cloneNode(true);
+            modalBtn.parentNode.replaceChild(newModalBtn, modalBtn);
+            
+            newModalBtn.onclick = async () => {
+                console.log("🔘 Modal button clicked (emergency handler)");
+                
+                const vID = document.getElementById('v-agent-input').value.trim();
+                const selectedWeapon = document.querySelector('.weapon-btn.selected');
+                const weaponID = selectedWeapon ? selectedWeapon.getAttribute('data-weapon-id') || selectedWeapon.innerText.split('>')[1]?.trim() : null;
+                
+                if (!vID) {
+                    SoundFX.error();
+                    alert("INCOMPLETE DATA: Missing vAgent ID");
+                    return;
+                }
+                
+                if (!selectedWeapon) {
+                    SoundFX.error();
+                    alert("INCOMPLATE DATA: No weapon selected");
+                    return;
+                }
+                
+                // Call the original submitMission if available
+                if (typeof submitMission === 'function') {
+                    await submitMission();
+                } else {
+                    // Fallback submit
+                    console.log("⚠️ Using fallback submit");
+                    const missionID = document.getElementById('mission-input').value;
+                    if (!missionID) {
+                        alert("No mission ID");
+                        return;
+                    }
+                    
+                    try {
+                        await setDoc(doc(db, "mission_orders", missionID), {
+                            missionID: missionID,
+                            agent: currentAgent,
+                            vAgentID: vID,
+                            weaponSystem: selectedWeapon.getAttribute('data-weapon-id') || selectedWeapon.innerText.split('>')[1]?.trim(),
+                            SecureLine: document.getElementById('secure-input-field').value.trim(),
+                            status: "DEPLOYED",
+                            timestamp: serverTimestamp()
+                        }, { merge: true });
+                        
+                        SoundFX.success();
+                        alert("MISSION SAVED SUCCESSFULLY");
+                        document.getElementById('modal-overlay').style.display = 'none';
+                        document.getElementById('mission-input').value = "";
+                        resetUI();
+                    } catch(e) {
+                        console.error(e);
+                        alert("ERROR SAVING MISSION");
+                    }
+                }
+            };
+            
+            console.log("✅ Emergency handler attached to modal button");
+        }
+    }, 500);
+});

@@ -337,3 +337,103 @@ window.openMemoirs = (mode) => {
 
   console.log("✅ Memoirs rendered successfully");
 };
+
+/* ====== 4D REALISTIC PHONE STYLES ====== */
+
+.phone-wrapper {
+  perspective: 1200px !important;
+  transform-style: preserve-3d !important;
+}
+
+.phone-body {
+  width: 120px !important;
+  height: 240px !important;
+  background: linear-gradient(145deg, #1a1f28, #0a0e15) !important;
+  border-radius: 32px !important;
+  position: relative !important;
+  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1) !important;
+  cursor: pointer !important;
+}
+
+/* NEON COLORS */
+.phone-wrapper[data-neon="1"] .phone-body { box-shadow: 0 0 15px #00f3ff, inset 0 0 8px rgba(0,243,255,0.5) !important; }
+.phone-wrapper[data-neon="2"] .phone-body { box-shadow: 0 0 15px #ff00ff, inset 0 0 8px rgba(255,0,255,0.5) !important; }
+.phone-wrapper[data-neon="3"] .phone-body { box-shadow: 0 0 15px #00ff88, inset 0 0 8px rgba(0,255,136,0.5) !important; }
+.phone-wrapper[data-neon="4"] .phone-body { box-shadow: 0 0 15px #ff6600, inset 0 0 8px rgba(255,102,0,0.5) !important; }
+.phone-wrapper[data-neon="5"] .phone-body { box-shadow: 0 0 15px #ff0066, inset 0 0 8px rgba(255,0,102,0.5) !important; }
+.phone-wrapper[data-neon="6"] .phone-body { box-shadow: 0 0 15px #ffff00, inset 0 0 8px rgba(255,255,0,0.5) !important; }
+
+/* HOVER EFFECTS */
+.phone-wrapper.left-phone .phone-body:hover {
+  transform: rotateY(-15deg) rotateX(5deg) translateX(15px) translateZ(20px) !important;
+}
+
+.phone-wrapper.right-phone .phone-body:hover {
+  transform: rotateY(15deg) rotateX(5deg) translateX(-15px) translateZ(20px) !important;
+}
+
+.phone-wrapper.center-phone .phone-body:hover {
+  transform: rotateX(5deg) translateZ(30px) !important;
+}
+
+/* 4K BOOT ANIMATION */
+.phone-wrapper.lights-on .phone-body {
+  animation: phoneBoot 0.8s ease-out forwards !important;
+}
+
+@keyframes phoneBoot {
+  0% { transform: scale(0.95); filter: brightness(0.3) blur(2px); }
+  20% { transform: scale(1.02); filter: brightness(1.5); box-shadow: 0 0 30px cyan; }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+/* SIDE BUTTONS */
+.phone-body .power-btn {
+  position: absolute; right: -3px; top: 80px;
+  width: 5px; height: 35px;
+  background: linear-gradient(90deg, #4a5058, #2a2f35);
+  border-radius: 3px;
+}
+
+.phone-body .volume-up, .phone-body .volume-down {
+  position: absolute; left: -3px;
+  width: 5px;
+  background: linear-gradient(90deg, #4a5058, #2a2f35);
+  border-radius: 3px;
+}
+.phone-body .volume-up { top: 60px; height: 28px; }
+.phone-body .volume-down { top: 98px; height: 28px; }
+
+/* DYNAMIC ISLAND */
+.phone-body .dynamic-island {
+  position: absolute; top: 12px; left: 50%;
+  transform: translateX(-50%);
+  width: 90px; height: 26px;
+  background: linear-gradient(145deg, #1a1a1a, #0a0a0a);
+  border-radius: 20px;
+  z-index: 10;
+}
+
+.phone-body .dynamic-island::before {
+  content: ''; position: absolute; top: 6px; right: 10px;
+  width: 8px; height: 8px;
+  background: radial-gradient(circle, #1a3a5c, #0a1a2c);
+  border-radius: 50%;
+}
+
+/* PHONE SCREEN */
+.phone-screen {
+  position: absolute; top: 48px; left: 6px; right: 6px; bottom: 6px;
+  background: #000;
+  border-radius: 24px;
+  overflow: hidden;
+}
+
+/* GLASS REFLECTION */
+.phone-body::before {
+  content: ''; position: absolute; top: 5%; left: 5%;
+  width: 90%; height: 20%;
+  background: radial-gradient(ellipse at top, rgba(255,255,255,0.15), transparent);
+  border-radius: 20px;
+  pointer-events: none;
+    }

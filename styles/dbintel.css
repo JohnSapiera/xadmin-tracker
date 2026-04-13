@@ -310,3 +310,112 @@ main {
     background: var(--cyan-dim); 
     border-top: 2px solid var(--cyan); 
 }
+
+/* ===== HEADER STYLES ===== */
+header { 
+    padding: 15px 20px; 
+    background: #000; 
+    border-bottom: 2px solid var(--cyan); 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    z-index: 10; 
+}
+
+header span { 
+    font-weight: 700; 
+    color: #fff; 
+    letter-spacing: 2px; 
+}
+
+/* ===== STATUS BAR ===== */
+.status-bar { 
+    font-size: 11px; 
+    padding: 8px 20px; 
+    background: rgba(0,243,255,0.05); 
+    border-bottom: 1px solid var(--border); 
+    display: flex; 
+    justify-content: space-between; 
+    color: var(--cyan); 
+    font-family: var(--font-mono); 
+}
+
+/* ===== PROFILE MINI ===== */
+.profile-mini { 
+    background: #051014; 
+    border: 1px solid var(--border); 
+    padding: 12px; 
+    display: flex; 
+    align-items: center; 
+    gap: 15px; 
+}
+
+.avatar { 
+    width: 40px; 
+    height: 40px; 
+    background: var(--cyan-dim); 
+    border: 1px solid var(--cyan); 
+    border-radius: 50%; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    color: var(--cyan); 
+    font-weight: bold; 
+}
+
+.profile-info div:first-child { 
+    color: var(--cyan); 
+    font-weight: 700; 
+}
+
+.profile-info div:last-child { 
+    color: #5c7882; 
+    font-size: 10px; 
+}
+
+/* ===== BOTTOM NAVIGATION ===== */
+.bottom-nav { 
+    position: fixed; 
+    bottom: 0; 
+    width: 100%; 
+    height: 65px; 
+    background: #000; 
+    border-top: 1px solid var(--border); 
+    display: grid; 
+    grid-template-columns: 1fr 1fr 1fr; 
+    z-index: 100;
+}
+
+.nav-item { 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center; 
+    color: #5c7882; 
+    text-decoration: none; 
+    font-size: 10px; 
+    font-weight: 700; 
+}
+
+.nav-item.active { 
+    color: var(--cyan); 
+    background: var(--cyan-dim); 
+    border-top: 2px solid var(--cyan); 
+}
+
+/* ===== CLOCK ANIMATION ===== */
+#clock {
+    font-family: var(--font-mono);
+    color: var(--cyan);
+}
+
+/* ===== UPLINK STABLE BLINK ===== */
+.status-bar div:last-child {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.5; }
+    50% { opacity: 1; }
+    100% { opacity: 0.5; }
+}

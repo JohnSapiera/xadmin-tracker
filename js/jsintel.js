@@ -1,4 +1,4 @@
-// js/jsintel.js - CORE INTEL
+// js/jsintel.js - CORE INTEL with Sounds
 
 import SoundFX from './sound.js';
 import { DEVICE_REGISTRY } from '../config.js';
@@ -30,10 +30,12 @@ const currentAgent = localStorage.getItem("agent") || localStorage.getItem("cia_
 
 function establishSession() {
     if (currentAgent) {
+        SoundFX.success(); // Session established sound
         authStatus.innerText = `AGENT: ${currentAgent}`;
         vAgentInput.disabled = false;
         scanStatus.innerText = "INPUT TARGET vAGENT# FOR VERIFICATION";
     } else {
+        SoundFX.error(); // Unauthorized sound
         authStatus.innerHTML = `<span style="color:var(--red)">[ UNAUTHORIZED ]</span>`;
         scanStatus.innerHTML = "ACCESS DENIED: REDIRECTING TO DASHBOARD...";
         setTimeout(() => location.href = "dashboard.html", 3000);
@@ -42,6 +44,7 @@ function establishSession() {
 
 async function addLog(msg, color) {
     try {
+        SoundFX.terminalUpdate(); // Terminal update sound
         await addDoc(collection(db, "terminal_logs"), {
             agent: currentAgent, message: msg, color: color, timestamp: serverTimestamp()
         });
@@ -57,6 +60,15 @@ function resetUI() {
     expenseInput.value = "";
 }
 
+// Keypad sounds for vAgent input
+vAgentInput.addEventListener('keypress', (e) => {
+    if (e.key >= '0' && e.key <= '9') {
+        SoundFX.keypadTone(e.key);
+    } else if (e.key >= 'a' && e.key <= 'z') {
+        SoundFX.beep(700, 0.05, 0.1); // Letter typing sound
+    }
+});
+
 let typingTimer;
 vAgentInput.addEventListener('input', () => {
     clearTimeout(typingTimer);
@@ -71,6 +83,7 @@ vAgentInput.addEventListener('input', () => {
 });
 
 async function performHierarchySearch(vInput) {
+    SoundFX.terminalUpdate(); // Scanning sound
     try {
         const qMatch = query(collection(db, "mission_orders"), where("vAgentID", "==", vInput), where("agent", "==", currentAgent));
         const snapMatch = await getDocs(qMatch);
@@ -79,15 +92,19 @@ async function performHierarchySearch(vInput) {
             const qGlobal = query(collection(db, "mission_orders"), where("vAgentID", "==", vInput));
             const snapGlobal = await getDocs(qGlobal);
             if (!snapGlobal.empty) {
+                SoundFX.error(); // Access denied sound
                 scanStatus.innerHTML = `<span style="color:var(--red)">[ACCESS DENIED] UNAUTHORIZED TARGET DETECTED</span>`;
                 addLog(`SECURITY ALERT: ${currentAgent} ACCESSED FOREIGN TARGET ${vInput}`, 'var(--red)');
             } else {
+                SoundFX.beep(400, 0.3, 0.2); // Not found sound
                 scanStatus.innerHTML = `<span style="color:var(--yellow)">[ERROR] vAGENT# ${vInput} NOT FOUND</span>`;
             }
             return;
         }
 
+        SoundFX.success(); // Match found sound
         scanStatus.innerHTML = `<span style="color:var(--green)">[IDENTITY MATCH] RETRIEVING WEAPON SYSTEM...</span>`;
+        
         snapMatch.forEach(doc => {
             const data = doc.data();
             const btn = document.createElement('button');
@@ -97,43 +114,59 @@ async function performHierarchySearch(vInput) {
                 <span style="font-weight:700">> ${deviceName}</span>
                 <span style="font-size:10px; color:#5c7882; align-self:flex-end">MISSION_REF: #${data.missionID}</span>`;
             btn.onclick = () => {
+                SoundFX.click(); // Button click sound
                 document.querySelectorAll('.dev-btn').forEach(x => x.classList.remove('active'));
                 btn.classList.add('active');
                 selectedMissionDocId = data.missionID;
                 expenseModule.style.opacity = "1";
                 expenseModule.style.pointerEvents = "auto";
                 submitBtn.classList.add('ready');
+                SoundFX.folderOpen(); // Weapon system selected sound
             };
             deviceList.appendChild(btn);
         });
     } catch (e) {
+        SoundFX.error(); // Error sound
         scanStatus.innerHTML = `<span style="color:var(--red)">[FAILURE] SYSTEM_ACCESS_TIMED_OUT</span>`;
     }
 }
 
 submitBtn.onclick = async () => {
+    SoundFX.click(); // Button click sound
+    
     const amount = parseFloat(expenseInput.value);
     if (!selectedMissionDocId || isNaN(amount) || amount <= 0) {
+        SoundFX.error(); // Invalid input sound
         alert("CRITICAL ERROR: DATA MISMATCH OR INVALID AMOUNT.");
         return;
     }
+    
     submitBtn.innerText = "INJECTING...";
     submitBtn.disabled = true;
+    
     try {
+        SoundFX.terminalUpdate(); // Injection sound
         const ref = doc(db, "mission_orders", selectedMissionDocId);
         await addLog(`OVERRIDE: ₱${amount.toFixed(2)} INJECTED TO #${selectedMissionDocId}`, 'var(--yellow)');
         await updateDoc(ref, {
             expensesBreakdown: arrayUnion({ amount: amount, timestamp: new Date().toISOString(), injectedBy: currentAgent }),
             totalExpenses: increment(amount)
         });
+        
+        SoundFX.success(); // Success sound
         alert("DATABASE OVERRIDDEN SUCCESSFULLY.");
         location.reload();
     } catch (e) {
+        SoundFX.error(); // Error sound
         alert("CRITICAL ERROR: INJECTION FAILED");
         submitBtn.innerText = "EXECUTE OVERRIDE";
         submitBtn.disabled = false;
     }
 };
 
-setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB'); }, 1000);
+// Clock update
+setInterval(() => { 
+    document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB'); 
+}, 1000);
+
 establishSession();

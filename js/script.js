@@ -1,4 +1,5 @@
-// script.js - CIA Profiles Main Logic
+// js/script.js - CIA Profiles Main Logic
+// CORRECT IMPORT PATH - from same folder (js/)
 import { db, DEVICE_REGISTRY, INTEL_TERMS } from "./config.js";
 import {
   collection,

@@ -6,13 +6,11 @@
   --cia-red: #ff003c;
   --font-digital: 'Share Tech Mono', monospace;
   --font-noir: 'Special Elite', cursive;
-}
   --bg: #02080a;
   --cyan: #00f3ff;
   --cyan-dim: rgba(0, 243, 255, 0.1);
   --border: rgba(0, 243, 255, 0.2);
 }
-
 * {
   box-sizing: border-box;
   margin: 0;

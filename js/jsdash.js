@@ -54,7 +54,7 @@ const profName = document.getElementById('prof-name');
 const avatarInit = document.getElementById('avatar-init');
 
 function init() {
-    SoundFX.success(); // Dashboard initialized sound
+    SoundFX.success();
     profName.innerText = currentAgent;
     avatarInit.innerText = currentAgent.charAt(0).toUpperCase();
     updateClock();
@@ -80,7 +80,7 @@ function setupTerminalListener() {
 
 async function addLog(msg, color) {
     try {
-        SoundFX.terminalUpdate(); // Terminal update sound
+        SoundFX.terminalUpdate();
         await addDoc(collection(db, "terminal_logs"), { agent: currentAgent, message: msg, color: color, timestamp: serverTimestamp() });
     } catch(e) { console.error("Log error:", e); }
 }
@@ -98,7 +98,7 @@ async function searchMission() {
     const val = input.value.trim();
     if (val.length < 4) { resetUI(); return; }
     
-    SoundFX.terminalUpdate(); // Scanning sound
+    SoundFX.terminalUpdate();
     statusLabel.innerHTML = "SCANNING DATABASE...";
     const qM = query(collection(db, "mission_orders"), where("missionID", "==", val));
     const snapM = await getDocs(qM);
@@ -107,14 +107,14 @@ async function searchMission() {
         currentMissionData = snapM.docs[0].data();
         const owner = currentMissionData.agent;
         if (owner === currentAgent) {
-            SoundFX.success(); // Your mission sound
+            SoundFX.success();
             actionBtn.textContent = "RETRIEVE";
             actionBtn.className = "btn btn-retrieve";
             actionBtn.style.pointerEvents = "auto";
             reserveBtn.classList.remove('active');
             statusLabel.innerHTML = `<span class="status-deployed">STATUS: YOUR MISSION</span>`;
         } else {
-            SoundFX.error(); // Access denied sound
+            SoundFX.error();
             statusLabel.innerHTML = `<span style="color:var(--red);">ALREADY DEPLOYED BY ${owner}</span>`;
             actionBtn.textContent = "LOCKED";
             actionBtn.className = "btn btn-locked";
@@ -123,7 +123,7 @@ async function searchMission() {
             addLog(`RESTRICTED: ${currentAgent} SCANNED ${owner}'S MISSION`, 'var(--red)');
         }
     } else {
-        SoundFX.beep(600, 0.2, 0.2); // Mission available sound
+        SoundFX.beep(600, 0.2, 0.2);
         currentMissionData = null;
         actionBtn.textContent = "SAVE";
         actionBtn.className = "btn btn-save";
@@ -144,8 +144,9 @@ function renderWeapons() {
         const b = document.createElement('button');
         b.className = "weapon-btn" + (sig === selectedWeaponID ? " selected" : "");
         b.innerText = `> ${DEVICE_REGISTRY[sig] || sig}`;
+        b.setAttribute('data-weapon-id', sig);
         b.onclick = () => {
-            SoundFX.click(); // Weapon select sound
+            SoundFX.click();
             document.querySelectorAll('.weapon-btn').forEach(x => x.classList.remove('selected'));
             b.classList.add('selected');
             selectedWeaponID = sig;
@@ -156,7 +157,7 @@ function renderWeapons() {
 
 async function openModal() {
     if (input.value.length < 4) return;
-    SoundFX.click(); // Modal open sound
+    SoundFX.click();
     modalOverlay.style.display = 'flex';
     document.getElementById('pop-header').innerText = `#${input.value}`;
     
@@ -184,26 +185,30 @@ async function openModal() {
 }
 
 function closeModal() {
-    SoundFX.click(); // Close sound
+    SoundFX.click();
     modalOverlay.style.display = 'none';
 }
 
 async function submitMission() {
-    SoundFX.click(); // Submit button sound
+    console.log("🔘 submitMission called");
+    SoundFX.click();
     
     const vID = vAgentInput.value.trim();
     const sLine = secureField.value.trim();
+    
     if (!vID || !selectedWeaponID) {
-        SoundFX.error(); // Incomplete data sound
-        return alert("INCOMPLETE DATA");
+        SoundFX.error();
+        alert("INCOMPLETE DATA");
+        return;
     }
     if (sLine !== "" && !sLine.startsWith("09")) {
-        SoundFX.error(); // Invalid phone sound
-        return alert("INVALID PHONE");
+        SoundFX.error();
+        alert("INVALID PHONE");
+        return;
     }
 
     try {
-        SoundFX.terminalUpdate(); // Saving mission sound
+        SoundFX.terminalUpdate();
         await setDoc(doc(db, "mission_orders", input.value), {
             missionID: input.value,
             agent: currentAgent,
@@ -214,35 +219,33 @@ async function submitMission() {
             timestamp: serverTimestamp()
         }, { merge: true });
         
-        SoundFX.success(); // Mission saved sound
+        SoundFX.success();
         addLog(`MISSION #${input.value} UPDATED BY ${currentAgent}`, 'var(--green)');
         closeModal();
         input.value = "";
         resetUI();
     } catch(e) { 
-        SoundFX.error(); // Error sound
+        SoundFX.error();
         console.error(e); 
         alert("ERROR SUBMITTING MISSION"); 
     }
 }
 
-// Keypad sounds for mission input
+// Keypad sounds
 input.addEventListener('keypress', (e) => {
     if (e.key >= '0' && e.key <= '9') {
         SoundFX.keypadTone(e.key);
     }
 });
 
-// Keypad sounds for vAgent input in modal
 vAgentInput.addEventListener('keypress', (e) => {
     if (e.key >= '0' && e.key <= '9') {
         SoundFX.keypadTone(e.key);
     } else if (e.key >= 'a' && e.key <= 'z') {
-        SoundFX.beep(700, 0.05, 0.1); // Letter typing sound
+        SoundFX.beep(700, 0.05, 0.1);
     }
 });
 
-// Keypad sounds for secure field
 secureField.addEventListener('keypress', (e) => {
     if (e.key >= '0' && e.key <= '9') {
         SoundFX.keypadTone(e.key);
@@ -252,87 +255,35 @@ secureField.addEventListener('keypress', (e) => {
 function setupEventListeners() {
     input.addEventListener('input', searchMission);
     actionBtn.onclick = openModal;
-    modalSubmit.onclick = submitMission;
     modalClose.onclick = closeModal;
     secureBtn.onclick = () => {
-        SoundFX.click(); // Add secure line sound
+        SoundFX.click();
         secureBtn.style.display = 'none';
         secureField.classList.add('show');
         secureField.focus();
     };
+    
+    // ⭐ FIXED: Direct assignment for modal submit
+    if (modalSubmit) {
+        modalSubmit.onclick = submitMission;
+        console.log("✅ Modal submit event attached");
+    } else {
+        console.log("❌ Modal submit element not found!");
+    }
 }
 
-init();
-
-// ====== EMERGENCY FIX FOR MODAL BUTTON ======
+// ⭐ EMERGENCY FALLBACK: Check if modal button exists after DOM load
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("🔧 DOM fully loaded - checking modal button");
-    
-    const checkModalButton = setInterval(() => {
-        const modalBtn = document.getElementById('modal-submit');
-        if (modalBtn) {
-            clearInterval(checkModalButton);
-            console.log("✅ Modal submit button found");
-            
-            // Force remove any existing listeners and add new one
-            const newModalBtn = modalBtn.cloneNode(true);
-            modalBtn.parentNode.replaceChild(newModalBtn, modalBtn);
-            
-            newModalBtn.onclick = async () => {
-                console.log("🔘 Modal button clicked (emergency handler)");
-                
-                const vID = document.getElementById('v-agent-input').value.trim();
-                const selectedWeapon = document.querySelector('.weapon-btn.selected');
-                const weaponID = selectedWeapon ? selectedWeapon.getAttribute('data-weapon-id') || selectedWeapon.innerText.split('>')[1]?.trim() : null;
-                
-                if (!vID) {
-                    SoundFX.error();
-                    alert("INCOMPLETE DATA: Missing vAgent ID");
-                    return;
-                }
-                
-                if (!selectedWeapon) {
-                    SoundFX.error();
-                    alert("INCOMPLATE DATA: No weapon selected");
-                    return;
-                }
-                
-                // Call the original submitMission if available
-                if (typeof submitMission === 'function') {
-                    await submitMission();
-                } else {
-                    // Fallback submit
-                    console.log("⚠️ Using fallback submit");
-                    const missionID = document.getElementById('mission-input').value;
-                    if (!missionID) {
-                        alert("No mission ID");
-                        return;
-                    }
-                    
-                    try {
-                        await setDoc(doc(db, "mission_orders", missionID), {
-                            missionID: missionID,
-                            agent: currentAgent,
-                            vAgentID: vID,
-                            weaponSystem: selectedWeapon.getAttribute('data-weapon-id') || selectedWeapon.innerText.split('>')[1]?.trim(),
-                            SecureLine: document.getElementById('secure-input-field').value.trim(),
-                            status: "DEPLOYED",
-                            timestamp: serverTimestamp()
-                        }, { merge: true });
-                        
-                        SoundFX.success();
-                        alert("MISSION SAVED SUCCESSFULLY");
-                        document.getElementById('modal-overlay').style.display = 'none';
-                        document.getElementById('mission-input').value = "";
-                        resetUI();
-                    } catch(e) {
-                        console.error(e);
-                        alert("ERROR SAVING MISSION");
-                    }
-                }
-            };
-            
-            console.log("✅ Emergency handler attached to modal button");
+    const checkModal = setInterval(() => {
+        const btn = document.getElementById('modal-submit');
+        if (btn) {
+            clearInterval(checkModal);
+            if (!btn.onclick) {
+                btn.onclick = submitMission;
+                console.log("✅ Emergency modal submit attached");
+            }
         }
     }, 500);
 });
+
+init();

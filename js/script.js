@@ -1,4 +1,4 @@
-// js/script.js - CIA PROFILES (same agent retrieval as dashboard)
+// js/script.js - CIA Profiles Main Logic (Original Working)
 // ========================================
 
 import { db, DEVICE_REGISTRY, INTEL_TERMS } from "./config.js";
@@ -14,8 +14,7 @@ console.log("✅ Modules loaded successfully");
 // ====== GLOBAL STATE ======
 let deviceData = {};
 let allMissions = [];
-// ⭐ SAME AS DASHBOARD
-const currentAgent = localStorage.getItem("agent") || localStorage.getItem("cia_agent") || "AGENT_LZ";
+const currentAgent = localStorage.getItem("cia_agent") || "UNKNOWN_AGENT";
 
 console.log("Current Agent:", currentAgent);
 
@@ -66,23 +65,7 @@ async function loadMissionData() {
   }
 }
 
-// ====== GET NEON NUMBER ======
-function getNeonNumber(index) {
-  return (index % 6) + 1;
-}
-
-// ====== ASSIGN PHONE POSITION ======
-function assignPhonePosition(wrapper, index, total) {
-  if (index === 0) {
-    wrapper.classList.add('left-phone');
-  } else if (index === total - 1) {
-    wrapper.classList.add('right-phone');
-  } else {
-    wrapper.classList.add('center-phone');
-  }
-}
-
-// ====== DEVICE RENDERING (WITH 4D REALISTIC PHONES) ======
+// ====== DEVICE RENDERING ======
 function renderDevices() {
   const grid = document.getElementById("deviceSection");
   if (!grid) return;
@@ -95,49 +78,26 @@ function renderDevices() {
     return;
   }
 
-  grid.innerHTML = "";
-  
-  keys.forEach((name, idx) => {
-    const neonNumber = getNeonNumber(idx);
-    const wrapper = document.createElement("div");
-    wrapper.className = "phone-wrapper";
-    wrapper.setAttribute("data-neon", neonNumber);
-    assignPhonePosition(wrapper, idx, keys.length);
-    
-    wrapper.innerHTML = `
-      <div class="phone-body">
-        <div class="power-btn"></div>
-        <div class="volume-up"></div>
-        <div class="volume-down"></div>
-        <div class="dynamic-island"></div>
-        <div class="phone-screen">
-          <div class="typing-text" align="center">WELCOME<br>NODE_${name}</div>
+  grid.innerHTML = keys
+    .map(
+      (name) => `
+      <div class="phone-wrapper" onclick="activateDevice('${name}', this)">
+        <div class="phone-body">
+          <div class="phone-screen">
+            <div class="typing-text">WELCOME<br>NODE_${name}</div>
+          </div>
         </div>
+        <div class="status-label">[ STANDBY_LINK ]</div>
       </div>
-      <div class="status-label">[ STANDBY_LINK ]</div>
-    `;
-    
-    wrapper.addEventListener("click", (e) => {
-      e.stopPropagation();
-      activateDevice(name, wrapper);
-    });
-    
-    grid.appendChild(wrapper);
-  });
+    `
+    )
+    .join("");
 }
 
 // ====== DEVICE ACTIVATION ======
-function activateDevice(name, element) {
+window.activateDevice = (name, element) => {
   console.log("🎯 Activating device:", name);
-  
-  element.classList.remove("lights-on");
-  void element.offsetWidth;
   element.classList.add("lights-on");
-  
-  if ("vibrate" in navigator) {
-    navigator.vibrate(50);
-  }
-  
   const statusLabel = element.querySelector(".status-label");
   statusLabel.innerHTML = "[ UPLINK_SYNC_DATA ]";
   statusLabel.classList.add("uplink-sync");
@@ -170,7 +130,7 @@ function activateDevice(name, element) {
         .join("") +
       `<div class="folder-box" style="opacity:0.5;"><div class="folder-main" style="background:#999;"></div><div class="file-label">LOCKED</div></div>`;
   }, 1800);
-}
+};
 
 // ====== BACK BUTTON ======
 const btnBack = document.getElementById("btnBack");
@@ -194,7 +154,9 @@ window.openNoirModal = (docID) => {
   const overlay = document.getElementById("noirOverlay");
   overlay.style.display = "flex";
 
-  document.getElementById("n-order").innerText = docID.substring(0, 12).toUpperCase();
+  document.getElementById("n-order").innerText = docID
+    .substring(0, 12)
+    .toUpperCase();
   document.getElementById("n-vagent").innerText = data.vAgentID || "N/A";
 
   let expHTML = "";
@@ -202,36 +164,49 @@ window.openNoirModal = (docID) => {
     const sorted = data.expensesBreakdown.sort(
       (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
     );
-    expHTML = sorted.map((e) => {
-      const d = e.timestamp ? new Date(e.timestamp) : new Date();
-      const displayDate = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-      return `
+    expHTML = sorted
+      .map((e) => {
+        const d = e.timestamp ? new Date(e.timestamp) : new Date();
+        const displayDate = d.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        });
+        const intelDesc = e.description || "FIELD_OPERATION";
+        return `
         <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:6px; border-bottom: 1px dotted rgba(0,0,0,0.3); padding-bottom: 2px;">
-          <span><span style="opacity:0.6;">${displayDate}</span> — ${e.description || "FIELD_OPERATION"}</span>
+          <span><span style="opacity:0.6;">${displayDate}</span> — ${intelDesc}</span>
           <b>₱${(e.amount || 0).toLocaleString()}</b>
         </div>`;
-    }).join("");
+      })
+      .join("");
   } else {
-    expHTML = "<p style='font-size:10px; opacity:0.5; text-align:center;'>[ NO_OPERATIONAL_LOGS ]</p>";
+    expHTML =
+      "<p style='font-size:10px; opacity:0.5; text-align:center;'>[ NO_OPERATIONAL_LOGS ]</p>";
   }
 
   document.getElementById("n-content").innerHTML = `
     <div style="font-size:11px; margin-bottom:12px;">
-      <p><b>SecureLine:</b> <span class="secure-marker">${data.marker || "SECRET_LINE"}</span></p>
+      <p><b>SecureLine:</b> <span class="secure-marker">${
+        data.marker || "SECRET_LINE"
+      }</span></p>
     </div>
-    <p style="font-size:10px; font-weight:bold; border-top:1px solid #000; padding-top:10px; margin-bottom:8px;">OPERATIONAL_LOGS:</p>
-    <div style="max-height:160px; overflow-y:auto; margin-bottom:15px;">${expHTML}</div>
+    <p style="font-size:10px; font-weight:bold; border-top:1px solid #000; padding-top:10px; margin-bottom:8px; letter-spacing:1.5px;">OPERATIONAL_LOGS:</p>
+    <div style="max-height:160px; overflow-y:auto; margin-bottom:15px; padding-right:5px;">${expHTML}</div>
     <center><button class="btn-terminate" onclick="alert('Auth Required')">TERMINATE_AGENT</button></center>
   `;
-  document.getElementById("n-total").innerText = `₱ ${(data.totalExpenses || 0).toLocaleString()}`;
+  document.getElementById("n-total").innerText = `₱ ${(
+    data.totalExpenses || 0
+  ).toLocaleString()}`;
 };
 
 window.closeNoir = () => {
+  console.log("🔐 Closing noir modal");
   document.getElementById("noirOverlay").style.display = "none";
 };
 
 // ====== MEMOIRS FUNCTIONS ======
 window.flipPage = (forward) => {
+  console.log("📖 Flipping page:", forward ? "forward" : "backward");
   const p1 = document.getElementById("p1");
   const p2 = document.getElementById("p2");
 
@@ -247,6 +222,7 @@ window.flipPage = (forward) => {
 };
 
 window.closeMemoirs = () => {
+  console.log("📚 Closing memoirs");
   document.getElementById("memoirsOverlay").style.display = "none";
 };
 
@@ -256,9 +232,13 @@ window.openMemoirs = (mode) => {
   overlay.style.display = "flex";
   flipPage(false);
 
-  let filtered = mode === "ALL" ? allMissions : allMissions.filter(
-    (m) => (DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem) === mode
-  );
+  let filtered =
+    mode === "ALL"
+      ? allMissions
+      : allMissions.filter(
+          (m) =>
+            (DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem) === mode
+        );
 
   const valid = filtered.filter((m) => (m.totalExpenses || 0) > 0);
   const withV = valid.filter((m) => m.vAgentID && m.vAgentID !== "");
@@ -276,7 +256,8 @@ window.openMemoirs = (mode) => {
     ...withoutV.map((m) => ({ ...m, isV: false })),
   ];
 
-  let p1HTML = "", p2HTML = "";
+  let p1HTML = "";
+  let p2HTML = "";
   let overallTotal = 0;
 
   masterList.forEach((m, index) => {
@@ -284,17 +265,40 @@ window.openMemoirs = (mode) => {
     const missionRef = m.id.substring(0, 10).toUpperCase();
     const agentName = m.agent || "UNKNOWN_OPERATIVE";
 
-    let rowContent = `
+    let rowContent = "";
+
+    const isFirstUnassigned =
+      !m.isV && (index === 0 || masterList[index - 1].isV);
+    if (isFirstUnassigned) {
+      rowContent += `
+        <div class="audit-separator" style="margin: 15px 0 10px 0; border-top: 1px solid #000;">
+          --- UNASSIGNED_RECORDS ---
+        </div>`;
+    }
+
+    rowContent += `
       <div class="expense-row" style="padding: 10px 0; border-bottom: 1px dashed rgba(0,0,0,0.2);">
         <div style="flex-grow: 1;">
-          <div style="font-size: 11px; font-weight: bold;">
-            ${m.isV ? `vAgent#: <span style="color:#8b0000;">${m.vAgentID}</span>` : `AGENT: ${agentName}`}
+          <div style="font-size: 11px; font-weight: bold; color: #000;">
+            ${
+              m.isV
+                ? `vAgent#: <span style="color:#8b0000;">${m.vAgentID}</span>`
+                : `AGENT: ${agentName}`
+            }
           </div>
-          ${m.isV ? `<div style="font-size: 9px; opacity: 0.7;">OPERATOR: ${agentName}</div>` : ""}
-          <div style="font-size: 8px; margin-top: 2px;">MO#: ${missionRef}</div>
+          ${
+            m.isV
+              ? `<div style="font-size: 9px; opacity: 0.7;">OPERATOR: ${agentName}</div>`
+              : ""
+          }
+          <div style="font-size: 8px; color: #000; font-weight: bold; margin-top: 2px;">
+            MO#: ${missionRef}
+          </div>
         </div>
         <div style="text-align: right;">
-          <b style="font-size: 14px;">₱${(m.totalExpenses || 0).toLocaleString()}</b>
+          <b style="font-size: 14px; color: #000;">₱${(
+            m.totalExpenses || 0
+          ).toLocaleString()}</b>
         </div>
       </div>`;
 
@@ -306,16 +310,24 @@ window.openMemoirs = (mode) => {
     }
   });
 
-  document.getElementById("active-list").innerHTML = p1HTML || "<center style='opacity:0.5;'>NO_RECORDS</center>";
+  document.getElementById("active-list").innerHTML =
+    p1HTML ||
+    "<center style='opacity:0.5; padding-top:20px;'>NO_RECORDS</center>";
   document.getElementById("target-name").innerText = mode;
   document.getElementById("total-val").innerText = overallTotal.toLocaleString();
 
   const p2Area = document.getElementById("weapon-system-breakdown");
   if (mode === "ALL") {
-    p2Area.innerHTML = p2HTML || "<center style='margin-top:50px; opacity:0.5;'>[ NO_OVERFLOW_DATA ]</center>";
+    p2Area.innerHTML =
+      p2HTML ||
+      `<center style="margin-top:50px; font-size:10px; opacity:0.5;">[ NO_OVERFLOW_DATA ]</center>`;
     document.getElementById("flipNextBtn").style.display = "block";
   } else {
     document.getElementById("flipNextBtn").style.display = "none";
   }
-  document.getElementById("total-val-p2").innerText = overallTotal.toLocaleString();
+
+  document.getElementById("total-val-p2").innerText =
+    overallTotal.toLocaleString();
+
+  console.log("✅ Memoirs rendered successfully");
 };

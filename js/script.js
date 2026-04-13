@@ -1,6 +1,7 @@
 // js/script.js - CIA Profiles Main Logic (Original Working)
 // ========================================
 
+import SoundFX from './sound.js';
 import { db, DEVICE_REGISTRY, INTEL_TERMS } from "./config.js";
 import {
   collection,

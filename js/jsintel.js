@@ -1,4 +1,4 @@
-// js/jsintel.js - CORE INTEL with Sounds
+// js/jsintel.js - CORE INTEL with Mobile-Friendly Sounds
 
 import SoundFX from './sound.js';
 import { DEVICE_REGISTRY } from './config.js';
@@ -30,12 +30,12 @@ const currentAgent = localStorage.getItem("agent") || localStorage.getItem("cia_
 
 function establishSession() {
     if (currentAgent) {
-        SoundFX.success(); // Session established sound
+        SoundFX.success();
         authStatus.innerText = `AGENT: ${currentAgent}`;
         vAgentInput.disabled = false;
         scanStatus.innerText = "INPUT TARGET vAGENT# FOR VERIFICATION";
     } else {
-        SoundFX.error(); // Unauthorized sound
+        SoundFX.error();
         authStatus.innerHTML = `<span style="color:var(--red)">[ UNAUTHORIZED ]</span>`;
         scanStatus.innerHTML = "ACCESS DENIED: REDIRECTING TO DASHBOARD...";
         setTimeout(() => location.href = "dashboard.html", 3000);
@@ -44,7 +44,7 @@ function establishSession() {
 
 async function addLog(msg, color) {
     try {
-        SoundFX.terminalUpdate(); // Terminal update sound
+        SoundFX.terminalUpdate();
         await addDoc(collection(db, "terminal_logs"), {
             agent: currentAgent, message: msg, color: color, timestamp: serverTimestamp()
         });
@@ -60,30 +60,68 @@ function resetUI() {
     expenseInput.value = "";
 }
 
-// Keypad sounds for vAgent input
-vAgentInput.addEventListener('keypress', (e) => {
-    if (e.key >= '0' && e.key <= '9') {
-        SoundFX.keypadTone(e.key);
-    } else if (e.key >= 'a' && e.key <= 'z') {
-        SoundFX.beep(700, 0.05, 0.1); // Letter typing sound
+// ====== MOBILE-FRIENDLY KEYPAD SOUNDS FOR vAGENT INPUT ======
+let lastVAgentLength = 0;
+vAgentInput.addEventListener('input', (e) => {
+    const currentLength = e.target.value.length;
+    if (currentLength > lastVAgentLength) {
+        const lastChar = e.target.value.slice(-1);
+        if (lastChar >= '0' && lastChar <= '9') {
+            SoundFX.keypadTone(lastChar);
+        } else if (lastChar >= 'a' && lastChar <= 'z') {
+            SoundFX.beep(700, 0.05, 0.1);
+        } else if (lastChar >= 'A' && lastChar <= 'Z') {
+            SoundFX.beep(750, 0.05, 0.1);
+        } else {
+            SoundFX.beep(800, 0.03, 0.1);
+        }
+    } else if (currentLength < lastVAgentLength) {
+        // Backspace sound
+        SoundFX.beep(400, 0.03, 0.08);
     }
+    lastVAgentLength = currentLength;
+});
+
+// ====== MOBILE-FRIENDLY KEYPAD SOUNDS FOR EXPENSE AMOUNT ======
+let lastExpenseLength = 0;
+expenseInput.addEventListener('input', (e) => {
+    const currentLength = e.target.value.length;
+    if (currentLength > lastExpenseLength) {
+        const lastChar = e.target.value.slice(-1);
+        if (lastChar >= '0' && lastChar <= '9') {
+            SoundFX.keypadTone(lastChar);
+        } else if (lastChar === '.') {
+            SoundFX.beep(900, 0.03, 0.15);
+        } else {
+            SoundFX.beep(600, 0.03, 0.1);
+        }
+    } else if (currentLength < lastExpenseLength) {
+        // Backspace sound
+        SoundFX.beep(400, 0.03, 0.08);
+    }
+    lastExpenseLength = currentLength;
 });
 
 let typingTimer;
 vAgentInput.addEventListener('input', () => {
     clearTimeout(typingTimer);
     const vInput = vAgentInput.value.trim();
-    resetUI();
+    
+    // Don't resetUI on every keystroke, only when needed
+    if (vInput.length === 0) {
+        resetUI();
+    }
+    
     if (vInput.length > 0 && currentAgent) {
         scanStatus.innerHTML = `<span class="blink">[VERIFYING IDENTITY] ${vInput}...</span>`;
         typingTimer = setTimeout(() => performHierarchySearch(vInput), 800);
-    } else {
+    } else if (vInput.length === 0) {
         scanStatus.innerText = "INPUT TARGET vAGENT# FOR VERIFICATION";
     }
 });
 
 async function performHierarchySearch(vInput) {
-    SoundFX.terminalUpdate(); // Scanning sound
+    SoundFX.terminalUpdate();
     try {
         const qMatch = query(collection(db, "mission_orders"), where("vAgentID", "==", vInput), where("agent", "==", currentAgent));
         const snapMatch = await getDocs(qMatch);
@@ -92,18 +130,21 @@ async function performHierarchySearch(vInput) {
             const qGlobal = query(collection(db, "mission_orders"), where("vAgentID", "==", vInput));
             const snapGlobal = await getDocs(qGlobal);
             if (!snapGlobal.empty) {
-                SoundFX.error(); // Access denied sound
+                SoundFX.error();
                 scanStatus.innerHTML = `<span style="color:var(--red)">[ACCESS DENIED] UNAUTHORIZED TARGET DETECTED</span>`;
                 addLog(`SECURITY ALERT: ${currentAgent} ACCESSED FOREIGN TARGET ${vInput}`, 'var(--red)');
             } else {
-                SoundFX.beep(400, 0.3, 0.2); // Not found sound
+                SoundFX.beep(400, 0.3, 0.2);
                 scanStatus.innerHTML = `<span style="color:var(--yellow)">[ERROR] vAGENT# ${vInput} NOT FOUND</span>`;
             }
             return;
         }
 
-        SoundFX.success(); // Match found sound
+        SoundFX.success();
         scanStatus.innerHTML = `<span style="color:var(--green)">[IDENTITY MATCH] RETRIEVING WEAPON SYSTEM...</span>`;
+        
+        // Clear and rebuild device list
+        deviceList.innerHTML = "";
         
         snapMatch.forEach(doc => {
             const data = doc.data();
@@ -114,29 +155,32 @@ async function performHierarchySearch(vInput) {
                 <span style="font-weight:700">> ${deviceName}</span>
                 <span style="font-size:10px; color:#5c7882; align-self:flex-end">MISSION_REF: #${data.missionID}</span>`;
             btn.onclick = () => {
-                SoundFX.click(); // Button click sound
+                SoundFX.click();
                 document.querySelectorAll('.dev-btn').forEach(x => x.classList.remove('active'));
                 btn.classList.add('active');
                 selectedMissionDocId = data.missionID;
                 expenseModule.style.opacity = "1";
                 expenseModule.style.pointerEvents = "auto";
                 submitBtn.classList.add('ready');
-                SoundFX.folderOpen(); // Weapon system selected sound
+                SoundFX.folderOpen();
+                // Focus on expense input for quick entry
+                expenseInput.focus();
             };
             deviceList.appendChild(btn);
         });
     } catch (e) {
-        SoundFX.error(); // Error sound
+        SoundFX.error();
         scanStatus.innerHTML = `<span style="color:var(--red)">[FAILURE] SYSTEM_ACCESS_TIMED_OUT</span>`;
+        console.error(e);
     }
 }
 
 submitBtn.onclick = async () => {
-    SoundFX.click(); // Button click sound
+    SoundFX.click();
     
     const amount = parseFloat(expenseInput.value);
     if (!selectedMissionDocId || isNaN(amount) || amount <= 0) {
-        SoundFX.error(); // Invalid input sound
+        SoundFX.error();
         alert("CRITICAL ERROR: DATA MISMATCH OR INVALID AMOUNT.");
         return;
     }
@@ -145,7 +189,7 @@ submitBtn.onclick = async () => {
     submitBtn.disabled = true;
     
     try {
-        SoundFX.terminalUpdate(); // Injection sound
+        SoundFX.terminalUpdate();
         const ref = doc(db, "mission_orders", selectedMissionDocId);
         await addLog(`OVERRIDE: ₱${amount.toFixed(2)} INJECTED TO #${selectedMissionDocId}`, 'var(--yellow)');
         await updateDoc(ref, {
@@ -153,14 +197,15 @@ submitBtn.onclick = async () => {
             totalExpenses: increment(amount)
         });
         
-        SoundFX.success(); // Success sound
+        SoundFX.success();
         alert("DATABASE OVERRIDDEN SUCCESSFULLY.");
         location.reload();
     } catch (e) {
-        SoundFX.error(); // Error sound
+        SoundFX.error();
         alert("CRITICAL ERROR: INJECTION FAILED");
         submitBtn.innerText = "EXECUTE OVERRIDE";
         submitBtn.disabled = false;
+        console.error(e);
     }
 };
 
@@ -168,5 +213,14 @@ submitBtn.onclick = async () => {
 setInterval(() => { 
     document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB'); 
 }, 1000);
+
+// Force audio activation on first click (mobile fallback)
+document.body.addEventListener('click', function activateAudio() {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    audioCtx.resume().then(() => {
+        console.log("🔊 Audio activated for intel page");
+        audioCtx.close();
+    });
+}, { once: true });
 
 establishSession();

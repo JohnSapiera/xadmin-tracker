@@ -1,79 +1,65 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CORE_DASH</title>
-    
-    <link rel="manifest" href="manifest.json">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#02080a">
-    
-    <link rel="stylesheet" href="styles/dbintel.css">
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DASHBOARD TEST</title>
+    <style>
+        body { background: black; color: cyan; font-family: monospace; padding: 20px; }
+        button { background: cyan; color: black; padding: 15px; margin: 10px; font-size: 18px; }
+        .overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); padding: 50px; }
+        .popup { background: #111; padding: 20px; border: 1px solid cyan; }
+        input { display: block; margin: 10px 0; padding: 10px; width: 90%; }
+    </style>
 </head>
 <body>
 
-<header>
-    <span style="font-weight: 700; color: #fff; letter-spacing: 2px;">CORE_DASH</span>
-</header>
+<h1>DASHBOARD TEST</h1>
+<p>Agent: <span id="prof-name">Loading...</span></p>
 
-<div class="status-bar">
-    <div>SYS_TIME: <span id="clock">00:00:00</span></div>
-    <div style="color: var(--green);">UPLINK_STABLE</div>
-</div>
+<button id="action-btn">OPEN MODAL</button>
 
-<main>
-    <div class="command-module">
-        <input type="tel" id="mission-input" placeholder="0000" maxlength="5" autocomplete="off">
-        <div id="mission-status"></div>
-        <div class="btn-row">
-            <button id="action-btn" class="btn btn-save">SAVE</button>
-            <button id="reserve-btn" class="btn btn-reserve">RESERVE</button>
-        </div>
-    </div>
-    <div id="terminal"></div>
-    
-    <div class="profile-mini" style="background: #051014; border: 1px solid var(--border); padding: 12px; display: flex; align-items: center; gap: 15px;">
-        <div class="avatar" id="avatar-init" style="width: 40px; height: 40px; background: var(--cyan-dim); border: 1px solid var(--cyan); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--cyan); font-weight: bold;">?</div>
-        <div class="profile-info">
-            <div id="prof-name" style="color: var(--cyan); font-weight: 700;">AGENT_PENDING</div>
-            <div style="color: #5c7882; font-size: 10px;">AUTH_LEVEL: OMEGA</div>
-        </div>
-    </div>
-</main>
-
-<div class="overlay" id="modal-overlay">
+<div id="modal-overlay" class="overlay">
     <div class="popup">
-        <div id="pop-header" style="color:var(--cyan); text-align:center; margin-bottom:18px; font-size:26px; font-weight:700; font-family:var(--font-mono);">#0000</div>
-        <span style="font-size: 10px; color: var(--cyan); display: block; margin-bottom: 5px;">vAGENT_IDENTIFIER:</span>
-        <input type="text" id="v-agent-input" class="pop-input" placeholder="V_ID_REQUIRED">
-        
-        <div class="secure-line-wrapper">
-            <span id="add-secure-btn">+add Secure Line</span>
-            <input type="tel" id="secure-input-field" maxlength="11" placeholder="09XXXXXXXXX">
-        </div>
-
-        <span style="font-size: 10px; color: var(--cyan); display: block; margin-bottom: 5px;" id="weapon-label">SYSTEM_LINK:</span>
-        <div class="weapon-selector" id="weapon-list"></div>
-
-        <div class="btn-row">
-            <!-- ⭐ FIXED: Added onclick directly -->
-            <button id="modal-submit" class="btn btn-save" onclick="window.saveMissionOrder()">CONFIRM</button>
-            <button id="modal-close" class="btn" style="background:#222; color:#fff;">ABORT</button>
-        </div>
+        <h3>Save Mission</h3>
+        <input type="text" id="v-agent-input" placeholder="vAgent ID">
+        <button id="modal-submit">CONFIRM</button>
+        <button id="modal-close">CANCEL</button>
     </div>
 </div>
 
-<nav class="bottom-nav">
-    <a href="#" class="nav-item active">DASHBOARD</a>
-    <a href="intel.html" class="nav-item">INTEL</a>
-    <a href="profile.html" class="nav-item">PROFILE</a>
-</nav>
-
-<script type="module" src="js/jsdash.js"></script>
+<script>
+    // Set agent
+    const agent = localStorage.getItem("cia_agent") || "AGENT_LZ";
+    document.getElementById('prof-name').innerText = agent;
+    
+    // Get elements
+    const actionBtn = document.getElementById('action-btn');
+    const modalOverlay = document.getElementById('modal-overlay');
+    const modalSubmit = document.getElementById('modal-submit');
+    const modalClose = document.getElementById('modal-close');
+    
+    // Open modal
+    actionBtn.onclick = () => {
+        console.log("Open modal");
+        modalOverlay.style.display = 'flex';
+    };
+    
+    // Close modal
+    modalClose.onclick = () => {
+        modalOverlay.style.display = 'none';
+    };
+    
+    // Submit button
+    modalSubmit.onclick = () => {
+        const vID = document.getElementById('v-agent-input').value;
+        alert("Confirm clicked! vAgent: " + vID);
+        modalOverlay.style.display = 'none';
+    };
+    
+    console.log("Test page loaded");
+    alert("Page loaded! Click OPEN MODAL then CONFIRM");
+</script>
 
 </body>
 </html>

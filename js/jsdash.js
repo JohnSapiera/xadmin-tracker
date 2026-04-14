@@ -1,4 +1,4 @@
-// js/jsdash.js - CORE DASHBOARD v30.5 with Sounds
+// js/jsdash.js - CORE DASHBOARD (SIMPLIFIED & FIXED)
 
 import SoundFX from './sound.js';
 import { DEVICE_REGISTRY } from '../config.js';
@@ -31,15 +31,14 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// ====== GET AGENT FROM LOCALSTORAGE ======
-const currentAgent = localStorage.getItem("agent") || localStorage.getItem("cia_agent") || "AGENT_LZ";
+// Get agent from localStorage
+const currentAgent = localStorage.getItem("cia_agent") || localStorage.getItem("agent") || "AGENT_LZ";
+console.log("🔐 Current Agent:", currentAgent);
 
-console.log("🔐 Current Agent from localStorage:", currentAgent);
-
+// State variables
 let selectedWeaponID = "";
-let agentSignatures = []; 
+let agentSignatures = [];
 let currentMissionData = null;
-let isAgentVerified = false;
 
 // DOM Elements
 const input = document.getElementById('mission-input');
@@ -58,87 +57,25 @@ const clockSpan = document.getElementById('clock');
 const profName = document.getElementById('prof-name');
 const avatarInit = document.getElementById('avatar-init');
 
-// ====== VERIFY AGENT IN DATABASE ======
-async function verifyAgent() {
-    console.log("🔍 Verifying agent in database:", currentAgent);
-    
-    try {
-        // Check if agent exists in database
-        const agentRef = doc(db, "agents", currentAgent);
-        const agentSnap = await getDoc(agentRef);
-        
-        if (agentSnap.exists()) {
-            const agentData = agentSnap.data();
-            console.log("✅ Agent verified:", agentData);
-            isAgentVerified = true;
-            
-            // Get linked signatures
-            agentSignatures = agentData.linkedSignatures || Object.keys(DEVICE_REGISTRY);
-            console.log("📱 Linked signatures:", agentSignatures);
-            
-            SoundFX.success();
-            return true;
-        } else {
-            console.log("❌ Agent not found in database:", currentAgent);
-            SoundFX.error();
-            alert(`AGENT "${currentAgent}" NOT FOUND IN DATABASE.\nPlease check your login.`);
-            return false;
-        }
-    } catch (error) {
-        console.error("❌ Agent verification error:", error);
-        SoundFX.error();
-        return false;
-    }
-}
-
+// ====== INITIALIZATION ======
 function init() {
-    console.log("🚀 Initializing Dashboard...");
+    console.log("🚀 Dashboard initializing...");
     
-    // Display agent name from localStorage
+    // Display agent info
     profName.innerText = currentAgent;
     avatarInit.innerText = currentAgent.charAt(0).toUpperCase();
     
+    // Start clock
     updateClock();
     setInterval(updateClock, 1000);
+    
+    // Setup terminal listener
     setupTerminalListener();
     
-    // Verify agent first before loading missions
-    verifyAgent().then(verified => {
-        if (verified) {
-            console.log("✅ Agent verified, loading missions...");
-            loadMissions();
-            setupEventListeners();
-        } else {
-            console.log("❌ Agent verification failed");
-            statusLabel.innerHTML = "<span style='color:var(--red)'>AGENT VERIFICATION FAILED</span>";
-        }
-    });
-}
-
-// ====== LOAD MISSIONS FOR VERIFIED AGENT ======
-async function loadMissions() {
-    console.log("📡 Loading missions for agent:", currentAgent);
-    SoundFX.terminalUpdate();
+    // Setup event listeners
+    setupEventListeners();
     
-    try {
-        const q = query(
-            collection(db, "mission_orders"),
-            where("agent", "==", currentAgent)
-        );
-        const snap = await getDocs(q);
-        console.log(`📋 Found ${snap.size} missions`);
-        
-        // Store missions data if needed
-        snap.forEach(doc => {
-            console.log("  - Mission:", doc.data().missionID, "vAgent:", doc.data().vAgentID);
-        });
-        
-        if (snap.size > 0) {
-            SoundFX.success();
-        }
-    } catch (error) {
-        console.error("Error loading missions:", error);
-    }
+    console.log("✅ Dashboard initialized");
 }
 
 function updateClock() {
@@ -158,9 +95,15 @@ function setupTerminalListener() {
 
 async function addLog(msg, color) {
     try {
-        SoundFX.terminalUpdate();
-        await addDoc(collection(db, "terminal_logs"), { agent: currentAgent, message: msg, color: color, timestamp: serverTimestamp() });
-    } catch(e) { console.error("Log error:", e); }
+        await addDoc(collection(db, "terminal_logs"), { 
+            agent: currentAgent, 
+            message: msg, 
+            color: color, 
+            timestamp: serverTimestamp() 
+        });
+    } catch(e) { 
+        console.error("Log error:", e); 
+    }
 }
 
 function resetUI() {
@@ -174,9 +117,11 @@ function resetUI() {
 
 async function searchMission() {
     const val = input.value.trim();
-    if (val.length < 4) { resetUI(); return; }
+    if (val.length < 4) { 
+        resetUI(); 
+        return; 
+    }
     
-    SoundFX.terminalUpdate();
     statusLabel.innerHTML = "SCANNING DATABASE...";
     const qM = query(collection(db, "mission_orders"), where("missionID", "==", val));
     const snapM = await getDocs(qM);
@@ -184,15 +129,13 @@ async function searchMission() {
     if (!snapM.empty) {
         currentMissionData = snapM.docs[0].data();
         const owner = currentMissionData.agent;
+        
         if (owner === currentAgent) {
-            SoundFX.success();
             actionBtn.textContent = "RETRIEVE";
             actionBtn.className = "btn btn-retrieve";
-            actionBtn.style.pointerEvents = "auto";
             reserveBtn.classList.remove('active');
             statusLabel.innerHTML = `<span class="status-deployed">STATUS: YOUR MISSION</span>`;
         } else {
-            SoundFX.error();
             statusLabel.innerHTML = `<span style="color:var(--red);">ALREADY DEPLOYED BY ${owner}</span>`;
             actionBtn.textContent = "LOCKED";
             actionBtn.className = "btn btn-locked";
@@ -201,7 +144,6 @@ async function searchMission() {
             addLog(`RESTRICTED: ${currentAgent} SCANNED ${owner}'S MISSION`, 'var(--red)');
         }
     } else {
-        SoundFX.beep(600, 0.2, 0.2);
         currentMissionData = null;
         actionBtn.textContent = "SAVE";
         actionBtn.className = "btn btn-save";
@@ -222,9 +164,7 @@ function renderWeapons() {
         const b = document.createElement('button');
         b.className = "weapon-btn" + (sig === selectedWeaponID ? " selected" : "");
         b.innerText = `> ${DEVICE_REGISTRY[sig] || sig}`;
-        b.setAttribute('data-weapon-id', sig);
         b.onclick = () => {
-            SoundFX.click();
             document.querySelectorAll('.weapon-btn').forEach(x => x.classList.remove('selected'));
             b.classList.add('selected');
             selectedWeaponID = sig;
@@ -235,14 +175,17 @@ function renderWeapons() {
 
 async function openModal() {
     if (input.value.length < 4) return;
-    if (!isAgentVerified) {
-        alert("AGENT NOT VERIFIED. Please reload.");
-        return;
-    }
     
-    SoundFX.click();
     modalOverlay.style.display = 'flex';
     document.getElementById('pop-header').innerText = `#${input.value}`;
+    
+    // Get agent signatures from Firebase or use defaults
+    try {
+        const snap = await getDoc(doc(db, "agents", currentAgent));
+        agentSignatures = snap.exists() ? snap.data().linkedSignatures || [] : Object.keys(DEVICE_REGISTRY);
+    } catch(e) {
+        agentSignatures = Object.keys(DEVICE_REGISTRY);
+    }
 
     if (currentMissionData) {
         vAgentInput.value = currentMissionData.vAgentID || "";
@@ -251,7 +194,9 @@ async function openModal() {
             secureField.value = currentMissionData.SecureLine;
             secureField.classList.add('show');
             secureBtn.style.display = 'none';
-        } else { resetSecureUI(); }
+        } else { 
+            resetSecureUI(); 
+        }
         modalSubmit.textContent = "UPDATE";
         modalSubmit.className = "btn btn-retrieve";
     } else {
@@ -265,30 +210,25 @@ async function openModal() {
 }
 
 function closeModal() {
-    SoundFX.click();
     modalOverlay.style.display = 'none';
 }
 
 async function submitMission() {
-    console.log("🔘 submitMission called");
-    SoundFX.click();
+    console.log("🔘 SUBMIT MISSION CALLED");
     
     const vID = vAgentInput.value.trim();
     const sLine = secureField.value.trim();
     
     if (!vID || !selectedWeaponID) {
-        SoundFX.error();
         alert("INCOMPLETE DATA");
         return;
     }
     if (sLine !== "" && !sLine.startsWith("09")) {
-        SoundFX.error();
         alert("INVALID PHONE");
         return;
     }
 
     try {
-        SoundFX.terminalUpdate();
         await setDoc(doc(db, "mission_orders", input.value), {
             missionID: input.value,
             agent: currentAgent,
@@ -299,54 +239,36 @@ async function submitMission() {
             timestamp: serverTimestamp()
         }, { merge: true });
         
-        SoundFX.success();
         addLog(`MISSION #${input.value} UPDATED BY ${currentAgent}`, 'var(--green)');
         closeModal();
         input.value = "";
         resetUI();
+        alert("MISSION SAVED SUCCESSFULLY!");
     } catch(e) { 
-        SoundFX.error();
         console.error(e); 
-        alert("ERROR SUBMITTING MISSION"); 
+        alert("ERROR SUBMITTING MISSION: " + e.message);
     }
 }
 
-// Keypad sounds
-input.addEventListener('keypress', (e) => {
-    if (e.key >= '0' && e.key <= '9') {
-        SoundFX.keypadTone(e.key);
-    }
-});
-
-vAgentInput.addEventListener('keypress', (e) => {
-    if (e.key >= '0' && e.key <= '9') {
-        SoundFX.keypadTone(e.key);
-    } else if (e.key >= 'a' && e.key <= 'z') {
-        SoundFX.beep(700, 0.05, 0.1);
-    }
-});
-
-secureField.addEventListener('keypress', (e) => {
-    if (e.key >= '0' && e.key <= '9') {
-        SoundFX.keypadTone(e.key);
-    }
-});
-
+// ====== EVENT LISTENERS ======
 function setupEventListeners() {
     input.addEventListener('input', searchMission);
     actionBtn.onclick = openModal;
     modalClose.onclick = closeModal;
+    
+    // ⭐ CRITICAL FIX: Direct assignment for modal submit
+    if (modalSubmit) {
+        modalSubmit.onclick = submitMission;
+        console.log("✅ Modal submit button attached");
+    } else {
+        console.log("❌ Modal submit button not found!");
+    }
+    
     secureBtn.onclick = () => {
-        SoundFX.click();
         secureBtn.style.display = 'none';
         secureField.classList.add('show');
         secureField.focus();
     };
-    
-    if (modalSubmit) {
-        modalSubmit.onclick = submitMission;
-        console.log("✅ Modal submit event attached");
-    }
 }
 
 // Start the app

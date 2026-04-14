@@ -1,4 +1,4 @@
-// js/jsdash.js - CORE DASHBOARD (SIMPLIFIED & FIXED)
+// js/jsdash.js - CORE DASHBOARD
 
 import SoundFX from './sound.js';
 import { DEVICE_REGISTRY } from '../config.js';
@@ -31,11 +31,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Get agent from localStorage
 const currentAgent = localStorage.getItem("cia_agent") || localStorage.getItem("agent") || "AGENT_LZ";
-console.log("🔐 Current Agent:", currentAgent);
-
-// State variables
 let selectedWeaponID = "";
 let agentSignatures = [];
 let currentMissionData = null;
@@ -47,7 +43,6 @@ const reserveBtn = document.getElementById('reserve-btn');
 const statusLabel = document.getElementById('mission-status');
 const terminal = document.getElementById('terminal');
 const vAgentInput = document.getElementById('v-agent-input');
-const modalSubmit = document.getElementById('modal-submit');
 const modalClose = document.getElementById('modal-close');
 const weaponList = document.getElementById('weapon-list');
 const secureField = document.getElementById('secure-input-field');
@@ -57,25 +52,13 @@ const clockSpan = document.getElementById('clock');
 const profName = document.getElementById('prof-name');
 const avatarInit = document.getElementById('avatar-init');
 
-// ====== INITIALIZATION ======
 function init() {
-    console.log("🚀 Dashboard initializing...");
-    
-    // Display agent info
     profName.innerText = currentAgent;
     avatarInit.innerText = currentAgent.charAt(0).toUpperCase();
-    
-    // Start clock
     updateClock();
     setInterval(updateClock, 1000);
-    
-    // Setup terminal listener
     setupTerminalListener();
-    
-    // Setup event listeners
     setupEventListeners();
-    
-    console.log("✅ Dashboard initialized");
 }
 
 function updateClock() {
@@ -95,15 +78,8 @@ function setupTerminalListener() {
 
 async function addLog(msg, color) {
     try {
-        await addDoc(collection(db, "terminal_logs"), { 
-            agent: currentAgent, 
-            message: msg, 
-            color: color, 
-            timestamp: serverTimestamp() 
-        });
-    } catch(e) { 
-        console.error("Log error:", e); 
-    }
+        await addDoc(collection(db, "terminal_logs"), { agent: currentAgent, message: msg, color: color, timestamp: serverTimestamp() });
+    } catch(e) { console.error("Log error:", e); }
 }
 
 function resetUI() {
@@ -117,10 +93,7 @@ function resetUI() {
 
 async function searchMission() {
     const val = input.value.trim();
-    if (val.length < 4) { 
-        resetUI(); 
-        return; 
-    }
+    if (val.length < 4) { resetUI(); return; }
     
     statusLabel.innerHTML = "SCANNING DATABASE...";
     const qM = query(collection(db, "mission_orders"), where("missionID", "==", val));
@@ -129,7 +102,6 @@ async function searchMission() {
     if (!snapM.empty) {
         currentMissionData = snapM.docs[0].data();
         const owner = currentMissionData.agent;
-        
         if (owner === currentAgent) {
             actionBtn.textContent = "RETRIEVE";
             actionBtn.className = "btn btn-retrieve";
@@ -164,6 +136,7 @@ function renderWeapons() {
         const b = document.createElement('button');
         b.className = "weapon-btn" + (sig === selectedWeaponID ? " selected" : "");
         b.innerText = `> ${DEVICE_REGISTRY[sig] || sig}`;
+        b.setAttribute('data-weapon-id', sig);
         b.onclick = () => {
             document.querySelectorAll('.weapon-btn').forEach(x => x.classList.remove('selected'));
             b.classList.add('selected');
@@ -175,11 +148,9 @@ function renderWeapons() {
 
 async function openModal() {
     if (input.value.length < 4) return;
-    
     modalOverlay.style.display = 'flex';
     document.getElementById('pop-header').innerText = `#${input.value}`;
     
-    // Get agent signatures from Firebase or use defaults
     try {
         const snap = await getDoc(doc(db, "agents", currentAgent));
         agentSignatures = snap.exists() ? snap.data().linkedSignatures || [] : Object.keys(DEVICE_REGISTRY);
@@ -194,17 +165,11 @@ async function openModal() {
             secureField.value = currentMissionData.SecureLine;
             secureField.classList.add('show');
             secureBtn.style.display = 'none';
-        } else { 
-            resetSecureUI(); 
-        }
-        modalSubmit.textContent = "UPDATE";
-        modalSubmit.className = "btn btn-retrieve";
+        } else { resetSecureUI(); }
     } else {
         vAgentInput.value = "";
         selectedWeaponID = "";
         resetSecureUI();
-        modalSubmit.textContent = "CONFIRM";
-        modalSubmit.className = "btn btn-save";
     }
     renderWeapons();
 }
@@ -213,24 +178,37 @@ function closeModal() {
     modalOverlay.style.display = 'none';
 }
 
-async function submitMission() {
-    console.log("🔘 SUBMIT MISSION CALLED");
+// ⭐ GLOBAL FUNCTION FOR CONFIRM BUTTON
+window.saveMissionOrder = async function() {
+    console.log("🔘 saveMissionOrder called");
     
+    const missionID = input.value;
     const vID = vAgentInput.value.trim();
     const sLine = secureField.value.trim();
     
-    if (!vID || !selectedWeaponID) {
-        alert("INCOMPLETE DATA");
+    if (!missionID || missionID.length < 4) {
+        alert("INVALID MISSION ID");
         return;
     }
+    
+    if (!vID) {
+        alert("INCOMPLETE DATA: Missing vAgent ID");
+        return;
+    }
+    
+    if (!selectedWeaponID) {
+        alert("INCOMPLETE DATA: No weapon selected");
+        return;
+    }
+    
     if (sLine !== "" && !sLine.startsWith("09")) {
-        alert("INVALID PHONE");
+        alert("INVALID PHONE NUMBER");
         return;
     }
 
     try {
-        await setDoc(doc(db, "mission_orders", input.value), {
-            missionID: input.value,
+        await setDoc(doc(db, "mission_orders", missionID), {
+            missionID: missionID,
             agent: currentAgent,
             vAgentID: vID,
             weaponSystem: selectedWeaponID,
@@ -239,31 +217,21 @@ async function submitMission() {
             timestamp: serverTimestamp()
         }, { merge: true });
         
-        addLog(`MISSION #${input.value} UPDATED BY ${currentAgent}`, 'var(--green)');
+        addLog(`MISSION #${missionID} CREATED BY ${currentAgent}`, 'var(--green)');
         closeModal();
         input.value = "";
         resetUI();
         alert("MISSION SAVED SUCCESSFULLY!");
     } catch(e) { 
-        console.error(e); 
-        alert("ERROR SUBMITTING MISSION: " + e.message);
+        console.error(e);
+        alert("ERROR: " + e.message);
     }
-}
+};
 
-// ====== EVENT LISTENERS ======
 function setupEventListeners() {
     input.addEventListener('input', searchMission);
     actionBtn.onclick = openModal;
     modalClose.onclick = closeModal;
-    
-    // ⭐ CRITICAL FIX: Direct assignment for modal submit
-    if (modalSubmit) {
-        modalSubmit.onclick = submitMission;
-        console.log("✅ Modal submit button attached");
-    } else {
-        console.log("❌ Modal submit button not found!");
-    }
-    
     secureBtn.onclick = () => {
         secureBtn.style.display = 'none';
         secureField.classList.add('show');
@@ -271,5 +239,4 @@ function setupEventListeners() {
     };
 }
 
-// Start the app
 init();

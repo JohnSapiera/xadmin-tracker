@@ -1,7 +1,7 @@
 // js/jsdash.js - CORE DASHBOARD WITH SOUNDS (COMPLETE)
 
 import SoundFX from './sound.js';
-import { DEVICE_REGISTRY } from '../config.js';
+import { DEVICE_REGISTRY } from './config.js';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { 
     getFirestore, 

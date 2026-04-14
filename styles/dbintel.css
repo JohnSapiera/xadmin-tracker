@@ -518,3 +518,20 @@ header span {
 @keyframes blinker { 
     50% { opacity: 0.3; } 
 }
+
+#terminal {
+    background: rgba(0,0,0,0.9);
+    border-left: 3px solid var(--cyan);
+    padding: 12px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    height: 160px;
+    overflow-y: auto;
+    color: #9ab4bc;
+    margin-bottom: 15px;
+}
+
+.term-line {
+    margin-bottom: 6px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+}

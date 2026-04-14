@@ -60,7 +60,8 @@
         <div class="weapon-selector" id="weapon-list"></div>
 
         <div class="btn-row">
-            <button id="modal-submit" class="btn btn-save">CONFIRM</button>
+            <!-- ⭐ FIXED: Added onclick directly -->
+            <button id="modal-submit" class="btn btn-save" onclick="window.saveMissionOrder()">CONFIRM</button>
             <button id="modal-close" class="btn" style="background:#222; color:#fff;">ABORT</button>
         </div>
     </div>

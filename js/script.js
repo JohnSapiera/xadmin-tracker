@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // ====== DATA LOADING ======
 async function loadMissionData() {
   console.log("📡 Loading mission data for agent:", currentAgent);
-  SoundFX.terminalUpdate(); // Scanning sound
+  SoundFX.terminalUpdate();
   try {
     const q = query(
       collection(db, "mission_orders"),
@@ -63,13 +63,13 @@ async function loadMissionData() {
     renderDevices();
     
     if (snap.size > 0) {
-      SoundFX.success(); // Data loaded successfully
+      SoundFX.success();
     } else {
-      SoundFX.beep(600, 0.2, 0.2); // No data sound
+      SoundFX.beep(600, 0.2, 0.2);
     }
   } catch (error) {
     console.error("❌ Error loading mission data:", error);
-    SoundFX.error(); // Error sound
+    SoundFX.error();
     renderDevices();
   }
 }
@@ -95,7 +95,6 @@ function renderDevices() {
     wrapper.className = "phone-wrapper";
     wrapper.setAttribute("data-neon", neonNumber);
     
-    // Assign position class
     if (idx === 0) {
       wrapper.classList.add('left-phone');
     } else if (idx === keys.length - 1) {
@@ -127,9 +126,9 @@ function renderDevices() {
 }
 
 // ====== DEVICE ACTIVATION ======
-window.activateDevice = (name, element) => {
+function activateDevice(name, element) {
   console.log("🎯 Activating device:", name);
-  SoundFX.success(); // Device activation success sound
+  SoundFX.success();
   
   element.classList.add("lights-on");
   const statusLabel = element.querySelector(".status-label");
@@ -141,9 +140,15 @@ window.activateDevice = (name, element) => {
     document.getElementById("vagentSection").style.display = "grid";
     document.getElementById("btnBack").style.display = "block";
 
-    document.getElementById("memoirsBtnContainer").innerHTML = `
-      <button onclick="openMemoirs('${name}')" style="background:none; border:1px solid var(--cia-red); color:var(--cia-red); padding:10px; width:100%; cursor:pointer; font-weight: bold;">[ VIEW_${name}_MEMOIRS ]</button>
-    `;
+    // ⭐ FIX: Use deviceMemoirsContainer for device-specific memoirs button
+    const deviceMemoirsContainer = document.getElementById("deviceMemoirsContainer");
+    if (deviceMemoirsContainer) {
+      deviceMemoirsContainer.innerHTML = `
+        <button onclick="openMemoirs('${name}')" style="background:none; border:1px solid var(--cia-red); color:var(--cia-red); padding:10px; width:100%; cursor:pointer; font-weight: bold;">
+          [ VIEW_${name}_MEMOIRS ]
+        </button>
+      `;
+    }
 
     const sorted = deviceData[name].sort(
       (a, b) => parseInt(a.vAgentID) - parseInt(b.vAgentID)
@@ -164,23 +169,29 @@ window.activateDevice = (name, element) => {
         .join("") +
       `<div class="folder-box" style="opacity:0.5;"><div class="folder-main" style="background:#999;"></div><div class="file-label">LOCKED</div></div>`;
   }, 1800);
-};
+}
 
 // ====== BACK BUTTON ======
 const btnBack = document.getElementById("btnBack");
 if (btnBack) {
   btnBack.addEventListener("click", () => {
-    SoundFX.click(); // Button click sound
+    SoundFX.click();
     document.getElementById("vagentSection").style.display = "none";
     document.getElementById("deviceSection").style.display = "grid";
     btnBack.style.display = "none";
+    
+    // ⭐ FIX: Clear device memoirs container when exiting
+    const deviceMemoirsContainer = document.getElementById("deviceMemoirsContainer");
+    if (deviceMemoirsContainer) {
+      deviceMemoirsContainer.innerHTML = "";
+    }
   });
 }
 
 // ====== NOIR MODAL ======
 window.openNoirModal = (docID) => {
   console.log("📋 Opening noir modal for:", docID);
-  SoundFX.folderOpen(); // Folder open sound
+  SoundFX.folderOpen();
   
   const data = allMissions.find((m) => m.id === docID);
   if (!data) {
@@ -239,14 +250,14 @@ window.openNoirModal = (docID) => {
 
 window.closeNoir = () => {
   console.log("🔐 Closing noir modal");
-  SoundFX.click(); // Close sound
+  SoundFX.click();
   document.getElementById("noirOverlay").style.display = "none";
 };
 
 // ====== MEMOIRS FUNCTIONS ======
 window.flipPage = (forward) => {
   console.log("📖 Flipping page:", forward ? "forward" : "backward");
-  SoundFX.pageFlip(); // Page flip sound
+  SoundFX.pageFlip();
   
   const p1 = document.getElementById("p1");
   const p2 = document.getElementById("p2");
@@ -264,13 +275,13 @@ window.flipPage = (forward) => {
 
 window.closeMemoirs = () => {
   console.log("📚 Closing memoirs");
-  SoundFX.click(); // Close sound
+  SoundFX.click();
   document.getElementById("memoirsOverlay").style.display = "none";
 };
 
 window.openMemoirs = (mode) => {
   console.log("📚 Opening memoirs for mode:", mode);
-  SoundFX.folderOpen(); // Opening memoirs sound
+  SoundFX.folderOpen();
   
   const overlay = document.getElementById("memoirsOverlay");
   overlay.style.display = "flex";
@@ -374,5 +385,5 @@ window.openMemoirs = (mode) => {
     overallTotal.toLocaleString();
 
   console.log("✅ Memoirs rendered successfully");
-  SoundFX.success(); // Success sound after rendering
+  SoundFX.success();
 };

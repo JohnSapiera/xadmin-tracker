@@ -1,7 +1,7 @@
 // js/jsintel.js - CORE INTEL with Sounds
 
 import SoundFX from './sound.js';
-import { DEVICE_REGISTRY } from '../config.js';
+import { DEVICE_REGISTRY } from './config.js';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, query, where, getDocs, doc, updateDoc, arrayUnion, increment, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 

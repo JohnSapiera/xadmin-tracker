@@ -2,178 +2,102 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TERMINAL_AUTH_v2.0</title>
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Test</title>
     <style>
-        :root { --bg: #01080b; --cyan: #00f2ff; --red: #ff003c; --green: #00ff66; }
-        * { box-sizing: border-box; margin: 0; padding: 0; overflow: hidden; }
-        
-        body { 
-            background: var(--bg); color: var(--cyan); 
-            font-family: 'Share Tech Mono', monospace;
-            height: 100vh; display: flex; align-items: center; justify-content: center;
-            background-image: radial-gradient(circle at center, #0a1f29 0%, #01080b 100%);
-        }
-
-        .auth-container {
-            width: 380px; padding: 40px;
-            background: rgba(2, 10, 13, 0.95);
-            border: 1px solid var(--cyan);
-            position: relative;
-            box-shadow: 0 0 30px rgba(0, 242, 255, 0.1);
-            clip-path: polygon(0 15%, 10% 0, 100% 0, 100% 85%, 90% 100%, 0 100%);
-        }
-
-        .header { font-size: 10px; letter-spacing: 5px; opacity: 0.5; margin-bottom: 30px; text-align: center; }
-        
-        input {
-            width: 100%; background: rgba(0, 242, 255, 0.05);
-            border: 1px solid rgba(0, 242, 255, 0.2);
-            padding: 15px; color: var(--cyan);
-            font-family: 'Share Tech Mono'; text-align: center;
-            font-size: 18px; outline: none; margin-bottom: 20px;
-            transition: 0.3s;
-        }
-
-        input:focus { border-color: var(--cyan); box-shadow: 0 0 15px rgba(0, 242, 255, 0.2); }
-
-        button {
-            width: 100%; padding: 15px; background: transparent;
-            border: 1px solid var(--cyan); color: var(--cyan);
-            font-family: 'Share Tech Mono'; cursor: pointer;
-            text-transform: uppercase; letter-spacing: 2px; transition: 0.3s;
-        }
-
-        button:hover { background: var(--cyan); color: var(--bg); font-weight: bold; }
-
-        #status {
-            margin-top: 25px; font-size: 12px; text-align: center;
-            min-height: 60px; letter-spacing: 1px;
-            line-height: 1.4;
-            word-break: break-word;
-        }
-
-        .denied { color: var(--red) !important; animation: shake 0.2s infinite; }
-        .granted { color: var(--green) !important; }
-        .debug { font-size: 9px; opacity: 0.5; margin-top: 15px; text-align: center; }
-        @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(2px); } 50% { transform: translateX(-2px); } 100% { transform: translateX(0); } }
+        body { background: #01080b; color: #00f3ff; font-family: monospace; padding: 20px; }
+        .container { max-width: 500px; margin: 0 auto; }
+        input, button { width: 100%; padding: 12px; margin: 10px 0; background: #000; border: 1px solid #00f3ff; color: #05ffa1; font-family: monospace; }
+        button { background: #00f3ff; color: #000; cursor: pointer; font-weight: bold; }
+        .debug { background: #051014; padding: 15px; margin-top: 20px; font-size: 11px; border: 1px solid #1a2f37; white-space: pre-wrap; word-break: break-all; }
+        .success { color: #05ffa1; }
+        .error { color: #ff003c; }
     </style>
 </head>
 <body>
-
-    <div class="auth-container">
-        <div class="header">DECRYPT_ACCESS_KEY</div>
-        
-        <input type="password" id="keyInput" placeholder="********" autocomplete="off">
-        <button id="authBtn">AUTHORIZE</button>
-
-        <div id="status">SYSTEM_IDLE</div>
-        <div id="debugInfo" class="debug"></div>
+    <div class="container">
+        <h2>🔐 Firebase Auth Test</h2>
+        <input type="text" id="secretInput" placeholder="Enter secret key (ex: 1234)">
+        <button id="testBtn">TEST CONNECTION</button>
+        <div id="result" class="debug">Ready...</div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
     <script>
-        const firebaseConfig = { 
-            apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
-            authDomain: "my-admin-portal-12691.firebaseapp.com", 
-            projectId: "my-admin-portal-12691", 
-            storageBucket: "my-admin-portal-12691.firebasestorage.app", 
-            messagingSenderId: "317015091563", 
-            appId: "1:317015091563:web:baab5171d8e0a58acd442e" 
+        const firebaseConfig = {
+            apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
+            authDomain: "my-admin-portal-12691.firebaseapp.com",
+            projectId: "my-admin-portal-12691",
+            storageBucket: "my-admin-portal-12691.firebasestorage.app",
+            messagingSenderId: "317015091563",
+            appId: "1:317015091563:web:baab5171d8e0a58acd442e",
+            measurementId: "G-150YYLS5FP"
         };
+        
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+        const resultDiv = document.getElementById('result');
 
-        const debugDiv = document.getElementById('debugInfo');
-
-        async function testConnection() {
+        async function testAll() {
+            resultDiv.innerHTML = '⏳ Testing connection...\n';
+            
             try {
-                // Test kung may laman ang agent collection
-                const testSnap = await db.collection("agent").limit(1).get();
-                debugDiv.innerHTML = `✅ Connected. Found ${testSnap.size} document(s) in "agent" collection.`;
+                // 1. Test connection
+                resultDiv.innerHTML += '✅ Firebase connected\n';
                 
-                if (testSnap.size === 0) {
-                    debugDiv.innerHTML += `<br>⚠️ WARNING: "agent" collection is empty!`;
+                // 2. List all collections (optional, limited)
+                resultDiv.innerHTML += '📡 Checking "agent" collection...\n';
+                
+                // Get all documents from "agent" collection
+                const snapshot = await db.collection("agent").get();
+                
+                if (snapshot.empty) {
+                    resultDiv.innerHTML += '❌ "agent" collection is EMPTY!\n';
+                    resultDiv.innerHTML += '💡 Create a document first using update_db.html\n';
                 } else {
-                    testSnap.forEach(doc => {
+                    resultDiv.innerHTML += `✅ Found ${snapshot.size} document(s) in "agent" collection:\n`;
+                    
+                    snapshot.forEach(doc => {
                         const data = doc.data();
-                        debugDiv.innerHTML += `<br>📄 Document: ${doc.id} | Fields: ${Object.keys(data).join(', ')}`;
+                        resultDiv.innerHTML += `\n📄 Document ID: ${doc.id}\n`;
+                        resultDiv.innerHTML += `   Fields: ${Object.keys(data).join(', ')}\n`;
+                        resultDiv.innerHTML += `   Data: ${JSON.stringify(data, null, 2)}\n`;
                     });
                 }
-            } catch (e) {
-                debugDiv.innerHTML = `❌ Connection error: ${e.message}`;
+                
+                // 3. Test secret key if provided
+                const secretKey = document.getElementById('secretInput').value.trim();
+                if (secretKey) {
+                    resultDiv.innerHTML += `\n🔍 Searching for secretKey = "${secretKey}"...\n`;
+                    const querySnap = await db.collection("agent").where("secretKey", "==", secretKey).get();
+                    
+                    if (querySnap.empty) {
+                        resultDiv.innerHTML += `❌ No document found with secretKey = "${secretKey}"\n`;
+                        resultDiv.innerHTML += `💡 Check: Are you using the correct secretKey?\n`;
+                        resultDiv.innerHTML += `💡 Check: Is the field name "secretKey" (case-sensitive)?\n`;
+                    } else {
+                        resultDiv.innerHTML += `✅ Found ${querySnap.size} document(s)!\n`;
+                        querySnap.forEach(doc => {
+                            const data = doc.data();
+                            resultDiv.innerHTML += `   - Agent: ${data.agentName || doc.id}\n`;
+                            resultDiv.innerHTML += `   - secretKey: ${data.secretKey}\n`;
+                        });
+                        resultDiv.innerHTML += `\n🎉 AUTHENTICATION SUCCESSFUL! You can now login.\n`;
+                    }
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML += `❌ ERROR: ${error.message}\n`;
+                console.error(error);
             }
         }
 
-        testConnection();
-
-        document.getElementById('authBtn').addEventListener('click', async () => {
-            const key = document.getElementById('keyInput').value.trim();
-            const statusDiv = document.getElementById('status');
-
-            if(!key || key.length === 0) {
-                statusDiv.innerText = "ENTER SECRET KEY";
-                statusDiv.classList.add('denied');
-                return;
-            }
-
-            statusDiv.innerText = "AUTHENTICATING...";
-            statusDiv.classList.remove('denied');
-            statusDiv.classList.remove('granted');
-            statusDiv.style.color = "var(--cyan)";
-
-            try {
-                debugDiv.innerHTML = `🔍 Searching for secretKey: "${key}" in "agent" collection...`;
-                
-                const snap = await db.collection("agent")
-                                     .where("secretKey", "==", key)
-                                     .get();
-
-                debugDiv.innerHTML += `<br>📊 Query returned ${snap.size} result(s).`;
-
-                if (!snap.empty) {
-                    const agentData = snap.docs[0].data();
-                    const agentName = agentData.agentName || snap.docs[0].id;
-                    
-                    debugDiv.innerHTML += `<br>✅ Found agent: ${agentName}`;
-                    debugDiv.innerHTML += `<br>📄 Full data: ${JSON.stringify(agentData)}`;
-                    
-                    statusDiv.innerText = "ACCESS_GRANTED";
-                    statusDiv.classList.add('granted');
-                    statusDiv.style.color = "var(--green)";
-
-                    // Save session
-                    localStorage.setItem("cia_agent", agentName);
-                    localStorage.setItem("agent", agentName);
-                    localStorage.setItem("agent_verified", "true");
-                    localStorage.setItem("last_auth", new Date().toISOString());
-
-                    setTimeout(() => {
-                        window.location.replace("dashboard.html");
-                    }, 1000);
-                } else {
-                    statusDiv.innerText = "INVALID_SECRET_KEY";
-                    statusDiv.classList.add('denied');
-                    debugDiv.innerHTML += `<br>❌ No document found with secretKey = "${key}"`;
-                    localStorage.clear();
-                }
-            } catch (e) {
-                console.error("Auth error:", e);
-                statusDiv.innerText = "CONNECTION_ERROR";
-                statusDiv.classList.add('denied');
-                debugDiv.innerHTML += `<br>❌ Error: ${e.message}`;
-            }
-        });
-
-        // Allow Enter key to submit
-        document.getElementById('keyInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                document.getElementById('authBtn').click();
-            }
-        });
+        document.getElementById('testBtn').onclick = testAll;
+        
+        // Auto-run on load
+        setTimeout(testAll, 500);
     </script>
 </body>
 </html>

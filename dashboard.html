@@ -16,6 +16,26 @@
 </head>
 <body>
 
+<!-- ✅ SESSION CHECK - ITO ANG IDAGDAG MO ✅ -->
+<script>
+    // Check kung naka-login
+    const agentName = localStorage.getItem('cia_agent');
+    const isVerified = localStorage.getItem('agent_verified');
+    
+    if (!isVerified || !agentName) {
+        // Walang login, balik sa login page
+        window.location.replace("index.html");
+    }
+    
+    // I-save ang agent data para magamit ng jsdash.js
+    window.agentData = {
+        name: agentName,
+        secretKey: localStorage.getItem('secret_key')
+    };
+    
+    console.log('✅ Logged in as:', agentName);
+</script>
+
 <header>
     <span style="font-weight: 700; color: #fff; letter-spacing: 2px;">CORE_DASH</span>
 </header>
@@ -39,7 +59,7 @@
     <div class="profile-mini">
         <div class="avatar" id="avatar-init">?</div>
         <div class="profile-info">
-            <div id="prof-name">AGENT_PENDING</div>
+            <div id="prof-name" class="agent-name-display"></div>
             <div>AUTH_LEVEL: OMEGA</div>
         </div>
     </div>
@@ -73,6 +93,21 @@
 </nav>
 
 <script type="module" src="js/jsdash.js"></script>
+
+<!-- ✅ Dagdag script para ipakita ang agent name ✅ -->
+<script>
+    // Ipakita ang agent name sa profile section
+    const profNameElem = document.getElementById('prof-name');
+    if (profNameElem && window.agentData && window.agentData.name) {
+        profNameElem.textContent = window.agentData.name;
+    }
+    
+    // Logout function (optional)
+    window.logout = function() {
+        localStorage.clear();
+        window.location.replace("index.html");
+    };
+</script>
 
 </body>
 </html>

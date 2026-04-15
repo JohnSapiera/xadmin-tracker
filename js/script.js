@@ -384,8 +384,8 @@ function renderDevicePage(deviceName, monthIndex, pageNum) {
     (DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem) === deviceName
   );
   
-  // Collect all expense entries with vAgent and date
-  let allExpenses = []; // each entry: { vAgent, date, amount, description, injectedBy }
+  // Collect all expense entries
+  let allExpenses = [];
   deviceMissions.forEach(mission => {
     if (mission.expensesBreakdown && Array.isArray(mission.expensesBreakdown)) {
       mission.expensesBreakdown.forEach(exp => {
@@ -393,7 +393,7 @@ function renderDevicePage(deviceName, monthIndex, pageNum) {
         const expMonth = expDate.getMonth();
         if (expMonth === monthIndex) {
           allExpenses.push({
-            vAgent: mission.vAgentID || null,  // use null for missing
+            vAgent: mission.vAgentID || null,
             date: expDate,
             amount: exp.amount,
             description: exp.description || "FIELD_OPERATION",
@@ -404,7 +404,7 @@ function renderDevicePage(deviceName, monthIndex, pageNum) {
     }
   });
   
-  // Group by vAgent (null for unassigned)
+  // Group by vAgent
   const groups = new Map();
   allExpenses.forEach(exp => {
     const key = exp.vAgent === null ? "__UNASSIGNED__" : exp.vAgent;
@@ -418,15 +418,14 @@ function renderDevicePage(deviceName, monthIndex, pageNum) {
   
   // Sort groups: assigned vAgents by total descending, then unassigned at the end
   const sortedGroups = Array.from(groups.values()).sort((a, b) => {
-    if (a.vAgent === null) return 1;  // unassigned goes last
+    if (a.vAgent === null) return 1;
     if (b.vAgent === null) return -1;
     return b.total - a.total;
   });
   
-  // Flatten logs in order: first all logs from each group (preserving group order)
+  // Flatten logs with group information
   const flattenedLogs = [];
   sortedGroups.forEach(group => {
-    // Sort logs within group by date descending (newest first)
     group.logs.sort((x, y) => y.date - x.date);
     flattenedLogs.push(...group.logs);
   });
@@ -436,20 +435,15 @@ function renderDevicePage(deviceName, monthIndex, pageNum) {
   const startIdx = pageNum * ITEMS_PER_PAGE;
   const pageLogs = flattenedLogs.slice(startIdx, startIdx + ITEMS_PER_PAGE);
   
-  // Build HTML for current page
+  // Build HTML with group headers for the page
   let logsHTML = '';
-  // We need to show group headers if the page starts within a group, but simplest is to just show each log with its vAgent
-  // However the user wants grouping headers. We'll rebuild the page content by iterating over groups and adding headers when crossing group boundaries.
-  // Since pageLogs are sliced from flattened array, we can reconstruct the group information by checking consecutive logs.
   let lastVAgent = null;
   pageLogs.forEach(log => {
     const currentVAgent = log.vAgent === null ? null : log.vAgent;
     if (currentVAgent !== lastVAgent) {
-      // show header
       if (currentVAgent === null) {
         logsHTML += `<div class="audit-separator" style="margin:15px 0 10px 0;">--- UNASSIGNED RECORDS ---</div>`;
       } else {
-        // find total for this vAgent from groups
         const group = groups.get(currentVAgent);
         const totalAmt = group ? group.total : 0;
         logsHTML += `<div style="font-size:12px; font-weight:bold; color:#8b0000; margin-top:12px; margin-bottom:6px;">📌 vAgent# ${currentVAgent} (Total: ₱${totalAmt.toLocaleString()})</div>`;
@@ -483,7 +477,7 @@ function renderDevicePage(deviceName, monthIndex, pageNum) {
   
   targetName.innerHTML = `${deviceName} <span style="font-size:9px; color:#5c7882;">(April only)</span>`;
   
-  // Month selector: disabled, fixed to April
+  // Month selector - disabled, fixed to April
   let monthSelector = document.getElementById("deviceMonthSelector");
   if (!monthSelector) {
     monthSelector = document.createElement('select');
@@ -511,7 +505,6 @@ function renderDevicePage(deviceName, monthIndex, pageNum) {
     if (i === monthIndex) option.selected = true;
     monthSelector.appendChild(option);
   }
-  monthSelector.disabled = true;  // disabled for future updates
   
   activeList.innerHTML = logsHTML;
   
@@ -523,49 +516,91 @@ function renderDevicePage(deviceName, monthIndex, pageNum) {
     totalVal.innerHTML = `<span style="font-size:12px; opacity:0.7;">(Total on last page)</span>`;
   }
   
-  // Pagination controls
+  // Create pagination controls inside the active-list area or near it
+  // Remove existing pagination controls first
+  const existingPagination = document.getElementById("devicePagination");
+  if (existingPagination) existingPagination.remove();
+  
   if (totalPages > 1) {
-    // Next button
-    if (pageNum < totalPages - 1) {
-      flipNextBtn.style.display = "block";
-      flipNextBtn.innerHTML = `[ NEXT PAGE ${pageNum+2}/${totalPages} &gt;&gt; ]`;
-      flipNextBtn.onclick = () => {
-        SoundFX.pageFlip();
-        renderDevicePage(deviceName, monthIndex, pageNum + 1);
-      };
-    } else {
-      flipNextBtn.style.display = "none";
-    }
+    const paginationDiv = document.createElement('div');
+    paginationDiv.id = "devicePagination";
+    paginationDiv.style.cssText = `
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 15px;
+      padding: 10px;
+      border-top: 1px solid var(--border);
+    `;
+    
     // Previous button
-    let prevBtn = document.getElementById("devicePrevBtn");
-    if (!prevBtn) {
-      prevBtn = document.createElement('div');
-      prevBtn.id = "devicePrevBtn";
-      prevBtn.className = "swipe-hint";
-      prevBtn.style.cssText = "text-align:left; margin-top:10px; cursor:pointer;";
-      activeList.parentNode.insertBefore(prevBtn, activeList.nextSibling);
-    }
+    const prevBtn = document.createElement('button');
+    prevBtn.innerHTML = '◀ PREV';
+    prevBtn.style.cssText = `
+      background: ${pageNum > 0 ? '#8b0000' : '#333'};
+      color: #fff;
+      border: none;
+      padding: 6px 15px;
+      border-radius: 20px;
+      font-family: monospace;
+      font-size: 10px;
+      cursor: ${pageNum > 0 ? 'pointer' : 'not-allowed'};
+      opacity: ${pageNum > 0 ? '1' : '0.5'};
+    `;
     if (pageNum > 0) {
-      prevBtn.innerHTML = `&lt;&lt; PREV PAGE ${pageNum}/${totalPages}`;
-      prevBtn.style.display = "block";
       prevBtn.onclick = () => {
-        SoundFX.pageFlip();
+        SoundFX.click();
         renderDevicePage(deviceName, monthIndex, pageNum - 1);
       };
-    } else {
-      prevBtn.style.display = "none";
     }
-  } else {
-    flipNextBtn.style.display = "none";
-    const prevBtn = document.getElementById("devicePrevBtn");
-    if (prevBtn) prevBtn.style.display = "none";
+    
+    // Page indicator
+    const pageIndicator = document.createElement('span');
+    pageIndicator.innerHTML = `${pageNum + 1} / ${totalPages}`;
+    pageIndicator.style.cssText = `
+      color: var(--cyan);
+      font-family: monospace;
+      font-size: 11px;
+      padding: 0 10px;
+    `;
+    
+    // Next button
+    const nextBtn = document.createElement('button');
+    nextBtn.innerHTML = 'NEXT ▶';
+    nextBtn.style.cssText = `
+      background: ${pageNum < totalPages - 1 ? '#8b0000' : '#333'};
+      color: #fff;
+      border: none;
+      padding: 6px 15px;
+      border-radius: 20px;
+      font-family: monospace;
+      font-size: 10px;
+      cursor: ${pageNum < totalPages - 1 ? 'pointer' : 'not-allowed'};
+      opacity: ${pageNum < totalPages - 1 ? '1' : '0.5'};
+    `;
+    if (pageNum < totalPages - 1) {
+      nextBtn.onclick = () => {
+        SoundFX.click();
+        renderDevicePage(deviceName, monthIndex, pageNum + 1);
+      };
+    }
+    
+    paginationDiv.appendChild(prevBtn);
+    paginationDiv.appendChild(pageIndicator);
+    paginationDiv.appendChild(nextBtn);
+    
+    // Insert pagination after active-list
+    activeList.parentNode.insertBefore(paginationDiv, activeList.nextSibling);
   }
-
+  
+  // Hide the original flipNextBtn since we're using custom pagination
+  flipNextBtn.style.display = "none";
+  
   // Reset book pages (ensure page 1 visible)
   p1.classList.remove("flipped");
   p2.style.display = "none";
   p2Area.innerHTML = '';
-  totalValP2.innerText = '';  // no secondary total needed
+  totalValP2.innerText = '';
 }
 
 // ====== TERMINATE AGENT ======

@@ -16,9 +16,8 @@
             background-image: radial-gradient(circle at center, #0a1f29 0%, #01080b 100%);
         }
 
-        /* Tactical UI Box */
         .auth-container {
-            width: 350px; padding: 40px;
+            width: 380px; padding: 40px;
             background: rgba(2, 10, 13, 0.95);
             border: 1px solid var(--cyan);
             position: relative;
@@ -50,12 +49,15 @@
 
         #status {
             margin-top: 25px; font-size: 12px; text-align: center;
-            height: 15px; letter-spacing: 1px;
+            min-height: 60px; letter-spacing: 1px;
+            line-height: 1.4;
+            word-break: break-word;
         }
 
-        /* Glitch Effect on Denied */
         .denied { color: var(--red) !important; animation: shake 0.2s infinite; }
-        @keyframes shake { 0% { x:0; } 25% { transform: translateX(2px); } 50% { transform: translateX(-2px); } 100% { transform: x:0; } }
+        .granted { color: var(--green) !important; }
+        .debug { font-size: 9px; opacity: 0.5; margin-top: 15px; text-align: center; }
+        @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(2px); } 50% { transform: translateX(-2px); } 100% { transform: translateX(0); } }
     </style>
 </head>
 <body>
@@ -67,6 +69,7 @@
         <button id="authBtn">AUTHORIZE</button>
 
         <div id="status">SYSTEM_IDLE</div>
+        <div id="debugInfo" class="debug"></div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -84,46 +87,91 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
+        const debugDiv = document.getElementById('debugInfo');
+
+        async function testConnection() {
+            try {
+                // Test kung may laman ang agent collection
+                const testSnap = await db.collection("agent").limit(1).get();
+                debugDiv.innerHTML = `✅ Connected. Found ${testSnap.size} document(s) in "agent" collection.`;
+                
+                if (testSnap.size === 0) {
+                    debugDiv.innerHTML += `<br>⚠️ WARNING: "agent" collection is empty!`;
+                } else {
+                    testSnap.forEach(doc => {
+                        const data = doc.data();
+                        debugDiv.innerHTML += `<br>📄 Document: ${doc.id} | Fields: ${Object.keys(data).join(', ')}`;
+                    });
+                }
+            } catch (e) {
+                debugDiv.innerHTML = `❌ Connection error: ${e.message}`;
+            }
+        }
+
+        testConnection();
+
         document.getElementById('authBtn').addEventListener('click', async () => {
-            const key = document.getElementById('keyInput').value;
-            const status = document.getElementById('status');
+            const key = document.getElementById('keyInput').value.trim();
+            const statusDiv = document.getElementById('status');
 
-            if(!key) return;
+            if(!key || key.length === 0) {
+                statusDiv.innerText = "ENTER SECRET KEY";
+                statusDiv.classList.add('denied');
+                return;
+            }
 
-            status.innerText = "AUTHENTICATING...";
-            status.classList.remove('denied');
+            statusDiv.innerText = "AUTHENTICATING...";
+            statusDiv.classList.remove('denied');
+            statusDiv.classList.remove('granted');
+            statusDiv.style.color = "var(--cyan)";
 
             try {
-                // Hahanapin natin ang agent na may match na secretKey at status ay true
-                const snap = await db.collection("agents")
+                debugDiv.innerHTML = `🔍 Searching for secretKey: "${key}" in "agent" collection...`;
+                
+                const snap = await db.collection("agent")
                                      .where("secretKey", "==", key)
-                                     .where("status", "==", true)
                                      .get();
+
+                debugDiv.innerHTML += `<br>📊 Query returned ${snap.size} result(s).`;
 
                 if (!snap.empty) {
                     const agentData = snap.docs[0].data();
-                    status.innerText = "ACCESS_GRANTED";
-                    status.style.color = "var(--green)";
-
-                    // SECURED STORAGE: Naglalagay tayo ng timestamp para sa session validation
-                    const sessionToken = {
-                        agent: agentData.agent,
-                        authorized: true,
-                        expiry: Date.now() + (1000 * 60 * 60) // Valid for 1 hour
-                    };
+                    const agentName = agentData.agentName || snap.docs[0].id;
                     
-                    localStorage.setItem("session_token", btoa(JSON.stringify(sessionToken)));
+                    debugDiv.innerHTML += `<br>✅ Found agent: ${agentName}`;
+                    debugDiv.innerHTML += `<br>📄 Full data: ${JSON.stringify(agentData)}`;
+                    
+                    statusDiv.innerText = "ACCESS_GRANTED";
+                    statusDiv.classList.add('granted');
+                    statusDiv.style.color = "var(--green)";
+
+                    // Save session
+                    localStorage.setItem("cia_agent", agentName);
+                    localStorage.setItem("agent", agentName);
+                    localStorage.setItem("agent_verified", "true");
+                    localStorage.setItem("last_auth", new Date().toISOString());
 
                     setTimeout(() => {
                         window.location.replace("dashboard.html");
                     }, 1000);
                 } else {
-                    status.innerText = "INVALID_KEY_OR_REVOKED";
-                    status.classList.add('denied');
+                    statusDiv.innerText = "INVALID_SECRET_KEY";
+                    statusDiv.classList.add('denied');
+                    debugDiv.innerHTML += `<br>❌ No document found with secretKey = "${key}"`;
                     localStorage.clear();
                 }
             } catch (e) {
-                status.innerText = "CONNECTION_ERROR";
+                console.error("Auth error:", e);
+                statusDiv.innerText = "CONNECTION_ERROR";
+                statusDiv.classList.add('denied');
+                debugDiv.innerHTML += `<br>❌ Error: ${e.message}`;
+            }
+        });
+
+        // Allow Enter key to submit
+        document.getElementById('keyInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('authBtn').click();
             }
         });
     </script>

@@ -377,14 +377,13 @@ function renderAllMemoirs() {
 
 function renderDevicePage(deviceName, monthIndex, pageNum) {
   const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
-  const currentMonth = monthNames[monthIndex];
   
   // Get all missions for this device
   const deviceMissions = allMissions.filter(m => 
     (DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem) === deviceName
   );
   
-  // Collect all expense entries
+  // Collect all expense entries with missionID included
   let allExpenses = [];
   deviceMissions.forEach(mission => {
     if (mission.expensesBreakdown && Array.isArray(mission.expensesBreakdown)) {
@@ -394,6 +393,7 @@ function renderDevicePage(deviceName, monthIndex, pageNum) {
         if (expMonth === monthIndex) {
           allExpenses.push({
             vAgent: mission.vAgentID || null,
+            missionID: mission.missionID || "???",
             date: expDate,
             amount: exp.amount,
             description: exp.description || "FIELD_OPERATION",
@@ -435,14 +435,14 @@ function renderDevicePage(deviceName, monthIndex, pageNum) {
   const startIdx = pageNum * ITEMS_PER_PAGE;
   const pageLogs = flattenedLogs.slice(startIdx, startIdx + ITEMS_PER_PAGE);
   
-  // Build HTML with group headers for the page
+  // Build HTML with group headers
   let logsHTML = '';
   let lastVAgent = null;
   pageLogs.forEach(log => {
     const currentVAgent = log.vAgent === null ? null : log.vAgent;
     if (currentVAgent !== lastVAgent) {
       if (currentVAgent === null) {
-        logsHTML += `<div class="audit-separator" style="margin:15px 0 10px 0;">--- UNASSIGNED RECORDS ---</div>`;
+        logsHTML += `<div class="audit-separator" style="margin:15px 0 10px 0;">--- UNASSIGNED RECORDS (No vAgent#) ---</div>`;
       } else {
         const group = groups.get(currentVAgent);
         const totalAmt = group ? group.total : 0;
@@ -451,14 +451,27 @@ function renderDevicePage(deviceName, monthIndex, pageNum) {
       lastVAgent = currentVAgent;
     }
     const dateStr = `${log.date.getMonth()+1}/${log.date.getDate()}`;
-    logsHTML += `
-      <div class="expense-row" style="padding: 6px 0; margin-left: 12px;">
-        <div style="flex-grow:1;">
-          <div style="font-size:10px; opacity:0.8;">${dateStr} - ${log.description}</div>
+    
+    // For unassigned records, show Mission Order number
+    if (log.vAgent === null) {
+      logsHTML += `
+        <div class="expense-row" style="padding: 6px 0; margin-left: 12px;">
+          <div style="flex-grow:1;">
+            <div style="font-size:10px;"><span style="color:#8b0000;">MO#${log.missionID}</span> - ${dateStr} - ${log.description}</div>
+          </div>
+          <div><b>₱${log.amount.toLocaleString()}</b></div>
         </div>
-        <div><b>₱${log.amount.toLocaleString()}</b></div>
-      </div>
-    `;
+      `;
+    } else {
+      logsHTML += `
+        <div class="expense-row" style="padding: 6px 0; margin-left: 12px;">
+          <div style="flex-grow:1;">
+            <div style="font-size:10px; opacity:0.8;">${dateStr} - ${log.description}</div>
+          </div>
+          <div><b>₱${log.amount.toLocaleString()}</b></div>
+        </div>
+      `;
+    }
   });
   
   if (pageLogs.length === 0) {
@@ -516,8 +529,7 @@ function renderDevicePage(deviceName, monthIndex, pageNum) {
     totalVal.innerHTML = `<span style="font-size:12px; opacity:0.7;">(Total on last page)</span>`;
   }
   
-  // Create pagination controls inside the active-list area or near it
-  // Remove existing pagination controls first
+  // Create pagination controls
   const existingPagination = document.getElementById("devicePagination");
   if (existingPagination) existingPagination.remove();
   
@@ -533,7 +545,6 @@ function renderDevicePage(deviceName, monthIndex, pageNum) {
       border-top: 1px solid var(--border);
     `;
     
-    // Previous button
     const prevBtn = document.createElement('button');
     prevBtn.innerHTML = '◀ PREV';
     prevBtn.style.cssText = `
@@ -554,7 +565,6 @@ function renderDevicePage(deviceName, monthIndex, pageNum) {
       };
     }
     
-    // Page indicator
     const pageIndicator = document.createElement('span');
     pageIndicator.innerHTML = `${pageNum + 1} / ${totalPages}`;
     pageIndicator.style.cssText = `
@@ -564,7 +574,6 @@ function renderDevicePage(deviceName, monthIndex, pageNum) {
       padding: 0 10px;
     `;
     
-    // Next button
     const nextBtn = document.createElement('button');
     nextBtn.innerHTML = 'NEXT ▶';
     nextBtn.style.cssText = `
@@ -588,15 +597,10 @@ function renderDevicePage(deviceName, monthIndex, pageNum) {
     paginationDiv.appendChild(prevBtn);
     paginationDiv.appendChild(pageIndicator);
     paginationDiv.appendChild(nextBtn);
-    
-    // Insert pagination after active-list
     activeList.parentNode.insertBefore(paginationDiv, activeList.nextSibling);
   }
   
-  // Hide the original flipNextBtn since we're using custom pagination
   flipNextBtn.style.display = "none";
-  
-  // Reset book pages (ensure page 1 visible)
   p1.classList.remove("flipped");
   p2.style.display = "none";
   p2Area.innerHTML = '';

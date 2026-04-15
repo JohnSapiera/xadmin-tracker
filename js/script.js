@@ -145,7 +145,7 @@ function activateDevice(name, element) {
     const deviceMemoirsContainer = document.getElementById("deviceMemoirsContainer");
     if (deviceMemoirsContainer) {
       deviceMemoirsContainer.innerHTML = `
-        <button onclick="openMemoirs('${name}')" style="background:none; border:1px solid var(--cia-red); color:var(--cia-red); padding:10px; width:100%; cursor:pointer; font-weight: bold;">
+        <button onclick="openMemoirs('${name}')" style="background:none; border:1px solid #8b0000; color:#8b0000; padding:10px; width:100%; cursor:pointer; font-weight: bold;">
           [ VIEW_${name}_MEMOIRS ]
         </button>
       `;
@@ -287,6 +287,11 @@ window.closeMemoirs = () => {
   if (prevBtn) prevBtn.remove();
   const masterPagination = document.getElementById("masterPagination");
   if (masterPagination) masterPagination.remove();
+  // Reset any flip state
+  const p1 = document.getElementById("p1");
+  const p2 = document.getElementById("p2");
+  if (p1) p1.classList.remove("flipped");
+  if (p2) p2.style.display = "none";
 };
 
 window.openMemoirs = (mode) => {
@@ -297,24 +302,25 @@ window.openMemoirs = (mode) => {
   overlay.style.display = "flex";
   
   if (mode === "ALL") {
-    renderAllMemoirs();
+    renderMasterMemoirs();
   } else {
     currentMemoirsMode = mode;
-    const FIXED_MONTH = 3; // April (0=Jan, 3=Apr)
+    const FIXED_MONTH = 3; // April
     renderDevicePage(mode, FIXED_MONTH, 0);
   }
 };
 
-// ====== MASTER MEMOIRS (ALL DEVICES) ======
-function renderAllMemoirs() {
-  // Remove existing pagination
-  const existingPagination = document.getElementById("masterPagination");
-  if (existingPagination) existingPagination.remove();
+// ====== MASTER MEMOIRS (UNIQUE, WITH FLIP ANIMATION) ======
+let masterCurrentPage = 0;
+let masterTotalPages = 0;
+let masterDevicesList = [];
+
+function renderMasterMemoirs() {
+  // Reset to first page
+  masterCurrentPage = 0;
   
-  const MASTER_ITEMS_PER_PAGE = 10;
-  
-  // Collect all devices with their expenses (filtered for April)
-  const devices = [];
+  // Prepare data: collect all devices with their April expenses
+  masterDevicesList = [];
   for (const [deviceName, missions] of Object.entries(deviceData)) {
     let totalExpenses = 0;
     let expenseEntries = [];
@@ -339,7 +345,7 @@ function renderAllMemoirs() {
     });
     
     if (expenseEntries.length > 0) {
-      devices.push({
+      masterDevicesList.push({
         name: deviceName,
         total: totalExpenses,
         expenses: expenseEntries.sort((a, b) => b.date - a.date)
@@ -348,52 +354,54 @@ function renderAllMemoirs() {
   }
   
   // Sort by total expenses (highest first)
-  devices.sort((a, b) => b.total - a.total);
+  masterDevicesList.sort((a, b) => b.total - a.total);
+  masterTotalPages = Math.ceil(masterDevicesList.length / ITEMS_PER_PAGE);
   
-  const totalPages = Math.ceil(devices.length / MASTER_ITEMS_PER_PAGE);
+  // Get DOM elements
+  const targetName = document.getElementById("target-name");
+  const activeList = document.getElementById("active-list");
+  const totalVal = document.getElementById("total-val");
+  const flipNextBtn = document.getElementById("flipNextBtn");
+  const p2Area = document.getElementById("weapon-system-breakdown");
+  const totalValP2 = document.getElementById("total-val-p2");
+  const p1 = document.getElementById("p1");
+  const p2 = document.getElementById("p2");
   
-  function renderMasterPage(pageNum) {
-    const startIdx = pageNum * MASTER_ITEMS_PER_PAGE;
-    const pageDevices = devices.slice(startIdx, startIdx + MASTER_ITEMS_PER_PAGE);
-    
-    const targetName = document.getElementById("target-name");
-    const activeList = document.getElementById("active-list");
-    const totalVal = document.getElementById("total-val");
-    const flipNextBtn = document.getElementById("flipNextBtn");
-    const p2Area = document.getElementById("weapon-system-breakdown");
-    const totalValP2 = document.getElementById("total-val-p2");
-    const p1 = document.getElementById("p1");
-    const p2 = document.getElementById("p2");
-    
-    // Title with month indicator (disabled)
-    targetName.innerHTML = `MASTER MEMOIRS <span style="font-size:9px; color:#5c7882; margin-left:10px;">📅 APRIL 2024 (Fixed)</span>`;
+  // Set title (no cyan)
+  targetName.innerHTML = `📜 MASTER MEMOIRS <span style="font-size:9px; color:#888; margin-left:10px;">📅 APRIL 2024</span>`;
+  
+  // Hide the original flip button (we'll use our own)
+  flipNextBtn.style.display = "none";
+  p2.style.display = "none";
+  p1.classList.remove("flipped");
+  
+  // Function to render a specific page with flip animation
+  function showPage(pageNum, animate = false) {
+    const start = pageNum * ITEMS_PER_PAGE;
+    const pageDevices = masterDevicesList.slice(start, start + ITEMS_PER_PAGE);
+    const overallGrandTotal = masterDevicesList.reduce((sum, d) => sum + d.total, 0);
+    const isLastPage = (pageNum === masterTotalPages - 1) || masterTotalPages === 0;
     
     // Build HTML
     let devicesHTML = '';
-    let grandTotal = 0;
-    
     pageDevices.forEach(device => {
-      grandTotal += device.total;
-      
       devicesHTML += `
-        <div style="margin-bottom: 20px; border-left: 3px solid #8b0000; padding-left: 12px;">
-          <div style="font-size: 13px; font-weight: bold; color: #00f3ff; margin-bottom: 8px;">
-            🔧 ${device.name} <span style="color: #8b0000; font-size: 11px;">(Total: ₱${device.total.toLocaleString()})</span>
+        <div style="margin-bottom: 25px; border-left: 3px solid #8b0000; padding-left: 12px; background: rgba(0,0,0,0.2); border-radius: 0 8px 8px 0;">
+          <div style="font-size: 14px; font-weight: bold; color: #fff; margin-bottom: 8px; padding-top: 6px;">
+            🔧 ${device.name} <span style="color: #8b0000; font-size: 12px;">(Total: ₱${device.total.toLocaleString()})</span>
           </div>
       `;
       
       device.expenses.forEach(exp => {
         const dateStr = `${exp.date.getMonth()+1}/${exp.date.getDate()}`;
-        const vAgentDisplay = exp.vAgent ? `<span style="color:#8b0000;">vAgent# ${exp.vAgent}</span>` : `<span style="color:#5c7882;">[NO vAGENT]</span>`;
+        const vAgentDisplay = exp.vAgent ? `<span style="color:#8b0000;">vAgent# ${exp.vAgent}</span>` : `<span style="color:#aaa;">[NO vAGENT]</span>`;
         
         devicesHTML += `
-          <div class="expense-row" style="padding: 6px 0; margin-left: 12px;">
-            <div style="flex-grow:1;">
-              <div style="font-size: 10px;">
-                <span style="color:#8b0000;">MO#${exp.missionID}</span> - ${vAgentDisplay} - ${dateStr} - ${exp.description}
-              </div>
+          <div style="display: flex; justify-content: space-between; padding: 6px 0; margin-left: 12px; border-bottom: 1px dotted #333;">
+            <div style="flex-grow:1; font-size: 11px;">
+              <span style="color:#8b0000;">MO#${exp.missionID}</span> - ${vAgentDisplay} - ${dateStr} - ${exp.description}
             </div>
-            <div><b>₱${exp.amount.toLocaleString()}</b></div>
+            <div style="font-weight: bold; color: #fff;">₱${exp.amount.toLocaleString()}</div>
           </div>
         `;
       });
@@ -405,99 +413,113 @@ function renderAllMemoirs() {
       devicesHTML = '<center style="opacity:0.5; padding:20px;">[ NO EXPENSES FOR APRIL ]</center>';
     }
     
-    activeList.innerHTML = devicesHTML;
-    
-    // Calculate overall grand total
-    const overallGrandTotal = devices.reduce((sum, d) => sum + d.total, 0);
-    
-    // Show total on last page only
-    const isLastPage = (pageNum === totalPages - 1) || totalPages === 0;
-    if (isLastPage) {
-      totalVal.innerHTML = `<span style="font-size:16px; color:#00f3ff;">GRAND TOTAL: ₱ ${overallGrandTotal.toLocaleString()}</span>`;
+    // Update content with or without animation
+    if (animate) {
+      // Apply flip animation
+      activeList.style.transition = 'transform 0.4s ease-in-out';
+      activeList.style.transform = 'rotateY(90deg)';
+      setTimeout(() => {
+        activeList.innerHTML = devicesHTML;
+        activeList.style.transform = 'rotateY(0deg)';
+        setTimeout(() => {
+          activeList.style.transition = '';
+        }, 400);
+      }, 200);
     } else {
-      totalVal.innerHTML = `<span style="font-size:12px; opacity:0.7;">(Grand Total on last page)</span>`;
+      activeList.innerHTML = devicesHTML;
     }
     
-    // Pagination controls
+    // Update total display
+    if (isLastPage) {
+      totalVal.innerHTML = `<span style="font-size: 18px; color: #fff; background: #8b0000; padding: 4px 12px; border-radius: 20px;">🏆 GRAND TOTAL: ₱ ${overallGrandTotal.toLocaleString()}</span>`;
+    } else {
+      totalVal.innerHTML = `<span style="font-size: 12px; opacity: 0.7;">📄 Page ${pageNum+1} of ${masterTotalPages} — Grand Total on last page</span>`;
+    }
+    
+    // Update pagination buttons
+    updatePaginationControls(pageNum);
+  }
+  
+  function updatePaginationControls(pageNum) {
     const existingPag = document.getElementById("masterPagination");
     if (existingPag) existingPag.remove();
     
-    if (totalPages > 1) {
-      const paginationDiv = document.createElement('div');
-      paginationDiv.id = "masterPagination";
-      paginationDiv.style.cssText = `
-        display: flex;
-        justify-content: center;
-        gap: 15px;
-        margin-top: 15px;
-        padding: 10px;
-        border-top: 1px solid var(--border);
-      `;
-      
-      const prevBtn = document.createElement('button');
-      prevBtn.innerHTML = '◀ PREV';
-      prevBtn.style.cssText = `
-        background: ${pageNum > 0 ? '#8b0000' : '#333'};
-        color: #fff;
-        border: none;
-        padding: 6px 15px;
-        border-radius: 20px;
-        font-family: monospace;
-        font-size: 10px;
-        cursor: ${pageNum > 0 ? 'pointer' : 'not-allowed'};
-        opacity: ${pageNum > 0 ? '1' : '0.5'};
-      `;
-      if (pageNum > 0) {
-        prevBtn.onclick = () => {
-          SoundFX.click();
-          renderMasterPage(pageNum - 1);
-        };
-      }
-      
-      const pageIndicator = document.createElement('span');
-      pageIndicator.innerHTML = `${pageNum + 1} / ${totalPages}`;
-      pageIndicator.style.cssText = `
-        color: var(--cyan);
-        font-family: monospace;
-        font-size: 11px;
-        padding: 0 10px;
-      `;
-      
-      const nextBtn = document.createElement('button');
-      nextBtn.innerHTML = 'NEXT ▶';
-      nextBtn.style.cssText = `
-        background: ${pageNum < totalPages - 1 ? '#8b0000' : '#333'};
-        color: #fff;
-        border: none;
-        padding: 6px 15px;
-        border-radius: 20px;
-        font-family: monospace;
-        font-size: 10px;
-        cursor: ${pageNum < totalPages - 1 ? 'pointer' : 'not-allowed'};
-        opacity: ${pageNum < totalPages - 1 ? '1' : '0.5'};
-      `;
-      if (pageNum < totalPages - 1) {
-        nextBtn.onclick = () => {
-          SoundFX.click();
-          renderMasterPage(pageNum + 1);
-        };
-      }
-      
-      paginationDiv.appendChild(prevBtn);
-      paginationDiv.appendChild(pageIndicator);
-      paginationDiv.appendChild(nextBtn);
-      activeList.parentNode.insertBefore(paginationDiv, activeList.nextSibling);
+    if (masterTotalPages <= 1) return;
+    
+    const paginationDiv = document.createElement('div');
+    paginationDiv.id = "masterPagination";
+    paginationDiv.style.cssText = `
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 20px;
+      padding: 12px;
+      border-top: 1px solid #333;
+    `;
+    
+    const prevBtn = document.createElement('button');
+    prevBtn.innerHTML = '◀ PREV PAGE';
+    prevBtn.style.cssText = `
+      background: ${pageNum > 0 ? '#8b0000' : '#444'};
+      color: white;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 30px;
+      font-family: monospace;
+      font-size: 11px;
+      cursor: ${pageNum > 0 ? 'pointer' : 'not-allowed'};
+      opacity: ${pageNum > 0 ? '1' : '0.5'};
+      transition: 0.2s;
+    `;
+    if (pageNum > 0) {
+      prevBtn.onclick = () => {
+        SoundFX.click();
+        masterCurrentPage--;
+        showPage(masterCurrentPage, true);
+      };
     }
     
-    // Hide original flip button and page 2
-    flipNextBtn.style.display = "none";
-    p1.classList.remove("flipped");
-    p2.style.display = "none";
-    p2Area.innerHTML = '';
-    totalValP2.innerText = '';
+    const pageIndicator = document.createElement('span');
+    pageIndicator.innerHTML = `${pageNum+1} / ${masterTotalPages}`;
+    pageIndicator.style.cssText = `
+      color: #fff;
+      font-family: monospace;
+      font-size: 13px;
+      background: #222;
+      padding: 4px 12px;
+      border-radius: 20px;
+    `;
+    
+    const nextBtn = document.createElement('button');
+    nextBtn.innerHTML = 'NEXT PAGE ▶';
+    nextBtn.style.cssText = `
+      background: ${pageNum < masterTotalPages-1 ? '#8b0000' : '#444'};
+      color: white;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 30px;
+      font-family: monospace;
+      font-size: 11px;
+      cursor: ${pageNum < masterTotalPages-1 ? 'pointer' : 'not-allowed'};
+      opacity: ${pageNum < masterTotalPages-1 ? '1' : '0.5'};
+      transition: 0.2s;
+    `;
+    if (pageNum < masterTotalPages-1) {
+      nextBtn.onclick = () => {
+        SoundFX.click();
+        masterCurrentPage++;
+        showPage(masterCurrentPage, true);
+      };
+    }
+    
+    paginationDiv.appendChild(prevBtn);
+    paginationDiv.appendChild(pageIndicator);
+    paginationDiv.appendChild(nextBtn);
+    activeList.parentNode.insertBefore(paginationDiv, activeList.nextSibling);
   }
   
-  renderMasterPage(0);
+  // Initial render
+  showPage(0, false);
 }
 
 // ====== DEVICE MEMOIRS (SINGLE DEVICE) ======
@@ -667,13 +689,13 @@ function renderDevicePage(deviceName, monthIndex, pageNum) {
       gap: 15px;
       margin-top: 15px;
       padding: 10px;
-      border-top: 1px solid var(--border);
+      border-top: 1px solid #333;
     `;
     
     const prevBtn = document.createElement('button');
     prevBtn.innerHTML = '◀ PREV';
     prevBtn.style.cssText = `
-      background: ${pageNum > 0 ? '#8b0000' : '#333'};
+      background: ${pageNum > 0 ? '#8b0000' : '#444'};
       color: #fff;
       border: none;
       padding: 6px 15px;
@@ -693,7 +715,7 @@ function renderDevicePage(deviceName, monthIndex, pageNum) {
     const pageIndicator = document.createElement('span');
     pageIndicator.innerHTML = `${pageNum + 1} / ${totalPages}`;
     pageIndicator.style.cssText = `
-      color: var(--cyan);
+      color: #fff;
       font-family: monospace;
       font-size: 11px;
       padding: 0 10px;
@@ -702,7 +724,7 @@ function renderDevicePage(deviceName, monthIndex, pageNum) {
     const nextBtn = document.createElement('button');
     nextBtn.innerHTML = 'NEXT ▶';
     nextBtn.style.cssText = `
-      background: ${pageNum < totalPages - 1 ? '#8b0000' : '#333'};
+      background: ${pageNum < totalPages - 1 ? '#8b0000' : '#444'};
       color: #fff;
       border: none;
       padding: 6px 15px;

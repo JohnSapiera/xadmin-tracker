@@ -17,7 +17,7 @@
             padding: 20px;
         }
         .container {
-            max-width: 550px;
+            max-width: 580px;
             width: 100%;
             background: #051014;
             border: 1px solid #00f3ff;
@@ -73,7 +73,6 @@
             background: rgba(0,243,255,0.15);
             color: #00f3ff;
         }
-        /* Dropdown */
         .dropdown-section {
             margin-bottom: 25px;
         }
@@ -100,7 +99,6 @@
         select:focus {
             border-color: #00f3ff;
         }
-        /* Status Radio Buttons (3 options) */
         .status-section {
             background: #000;
             border: 1px solid #1a2f37;
@@ -276,8 +274,9 @@
 
         let allAgents = [];
         let currentAgent = null;
-        let dropdownOptions = []; // { value, display, type, count, weaponSystem }
-        let weaponData = {}; // store weapon details per agent
+        let dropdownOptions = [];
+        let weaponData = {};
+        let blacklistData = { count: 0, items: [] };
 
         // ========== LOAD AGENTS ==========
         async function loadAgents() {
@@ -336,7 +335,6 @@
             updateBtn.disabled = true;
             statusRadios.forEach(r => r.checked = false);
             
-            // Reset status option styles
             document.querySelectorAll('.status-option').forEach(opt => {
                 opt.classList.remove('disabled');
             });
@@ -346,16 +344,18 @@
                     .where("agent", "==", agent)
                     .get();
                 
-                // Collect weapon systems with their vAgent counts and mission orders
-                const weaponMap = new Map(); // key: weaponSystem, value: { vAgentCount, missionOrders, hasVAgent }
+                // Collect weapon systems with their vAgent counts
+                const weaponMap = new Map();
                 let totalNoVAgent = 0;
                 let noVAgentMissions = [];
+                let blacklistItems = []; // For BLACKLIST: find documents with "blacklist" field
                 
                 snapshot.forEach(doc => {
                     const data = doc.data();
                     const weapon = data.weaponSystem;
                     const vAgent = data.vAgentID;
                     const missionID = data.missionID;
+                    const blacklistValue = data.blacklist; // field name "blacklist" sa database
                     
                     if (!weapon || weapon === 'INIT') return;
                     
@@ -367,18 +367,33 @@
                     if (vAgent && vAgent !== '' && vAgent !== 'INIT') {
                         info.vAgentCount++;
                         info.hasVAgent = true;
-                        info.missionOrders.push({ missionID, vAgent });
+                        info.missionOrders.push({ missionID, vAgent, weapon });
                     } else {
                         totalNoVAgent++;
                         noVAgentMissions.push({ missionID, weapon });
                     }
+                    
+                    // Collect blacklist items (documents with "blacklist" field)
+                    if (blacklistValue && blacklistValue !== '') {
+                        blacklistItems.push({
+                            targetID: blacklistValue,
+                            missionID: missionID,
+                            weaponSystem: weapon
+                        });
+                    }
                 });
+                
+                // Store blacklist data globally
+                blacklistData = {
+                    count: blacklistItems.length,
+                    items: blacklistItems
+                };
                 
                 // Build dropdown options
                 dropdownOptions = [];
                 weaponData = {};
                 
-                // Device 1, Device 2, etc. (only those with vAgent)
+                // Device options (only those with vAgent)
                 let deviceIndex = 1;
                 for (const [weapon, info] of weaponMap.entries()) {
                     if (info.hasVAgent) {
@@ -406,6 +421,18 @@
                         missionOrders: noVAgentMissions
                     });
                     weaponData['no_agent'] = { missionOrders: noVAgentMissions };
+                }
+                
+                // BLACKLIST option - only show if there are blacklist items
+                if (blacklistItems.length > 0) {
+                    dropdownOptions.push({
+                        value: 'blacklist',
+                        display: `⚫ BLACKLIST - ${blacklistItems.length} target(s) found`,
+                        type: 'blacklist',
+                        count: blacklistItems.length,
+                        items: blacklistItems
+                    });
+                    weaponData['blacklist'] = { items: blacklistItems };
                 }
                 
                 // Add default option at the beginning
@@ -464,7 +491,20 @@
                     }
                 }
                 statusMsg.innerHTML = '<span class="warning">⚠️ "No Assign Agent#" can only be TERMINATED</span>';
-            } else if (selectedOption && selectedOption.type === 'device') {
+            } 
+            // If "BLACKLIST" is selected, disable ACTIVE (only TERMINATED allowed)
+            else if (selectedOption && selectedOption.type === 'blacklist') {
+                const activeLabel = document.querySelector('.status-option input[value="ACTIVE"]')?.closest('.status-option');
+                if (activeLabel) {
+                    activeLabel.classList.add('disabled');
+                    activeLabel.querySelector('input').disabled = true;
+                    if (document.querySelector('input[name="status"]:checked')?.value === 'ACTIVE') {
+                        document.querySelector('input[name="status"]:checked').checked = false;
+                    }
+                }
+                statusMsg.innerHTML = '<span class="warning">⚠️ BLACKLIST items will be saved to TERMINATED_INFO</span>';
+            }
+            else if (selectedOption && selectedOption.type === 'device') {
                 statusMsg.innerHTML = `📌 Selected: ${selectedOption.display}`;
             } else {
                 statusMsg.innerHTML = 'Select an option and status';
@@ -499,10 +539,15 @@
             
             const selectedOption = dropdownOptions.find(opt => opt.value === selectedValue);
             
-            // Validation for No Assign Agent#
+            // Validation rules
             if (selectedOption.type === 'no_agent' && selectedStatus !== 'TERMINATED') {
                 statusMsg.innerHTML = '<span class="error">❌ "No Assign Agent#" can only be TERMINATED</span>';
                 return;
+            }
+            
+            if (selectedOption.type === 'blacklist') {
+                // BLACKLIST always goes to terminated_info
+                selectedStatus = 'TERMINATED';
             }
             
             // Confirm action
@@ -514,11 +559,11 @@
             updateBtn.disabled = true;
             
             try {
-                if (selectedStatus === 'BLACKLIST') {
-                    // Handle BLACKLIST: save targetID to blacklist collection
-                    await saveToBlacklist(selectedOption);
+                if (selectedOption.type === 'blacklist') {
+                    // Save blacklist items to terminated_info
+                    await saveBlacklistToTerminated(selectedOption);
                 } else {
-                    // Handle ACTIVE or TERMINATED: save mission orders to active_info or terminated_info
+                    // Save mission orders to active_info or terminated_info
                     await saveMissionOrders(selectedOption, selectedStatus);
                 }
                 
@@ -540,7 +585,6 @@
                 throw new Error('No mission orders found for this selection');
             }
             
-            // Create a batch to save all mission orders
             const batch = db.batch();
             const timestamp = firebase.firestore.FieldValue.serverTimestamp();
             
@@ -551,7 +595,7 @@
                 batch.set(docRef, {
                     agent: currentAgent,
                     missionID: order.missionID,
-                    weaponSystem: selectedOption.weaponSystem || 'N/A',
+                    weaponSystem: selectedOption.weaponSystem || order.weapon || 'N/A',
                     vAgent: order.vAgent || null,
                     status: status,
                     timestamp: timestamp,
@@ -562,7 +606,7 @@
             
             await batch.commit();
             
-            // Also save a summary document
+            // Summary document
             const summaryId = `${currentAgent}_${selectedOption.value}_${Date.now()}`;
             await db.collection(collectionName).doc(summaryId).set({
                 agent: currentAgent,
@@ -577,50 +621,48 @@
             console.log(`Saved ${missionOrders.length} mission orders to ${collectionName}`);
         }
 
-        async function saveToBlacklist(selectedOption) {
-            // For BLACKLIST, we need to get targetID from mission orders
-            // First, find all mission orders for this weapon/device that have targetID
-            const snapshot = await db.collection("mission_orders")
-                .where("agent", "==", currentAgent)
-                .where("weaponSystem", "==", selectedOption.weaponSystem)
-                .get();
+        async function saveBlacklistToTerminated(selectedOption) {
+            const collectionName = 'terminated_info';
+            const blacklistItems = selectedOption.items;
             
-            const blacklistItems = [];
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                if (data.targetID && data.targetID !== '') {
-                    blacklistItems.push({
-                        targetID: data.targetID,
-                        missionID: data.missionID,
-                        weaponSystem: data.weaponSystem
-                    });
-                }
-            });
-            
-            if (blacklistItems.length === 0) {
-                throw new Error('No targetID found for blacklist');
+            if (!blacklistItems || blacklistItems.length === 0) {
+                throw new Error('No blacklist items found');
             }
             
             const batch = db.batch();
             const timestamp = firebase.firestore.FieldValue.serverTimestamp();
             
             for (const item of blacklistItems) {
-                const docId = `${currentAgent}_${item.targetID}_${Date.now()}`;
-                const docRef = db.collection('blacklist').doc(docId);
+                const docId = `${currentAgent}_blacklist_${item.targetID}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+                const docRef = db.collection(collectionName).doc(docId);
                 
                 batch.set(docRef, {
                     agent: currentAgent,
                     targetID: item.targetID,
                     missionID: item.missionID,
                     weaponSystem: item.weaponSystem,
-                    status: 'BLACKLISTED',
+                    status: 'TERMINATED',
+                    sourceType: 'blacklist',
                     timestamp: timestamp,
-                    sourceType: selectedOption.type
+                    savedBy: 'status_manager'
                 });
             }
             
             await batch.commit();
-            console.log(`Saved ${blacklistItems.length} items to blacklist collection`);
+            
+            // Summary document
+            const summaryId = `${currentAgent}_blacklist_summary_${Date.now()}`;
+            await db.collection(collectionName).doc(summaryId).set({
+                agent: currentAgent,
+                selection: 'blacklist',
+                display: `BLACKLIST - ${blacklistItems.length} target(s)`,
+                count: blacklistItems.length,
+                status: 'TERMINATED',
+                timestamp: timestamp,
+                isSummary: true
+            });
+            
+            console.log(`Saved ${blacklistItems.length} blacklist items to ${collectionName}`);
         }
 
         // Event listener for update button

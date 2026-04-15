@@ -17,7 +17,7 @@
             padding: 20px;
         }
         .container {
-            max-width: 900px;
+            max-width: 550px;
             width: 100%;
             background: #051014;
             border: 1px solid #00f3ff;
@@ -34,8 +34,8 @@
         }
         .agents-section {
             text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
             border-bottom: 1px solid #1a2f37;
         }
         .section-title {
@@ -73,23 +73,14 @@
             background: rgba(0,243,255,0.15);
             color: #00f3ff;
         }
-        /* Dropdown Grid */
-        .dropdown-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        .dropdown-card {
-            background: #000;
-            border: 1px solid #1a2f37;
-            border-radius: 8px;
-            padding: 15px;
+        /* Dropdown */
+        .dropdown-section {
+            margin-bottom: 25px;
         }
         .dropdown-title {
             color: #00f3ff;
-            font-size: 10px;
-            margin-bottom: 12px;
+            font-size: 11px;
+            margin-bottom: 10px;
             text-align: center;
             letter-spacing: 1px;
         }
@@ -98,30 +89,28 @@
             background: #01080b;
             border: 1px solid #1a2f37;
             color: #05ffa1;
-            padding: 12px;
+            padding: 14px;
             font-family: 'Share Tech Mono', monospace;
-            font-size: 11px;
-            border-radius: 6px;
+            font-size: 13px;
+            border-radius: 8px;
             outline: none;
+            text-align: center;
+            cursor: pointer;
         }
         select:focus {
             border-color: #00f3ff;
         }
-        select:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        /* Status Radio Buttons */
+        /* Status Radio Buttons (3 options) */
         .status-section {
             background: #000;
             border: 1px solid #1a2f37;
             border-radius: 8px;
             padding: 15px;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
         .status-title {
             color: #00f3ff;
-            font-size: 10px;
+            font-size: 11px;
             margin-bottom: 15px;
             text-align: center;
             letter-spacing: 1px;
@@ -129,22 +118,24 @@
         .status-options {
             display: flex;
             justify-content: center;
-            gap: 30px;
+            gap: 20px;
+            flex-wrap: wrap;
         }
         .status-option {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             cursor: pointer;
-            padding: 8px 25px;
+            padding: 8px 20px;
             background: #01080b;
             border: 1px solid #1a2f37;
             border-radius: 40px;
+            transition: 0.2s;
         }
         .status-option input {
             accent-color: #00f3ff;
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
         }
         .status-option span {
             color: #05ffa1;
@@ -158,15 +149,19 @@
         .status-option:has(input:checked) span {
             color: #00f3ff;
         }
+        .status-option.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
         .update-section {
             text-align: center;
-            margin-top: 20px;
         }
         .update-btn {
+            width: 100%;
             background: #00f3ff;
             color: #000;
             border: none;
-            padding: 14px 30px;
+            padding: 14px;
             border-radius: 40px;
             font-family: monospace;
             font-size: 14px;
@@ -193,16 +188,20 @@
         }
         .success { color: #05ffa1; }
         .error { color: #ff003c; }
+        .warning { color: #ffbd00; }
         .loading, .empty {
             text-align: center;
             color: #5c7882;
             padding: 20px;
         }
-        .info-text {
-            font-size: 9px;
-            color: #5c7882;
-            margin-top: 8px;
-            text-align: center;
+        .info-badge {
+            display: inline-block;
+            background: #1a2f37;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 10px;
+            margin-left: 8px;
+            color: #00f3ff;
         }
     </style>
 </head>
@@ -218,49 +217,18 @@
             </div>
         </div>
 
-        <!-- 4 DROPDOWNS (2x2 Grid) -->
-        <div class="dropdown-grid">
-            <!-- 1st: Weapon System with vAgent -->
-            <div class="dropdown-card">
-                <div class="dropdown-title">🔫 WEAPON SYSTEM (with vAgent)</div>
-                <select id="weaponWithVAgent" disabled>
-                    <option>Select agent first</option>
-                </select>
-                <div class="info-text">Active devices with vAgent#</div>
-            </div>
-
-            <!-- 2nd: Weapon System without vAgent -->
-            <div class="dropdown-card">
-                <div class="dropdown-title">⚠️ WEAPON SYSTEM (NO vAGENT)</div>
-                <select id="weaponNoVAgent" disabled>
-                    <option>Select agent first</option>
-                </select>
-                <div class="info-text">Unassigned weapon systems</div>
-            </div>
-
-            <!-- 3rd: Mission Order # without vAgent -->
-            <div class="dropdown-card">
-                <div class="dropdown-title">📋 MISSION ORDER (NO vAGENT)</div>
-                <select id="missionNoVAgent" disabled>
-                    <option>Select agent first</option>
-                </select>
-                <div class="info-text">Mission orders without vAgent#</div>
-            </div>
-
-            <!-- 4th: BLACKLIST (targetID) -->
-            <div class="dropdown-card">
-                <div class="dropdown-title">🚫 BLACKLIST (targetID)</div>
-                <select id="blacklistSelect" disabled>
-                    <option>Select agent first</option>
-                </select>
-                <div class="info-text">Targeted IDs for termination</div>
-            </div>
+        <!-- SINGLE DROPDOWN -->
+        <div class="dropdown-section">
+            <div class="dropdown-title">🔽 SELECT DEVICE / CATEGORY</div>
+            <select id="mainDropdown" disabled>
+                <option value="">-- SELECT --</option>
+            </select>
         </div>
 
-        <!-- STATUS RADIO BUTTONS -->
+        <!-- STATUS RADIO BUTTONS (3 options) -->
         <div class="status-section">
-            <div class="status-title">📌 SELECT STATUS</div>
-            <div class="status-options">
+            <div class="status-title">📌 SELECT STATUS ACTION</div>
+            <div class="status-options" id="statusOptions">
                 <label class="status-option">
                     <input type="radio" name="status" value="ACTIVE">
                     <span>🟢 ACTIVE</span>
@@ -268,6 +236,10 @@
                 <label class="status-option">
                     <input type="radio" name="status" value="TERMINATED">
                     <span>🔴 TERMINATED</span>
+                </label>
+                <label class="status-option">
+                    <input type="radio" name="status" value="BLACKLIST">
+                    <span>⚫ BLACKLIST</span>
                 </label>
             </div>
         </div>
@@ -297,22 +269,15 @@
 
         // DOM Elements
         const agentRadioGroup = document.getElementById('agentRadioGroup');
-        const weaponWithVAgent = document.getElementById('weaponWithVAgent');
-        const weaponNoVAgent = document.getElementById('weaponNoVAgent');
-        const missionNoVAgent = document.getElementById('missionNoVAgent');
-        const blacklistSelect = document.getElementById('blacklistSelect');
+        const mainDropdown = document.getElementById('mainDropdown');
         const updateBtn = document.getElementById('updateBtn');
         const statusMsg = document.getElementById('statusMsg');
         const statusRadios = document.querySelectorAll('input[name="status"]');
 
         let allAgents = [];
         let currentAgent = null;
-        
-        // Data stores
-        let weaponWithVAgentList = [];      // { value, display }
-        let weaponNoVAgentList = [];
-        let missionNoVAgentList = [];        // { value: missionID, display: missionID }
-        let blacklistList = [];               // { value: targetID, display: targetID }
+        let dropdownOptions = []; // { value, display, type, count, weaponSystem }
+        let weaponData = {}; // store weapon details per agent
 
         // ========== LOAD AGENTS ==========
         async function loadAgents() {
@@ -361,91 +326,106 @@
             });
         }
 
-        // ========== SELECT AGENT: LOAD ALL DATA ==========
+        // ========== SELECT AGENT: BUILD DROPDOWN ==========
         async function selectAgent(agent) {
             currentAgent = agent;
             statusMsg.innerHTML = `⏳ Loading data for ${agent}...`;
             
-            // Reset dropdowns
-            const dropdowns = [weaponWithVAgent, weaponNoVAgent, missionNoVAgent, blacklistSelect];
-            dropdowns.forEach(d => { d.disabled = true; d.innerHTML = '<option>Loading...</option>'; });
+            mainDropdown.disabled = true;
+            mainDropdown.innerHTML = '<option value="">Loading...</option>';
             updateBtn.disabled = true;
             statusRadios.forEach(r => r.checked = false);
             
-            weaponWithVAgentList = [];
-            weaponNoVAgentList = [];
-            missionNoVAgentList = [];
-            blacklistList = [];
+            // Reset status option styles
+            document.querySelectorAll('.status-option').forEach(opt => {
+                opt.classList.remove('disabled');
+            });
             
             try {
                 const snapshot = await db.collection("mission_orders")
                     .where("agent", "==", agent)
                     .get();
                 
-                const weaponMap = new Map(); // for weapon categorization
+                // Collect weapon systems with their vAgent counts and mission orders
+                const weaponMap = new Map(); // key: weaponSystem, value: { vAgentCount, missionOrders, hasVAgent }
+                let totalNoVAgent = 0;
+                let noVAgentMissions = [];
                 
                 snapshot.forEach(doc => {
                     const data = doc.data();
                     const weapon = data.weaponSystem;
                     const vAgent = data.vAgentID;
                     const missionID = data.missionID;
-                    const targetID = data.targetID;
                     
                     if (!weapon || weapon === 'INIT') return;
                     
-                    // Track weapon categories
                     if (!weaponMap.has(weapon)) {
-                        weaponMap.set(weapon, { hasVAgent: false, noVAgent: false });
+                        weaponMap.set(weapon, { vAgentCount: 0, missionOrders: [], hasVAgent: false });
                     }
-                    const weaponInfo = weaponMap.get(weapon);
+                    const info = weaponMap.get(weapon);
+                    
                     if (vAgent && vAgent !== '' && vAgent !== 'INIT') {
-                        weaponInfo.hasVAgent = true;
+                        info.vAgentCount++;
+                        info.hasVAgent = true;
+                        info.missionOrders.push({ missionID, vAgent });
                     } else {
-                        weaponInfo.noVAgent = true;
-                    }
-                    
-                    // Collect mission orders without vAgent
-                    if ((!vAgent || vAgent === '' || vAgent === 'INIT') && missionID && missionID !== 'INIT') {
-                        missionNoVAgentList.push({ value: missionID, display: missionID });
-                    }
-                    
-                    // Collect blacklist (targetID)
-                    if (targetID && targetID !== '' && targetID !== 'INIT') {
-                        blacklistList.push({ value: targetID, display: targetID });
+                        totalNoVAgent++;
+                        noVAgentMissions.push({ missionID, weapon });
                     }
                 });
                 
-                // Build weapon lists
+                // Build dropdown options
+                dropdownOptions = [];
+                weaponData = {};
+                
+                // Device 1, Device 2, etc. (only those with vAgent)
+                let deviceIndex = 1;
                 for (const [weapon, info] of weaponMap.entries()) {
                     if (info.hasVAgent) {
-                        weaponWithVAgentList.push({ value: weapon, display: weapon });
-                    }
-                    if (info.noVAgent) {
-                        weaponNoVAgentList.push({ value: weapon, display: weapon });
+                        const displayName = `Device ${deviceIndex} (${weapon}) - ${info.vAgentCount} vAgent(s)`;
+                        dropdownOptions.push({
+                            value: `device_${deviceIndex}`,
+                            display: displayName,
+                            type: 'device',
+                            weaponSystem: weapon,
+                            count: info.vAgentCount,
+                            missionOrders: info.missionOrders
+                        });
+                        weaponData[`device_${deviceIndex}`] = { weaponSystem: weapon, missionOrders: info.missionOrders };
+                        deviceIndex++;
                     }
                 }
                 
-                // Remove duplicates from mission list and blacklist
-                missionNoVAgentList = [...new Map(missionNoVAgentList.map(item => [item.value, item])).values()];
-                blacklistList = [...new Map(blacklistList.map(item => [item.value, item])).values()];
+                // No Assign Agent# option
+                if (totalNoVAgent > 0) {
+                    dropdownOptions.push({
+                        value: 'no_agent',
+                        display: `⚠️ No Assign Agent# - ${totalNoVAgent} mission(s) without vAgent`,
+                        type: 'no_agent',
+                        count: totalNoVAgent,
+                        missionOrders: noVAgentMissions
+                    });
+                    weaponData['no_agent'] = { missionOrders: noVAgentMissions };
+                }
                 
-                // Sort alphabetically
-                weaponWithVAgentList.sort((a,b) => a.display.localeCompare(b.display));
-                weaponNoVAgentList.sort((a,b) => a.display.localeCompare(b.display));
-                missionNoVAgentList.sort((a,b) => a.display.localeCompare(b.display));
-                blacklistList.sort((a,b) => a.display.localeCompare(b.display));
+                // Add default option at the beginning
+                dropdownOptions.unshift({ value: '', display: '-- SELECT --', type: 'default' });
                 
-                // Populate dropdowns
-                populateDropdown(weaponWithVAgent, weaponWithVAgentList, 'No weapons with vAgent');
-                populateDropdown(weaponNoVAgent, weaponNoVAgentList, 'No unassigned weapons');
-                populateDropdown(missionNoVAgent, missionNoVAgentList, 'No missions without vAgent');
-                populateDropdown(blacklistSelect, blacklistList, 'No blacklist entries');
+                // Populate dropdown
+                mainDropdown.innerHTML = '';
+                dropdownOptions.forEach(opt => {
+                    const option = document.createElement('option');
+                    option.value = opt.value;
+                    option.textContent = opt.display;
+                    option.setAttribute('data-type', opt.type);
+                    mainDropdown.appendChild(option);
+                });
+                mainDropdown.disabled = false;
                 
-                const total = weaponWithVAgentList.length + weaponNoVAgentList.length + missionNoVAgentList.length + blacklistList.length;
-                statusMsg.innerHTML = `<span class="success">✅ Loaded ${total} items for ${agent}</span>`;
+                // Add event listener to update status options based on selection
+                mainDropdown.onchange = updateStatusOptionsBasedOnSelection;
                 
-                // Enable update button if at least one dropdown has selection
-                updateBtn.disabled = false;
+                statusMsg.innerHTML = `<span class="success">✅ Loaded ${dropdownOptions.length - 1} option(s) for ${agent}</span>`;
                 
             } catch (error) {
                 console.error("Error loading data:", error);
@@ -453,99 +433,96 @@
             }
         }
 
-        function populateDropdown(selectElement, items, emptyMessage) {
-            selectElement.innerHTML = '';
-            if (items.length === 0) {
-                selectElement.innerHTML = `<option>${emptyMessage}</option>`;
-                selectElement.disabled = true;
+        function updateStatusOptionsBasedOnSelection() {
+            const selectedValue = mainDropdown.value;
+            const selectedOption = dropdownOptions.find(opt => opt.value === selectedValue);
+            
+            // Reset all status options to enabled
+            const statusLabels = document.querySelectorAll('.status-option');
+            statusLabels.forEach(label => {
+                label.classList.remove('disabled');
+                const radio = label.querySelector('input');
+                if (radio) radio.disabled = false;
+            });
+            
+            // If "No Assign Agent#" is selected, disable ACTIVE and BLACKLIST
+            if (selectedOption && selectedOption.type === 'no_agent') {
+                const activeLabel = document.querySelector('.status-option input[value="ACTIVE"]')?.closest('.status-option');
+                const blacklistLabel = document.querySelector('.status-option input[value="BLACKLIST"]')?.closest('.status-option');
+                if (activeLabel) {
+                    activeLabel.classList.add('disabled');
+                    activeLabel.querySelector('input').disabled = true;
+                    if (document.querySelector('input[name="status"]:checked')?.value === 'ACTIVE') {
+                        document.querySelector('input[name="status"]:checked').checked = false;
+                    }
+                }
+                if (blacklistLabel) {
+                    blacklistLabel.classList.add('disabled');
+                    blacklistLabel.querySelector('input').disabled = true;
+                    if (document.querySelector('input[name="status"]:checked')?.value === 'BLACKLIST') {
+                        document.querySelector('input[name="status"]:checked').checked = false;
+                    }
+                }
+                statusMsg.innerHTML = '<span class="warning">⚠️ "No Assign Agent#" can only be TERMINATED</span>';
+            } else if (selectedOption && selectedOption.type === 'device') {
+                statusMsg.innerHTML = `📌 Selected: ${selectedOption.display}`;
             } else {
-                items.forEach(item => {
-                    const option = document.createElement('option');
-                    option.value = item.value;
-                    option.textContent = item.display;
-                    selectElement.appendChild(option);
-                });
-                selectElement.disabled = false;
-            }
-        }
-
-        // ========== GET CURRENT SELECTION ==========
-        function getCurrentSelection() {
-            let type = '';
-            let value = '';
-            let display = '';
-            
-            if (weaponWithVAgent.value && weaponWithVAgent.value !== 'Select agent first' && weaponWithVAgent.value !== 'No weapons with vAgent') {
-                type = 'weapon_vagent';
-                value = weaponWithVAgent.value;
-                display = `Weapon: ${value} (with vAgent)`;
-            } else if (weaponNoVAgent.value && weaponNoVAgent.value !== 'Select agent first' && weaponNoVAgent.value !== 'No unassigned weapons') {
-                type = 'weapon_novagent';
-                value = weaponNoVAgent.value;
-                display = `Weapon: ${value} (NO vAgent)`;
-            } else if (missionNoVAgent.value && missionNoVAgent.value !== 'Select agent first' && missionNoVAgent.value !== 'No missions without vAgent') {
-                type = 'mission_novagent';
-                value = missionNoVAgent.value;
-                display = `Mission Order: ${value}`;
-            } else if (blacklistSelect.value && blacklistSelect.value !== 'Select agent first' && blacklistSelect.value !== 'No blacklist entries') {
-                type = 'blacklist';
-                value = blacklistSelect.value;
-                display = `Target ID: ${value}`;
+                statusMsg.innerHTML = 'Select an option and status';
             }
             
-            return { type, value, display };
+            // Enable update button if something is selected
+            updateBtn.disabled = (selectedValue === '' || selectedValue === '-- SELECT --');
         }
 
-        // ========== SAVE TO DATABASE (active_status / terminated_status) ==========
+        // ========== SAVE TO DATABASE ==========
         async function saveToDatabase() {
             if (!currentAgent) {
                 statusMsg.innerHTML = '<span class="error">❌ No agent selected</span>';
                 return;
             }
             
+            const selectedValue = mainDropdown.value;
+            if (!selectedValue || selectedValue === '-- SELECT --') {
+                statusMsg.innerHTML = '<span class="error">❌ Please select a device/category</span>';
+                return;
+            }
+            
             let selectedStatus = null;
             statusRadios.forEach(radio => {
-                if (radio.checked) selectedStatus = radio.value;
+                if (radio.checked && !radio.disabled) selectedStatus = radio.value;
             });
             
             if (!selectedStatus) {
-                statusMsg.innerHTML = '<span class="error">❌ Please select ACTIVE or TERMINATED</span>';
+                statusMsg.innerHTML = '<span class="error">❌ Please select ACTIVE, TERMINATED, or BLACKLIST</span>';
                 return;
             }
             
-            const selection = getCurrentSelection();
-            if (!selection.type) {
-                statusMsg.innerHTML = '<span class="error">❌ Please select an item from dropdown</span>';
+            const selectedOption = dropdownOptions.find(opt => opt.value === selectedValue);
+            
+            // Validation for No Assign Agent#
+            if (selectedOption.type === 'no_agent' && selectedStatus !== 'TERMINATED') {
+                statusMsg.innerHTML = '<span class="error">❌ "No Assign Agent#" can only be TERMINATED</span>';
                 return;
             }
             
-            // Determine collection name based on status
-            const collectionName = (selectedStatus === 'ACTIVE') ? 'active_status' : 'terminated_status';
-            
-            if (!confirm(`Save to "${collectionName}"?\n\nAgent: ${currentAgent}\n${selection.display}\nStatus: ${selectedStatus}`)) {
+            // Confirm action
+            if (!confirm(`Confirm action:\n\nAgent: ${currentAgent}\nSelection: ${selectedOption.display}\nAction: ${selectedStatus}\n\nThis will save to Firebase database.`)) {
                 return;
             }
             
-            statusMsg.innerHTML = `⏳ Saving to ${collectionName}...`;
+            statusMsg.innerHTML = `⏳ Processing...`;
             updateBtn.disabled = true;
             
             try {
-                // Create document ID based on agent and value
-                const docId = `${currentAgent}_${selection.value.replace(/\s/g, '_')}`;
+                if (selectedStatus === 'BLACKLIST') {
+                    // Handle BLACKLIST: save targetID to blacklist collection
+                    await saveToBlacklist(selectedOption);
+                } else {
+                    // Handle ACTIVE or TERMINATED: save mission orders to active_info or terminated_info
+                    await saveMissionOrders(selectedOption, selectedStatus);
+                }
                 
-                await db.collection(collectionName).doc(docId).set({
-                    agent: currentAgent,
-                    type: selection.type,
-                    value: selection.value,
-                    status: selectedStatus,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    originalDisplay: selection.display
-                }, { merge: true });
-                
-                statusMsg.innerHTML = `<span class="success">✅ SUCCESS: Saved to "${collectionName}" - ${selection.display}</span>`;
-                
-                // Optional: show what's saved
-                console.log(`Saved to ${collectionName}:`, { agent: currentAgent, type: selection.type, value: selection.value });
+                statusMsg.innerHTML = `<span class="success">✅ SUCCESS: Saved "${selectedOption.display}" as ${selectedStatus}</span>`;
                 
             } catch (error) {
                 console.error("Error saving:", error);
@@ -555,7 +532,98 @@
             }
         }
 
-        // Event listener
+        async function saveMissionOrders(selectedOption, status) {
+            const collectionName = (status === 'ACTIVE') ? 'active_info' : 'terminated_info';
+            const missionOrders = selectedOption.missionOrders;
+            
+            if (!missionOrders || missionOrders.length === 0) {
+                throw new Error('No mission orders found for this selection');
+            }
+            
+            // Create a batch to save all mission orders
+            const batch = db.batch();
+            const timestamp = firebase.firestore.FieldValue.serverTimestamp();
+            
+            for (const order of missionOrders) {
+                const docId = `${currentAgent}_${order.missionID}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+                const docRef = db.collection(collectionName).doc(docId);
+                
+                batch.set(docRef, {
+                    agent: currentAgent,
+                    missionID: order.missionID,
+                    weaponSystem: selectedOption.weaponSystem || 'N/A',
+                    vAgent: order.vAgent || null,
+                    status: status,
+                    timestamp: timestamp,
+                    sourceType: selectedOption.type,
+                    savedBy: 'status_manager'
+                });
+            }
+            
+            await batch.commit();
+            
+            // Also save a summary document
+            const summaryId = `${currentAgent}_${selectedOption.value}_${Date.now()}`;
+            await db.collection(collectionName).doc(summaryId).set({
+                agent: currentAgent,
+                selection: selectedOption.value,
+                display: selectedOption.display,
+                count: missionOrders.length,
+                status: status,
+                timestamp: timestamp,
+                isSummary: true
+            });
+            
+            console.log(`Saved ${missionOrders.length} mission orders to ${collectionName}`);
+        }
+
+        async function saveToBlacklist(selectedOption) {
+            // For BLACKLIST, we need to get targetID from mission orders
+            // First, find all mission orders for this weapon/device that have targetID
+            const snapshot = await db.collection("mission_orders")
+                .where("agent", "==", currentAgent)
+                .where("weaponSystem", "==", selectedOption.weaponSystem)
+                .get();
+            
+            const blacklistItems = [];
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                if (data.targetID && data.targetID !== '') {
+                    blacklistItems.push({
+                        targetID: data.targetID,
+                        missionID: data.missionID,
+                        weaponSystem: data.weaponSystem
+                    });
+                }
+            });
+            
+            if (blacklistItems.length === 0) {
+                throw new Error('No targetID found for blacklist');
+            }
+            
+            const batch = db.batch();
+            const timestamp = firebase.firestore.FieldValue.serverTimestamp();
+            
+            for (const item of blacklistItems) {
+                const docId = `${currentAgent}_${item.targetID}_${Date.now()}`;
+                const docRef = db.collection('blacklist').doc(docId);
+                
+                batch.set(docRef, {
+                    agent: currentAgent,
+                    targetID: item.targetID,
+                    missionID: item.missionID,
+                    weaponSystem: item.weaponSystem,
+                    status: 'BLACKLISTED',
+                    timestamp: timestamp,
+                    sourceType: selectedOption.type
+                });
+            }
+            
+            await batch.commit();
+            console.log(`Saved ${blacklistItems.length} items to blacklist collection`);
+        }
+
+        // Event listener for update button
         updateBtn.onclick = saveToDatabase;
 
         // Load agents on page load

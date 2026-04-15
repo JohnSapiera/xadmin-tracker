@@ -254,10 +254,10 @@ window.closeNoir = () => {
   document.getElementById("noirOverlay").style.display = "none";
 };
 
-// ====== MEMOIRS FUNCTIONS (ENHANCED WITH DROPDOWN & PAGE FLIP) ======
+// ====== MEMOIRS FUNCTIONS (ENHANCED) ======
 let currentMemoirsMode = null;
 let currentFilterMonth = null;
-let currentDeviceExpenses = [];     // stored expenses for the selected month
+let currentDeviceExpenses = [];     // flattened list of expense entries for current device/month
 let currentPage = 0;
 const ITEMS_PER_PAGE = 10;
 
@@ -278,158 +278,6 @@ window.flipPage = (forward) => {
     }, 600);
   }
 };
-
-// For device memoirs: custom page flip (next/previous) without using the book's two-page layout
-// We'll use the existing book pages but repurpose them for pagination.
-let currentDevicePage = 0;
-let totalDevicePages = 1;
-
-function renderDevicePage(deviceName, monthIndex, pageNum) {
-  const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
-  const currentMonth = monthNames[monthIndex];
-  
-  // Filter expenses for this month
-  const deviceMissions = allMissions.filter(m => 
-    (DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem) === deviceName
-  );
-  
-  let allExpenses = [];
-  deviceMissions.forEach(mission => {
-    if (mission.expensesBreakdown && Array.isArray(mission.expensesBreakdown)) {
-      mission.expensesBreakdown.forEach(exp => {
-        const expDate = new Date(exp.timestamp);
-        const expMonth = expDate.getMonth();
-        if (expMonth === monthIndex) {
-          allExpenses.push({
-            vAgent: mission.vAgentID,
-            date: expDate,
-            amount: exp.amount,
-            description: exp.description || "FIELD_OPERATION",
-            injectedBy: exp.injectedBy
-          });
-        }
-      });
-    }
-  });
-  
-  allExpenses.sort((a, b) => b.date - a.date);
-  const total = allExpenses.reduce((sum, exp) => sum + exp.amount, 0);
-  const totalPages = Math.ceil(allExpenses.length / ITEMS_PER_PAGE);
-  const start = pageNum * ITEMS_PER_PAGE;
-  const pageExpenses = allExpenses.slice(start, start + ITEMS_PER_PAGE);
-  
-  // Update DOM elements
-  const targetName = document.getElementById("target-name");
-  const activeList = document.getElementById("active-list");
-  const totalVal = document.getElementById("total-val");
-  const flipNextBtn = document.getElementById("flipNextBtn");
-  const p2Area = document.getElementById("weapon-system-breakdown");
-  const totalValP2 = document.getElementById("total-val-p2");
-  const p1 = document.getElementById("p1");
-  const p2 = document.getElementById("p2");
-  
-  // Set title and month dropdown
-  targetName.innerHTML = `${deviceName}`;
-  
-  // Create or update month dropdown
-  let monthSelector = document.getElementById("deviceMonthSelector");
-  if (!monthSelector) {
-    monthSelector = document.createElement('select');
-    monthSelector.id = "deviceMonthSelector";
-    monthSelector.style.cssText = `
-      background: #000;
-      border: 1px solid #8b0000;
-      color: #8b0000;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-family: monospace;
-      font-size: 10px;
-      margin-left: 10px;
-      cursor: pointer;
-    `;
-    targetName.parentNode.insertBefore(monthSelector, targetName.nextSibling);
-  }
-  // Populate dropdown
-  monthSelector.innerHTML = '';
-  for (let i = 0; i < monthNames.length; i++) {
-    const option = document.createElement('option');
-    option.value = i;
-    option.textContent = monthNames[i];
-    if (i === monthIndex) option.selected = true;
-    monthSelector.appendChild(option);
-  }
-  monthSelector.onchange = (e) => {
-    const newMonth = parseInt(e.target.value);
-    renderDevicePage(deviceName, newMonth, 0);
-  };
-  
-  // Build HTML for current page
-  let expensesHTML = '';
-  if (pageExpenses.length === 0) {
-    expensesHTML = '<center style="opacity:0.5; padding:20px;">[ NO EXPENSES FOR THIS MONTH ]</center>';
-  } else {
-    pageExpenses.forEach(exp => {
-      const dateStr = `${exp.date.getMonth()+1}/${exp.date.getDate()}`;
-      expensesHTML += `
-        <div class="expense-row" style="padding: 8px 0;">
-          <div style="flex-grow:1;">
-            <div style="font-size:11px; font-weight:bold;">vAgent#: <span style="color:#8b0000;">${exp.vAgent}</span></div>
-            <div style="font-size:9px; opacity:0.7;">${dateStr} - ${exp.description}</div>
-          </div>
-          <div><b>₱${exp.amount.toLocaleString()}</b></div>
-        </div>
-      `;
-    });
-  }
-  
-  activeList.innerHTML = expensesHTML;
-  totalVal.innerText = total.toLocaleString();
-  
-  // Pagination controls: use flipNextBtn for next page, and add a "BACK" button if needed.
-  if (totalPages > 1) {
-    // Show next button if not last page
-    if (pageNum < totalPages - 1) {
-      flipNextBtn.style.display = "block";
-      flipNextBtn.innerHTML = `[ NEXT PAGE ${pageNum+2}/${totalPages} &gt;&gt; ]`;
-      flipNextBtn.onclick = () => {
-        SoundFX.pageFlip();
-        renderDevicePage(deviceName, monthIndex, pageNum + 1);
-      };
-    } else {
-      flipNextBtn.style.display = "none";
-    }
-    // Handle previous page navigation: we need a previous button. We'll add it dynamically.
-    let prevBtn = document.getElementById("devicePrevBtn");
-    if (!prevBtn) {
-      prevBtn = document.createElement('div');
-      prevBtn.id = "devicePrevBtn";
-      prevBtn.className = "swipe-hint";
-      prevBtn.style.cssText = "text-align:left; margin-top:10px; cursor:pointer;";
-      activeList.parentNode.insertBefore(prevBtn, activeList.nextSibling);
-    }
-    if (pageNum > 0) {
-      prevBtn.innerHTML = `&lt;&lt; PREV PAGE ${pageNum}/${totalPages}`;
-      prevBtn.style.display = "block";
-      prevBtn.onclick = () => {
-        SoundFX.pageFlip();
-        renderDevicePage(deviceName, monthIndex, pageNum - 1);
-      };
-    } else {
-      prevBtn.style.display = "none";
-    }
-  } else {
-    flipNextBtn.style.display = "none";
-    const prevBtn = document.getElementById("devicePrevBtn");
-    if (prevBtn) prevBtn.style.display = "none";
-  }
-  
-  // Reset the book page view (ensure page 1 is shown)
-  p1.classList.remove("flipped");
-  p2.style.display = "none";
-  // Also clear page 2 content (unused in device memoirs)
-  p2Area.innerHTML = '';
-  totalValP2.innerText = total.toLocaleString();
-}
 
 window.closeMemoirs = () => {
   console.log("📚 Closing memoirs");
@@ -452,13 +300,14 @@ window.openMemoirs = (mode) => {
     renderAllMemoirs();
   } else {
     currentMemoirsMode = mode;
-    const currentMonth = new Date().getMonth(); // current month (0-11)
-    renderDevicePage(mode, currentMonth, 0);
+    // Force April (month index 3) and disable month selector for now
+    const FIXED_MONTH = 3; // April (0=Jan, 3=Apr)
+    renderDevicePage(mode, FIXED_MONTH, 0);
   }
 };
 
 function renderAllMemoirs() {
-  // Reset any device-specific elements
+  // Reset device-specific UI elements
   const selector = document.getElementById("deviceMonthSelector");
   if (selector) selector.remove();
   const prevBtn = document.getElementById("devicePrevBtn");
@@ -526,34 +375,194 @@ function renderAllMemoirs() {
   document.getElementById("total-val-p2").innerText = overallTotal.toLocaleString();
 }
 
-// ====== TERMINATE AGENT ======
-window.terminateAgent = async (docID) => {
-    console.log("🔫 Terminating agent for mission:", docID);
-    
-    const confirmTerminate = confirm("⚠️ WARNING: This will permanently delete the mission order.\n\nAre you sure you want to TERMINATE this agent?");
-    if (!confirmTerminate) {
-        console.log("Termination cancelled");
-        return;
+function renderDevicePage(deviceName, monthIndex, pageNum) {
+  const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+  const currentMonth = monthNames[monthIndex];
+  
+  // Get all missions for this device
+  const deviceMissions = allMissions.filter(m => 
+    (DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem) === deviceName
+  );
+  
+  // Collect all expense entries with vAgent and date
+  let allExpenses = []; // each entry: { vAgent, date, amount, description, injectedBy }
+  deviceMissions.forEach(mission => {
+    if (mission.expensesBreakdown && Array.isArray(mission.expensesBreakdown)) {
+      mission.expensesBreakdown.forEach(exp => {
+        const expDate = new Date(exp.timestamp);
+        const expMonth = expDate.getMonth();
+        if (expMonth === monthIndex) {
+          allExpenses.push({
+            vAgent: mission.vAgentID || null,  // use null for missing
+            date: expDate,
+            amount: exp.amount,
+            description: exp.description || "FIELD_OPERATION",
+            injectedBy: exp.injectedBy
+          });
+        }
+      });
     }
-    
-    const doubleConfirm = prompt("FINAL WARNING: This action cannot be undone!\n\nType 'TERMINATE' to confirm:");
-    if (doubleConfirm !== "TERMINATE") {
-        alert("Termination aborted.");
-        return;
+  });
+  
+  // Group by vAgent (null for unassigned)
+  const groups = new Map();
+  allExpenses.forEach(exp => {
+    const key = exp.vAgent === null ? "__UNASSIGNED__" : exp.vAgent;
+    if (!groups.has(key)) {
+      groups.set(key, { vAgent: exp.vAgent, total: 0, logs: [] });
     }
-    
-    SoundFX.error();
-    
-    try {
-        await deleteDoc(doc(db, "mission_orders", docID));
-        console.log("✅ Mission terminated successfully:", docID);
-        SoundFX.success();
-        alert("✅ AGENT TERMINATED SUCCESSFULLY");
-        closeNoir();
-        location.reload();
-    } catch (error) {
-        console.error("❌ Termination failed:", error);
-        SoundFX.error();
-        alert("❌ TERMINATION FAILED: " + error.message);
+    const group = groups.get(key);
+    group.total += exp.amount;
+    group.logs.push(exp);
+  });
+  
+  // Sort groups: assigned vAgents by total descending, then unassigned at the end
+  const sortedGroups = Array.from(groups.values()).sort((a, b) => {
+    if (a.vAgent === null) return 1;  // unassigned goes last
+    if (b.vAgent === null) return -1;
+    return b.total - a.total;
+  });
+  
+  // Flatten logs in order: first all logs from each group (preserving group order)
+  const flattenedLogs = [];
+  sortedGroups.forEach(group => {
+    // Sort logs within group by date descending (newest first)
+    group.logs.sort((x, y) => y.date - x.date);
+    flattenedLogs.push(...group.logs);
+  });
+  
+  const totalExpenses = flattenedLogs.reduce((sum, log) => sum + log.amount, 0);
+  const totalPages = Math.ceil(flattenedLogs.length / ITEMS_PER_PAGE);
+  const startIdx = pageNum * ITEMS_PER_PAGE;
+  const pageLogs = flattenedLogs.slice(startIdx, startIdx + ITEMS_PER_PAGE);
+  
+  // Build HTML for current page
+  let logsHTML = '';
+  // We need to show group headers if the page starts within a group, but simplest is to just show each log with its vAgent
+  // However the user wants grouping headers. We'll rebuild the page content by iterating over groups and adding headers when crossing group boundaries.
+  // Since pageLogs are sliced from flattened array, we can reconstruct the group information by checking consecutive logs.
+  let lastVAgent = null;
+  pageLogs.forEach(log => {
+    const currentVAgent = log.vAgent === null ? null : log.vAgent;
+    if (currentVAgent !== lastVAgent) {
+      // show header
+      if (currentVAgent === null) {
+        logsHTML += `<div class="audit-separator" style="margin:15px 0 10px 0;">--- UNASSIGNED RECORDS ---</div>`;
+      } else {
+        // find total for this vAgent from groups
+        const group = groups.get(currentVAgent);
+        const totalAmt = group ? group.total : 0;
+        logsHTML += `<div style="font-size:12px; font-weight:bold; color:#8b0000; margin-top:12px; margin-bottom:6px;">📌 vAgent# ${currentVAgent} (Total: ₱${totalAmt.toLocaleString()})</div>`;
+      }
+      lastVAgent = currentVAgent;
     }
-};
+    const dateStr = `${log.date.getMonth()+1}/${log.date.getDate()}`;
+    logsHTML += `
+      <div class="expense-row" style="padding: 6px 0; margin-left: 12px;">
+        <div style="flex-grow:1;">
+          <div style="font-size:10px; opacity:0.8;">${dateStr} - ${log.description}</div>
+        </div>
+        <div><b>₱${log.amount.toLocaleString()}</b></div>
+      </div>
+    `;
+  });
+  
+  if (pageLogs.length === 0) {
+    logsHTML = '<center style="opacity:0.5; padding:20px;">[ NO EXPENSES FOR THIS MONTH ]</center>';
+  }
+  
+  // Update DOM
+  const targetName = document.getElementById("target-name");
+  const activeList = document.getElementById("active-list");
+  const totalVal = document.getElementById("total-val");
+  const flipNextBtn = document.getElementById("flipNextBtn");
+  const p2Area = document.getElementById("weapon-system-breakdown");
+  const totalValP2 = document.getElementById("total-val-p2");
+  const p1 = document.getElementById("p1");
+  const p2 = document.getElementById("p2");
+  
+  targetName.innerHTML = `${deviceName} <span style="font-size:9px; color:#5c7882;">(April only)</span>`;
+  
+  // Month selector: disabled, fixed to April
+  let monthSelector = document.getElementById("deviceMonthSelector");
+  if (!monthSelector) {
+    monthSelector = document.createElement('select');
+    monthSelector.id = "deviceMonthSelector";
+    monthSelector.style.cssText = `
+      background: #222;
+      border: 1px solid #5c7882;
+      color: #5c7882;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 10px;
+      margin-left: 10px;
+      cursor: not-allowed;
+      opacity: 0.6;
+    `;
+    monthSelector.disabled = true;
+    targetName.parentNode.insertBefore(monthSelector, targetName.nextSibling);
+  }
+  monthSelector.innerHTML = '';
+  for (let i = 0; i < monthNames.length; i++) {
+    const option = document.createElement('option');
+    option.value = i;
+    option.textContent = monthNames[i];
+    if (i === monthIndex) option.selected = true;
+    monthSelector.appendChild(option);
+  }
+  monthSelector.disabled = true;  // disabled for future updates
+  
+  activeList.innerHTML = logsHTML;
+  
+  // Show total only on last page
+  const isLastPage = (pageNum === totalPages - 1) || totalPages === 0;
+  if (isLastPage) {
+    totalVal.innerHTML = `<span style="font-size:16px;">₱ ${totalExpenses.toLocaleString()}</span>`;
+  } else {
+    totalVal.innerHTML = `<span style="font-size:12px; opacity:0.7;">(Total on last page)</span>`;
+  }
+  
+  // Pagination controls
+  if (totalPages > 1) {
+    // Next button
+    if (pageNum < totalPages - 1) {
+      flipNextBtn.style.display = "block";
+      flipNextBtn.innerHTML = `[ NEXT PAGE ${pageNum+2}/${totalPages} &gt;&gt; ]`;
+      flipNextBtn.onclick = () => {
+        SoundFX.pageFlip();
+        renderDevicePage(deviceName, monthIndex, pageNum + 1);
+      };
+    } else {
+      flipNextBtn.style.display = "none";
+    }
+    // Previous button
+    let prevBtn = document.getElementById("devicePrevBtn");
+    if (!prevBtn) {
+      prevBtn = document.createElement('div');
+      prevBtn.id = "devicePrevBtn";
+      prevBtn.className = "swipe-hint";
+      prevBtn.style.cssText = "text-align:left; margin-top:10px; cursor:pointer;";
+      activeList.parentNode.insertBefore(prevBtn, activeList.nextSibling);
+    }
+    if (pageNum > 0) {
+      prevBtn.innerHTML = `&lt;&lt; PREV PAGE ${pageNum}/${totalPages}`;
+      prevBtn.style.display = "block";
+      prevBtn.onclick = () => {
+        SoundFX.pageFlip();
+        renderDevicePage(deviceName, monthIndex, pageNum - 1);
+      };
+    } else {
+      prevBtn.style.display = "none";
+    }
+  } else {
+    flipNextBtn.style.display = "none";
+    const prevBtn = document.getElementById("devicePrevBtn");
+    if (prevBtn) prevBtn.style.display = "none";
+  }
+  
+  // Reset book pages (ensure page 1 visible)
+  p1.classList.remove("flipped");
+  p2.style.display = "none";
+  p2Area.innerHTML = '';
+  totalV

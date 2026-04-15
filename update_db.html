@@ -2,320 +2,152 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BLACKLIST MANAGER</title>
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            background: #01080b;
-            font-family: 'Share Tech Mono', monospace;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        .container {
-            max-width: 550px;
-            width: 100%;
-            background: #051014;
-            border: 1px solid #00f3ff;
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 0 30px rgba(0,243,255,0.1);
-        }
-        h2 {
-            color: #00f3ff;
-            text-align: center;
-            margin-bottom: 25px;
-            letter-spacing: 2px;
-            font-size: 18px;
-        }
-        .dropdown-section {
-            margin-bottom: 25px;
-        }
-        .dropdown-title {
-            color: #00f3ff;
-            font-size: 11px;
-            margin-bottom: 10px;
-            text-align: center;
-            letter-spacing: 1px;
-        }
-        select {
-            width: 100%;
-            background: #01080b;
-            border: 1px solid #1a2f37;
-            color: #05ffa1;
-            padding: 14px;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 13px;
-            border-radius: 8px;
-            outline: none;
-            text-align: center;
-            cursor: pointer;
-        }
-        select:focus {
-            border-color: #00f3ff;
-        }
-        .info-section {
-            background: #000;
-            border: 1px solid #1a2f37;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 25px;
-            text-align: center;
-        }
-        .info-title {
-            color: #00f3ff;
-            font-size: 11px;
-            margin-bottom: 10px;
-            letter-spacing: 1px;
-        }
-        .info-value {
-            color: #05ffa1;
-            font-size: 24px;
-            font-weight: bold;
-        }
-        .update-section {
-            text-align: center;
-        }
-        .update-btn {
-            width: 100%;
-            background: #00f3ff;
-            color: #000;
-            border: none;
-            padding: 14px;
-            border-radius: 40px;
-            font-family: monospace;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-            letter-spacing: 2px;
-        }
-        .update-btn:hover {
-            background: #05ffa1;
-            box-shadow: 0 0 15px rgba(5,255,161,0.4);
-        }
-        .update-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        .status-msg {
-            margin-top: 20px;
-            padding: 10px;
-            text-align: center;
-            font-size: 11px;
-            color: #5c7882;
-            border-top: 1px solid #1a2f37;
-        }
-        .success { color: #05ffa1; }
-        .error { color: #ff003c; }
-        .warning { color: #ffbd00; }
-        .loading {
-            text-align: center;
-            color: #5c7882;
-            padding: 20px;
-        }
-        .target-list {
-            max-height: 200px;
-            overflow-y: auto;
-            margin-top: 10px;
-            text-align: left;
-            font-size: 11px;
-            color: #5c7882;
-            border-top: 1px solid #1a2f37;
-            padding-top: 10px;
-        }
-        .target-list span {
-            color: #05ffa1;
-        }
-    </style>
+    <title>Create Agent Account</title>
+    <!-- Supabase JS library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <div class="container">
-        <h2>⚫ BLACKLIST MANAGER</h2>
 
-        <!-- INFO SECTION - Display count -->
-        <div class="info-section">
-            <div class="info-title">📊 TOTAL BLACKLIST TARGETS</div>
-            <div class="info-value" id="totalCount">0</div>
-            <div id="targetList" class="target-list"></div>
+    <h1>Create Agent Account</h1>
+
+    <!-- Form para sa agent account -->
+    <form id="agentForm">
+        <div>
+            <label for="agentName">Agent Name:</label><br>
+            <input type="text" id="agentName" name="agentName" required>
         </div>
-
-        <!-- UPDATE BUTTON -->
-        <div class="update-section">
-            <button id="updateBtn" class="update-btn">📦 MOVE ALL TO TERMINATED_INFO</button>
+        <br>
+        <div>
+            <label for="secretKey">Secret Key (4-digit):</label><br>
+            <input type="password" id="secretKey" name="secretKey" maxlength="4" pattern="[0-9]{4}" required>
+            <small>Enter exactly 4 digits (0-9)</small>
         </div>
+        <br>
+        <div>
+            <button type="submit">Create Agent Account</button>
+        </div>
+    </form>
 
-        <div class="status-msg" id="statusMsg">Ready</div>
-    </div>
-
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <!-- Para sa messages -->
+    <div id="message" style="margin-top: 20px;"></div>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
-            authDomain: "my-admin-portal-12691.firebaseapp.com",
-            projectId: "my-admin-portal-12691",
-            storageBucket: "my-admin-portal-12691.firebasestorage.app",
-            messagingSenderId: "317015091563",
-            appId: "1:317015091563:web:baab5171d8e0a58acd442e"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        // Supabase configuration - PALITAN MO ITO NG ACTUAL KEYS MO
+        const SUPABASE_URL = 'https://pgclrzqfpoznvrjrzced.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_GhIOC2mXVo0UrhMHZX6Qww_T12tQl4s';
+        
+        // Initialize Supabase client
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // DOM Elements
-        const totalCountSpan = document.getElementById('totalCount');
-        const targetListDiv = document.getElementById('targetList');
-        const updateBtn = document.getElementById('updateBtn');
-        const statusMsg = document.getElementById('statusMsg');
+        // Reference sa form at message div
+        const form = document.getElementById('agentForm');
+        const messageDiv = document.getElementById('message');
 
-        let blacklistItems = []; // Array of { targetID, docId, ...other fields }
-
-        // ========== LOAD ALL TARGET IDs FROM BLACKLIST COLLECTION ==========
-        async function loadBlacklist() {
-            statusMsg.innerHTML = '⏳ Loading blacklist collection...';
-            updateBtn.disabled = true;
-            
-            try {
-                const snapshot = await db.collection("blacklist").get();
-                
-                blacklistItems = [];
-                
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    const targetID = data.targetID;
-                    
-                    if (targetID && targetID.trim() !== '') {
-                        blacklistItems.push({
-                            docId: doc.id,
-                            targetID: targetID,
-                            ...data
-                        });
-                    } else if (doc.id) {
-                        // If targetID is not a field, use document ID as targetID
-                        blacklistItems.push({
-                            docId: doc.id,
-                            targetID: doc.id,
-                            ...data
-                        });
-                    }
-                });
-                
-                // Remove duplicates by targetID
-                const uniqueMap = new Map();
-                blacklistItems.forEach(item => {
-                    if (!uniqueMap.has(item.targetID)) {
-                        uniqueMap.set(item.targetID, item);
-                    }
-                });
-                blacklistItems = Array.from(uniqueMap.values());
-                
-                // Sort alphabetically
-                blacklistItems.sort((a, b) => a.targetID.localeCompare(b.targetID));
-                
-                const count = blacklistItems.length;
-                totalCountSpan.innerHTML = count;
-                
-                if (count === 0) {
-                    targetListDiv.innerHTML = '<span style="color:#5c7882;">No blacklist targets found</span>';
-                    statusMsg.innerHTML = '<span class="warning">⚠️ No documents in "blacklist" collection</span>';
-                    updateBtn.disabled = true;
-                } else {
-                    // Display list of targetIDs
-                    let listHtml = '';
-                    blacklistItems.forEach(item => {
-                        listHtml += `<div>🔴 <span>${item.targetID}</span></div>`;
-                    });
-                    targetListDiv.innerHTML = listHtml;
-                    statusMsg.innerHTML = `<span class="success">✅ Loaded ${count} target(s) from blacklist collection</span>`;
-                    updateBtn.disabled = false;
-                }
-                
-            } catch (error) {
-                console.error("Error loading blacklist:", error);
-                statusMsg.innerHTML = `<span class="error">❌ Failed to load: ${error.message}</span>`;
-                updateBtn.disabled = true;
-            }
+        // Function para magpakita ng message
+        function showMessage(text, isError = false) {
+            messageDiv.innerHTML = text;
+            messageDiv.style.color = isError ? 'red' : 'green';
+            // Mag-clear ng message after 5 seconds
+            setTimeout(() => {
+                messageDiv.innerHTML = '';
+            }, 5000);
         }
 
-        // ========== MOVE ALL BLACKLIST TARGETS TO TERMINATED_INFO ==========
-        async function moveToTerminatedInfo() {
-            if (blacklistItems.length === 0) {
-                statusMsg.innerHTML = '<span class="error">❌ No blacklist targets to move</span>';
+        // Handle form submission
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();  // Para hindi mag-reload ang page
+            
+            // Kunin ang values mula sa form
+            const agentName = document.getElementById('agentName').value.trim();
+            const secretKey = document.getElementById('secretKey').value;
+            
+            // Basic validation
+            if (!agentName) {
+                showMessage('Please enter agent name', true);
                 return;
             }
             
-            const confirmMsg = `Confirm move ${blacklistItems.length} blacklist target(s) to "terminated_info" collection?\n\nTargets:\n${blacklistItems.map(i => `  - ${i.targetID}`).join('\n')}\n\nThis will copy all data to terminated_info.`;
-            
-            if (!confirm(confirmMsg)) {
-                statusMsg.innerHTML = 'Operation cancelled';
+            if (!secretKey || secretKey.length !== 4 || !/^\d+$/.test(secretKey)) {
+                showMessage('Secret key must be exactly 4 digits (0-9 only)', true);
                 return;
             }
             
-            statusMsg.innerHTML = `⏳ Moving ${blacklistItems.length} target(s) to terminated_info...`;
-            updateBtn.disabled = true;
+            // I-disable ang button habang nagpo-process
+            const submitButton = form.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.textContent = 'Creating...';
             
             try {
-                const batch = db.batch();
-                const timestamp = firebase.firestore.FieldValue.serverTimestamp();
-                let successCount = 0;
+                // Una, check kung existing na ang agent name
+                const { data: existingAgent, error: checkError } = await supabase
+                    .from('agents')
+                    .select('agent_name')
+                    .eq('agent_name', agentName)
+                    .single();
                 
-                for (const item of blacklistItems) {
-                    // Create document in terminated_info collection
-                    const docId = `${item.targetID}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
-                    const docRef = db.collection("terminated_info").doc(docId);
-                    
-                    batch.set(docRef, {
-                        targetID: item.targetID,
-                        sourceCollection: 'blacklist',
-                        originalDocId: item.docId,
-                        movedAt: timestamp,
-                        status: 'TERMINATED',
-                        ...item
-                    });
-                    successCount++;
+                if (existingAgent) {
+                    showMessage('Agent name already exists! Please choose another name.', true);
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Create Agent Account';
+                    return;
                 }
                 
-                await batch.commit();
+                // Insert ang bagong agent sa database
+                const { data, error } = await supabase
+                    .from('agents')
+                    .insert([
+                        { 
+                            agent_name: agentName, 
+                            secret_key: secretKey,
+                            created_at: new Date().toISOString(),
+                            device_info: {
+                                userAgent: navigator.userAgent,
+                                platform: navigator.platform,
+                                created_at: new Date().toISOString()
+                            }
+                        }
+                    ])
+                    .select();
                 
-                statusMsg.innerHTML = `<span class="success">✅ SUCCESS: Moved ${successCount} target(s) to "terminated_info" collection</span>`;
-                
-                // Optional: Ask if user wants to delete from blacklist collection
-                const deleteOriginal = confirm(`Move completed!\n\nDo you want to DELETE the original ${successCount} document(s) from "blacklist" collection?`);
-                
-                if (deleteOriginal) {
-                    statusMsg.innerHTML = `⏳ Deleting original blacklist documents...`;
-                    const deleteBatch = db.batch();
-                    for (const item of blacklistItems) {
-                        const docRef = db.collection("blacklist").doc(item.docId);
-                        deleteBatch.delete(docRef);
-                    }
-                    await deleteBatch.commit();
-                    statusMsg.innerHTML = `<span class="success">✅ SUCCESS: Deleted ${successCount} document(s) from "blacklist" collection</span>`;
-                    
-                    // Reload the blacklist
-                    await loadBlacklist();
+                if (error) {
+                    console.error('Supabase error:', error);
+                    showMessage('Error creating agent: ' + error.message, true);
                 } else {
-                    // Just reload to refresh display
-                    await loadBlacklist();
+                    showMessage(`✅ Agent "${agentName}" created successfully! Secret key: ${secretKey}`);
+                    form.reset();  // I-clear ang form
+                    
+                    // Optional: Ipakita ang agent details
+                    console.log('Created agent:', data);
                 }
                 
-            } catch (error) {
-                console.error("Error moving to terminated_info:", error);
-                statusMsg.innerHTML = `<span class="error">❌ ERROR: ${error.message}</span>`;
-                updateBtn.disabled = false;
+            } catch (err) {
+                console.error('Unexpected error:', err);
+                showMessage('An unexpected error occurred. Please try again.', true);
+            } finally {
+                // I-enable ulit ang button
+                submitButton.disabled = false;
+                submitButton.textContent = 'Create Agent Account';
+            }
+        });
+        
+        // Optional: Function para i-check kung connected sa Supabase
+        async function checkConnection() {
+            try {
+                const { data, error } = await supabase.from('agents').select('count', { count: 'exact', head: true });
+                if (error) {
+                    console.warn('Connection check failed:', error);
+                    showMessage('⚠️ Warning: Cannot connect to database. Check if table "agents" exists.', true);
+                } else {
+                    console.log('Connected to Supabase successfully');
+                }
+            } catch (err) {
+                console.error('Connection error:', err);
             }
         }
-
-        // Event listener for update button
-        updateBtn.onclick = moveToTerminatedInfo;
-
-        // Load blacklist on page load
-        loadBlacklist();
+        
+        // I-check ang connection pag nag-load ang page
+        checkConnection();
     </script>
+
 </body>
 </html>

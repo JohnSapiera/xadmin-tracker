@@ -387,3 +387,45 @@ window.openMemoirs = (mode) => {
   console.log("✅ Memoirs rendered successfully");
   SoundFX.success();
 };
+
+// ====== TERMINATE AGENT (Delete Mission Order) ======
+window.terminateAgent = async (docID) => {
+    console.log("🔫 Terminating agent for mission:", docID);
+    
+    // Confirmation dialog
+    const confirmTerminate = confirm("⚠️ WARNING: This will permanently delete the mission order.\n\nAre you sure you want to TERMINATE this agent?");
+    
+    if (!confirmTerminate) {
+        console.log("Termination cancelled");
+        return;
+    }
+    
+    // Second confirmation for safety
+    const doubleConfirm = confirm("FINAL WARNING: This action cannot be undone!\n\nType 'TERMINATE' to confirm:");
+    if (doubleConfirm !== "TERMINATE") {
+        alert("Termination aborted.");
+        return;
+    }
+    
+    SoundFX.error(); // Termination sound
+    
+    try {
+        // Delete the document from mission_orders collection
+        await deleteDoc(doc(db, "mission_orders", docID));
+        
+        console.log("✅ Mission terminated successfully:", docID);
+        SoundFX.success();
+        alert("✅ AGENT TERMINATED SUCCESSFULLY");
+        
+        // Close the modal
+        closeNoir();
+        
+        // Reload the page to refresh data
+        location.reload();
+        
+    } catch (error) {
+        console.error("❌ Termination failed:", error);
+        SoundFX.error();
+        alert("❌ TERMINATION FAILED: " + error.message);
+    }
+};

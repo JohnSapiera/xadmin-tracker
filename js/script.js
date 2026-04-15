@@ -283,11 +283,11 @@ window.closeMemoirs = () => {
   document.getElementById("memoirsOverlay").style.display = "none";
   const selector = document.getElementById("deviceMonthSelector");
   if (selector) selector.remove();
-  const prevBtn = document.getElementById("devicePrevBtn");
-  if (prevBtn) prevBtn.remove();
   const masterPagination = document.getElementById("masterPagination");
   if (masterPagination) masterPagination.remove();
-  // Reset any flip state
+  const devicePagination = document.getElementById("devicePagination");
+  if (devicePagination) devicePagination.remove();
+  // Reset flip state
   const p1 = document.getElementById("p1");
   const p2 = document.getElementById("p2");
   if (p1) p1.classList.remove("flipped");
@@ -309,11 +309,6 @@ window.openMemoirs = (mode) => {
     renderDevicePage(mode, FIXED_MONTH, 0);
   }
 };
-
-// ====== MASTER MEMOIRS (UNIQUE, WITH FLIP ANIMATION) ======
-let masterCurrentPage = 0;
-let masterTotalPages = 0;
-let masterDevicesList = [];
 
 // ====== MASTER MEMOIRS (UNIQUE, WITH FLIP ANIMATION) ======
 let masterCurrentPage = 0;
@@ -380,17 +375,14 @@ function renderMasterMemoirs() {
   p2.style.display = "none";
   p1.classList.remove("flipped");
   
-  // Function to render a specific page with flip animation
   function showPage(pageNum, animate = false) {
     const start = pageNum * ITEMS_PER_PAGE;
     const pageDevices = masterDevicesList.slice(start, start + ITEMS_PER_PAGE);
     const overallGrandTotal = masterDevicesList.reduce((sum, d) => sum + d.total, 0);
     const isLastPage = (pageNum === masterTotalPages - 1) || masterTotalPages === 0;
     
-    // Build HTML
     let devicesHTML = '';
     pageDevices.forEach(device => {
-      // Separate assigned and unassigned expenses for better readability
       const assignedExpenses = device.expenses.filter(exp => exp.vAgent !== null);
       const unassignedExpenses = device.expenses.filter(exp => exp.vAgent === null);
       
@@ -401,7 +393,6 @@ function renderMasterMemoirs() {
           </div>
       `;
       
-      // Assigned expenses (with vAgent)
       if (assignedExpenses.length > 0) {
         devicesHTML += `<div style="margin-left: 8px; margin-bottom: 6px;"><span style="color:#aaa; font-size:10px;">▶ WITH vAGENT</span></div>`;
         assignedExpenses.forEach(exp => {
@@ -417,7 +408,6 @@ function renderMasterMemoirs() {
         });
       }
       
-      // Unassigned expenses (no vAgent) - clearly marked
       if (unassignedExpenses.length > 0) {
         devicesHTML += `<div style="margin-left: 8px; margin-top: 8px; margin-bottom: 6px;"><span style="color:#aaa; font-size:10px;">⚠️ WITHOUT vAGENT</span></div>`;
         unassignedExpenses.forEach(exp => {
@@ -440,7 +430,7 @@ function renderMasterMemoirs() {
       devicesHTML = '<center style="opacity:0.5; padding:20px;">[ NO EXPENSES FOR APRIL ]</center>';
     }
     
-    // Update content with flip animation
+    // Flip animation
     if (animate) {
       activeList.style.transition = 'transform 0.4s ease-in-out';
       activeList.style.transform = 'rotateY(90deg)';
@@ -455,14 +445,13 @@ function renderMasterMemoirs() {
       activeList.innerHTML = devicesHTML;
     }
     
-    // Update total display (no emoji, no cyan)
+    // Total display (no emoji, no cyan)
     if (isLastPage) {
       totalVal.innerHTML = `<div style="background: #8b0000; color: #fff; padding: 8px 16px; border-radius: 8px; display: inline-block; font-size: 16px; font-weight: bold;">TOTAL EXPENDITURE: ₱ ${overallGrandTotal.toLocaleString()}</div>`;
     } else {
       totalVal.innerHTML = `<span style="font-size: 12px; color: #aaa;">Page ${pageNum+1} of ${masterTotalPages} — Total expenditure on last page</span>`;
     }
     
-    // Pagination controls
     updatePaginationControls(pageNum);
   }
   
@@ -544,172 +533,6 @@ function renderMasterMemoirs() {
     activeList.parentNode.insertBefore(paginationDiv, activeList.nextSibling);
   }
   
-  // Initial render
-  showPage(0, false);
-}
-  
-  // Get DOM elements
-  const targetName = document.getElementById("target-name");
-  const activeList = document.getElementById("active-list");
-  const totalVal = document.getElementById("total-val");
-  const flipNextBtn = document.getElementById("flipNextBtn");
-  const p2Area = document.getElementById("weapon-system-breakdown");
-  const totalValP2 = document.getElementById("total-val-p2");
-  const p1 = document.getElementById("p1");
-  const p2 = document.getElementById("p2");
-  
-  // Set title (no cyan)
-  targetName.innerHTML = `📜 MASTER MEMOIRS <span style="font-size:9px; color:#888; margin-left:10px;">📅 APRIL 2024</span>`;
-  
-  // Hide the original flip button (we'll use our own)
-  flipNextBtn.style.display = "none";
-  p2.style.display = "none";
-  p1.classList.remove("flipped");
-  
-  // Function to render a specific page with flip animation
-  function showPage(pageNum, animate = false) {
-    const start = pageNum * ITEMS_PER_PAGE;
-    const pageDevices = masterDevicesList.slice(start, start + ITEMS_PER_PAGE);
-    const overallGrandTotal = masterDevicesList.reduce((sum, d) => sum + d.total, 0);
-    const isLastPage = (pageNum === masterTotalPages - 1) || masterTotalPages === 0;
-    
-    // Build HTML
-    let devicesHTML = '';
-    pageDevices.forEach(device => {
-      devicesHTML += `
-        <div style="margin-bottom: 25px; border-left: 3px solid #8b0000; padding-left: 12px; background: rgba(0,0,0,0.2); border-radius: 0 8px 8px 0;">
-          <div style="font-size: 14px; font-weight: bold; color: #fff; margin-bottom: 8px; padding-top: 6px;">
-            🔧 ${device.name} <span style="color: #8b0000; font-size: 12px;">(Total: ₱${device.total.toLocaleString()})</span>
-          </div>
-      `;
-      
-      device.expenses.forEach(exp => {
-        const dateStr = `${exp.date.getMonth()+1}/${exp.date.getDate()}`;
-        const vAgentDisplay = exp.vAgent ? `<span style="color:#8b0000;">vAgent# ${exp.vAgent}</span>` : `<span style="color:#aaa;">[NO vAGENT]</span>`;
-        
-        devicesHTML += `
-          <div style="display: flex; justify-content: space-between; padding: 6px 0; margin-left: 12px; border-bottom: 1px dotted #333;">
-            <div style="flex-grow:1; font-size: 11px;">
-              <span style="color:#8b0000;">MO#${exp.missionID}</span> - ${vAgentDisplay} - ${dateStr} - ${exp.description}
-            </div>
-            <div style="font-weight: bold; color: #fff;">₱${exp.amount.toLocaleString()}</div>
-          </div>
-        `;
-      });
-      
-      devicesHTML += `</div>`;
-    });
-    
-    if (pageDevices.length === 0) {
-      devicesHTML = '<center style="opacity:0.5; padding:20px;">[ NO EXPENSES FOR APRIL ]</center>';
-    }
-    
-    // Update content with or without animation
-    if (animate) {
-      // Apply flip animation
-      activeList.style.transition = 'transform 0.4s ease-in-out';
-      activeList.style.transform = 'rotateY(90deg)';
-      setTimeout(() => {
-        activeList.innerHTML = devicesHTML;
-        activeList.style.transform = 'rotateY(0deg)';
-        setTimeout(() => {
-          activeList.style.transition = '';
-        }, 400);
-      }, 200);
-    } else {
-      activeList.innerHTML = devicesHTML;
-    }
-    
-    // Update total display
-    if (isLastPage) {
-      totalVal.innerHTML = `<span style="font-size: 18px; color: #fff; background: #8b0000; padding: 4px 12px; border-radius: 20px;">🏆 GRAND TOTAL: ₱ ${overallGrandTotal.toLocaleString()}</span>`;
-    } else {
-      totalVal.innerHTML = `<span style="font-size: 12px; opacity: 0.7;">📄 Page ${pageNum+1} of ${masterTotalPages} — Grand Total on last page</span>`;
-    }
-    
-    // Update pagination buttons
-    updatePaginationControls(pageNum);
-  }
-  
-  function updatePaginationControls(pageNum) {
-    const existingPag = document.getElementById("masterPagination");
-    if (existingPag) existingPag.remove();
-    
-    if (masterTotalPages <= 1) return;
-    
-    const paginationDiv = document.createElement('div');
-    paginationDiv.id = "masterPagination";
-    paginationDiv.style.cssText = `
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-      margin-top: 20px;
-      padding: 12px;
-      border-top: 1px solid #333;
-    `;
-    
-    const prevBtn = document.createElement('button');
-    prevBtn.innerHTML = '◀ PREV PAGE';
-    prevBtn.style.cssText = `
-      background: ${pageNum > 0 ? '#8b0000' : '#444'};
-      color: white;
-      border: none;
-      padding: 8px 20px;
-      border-radius: 30px;
-      font-family: monospace;
-      font-size: 11px;
-      cursor: ${pageNum > 0 ? 'pointer' : 'not-allowed'};
-      opacity: ${pageNum > 0 ? '1' : '0.5'};
-      transition: 0.2s;
-    `;
-    if (pageNum > 0) {
-      prevBtn.onclick = () => {
-        SoundFX.click();
-        masterCurrentPage--;
-        showPage(masterCurrentPage, true);
-      };
-    }
-    
-    const pageIndicator = document.createElement('span');
-    pageIndicator.innerHTML = `${pageNum+1} / ${masterTotalPages}`;
-    pageIndicator.style.cssText = `
-      color: #fff;
-      font-family: monospace;
-      font-size: 13px;
-      background: #222;
-      padding: 4px 12px;
-      border-radius: 20px;
-    `;
-    
-    const nextBtn = document.createElement('button');
-    nextBtn.innerHTML = 'NEXT PAGE ▶';
-    nextBtn.style.cssText = `
-      background: ${pageNum < masterTotalPages-1 ? '#8b0000' : '#444'};
-      color: white;
-      border: none;
-      padding: 8px 20px;
-      border-radius: 30px;
-      font-family: monospace;
-      font-size: 11px;
-      cursor: ${pageNum < masterTotalPages-1 ? 'pointer' : 'not-allowed'};
-      opacity: ${pageNum < masterTotalPages-1 ? '1' : '0.5'};
-      transition: 0.2s;
-    `;
-    if (pageNum < masterTotalPages-1) {
-      nextBtn.onclick = () => {
-        SoundFX.click();
-        masterCurrentPage++;
-        showPage(masterCurrentPage, true);
-      };
-    }
-    
-    paginationDiv.appendChild(prevBtn);
-    paginationDiv.appendChild(pageIndicator);
-    paginationDiv.appendChild(nextBtn);
-    activeList.parentNode.insertBefore(paginationDiv, activeList.nextSibling);
-  }
-  
-  // Initial render
   showPage(0, false);
 }
 

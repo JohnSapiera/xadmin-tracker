@@ -3,171 +3,192 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TERMINAL_UPLINK_v19.0</title>
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+    <title>UPDATE_DB</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
-        :root { --cyan: #00f2ff; --bg: #020a0d; --green: #00ff66; --border: rgba(0, 242, 255, 0.2); }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { 
-            background: var(--bg); color: #fff; font-family: 'Share Tech Mono', monospace; 
-            display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0;
-            background-image: radial-gradient(circle at center, #0a1f29 0%, #020a0d 100%);
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: #01080b;
+            font-family: 'Share Tech Mono', monospace;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
         }
-        .card { 
-            width: 340px; background: rgba(1, 15, 20, 0.95); padding: 30px; 
-            border: 1px solid var(--border); backdrop-filter: blur(10px);
-            box-shadow: 0 0 50px rgba(0,0,0,0.9); position: relative;
+        .container {
+            max-width: 500px;
+            width: 100%;
+            background: #051014;
+            border: 1px solid #00f3ff;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 0 30px rgba(0,243,255,0.1);
         }
-        h2 { 
-            font-size: 16px; margin: 0 0 25px 0; color: var(--cyan); 
-            text-align: center; letter-spacing: 4px; text-transform: uppercase;
-            border-bottom: 2px solid var(--cyan); padding-bottom: 12px;
+        h2 {
+            color: #00f3ff;
+            text-align: center;
+            margin-bottom: 25px;
+            letter-spacing: 2px;
+            font-size: 18px;
         }
-        .form-container { display: flex; flex-direction: column; gap: 20px; }
-        label { font-size: 10px; color: var(--cyan); text-transform: uppercase; margin-bottom: 8px; display: block; opacity: 0.8; letter-spacing: 1px; }
-        .input-field {
-            width: 100%; padding: 14px; background: #000; border: 1px solid var(--border);
-            color: var(--green); font-family: 'Share Tech Mono'; font-size: 12px;
-            outline: none; border-radius: 0; appearance: none;
+        .field-group {
+            margin-bottom: 20px;
         }
-        select.input-field { 
-            background-image: linear-gradient(45deg, transparent 50%, var(--cyan) 50%), linear-gradient(135deg, var(--cyan) 50%, transparent 50%); 
-            background-position: calc(100% - 20px) calc(1em + 2px), calc(100% - 15px) calc(1em + 2px); 
-            background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; 
+        label {
+            display: block;
+            color: #00f3ff;
+            font-size: 11px;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
         }
-        .btn-auth {
-            width: 100%; padding: 18px; background: transparent; 
-            color: var(--green); border: 2px solid var(--green);
-            font-family: 'Rajdhani'; font-weight: 700; cursor: pointer;
-            text-transform: uppercase; letter-spacing: 3px; font-size: 14px;
-            margin-top: 10px; transition: 0.4s;
+        select, input {
+            width: 100%;
+            padding: 12px;
+            background: #000;
+            border: 1px solid #1a2f37;
+            color: #05ffa1;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 14px;
+            outline: none;
+            border-radius: 6px;
         }
-        .btn-auth:hover { background: var(--green); color: #000; box-shadow: 0 0 30px rgba(0, 255, 102, 0.4); }
-        .ticker-wrap {
-            margin-top: 30px; background: rgba(0, 242, 255, 0.03);
-            border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
-            overflow: hidden; white-space: nowrap; padding: 10px 0;
+        select:focus, input:focus {
+            border-color: #00f3ff;
         }
-        .ticker-move { display: inline-block; animation: marquee 15s linear infinite; font-size: 10px; color: #556b73; }
-        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-        .ticker-item { display: inline-block; margin-right: 50px; }
-        .ticker-item span { color: var(--cyan); }
-        #status { font-size: 10px; text-align: center; margin-top: 20px; color: #4a5a61; min-height: 15px; font-weight: bold; }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #00f3ff;
+            color: #000;
+            border: none;
+            font-weight: bold;
+            font-family: monospace;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 6px;
+            transition: 0.3s;
+        }
+        button:hover {
+            background: #05ffa1;
+            box-shadow: 0 0 15px rgba(5,255,161,0.3);
+        }
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            text-align: center;
+            font-size: 11px;
+            color: #5c7882;
+            border-top: 1px solid #1a2f37;
+        }
+        .success { color: #05ffa1; }
         .error { color: #ff003c; }
-        .success { color: var(--green); }
     </style>
 </head>
 <body>
+    <div class="container">
+        <h2>🔐 AGENT KEY MANAGER</h2>
 
-    <div class="card">
-        <h2>SECURE_UPLINK</h2>
-
-        <div class="form-container">
-            <!-- Pinalitan: 4-digit secret key input sa halip na hardware fingerprint -->
-            <div class="field-group">
-                <label>4-DIGIT SECRET KEY:</label>
-                <input type="password" id="secretKey" class="input-field" maxlength="4" placeholder="****" autocomplete="off" inputmode="numeric">
-            </div>
-
-            <div class="field-group">
-                <label>AGENT_IDENTITY_PROFILE:</label>
-                <select id="agentSelect" class="input-field">
-                    <option value="AGENT_JFSN">AGENT_JFSN</option>
-                    <option value="AGENT_LZ">AGENT_LZ</option>
-                </select>
-            </div>
-
-            <button class="btn-auth" id="syncBtn">AUTHORIZE_UPLINK</button>
+        <div class="field-group">
+            <label>SELECT AGENT</label>
+            <select id="agentSelect">
+                <option value="AGENT_JFSN">AGENT_JFSN</option>
+                <option value="AGENT_LZ">AGENT_LZ</option>
+            </select>
         </div>
 
-        <div id="status">> WAITING_FOR_4DIGIT_KEY...</div>
-
-        <div class="ticker-wrap">
-            <div class="ticker-move" id="ticker-content"></div>
+        <div class="field-group">
+            <label>4-DIGIT SECRET KEY</label>
+            <input type="text" id="secretKey" maxlength="4" placeholder="0000" autocomplete="off">
         </div>
+
+        <button id="updateBtn">💾 UPDATE DATABASE</button>
+
+        <div class="status" id="statusMsg">Ready to update</div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
     <script>
-        const firebaseConfig = { 
-            apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
-            authDomain: "my-admin-portal-12691.firebaseapp.com", 
-            projectId: "my-admin-portal-12691", 
-            storageBucket: "my-admin-portal-12691.firebasestorage.app", 
-            messagingSenderId: "317015091563", 
-            appId: "1:317015091563:web:baab5171d8e0a58acd442e" 
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
+            authDomain: "my-admin-portal-12691.firebaseapp.com",
+            projectId: "my-admin-portal-12691",
+            storageBucket: "my-admin-portal-12691.firebasestorage.app",
+            messagingSenderId: "317015091563",
+            appId: "1:317015091563:web:baab5171d8e0a58acd442e"
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Predefined 4-digit secret keys para sa bawat agent (maaaring palitan)
-        const AGENT_SECRETS = {
-            "AGENT_JFSN": "1234",
-            "AGENT_LZ": "5678"
-        };
+        // DOM Elements
+        const agentSelect = document.getElementById('agentSelect');
+        const secretKeyInput = document.getElementById('secretKey');
+        const updateBtn = document.getElementById('updateBtn');
+        const statusMsg = document.getElementById('statusMsg');
 
-        // Simple ticker info (opsyonal)
-        const tickerHtml = `
-            <div class="ticker-item">🔐 <span>4-DIGIT AUTH</span></div>
-            <div class="ticker-item">⚡ <span>SECURE UPLINK</span></div>
-            <div class="ticker-item">🛡️ <span>AGENT VERIFICATION</span></div>
-        `;
-        document.getElementById('ticker-content').innerHTML = tickerHtml + tickerHtml;
+        // Function to update database
+        async function updateAgentKey() {
+            const agent = agentSelect.value;
+            const newKey = secretKeyInput.value.trim();
 
-        // Authorize Access Logic gamit ang 4-digit secret key
-        document.getElementById('syncBtn').onclick = async () => {
-            const agent = document.getElementById('agentSelect').value;
-            const secretInput = document.getElementById('secretKey').value.trim();
-            const statusDiv = document.getElementById('status');
-            const btn = document.getElementById('syncBtn');
-
-            // I-reset ang status
-            statusDiv.innerHTML = `> VERIFYING_CREDENTIALS...`;
-
-            // Validate kung 4-digit number
-            if (!/^\d{4}$/.test(secretInput)) {
-                statusDiv.innerHTML = `> <span class="error">INVALID_SECRET_KEY (must be 4 digits)</span>`;
+            // Validate 4-digit
+            if (!/^\d{4}$/.test(newKey)) {
+                statusMsg.innerHTML = '<span class="error">❌ Invalid: Must be exactly 4 digits</span>';
                 return;
             }
 
-            // I-verify ang secret key laban sa agent
-            const expectedSecret = AGENT_SECRETS[agent];
-            if (secretInput !== expectedSecret) {
-                statusDiv.innerHTML = `> <span class="error">ACCESS_DENIED: Incorrect secret key for ${agent}</span>`;
-                return;
-            }
-
-            // Kung tama ang key, magpatuloy sa Firebase sync
-            btn.disabled = true;
-            statusDiv.innerHTML = `> SYNCING_WITH_CORE_DATABASE...`;
+            statusMsg.innerHTML = '⏳ Updating database...';
+            updateBtn.disabled = true;
 
             try {
-                // I-update ang agent document sa Firestore (opsyonal: magdagdag ng timestamp at iba pang metadata)
+                // Update the agent document in Firestore
                 await db.collection("agents").doc(agent).set({
                     agentName: agent,
-                    lastAuthMethod: "4digit_key",
-                    lastSync: firebase.firestore.FieldValue.serverTimestamp()
+                    secretKey: newKey,
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
 
-                // I-save sa localStorage para sa auto-login
-                localStorage.setItem("cia_agent", agent);
-                localStorage.setItem("agent_verified", "true");
-                localStorage.setItem("auth_method", "4digit_key");
-
-                statusDiv.innerHTML = `> <span class="success">UPLINK_SUCCESSFUL</span>`;
-                
-                setTimeout(() => {
-                    alert(`ACCESS GRANTED: Agent ${agent} authenticated.`);
-                    window.location.href = "dashboard.html";
-                }, 1000);
-
-            } catch (e) {
-                statusDiv.innerHTML = `> <span class="error">UPLINK_FAILED: ${e.message}</span>`;
-                btn.disabled = false;
+                statusMsg.innerHTML = `<span class="success">✅ SUCCESS: ${agent} key updated to ${newKey}</span>`;
+                secretKeyInput.value = '';
+            } catch (error) {
+                statusMsg.innerHTML = `<span class="error">❌ ERROR: ${error.message}</span>`;
+            } finally {
+                updateBtn.disabled = false;
             }
-        };
+        }
+
+        // Event listener
+        updateBtn.onclick = updateAgentKey;
+
+        // Optional: Load existing key when agent changes
+        async function loadExistingKey() {
+            const agent = agentSelect.value;
+            try {
+                const docRef = await db.collection("agents").doc(agent).get();
+                if (docRef.exists) {
+                    const data = docRef.data();
+                    if (data.secretKey) {
+                        secretKeyInput.value = data.secretKey;
+                        statusMsg.innerHTML = `📋 Loaded existing key for ${agent}`;
+                    } else {
+                        secretKeyInput.value = '';
+                        statusMsg.innerHTML = `📋 No existing key for ${agent}`;
+                    }
+                } else {
+                    secretKeyInput.value = '';
+                    statusMsg.innerHTML = `📋 New agent: ${agent}`;
+                }
+            } catch (error) {
+                console.error("Error loading key:", error);
+            }
+        }
+
+        agentSelect.onchange = loadExistingKey;
+        loadExistingKey();
     </script>
 </body>
 </html>

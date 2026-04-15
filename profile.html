@@ -7,28 +7,17 @@
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&family=Special+Elite&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles/styles.css" />
 </head>
-  
 <body>
   <div class="container">
-    <!-- HEADER -->
     <header>
       <h2 id="display-agent" style="color: var(--cia-cyan); letter-spacing: 2px">AUTHENTICATING...</h2>
       <p style="font-size: 9px; opacity: 0.5">MEMOIRS_PROTOCOL_ACTIVE</p>
     </header>
 
-    <!-- DEVICE GRID (mga phone) -->
     <div id="deviceSection" class="device-grid"></div>
-
-    <!-- VAGENT FOLDER GRID (lalabas kapag nag-click ng phone) -->
     <div id="vagentSection" class="vagent-grid"></div>
-
-    <!-- DEVICE MEMOIRS BUTTON (dynamic - lalabas lang kapag may active device) -->
     <div id="deviceMemoirsContainer" style="margin-top: 10px;"></div>
-
-    <!-- EXIT BUTTON -->
     <button id="btnBack" onclick="location.reload()">[ EXIT_DEVICE_SYSTEM ]</button>
-
-    <!-- MASTER MEMOIRS BUTTON -->
     <div id="memoirsBtnContainer">
       <button onclick="openMemoirs('ALL')">[ VIEW_MASTER_MEMOIRS ]</button>
     </div>
@@ -38,58 +27,33 @@
   <div id="noirOverlay" class="overlay">
     <div class="dossier-paper">
       <button class="close-btn" onclick="closeNoir()">X</button>
-      <h3 style="text-align: center; border-bottom: 2px solid #000; margin-bottom: 15px; letter-spacing: 1px">
-        vAGENT_DOSSIER
-      </h3>
-      <p style="font-size: 11px; margin-bottom: 4px">
-        <b>MO#:</b>
-        <span id="n-order">---</span>
-      </p>
-      <p style="font-size: 11px; margin-bottom: 4px">
-        <b>vAgent#:</b>
-        <span id="n-vagent" style="background: rgba(0, 0, 0, 0.1); padding: 0 5px">---</span>
-      </p>
-      <div id="n-content" style="margin-top: 15px; border-top: 1px dashed #000; padding-top: 10px"></div>
-      <div style="text-align: right; margin-top: 20px; border-top: 2px solid #000; padding-top: 8px">
-        <p style="font-weight: bold; font-size: 18px">
-          Total:
-          <span id="n-total">₱ 0.00</span>
-        </p>
-      </div>
+      <h3>vAGENT_DOSSIER</h3>
+      <p><b>MO#:</b> <span id="n-order">---</span></p>
+      <p><b>vAgent#:</b> <span id="n-vagent">---</span></p>
+      <div id="n-content"></div>
+      <div style="text-align: right;"><b>Total:</b> <span id="n-total">₱0.00</span></div>
     </div>
   </div>
 
-  <!-- MEMOIRS BOOK MODAL -->
+  <!-- MEMOIRS MODAL -->
   <div id="memoirsOverlay" class="overlay">
     <div class="book" id="dossierBook">
-      <!-- PAGE 1: AUDIT REPORT -->
       <div id="p1" class="page page-front">
         <button class="close-btn" onclick="closeMemoirs()">X</button>
-        <h3 style="text-align: center; border-bottom: 2px solid #000; margin-bottom: 10px">AUDIT_REPORT</h3>
-        <p style="font-size: 9px; margin-bottom: 10px; opacity: 0.6">
-          NODE:
-          <span id="target-name">---</span>
-        </p>
-        <div id="active-list" class="audit-list" style="height: 60%; overflow-y: auto"></div>
-        <!-- ✨ INAALIS ANG STATIC TOTAL_EXPENDITURE BOX – dynamic na ito sa script -->
-        <div id="flipNextBtn" class="swipe-hint" onclick="flipPage(true)" style="display: none">
-          [ VIEW_SUMMARY ] &gt;&gt;
+        <h3>AUDIT REPORT</h3>
+        <p>NODE: <span id="target-name">---</span></p>
+        <div id="active-list" class="audit-list"></div>
+        <div id="total-container" style="margin-top: auto; text-align: center; padding-top: 10px;">
+          <span id="total-val"></span>
         </div>
+        <div id="flipNextBtn" class="swipe-hint" onclick="flipPage(true)">[ VIEW SUMMARY ] &gt;&gt;</div>
       </div>
-
-      <!-- PAGE 2: SUMMARY CONTINUATION -->
       <div id="p2" class="page page-back">
         <button class="close-btn" onclick="closeMemoirs()">X</button>
-        <h3 style="text-align: center; border-bottom: 2px solid #000; margin-bottom: 20px">SUMMARY_CONTINUATION</h3>
+        <h3>SUMMARY CONTINUATION</h3>
         <div id="weapon-system-breakdown" class="audit-list"></div>
-        <div style="margin-top: auto; border-top: 3px double #000; padding-top: 10px">
-          <p style="font-size: 10px; font-weight: bold">GRAND_TOTAL_EXPENSES:</p>
-          <h1 style="font-size: 26px; color: #000">
-            ₱
-            <span id="total-val-p2">0.00</span>
-          </h1>
-        </div>
-        <div class="swipe-hint" onclick="flipPage(false)" style="text-align: left">&lt;&lt; BACK</div>
+        <div style="margin-top: auto; text-align: center;"><b>GRAND TOTAL:</b> ₱<span id="total-val-p2">0.00</span></div>
+        <div class="swipe-hint" onclick="flipPage(false)">&lt;&lt; BACK</div>
       </div>
     </div>
   </div>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>UPDATE_DB - STATUS MANAGER</title>
+    <title>BLACKLIST MANAGER</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -17,7 +17,7 @@
             padding: 20px;
         }
         .container {
-            max-width: 580px;
+            max-width: 550px;
             width: 100%;
             background: #051014;
             border: 1px solid #00f3ff;
@@ -31,47 +31,6 @@
             margin-bottom: 25px;
             letter-spacing: 2px;
             font-size: 18px;
-        }
-        .agents-section {
-            text-align: center;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #1a2f37;
-        }
-        .section-title {
-            color: #00f3ff;
-            font-size: 11px;
-            margin-bottom: 15px;
-            letter-spacing: 1px;
-        }
-        .radio-group {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 15px;
-        }
-        .radio-group label {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #05ffa1;
-            font-size: 13px;
-            cursor: pointer;
-            padding: 6px 15px;
-            background: #000;
-            border: 1px solid #1a2f37;
-            border-radius: 30px;
-            transition: 0.2s;
-        }
-        .radio-group input[type="radio"] {
-            accent-color: #00f3ff;
-            width: 16px;
-            height: 16px;
-        }
-        .radio-group label:has(input:checked) {
-            border-color: #00f3ff;
-            background: rgba(0,243,255,0.15);
-            color: #00f3ff;
         }
         .dropdown-section {
             margin-bottom: 25px;
@@ -99,57 +58,24 @@
         select:focus {
             border-color: #00f3ff;
         }
-        .status-section {
+        .info-section {
             background: #000;
             border: 1px solid #1a2f37;
             border-radius: 8px;
             padding: 15px;
             margin-bottom: 25px;
+            text-align: center;
         }
-        .status-title {
+        .info-title {
             color: #00f3ff;
             font-size: 11px;
-            margin-bottom: 15px;
-            text-align: center;
+            margin-bottom: 10px;
             letter-spacing: 1px;
         }
-        .status-options {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-        .status-option {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            padding: 8px 20px;
-            background: #01080b;
-            border: 1px solid #1a2f37;
-            border-radius: 40px;
-            transition: 0.2s;
-        }
-        .status-option input {
-            accent-color: #00f3ff;
-            width: 16px;
-            height: 16px;
-        }
-        .status-option span {
+        .info-value {
             color: #05ffa1;
-            font-size: 12px;
+            font-size: 24px;
             font-weight: bold;
-        }
-        .status-option:has(input:checked) {
-            border-color: #00f3ff;
-            background: rgba(0,243,255,0.1);
-        }
-        .status-option:has(input:checked) span {
-            color: #00f3ff;
-        }
-        .status-option.disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
         }
         .update-section {
             text-align: center;
@@ -187,64 +113,40 @@
         .success { color: #05ffa1; }
         .error { color: #ff003c; }
         .warning { color: #ffbd00; }
-        .loading, .empty {
+        .loading {
             text-align: center;
             color: #5c7882;
             padding: 20px;
         }
-        .info-badge {
-            display: inline-block;
-            background: #1a2f37;
-            padding: 2px 8px;
-            border-radius: 20px;
-            font-size: 10px;
-            margin-left: 8px;
-            color: #00f3ff;
+        .target-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+            text-align: left;
+            font-size: 11px;
+            color: #5c7882;
+            border-top: 1px solid #1a2f37;
+            padding-top: 10px;
+        }
+        .target-list span {
+            color: #05ffa1;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>🔧 STATUS MANAGER</h2>
+        <h2>⚫ BLACKLIST MANAGER</h2>
 
-        <!-- AGENTS SECTION (Top Center) -->
-        <div class="agents-section">
-            <div class="section-title">📡 SELECT AGENT</div>
-            <div id="agentRadioGroup" class="radio-group">
-                <div class="loading">Loading agents...</div>
-            </div>
-        </div>
-
-        <!-- SINGLE DROPDOWN -->
-        <div class="dropdown-section">
-            <div class="dropdown-title">🔽 SELECT DEVICE / CATEGORY</div>
-            <select id="mainDropdown" disabled>
-                <option value="">-- SELECT --</option>
-            </select>
-        </div>
-
-        <!-- STATUS RADIO BUTTONS (3 options) -->
-        <div class="status-section">
-            <div class="status-title">📌 SELECT STATUS ACTION</div>
-            <div class="status-options" id="statusOptions">
-                <label class="status-option">
-                    <input type="radio" name="status" value="ACTIVE">
-                    <span>🟢 ACTIVE</span>
-                </label>
-                <label class="status-option">
-                    <input type="radio" name="status" value="TERMINATED">
-                    <span>🔴 TERMINATED</span>
-                </label>
-                <label class="status-option">
-                    <input type="radio" name="status" value="BLACKLIST">
-                    <span>⚫ BLACKLIST</span>
-                </label>
-            </div>
+        <!-- INFO SECTION - Display count -->
+        <div class="info-section">
+            <div class="info-title">📊 TOTAL BLACKLIST TARGETS</div>
+            <div class="info-value" id="totalCount">0</div>
+            <div id="targetList" class="target-list"></div>
         </div>
 
         <!-- UPDATE BUTTON -->
         <div class="update-section">
-            <button id="updateBtn" class="update-btn" disabled>💾 SAVE TO DATABASE</button>
+            <button id="updateBtn" class="update-btn">📦 MOVE ALL TO TERMINATED_INFO</button>
         </div>
 
         <div class="status-msg" id="statusMsg">Ready</div>
@@ -266,410 +168,154 @@
         const db = firebase.firestore();
 
         // DOM Elements
-        const agentRadioGroup = document.getElementById('agentRadioGroup');
-        const mainDropdown = document.getElementById('mainDropdown');
+        const totalCountSpan = document.getElementById('totalCount');
+        const targetListDiv = document.getElementById('targetList');
         const updateBtn = document.getElementById('updateBtn');
         const statusMsg = document.getElementById('statusMsg');
-        const statusRadios = document.querySelectorAll('input[name="status"]');
 
-        let allAgents = [];
-        let currentAgent = null;
-        let dropdownOptions = [];
-        let weaponData = {};
-        let blacklistData = { count: 0, items: [] };
+        let blacklistItems = []; // Array of { targetID, docId, ...other fields }
 
-        // ========== LOAD AGENTS ==========
-        async function loadAgents() {
-            statusMsg.innerHTML = '⏳ Loading agents...';
-            agentRadioGroup.innerHTML = '<div class="loading">Loading agents...</div>';
-            
-            try {
-                const snapshot = await db.collection("mission_orders").get();
-                const agentSet = new Set();
-                
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    if (data.agent && data.agent.trim() !== '') {
-                        agentSet.add(data.agent);
-                    }
-                });
-                
-                allAgents = Array.from(agentSet).sort();
-                
-                if (allAgents.length === 0) {
-                    agentRadioGroup.innerHTML = '<div class="empty">⚠️ No agents found</div>';
-                    statusMsg.innerHTML = '<span class="error">No agents found. Please create missions first.</span>';
-                } else {
-                    renderAgentRadios();
-                    statusMsg.innerHTML = `<span class="success">✅ Loaded ${allAgents.length} agent(s)</span>`;
-                }
-            } catch (error) {
-                agentRadioGroup.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
-                statusMsg.innerHTML = `<span class="error">❌ Failed to load agents</span>`;
-            }
-        }
-
-        function renderAgentRadios() {
-            agentRadioGroup.innerHTML = '';
-            allAgents.forEach(agent => {
-                const label = document.createElement('label');
-                const radio = document.createElement('input');
-                radio.type = 'radio';
-                radio.name = 'agent';
-                radio.value = agent;
-                radio.onclick = () => selectAgent(agent);
-                
-                label.appendChild(radio);
-                label.appendChild(document.createTextNode(` ${agent}`));
-                agentRadioGroup.appendChild(label);
-            });
-        }
-
-        // ========== SELECT AGENT: BUILD DROPDOWN ==========
-        async function selectAgent(agent) {
-            currentAgent = agent;
-            statusMsg.innerHTML = `⏳ Loading data for ${agent}...`;
-            
-            mainDropdown.disabled = true;
-            mainDropdown.innerHTML = '<option value="">Loading...</option>';
+        // ========== LOAD ALL TARGET IDs FROM BLACKLIST COLLECTION ==========
+        async function loadBlacklist() {
+            statusMsg.innerHTML = '⏳ Loading blacklist collection...';
             updateBtn.disabled = true;
-            statusRadios.forEach(r => r.checked = false);
-            
-            document.querySelectorAll('.status-option').forEach(opt => {
-                opt.classList.remove('disabled');
-            });
             
             try {
-                const snapshot = await db.collection("mission_orders")
-                    .where("agent", "==", agent)
-                    .get();
+                const snapshot = await db.collection("blacklist").get();
                 
-                // Collect weapon systems with their vAgent counts
-                const weaponMap = new Map();
-                let totalNoVAgent = 0;
-                let noVAgentMissions = [];
-                let blacklistItems = []; // For BLACKLIST: find documents with "blacklist" field
+                blacklistItems = [];
                 
                 snapshot.forEach(doc => {
                     const data = doc.data();
-                    const weapon = data.weaponSystem;
-                    const vAgent = data.vAgentID;
-                    const missionID = data.missionID;
-                    const blacklistValue = data.blacklist; // field name "blacklist" sa database
+                    const targetID = data.targetID;
                     
-                    if (!weapon || weapon === 'INIT') return;
-                    
-                    if (!weaponMap.has(weapon)) {
-                        weaponMap.set(weapon, { vAgentCount: 0, missionOrders: [], hasVAgent: false });
-                    }
-                    const info = weaponMap.get(weapon);
-                    
-                    if (vAgent && vAgent !== '' && vAgent !== 'INIT') {
-                        info.vAgentCount++;
-                        info.hasVAgent = true;
-                        info.missionOrders.push({ missionID, vAgent, weapon });
-                    } else {
-                        totalNoVAgent++;
-                        noVAgentMissions.push({ missionID, weapon });
-                    }
-                    
-                    // Collect blacklist items (documents with "blacklist" field)
-                    if (blacklistValue && blacklistValue !== '') {
+                    if (targetID && targetID.trim() !== '') {
                         blacklistItems.push({
-                            targetID: blacklistValue,
-                            missionID: missionID,
-                            weaponSystem: weapon
+                            docId: doc.id,
+                            targetID: targetID,
+                            ...data
+                        });
+                    } else if (doc.id) {
+                        // If targetID is not a field, use document ID as targetID
+                        blacklistItems.push({
+                            docId: doc.id,
+                            targetID: doc.id,
+                            ...data
                         });
                     }
                 });
                 
-                // Store blacklist data globally
-                blacklistData = {
-                    count: blacklistItems.length,
-                    items: blacklistItems
-                };
-                
-                // Build dropdown options
-                dropdownOptions = [];
-                weaponData = {};
-                
-                // Device options (only those with vAgent)
-                let deviceIndex = 1;
-                for (const [weapon, info] of weaponMap.entries()) {
-                    if (info.hasVAgent) {
-                        const displayName = `Device ${deviceIndex} (${weapon}) - ${info.vAgentCount} vAgent(s)`;
-                        dropdownOptions.push({
-                            value: `device_${deviceIndex}`,
-                            display: displayName,
-                            type: 'device',
-                            weaponSystem: weapon,
-                            count: info.vAgentCount,
-                            missionOrders: info.missionOrders
-                        });
-                        weaponData[`device_${deviceIndex}`] = { weaponSystem: weapon, missionOrders: info.missionOrders };
-                        deviceIndex++;
+                // Remove duplicates by targetID
+                const uniqueMap = new Map();
+                blacklistItems.forEach(item => {
+                    if (!uniqueMap.has(item.targetID)) {
+                        uniqueMap.set(item.targetID, item);
                     }
-                }
-                
-                // No Assign Agent# option
-                if (totalNoVAgent > 0) {
-                    dropdownOptions.push({
-                        value: 'no_agent',
-                        display: `⚠️ No Assign Agent# - ${totalNoVAgent} mission(s) without vAgent`,
-                        type: 'no_agent',
-                        count: totalNoVAgent,
-                        missionOrders: noVAgentMissions
-                    });
-                    weaponData['no_agent'] = { missionOrders: noVAgentMissions };
-                }
-                
-                // BLACKLIST option - only show if there are blacklist items
-                if (blacklistItems.length > 0) {
-                    dropdownOptions.push({
-                        value: 'blacklist',
-                        display: `⚫ BLACKLIST - ${blacklistItems.length} target(s) found`,
-                        type: 'blacklist',
-                        count: blacklistItems.length,
-                        items: blacklistItems
-                    });
-                    weaponData['blacklist'] = { items: blacklistItems };
-                }
-                
-                // Add default option at the beginning
-                dropdownOptions.unshift({ value: '', display: '-- SELECT --', type: 'default' });
-                
-                // Populate dropdown
-                mainDropdown.innerHTML = '';
-                dropdownOptions.forEach(opt => {
-                    const option = document.createElement('option');
-                    option.value = opt.value;
-                    option.textContent = opt.display;
-                    option.setAttribute('data-type', opt.type);
-                    mainDropdown.appendChild(option);
                 });
-                mainDropdown.disabled = false;
+                blacklistItems = Array.from(uniqueMap.values());
                 
-                // Add event listener to update status options based on selection
-                mainDropdown.onchange = updateStatusOptionsBasedOnSelection;
+                // Sort alphabetically
+                blacklistItems.sort((a, b) => a.targetID.localeCompare(b.targetID));
                 
-                statusMsg.innerHTML = `<span class="success">✅ Loaded ${dropdownOptions.length - 1} option(s) for ${agent}</span>`;
+                const count = blacklistItems.length;
+                totalCountSpan.innerHTML = count;
+                
+                if (count === 0) {
+                    targetListDiv.innerHTML = '<span style="color:#5c7882;">No blacklist targets found</span>';
+                    statusMsg.innerHTML = '<span class="warning">⚠️ No documents in "blacklist" collection</span>';
+                    updateBtn.disabled = true;
+                } else {
+                    // Display list of targetIDs
+                    let listHtml = '';
+                    blacklistItems.forEach(item => {
+                        listHtml += `<div>🔴 <span>${item.targetID}</span></div>`;
+                    });
+                    targetListDiv.innerHTML = listHtml;
+                    statusMsg.innerHTML = `<span class="success">✅ Loaded ${count} target(s) from blacklist collection</span>`;
+                    updateBtn.disabled = false;
+                }
                 
             } catch (error) {
-                console.error("Error loading data:", error);
-                statusMsg.innerHTML = `<span class="error">❌ Failed to load data: ${error.message}</span>`;
+                console.error("Error loading blacklist:", error);
+                statusMsg.innerHTML = `<span class="error">❌ Failed to load: ${error.message}</span>`;
+                updateBtn.disabled = true;
             }
         }
 
-        function updateStatusOptionsBasedOnSelection() {
-            const selectedValue = mainDropdown.value;
-            const selectedOption = dropdownOptions.find(opt => opt.value === selectedValue);
-            
-            // Reset all status options to enabled
-            const statusLabels = document.querySelectorAll('.status-option');
-            statusLabels.forEach(label => {
-                label.classList.remove('disabled');
-                const radio = label.querySelector('input');
-                if (radio) radio.disabled = false;
-            });
-            
-            // If "No Assign Agent#" is selected, disable ACTIVE and BLACKLIST
-            if (selectedOption && selectedOption.type === 'no_agent') {
-                const activeLabel = document.querySelector('.status-option input[value="ACTIVE"]')?.closest('.status-option');
-                const blacklistLabel = document.querySelector('.status-option input[value="BLACKLIST"]')?.closest('.status-option');
-                if (activeLabel) {
-                    activeLabel.classList.add('disabled');
-                    activeLabel.querySelector('input').disabled = true;
-                    if (document.querySelector('input[name="status"]:checked')?.value === 'ACTIVE') {
-                        document.querySelector('input[name="status"]:checked').checked = false;
-                    }
-                }
-                if (blacklistLabel) {
-                    blacklistLabel.classList.add('disabled');
-                    blacklistLabel.querySelector('input').disabled = true;
-                    if (document.querySelector('input[name="status"]:checked')?.value === 'BLACKLIST') {
-                        document.querySelector('input[name="status"]:checked').checked = false;
-                    }
-                }
-                statusMsg.innerHTML = '<span class="warning">⚠️ "No Assign Agent#" can only be TERMINATED</span>';
-            } 
-            // If "BLACKLIST" is selected, disable ACTIVE (only TERMINATED allowed)
-            else if (selectedOption && selectedOption.type === 'blacklist') {
-                const activeLabel = document.querySelector('.status-option input[value="ACTIVE"]')?.closest('.status-option');
-                if (activeLabel) {
-                    activeLabel.classList.add('disabled');
-                    activeLabel.querySelector('input').disabled = true;
-                    if (document.querySelector('input[name="status"]:checked')?.value === 'ACTIVE') {
-                        document.querySelector('input[name="status"]:checked').checked = false;
-                    }
-                }
-                statusMsg.innerHTML = '<span class="warning">⚠️ BLACKLIST items will be saved to TERMINATED_INFO</span>';
-            }
-            else if (selectedOption && selectedOption.type === 'device') {
-                statusMsg.innerHTML = `📌 Selected: ${selectedOption.display}`;
-            } else {
-                statusMsg.innerHTML = 'Select an option and status';
-            }
-            
-            // Enable update button if something is selected
-            updateBtn.disabled = (selectedValue === '' || selectedValue === '-- SELECT --');
-        }
-
-        // ========== SAVE TO DATABASE ==========
-        async function saveToDatabase() {
-            if (!currentAgent) {
-                statusMsg.innerHTML = '<span class="error">❌ No agent selected</span>';
+        // ========== MOVE ALL BLACKLIST TARGETS TO TERMINATED_INFO ==========
+        async function moveToTerminatedInfo() {
+            if (blacklistItems.length === 0) {
+                statusMsg.innerHTML = '<span class="error">❌ No blacklist targets to move</span>';
                 return;
             }
             
-            const selectedValue = mainDropdown.value;
-            if (!selectedValue || selectedValue === '-- SELECT --') {
-                statusMsg.innerHTML = '<span class="error">❌ Please select a device/category</span>';
+            const confirmMsg = `Confirm move ${blacklistItems.length} blacklist target(s) to "terminated_info" collection?\n\nTargets:\n${blacklistItems.map(i => `  - ${i.targetID}`).join('\n')}\n\nThis will copy all data to terminated_info.`;
+            
+            if (!confirm(confirmMsg)) {
+                statusMsg.innerHTML = 'Operation cancelled';
                 return;
             }
             
-            let selectedStatus = null;
-            statusRadios.forEach(radio => {
-                if (radio.checked && !radio.disabled) selectedStatus = radio.value;
-            });
-            
-            if (!selectedStatus) {
-                statusMsg.innerHTML = '<span class="error">❌ Please select ACTIVE, TERMINATED, or BLACKLIST</span>';
-                return;
-            }
-            
-            const selectedOption = dropdownOptions.find(opt => opt.value === selectedValue);
-            
-            // Validation rules
-            if (selectedOption.type === 'no_agent' && selectedStatus !== 'TERMINATED') {
-                statusMsg.innerHTML = '<span class="error">❌ "No Assign Agent#" can only be TERMINATED</span>';
-                return;
-            }
-            
-            if (selectedOption.type === 'blacklist') {
-                // BLACKLIST always goes to terminated_info
-                selectedStatus = 'TERMINATED';
-            }
-            
-            // Confirm action
-            if (!confirm(`Confirm action:\n\nAgent: ${currentAgent}\nSelection: ${selectedOption.display}\nAction: ${selectedStatus}\n\nThis will save to Firebase database.`)) {
-                return;
-            }
-            
-            statusMsg.innerHTML = `⏳ Processing...`;
+            statusMsg.innerHTML = `⏳ Moving ${blacklistItems.length} target(s) to terminated_info...`;
             updateBtn.disabled = true;
             
             try {
-                if (selectedOption.type === 'blacklist') {
-                    // Save blacklist items to terminated_info
-                    await saveBlacklistToTerminated(selectedOption);
-                } else {
-                    // Save mission orders to active_info or terminated_info
-                    await saveMissionOrders(selectedOption, selectedStatus);
+                const batch = db.batch();
+                const timestamp = firebase.firestore.FieldValue.serverTimestamp();
+                let successCount = 0;
+                
+                for (const item of blacklistItems) {
+                    // Create document in terminated_info collection
+                    const docId = `${item.targetID}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+                    const docRef = db.collection("terminated_info").doc(docId);
+                    
+                    batch.set(docRef, {
+                        targetID: item.targetID,
+                        sourceCollection: 'blacklist',
+                        originalDocId: item.docId,
+                        movedAt: timestamp,
+                        status: 'TERMINATED',
+                        ...item
+                    });
+                    successCount++;
                 }
                 
-                statusMsg.innerHTML = `<span class="success">✅ SUCCESS: Saved "${selectedOption.display}" as ${selectedStatus}</span>`;
+                await batch.commit();
+                
+                statusMsg.innerHTML = `<span class="success">✅ SUCCESS: Moved ${successCount} target(s) to "terminated_info" collection</span>`;
+                
+                // Optional: Ask if user wants to delete from blacklist collection
+                const deleteOriginal = confirm(`Move completed!\n\nDo you want to DELETE the original ${successCount} document(s) from "blacklist" collection?`);
+                
+                if (deleteOriginal) {
+                    statusMsg.innerHTML = `⏳ Deleting original blacklist documents...`;
+                    const deleteBatch = db.batch();
+                    for (const item of blacklistItems) {
+                        const docRef = db.collection("blacklist").doc(item.docId);
+                        deleteBatch.delete(docRef);
+                    }
+                    await deleteBatch.commit();
+                    statusMsg.innerHTML = `<span class="success">✅ SUCCESS: Deleted ${successCount} document(s) from "blacklist" collection</span>`;
+                    
+                    // Reload the blacklist
+                    await loadBlacklist();
+                } else {
+                    // Just reload to refresh display
+                    await loadBlacklist();
+                }
                 
             } catch (error) {
-                console.error("Error saving:", error);
+                console.error("Error moving to terminated_info:", error);
                 statusMsg.innerHTML = `<span class="error">❌ ERROR: ${error.message}</span>`;
-            } finally {
                 updateBtn.disabled = false;
             }
         }
 
-        async function saveMissionOrders(selectedOption, status) {
-            const collectionName = (status === 'ACTIVE') ? 'active_info' : 'terminated_info';
-            const missionOrders = selectedOption.missionOrders;
-            
-            if (!missionOrders || missionOrders.length === 0) {
-                throw new Error('No mission orders found for this selection');
-            }
-            
-            const batch = db.batch();
-            const timestamp = firebase.firestore.FieldValue.serverTimestamp();
-            
-            for (const order of missionOrders) {
-                const docId = `${currentAgent}_${order.missionID}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
-                const docRef = db.collection(collectionName).doc(docId);
-                
-                batch.set(docRef, {
-                    agent: currentAgent,
-                    missionID: order.missionID,
-                    weaponSystem: selectedOption.weaponSystem || order.weapon || 'N/A',
-                    vAgent: order.vAgent || null,
-                    status: status,
-                    timestamp: timestamp,
-                    sourceType: selectedOption.type,
-                    savedBy: 'status_manager'
-                });
-            }
-            
-            await batch.commit();
-            
-            // Summary document
-            const summaryId = `${currentAgent}_${selectedOption.value}_${Date.now()}`;
-            await db.collection(collectionName).doc(summaryId).set({
-                agent: currentAgent,
-                selection: selectedOption.value,
-                display: selectedOption.display,
-                count: missionOrders.length,
-                status: status,
-                timestamp: timestamp,
-                isSummary: true
-            });
-            
-            console.log(`Saved ${missionOrders.length} mission orders to ${collectionName}`);
-        }
-
-        async function saveBlacklistToTerminated(selectedOption) {
-            const collectionName = 'terminated_info';
-            const blacklistItems = selectedOption.items;
-            
-            if (!blacklistItems || blacklistItems.length === 0) {
-                throw new Error('No blacklist items found');
-            }
-            
-            const batch = db.batch();
-            const timestamp = firebase.firestore.FieldValue.serverTimestamp();
-            
-            for (const item of blacklistItems) {
-                const docId = `${currentAgent}_blacklist_${item.targetID}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
-                const docRef = db.collection(collectionName).doc(docId);
-                
-                batch.set(docRef, {
-                    agent: currentAgent,
-                    targetID: item.targetID,
-                    missionID: item.missionID,
-                    weaponSystem: item.weaponSystem,
-                    status: 'TERMINATED',
-                    sourceType: 'blacklist',
-                    timestamp: timestamp,
-                    savedBy: 'status_manager'
-                });
-            }
-            
-            await batch.commit();
-            
-            // Summary document
-            const summaryId = `${currentAgent}_blacklist_summary_${Date.now()}`;
-            await db.collection(collectionName).doc(summaryId).set({
-                agent: currentAgent,
-                selection: 'blacklist',
-                display: `BLACKLIST - ${blacklistItems.length} target(s)`,
-                count: blacklistItems.length,
-                status: 'TERMINATED',
-                timestamp: timestamp,
-                isSummary: true
-            });
-            
-            console.log(`Saved ${blacklistItems.length} blacklist items to ${collectionName}`);
-        }
-
         // Event listener for update button
-        updateBtn.onclick = saveToDatabase;
+        updateBtn.onclick = moveToTerminatedInfo;
 
-        // Load agents on page load
-        loadAgents();
+        // Load blacklist on page load
+        loadBlacklist();
     </script>
 </body>
 </html>

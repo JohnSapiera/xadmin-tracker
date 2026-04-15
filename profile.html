@@ -16,25 +16,25 @@
       <p style="font-size: 9px; opacity: 0.5">MEMOIRS_PROTOCOL_ACTIVE</p>
     </header>
 
-    <!-- DEVICE GRID (mga phone) -->
+    <!-- DEVICE GRID -->
     <div id="deviceSection" class="device-grid"></div>
 
-    <!-- VAGENT FOLDER GRID (lalabas kapag nag-click ng phone) -->
+    <!-- VAGENT FOLDER GRID -->
     <div id="vagentSection" class="vagent-grid"></div>
 
-    <!-- DEVICE MEMOIRS BUTTON (dynamic - lalabas lang kapag may active device) -->
+    <!-- DEVICE MEMOIRS BUTTON (dynamic) -->
     <div id="deviceMemoirsContainer" style="margin-top: 10px;"></div>
 
-    <!-- EXIT BUTTON (bumalik sa device grid) -->
+    <!-- EXIT BUTTON -->
     <button id="btnBack" onclick="location.reload()">[ EXIT_DEVICE_SYSTEM ]</button>
 
-    <!-- MASTER MEMOIRS BUTTON (permanent - kita lagi) -->
+    <!-- MASTER MEMOIRS BUTTON -->
     <div id="memoirsBtnContainer">
       <button onclick="openMemoirs('ALL')">[ VIEW_MASTER_MEMOIRS ]</button>
     </div>
   </div>
 
-  <!-- NOIR MODAL (dossier ng vAgent) -->
+  <!-- NOIR MODAL -->
   <div id="noirOverlay" class="overlay">
     <div class="dossier-paper">
       <button class="close-btn" onclick="closeNoir()">X</button>
@@ -59,7 +59,7 @@
     </div>
   </div>
 
-  <!-- MEMOIRS BOOK MODAL (para sa lahat ng memoirs) -->
+  <!-- MEMOIRS BOOK MODAL -->
   <div id="memoirsOverlay" class="overlay">
     <div class="book" id="dossierBook">
       <!-- PAGE 1: AUDIT REPORT -->
@@ -100,7 +100,6 @@
     </div>
   </div>
 
-  <!-- BOTTOM NAVIGATION -->
   <nav class="bottom-nav">
     <a href="dashboard.html" class="nav-item">DASHBOARD</a>
     <a href="intel.html" class="nav-item">INTEL</a>

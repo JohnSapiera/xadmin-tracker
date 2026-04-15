@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TERMINAL_AUTH_v2.0</title>
+    <title>TERMINAL_AUTH_v3.0 - SUPABASE</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --bg: #01080b; --cyan: #00f2ff; --red: #ff003c; --green: #00ff66; }
         * { box-sizing: border-box; margin: 0; padding: 0; overflow: hidden; }
@@ -55,7 +56,13 @@
 
         .denied { color: var(--red) !important; animation: shake 0.2s infinite; }
         .granted { color: var(--green) !important; }
-        @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(2px); } 50% { transform: translateX(-2px); } 100% { transform: translateX(0); } }
+        
+        @keyframes shake { 
+            0% { transform: translateX(0); } 
+            25% { transform: translateX(2px); } 
+            50% { transform: translateX(-2px); } 
+            100% { transform: translateX(0); } 
+        }
     </style>
 </head>
 <body>
@@ -63,83 +70,145 @@
     <div class="auth-container">
         <div class="header">DECRYPT_ACCESS_KEY</div>
         
-        <input type="password" id="keyInput" placeholder="********" autocomplete="off">
+        <input type="password" id="keyInput" placeholder="ENTER SECRET KEY" autocomplete="off">
         <button id="authBtn">AUTHORIZE</button>
 
         <div id="status">SYSTEM_IDLE</div>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-
     <script>
-        const firebaseConfig = { 
-            apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
-            authDomain: "my-admin-portal-12691.firebaseapp.com", 
-            projectId: "my-admin-portal-12691", 
-            storageBucket: "my-admin-portal-12691.firebasestorage.app", 
-            messagingSenderId: "317015091563", 
-            appId: "1:317015091563:web:baab5171d8e0a58acd442e" 
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-
-        document.getElementById('authBtn').addEventListener('click', async () => {
-            const key = document.getElementById('keyInput').value.trim();
-            const statusDiv = document.getElementById('status');
-
-            if(!key || key.length === 0) {
+        // ========== SUPABASE CONFIGURATION ==========
+        const SUPABASE_URL = 'https://pgclrzqfpoznvrjrzced.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_GhIOC2mXVo0UrhMHZX6Qww_T12tQl4s';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // ========== DOM ELEMENTS ==========
+        const keyInput = document.getElementById('keyInput');
+        const authBtn = document.getElementById('authBtn');
+        const statusDiv = document.getElementById('status');
+        
+        // ========== LOGIN FUNCTION ==========
+        async function authenticateWithSecretKey(secretKey) {
+            try {
+                // Hanapin ang agent gamit ang secret_key
+                const { data, error } = await supabase
+                    .from('agents')
+                    .select('agent_name, secret_key')
+                    .eq('secret_key', secretKey)
+                    .maybeSingle();
+                
+                if (error) throw error;
+                
+                if (data) {
+                    // SUCCESS - Tugma ang secret key
+                    const agentName = data.agent_name;
+                    
+                    // Save session data
+                    localStorage.setItem("cia_agent", agentName);
+                    localStorage.setItem("agent", agentName);
+                    localStorage.setItem("agent_verified", "true");
+                    localStorage.setItem("secret_key", secretKey);
+                    localStorage.setItem("last_auth", new Date().toISOString());
+                    
+                    return { success: true, agentName: agentName };
+                } else {
+                    // FAILED - Walang agent na may ganitong secret key
+                    return { success: false };
+                }
+                
+            } catch (err) {
+                console.error("Supabase auth error:", err);
+                return { success: false, error: err.message };
+            }
+        }
+        
+        // ========== EVENT HANDLER ==========
+        authBtn.addEventListener('click', async () => {
+            const key = keyInput.value.trim();
+            
+            // Validate input
+            if (!key || key.length === 0) {
                 statusDiv.innerText = "ENTER SECRET KEY";
                 statusDiv.classList.add('denied');
+                statusDiv.classList.remove('granted');
                 return;
             }
-
+            
+            // Validate kung 4 digits
+            if (!/^\d+$/.test(key) || key.length !== 4) {
+                statusDiv.innerText = "KEY MUST BE 4 DIGITS";
+                statusDiv.classList.add('denied');
+                statusDiv.classList.remove('granted');
+                return;
+            }
+            
+            // Show loading
             statusDiv.innerText = "AUTHENTICATING...";
             statusDiv.classList.remove('denied');
             statusDiv.classList.remove('granted');
             statusDiv.style.color = "var(--cyan)";
-
+            
+            // Disable button while processing
+            authBtn.disabled = true;
+            authBtn.textContent = "PROCESSING...";
+            
             try {
-                // ⭐ CORRECTED: Collection name is "agents" (plural)
-                const snap = await db.collection("agents")
-                                     .where("secretKey", "==", key)
-                                     .get();
-
-                if (!snap.empty) {
-                    const agentData = snap.docs[0].data();
-                    const agentName = agentData.agentName || snap.docs[0].id;
-                    
-                    statusDiv.innerText = "ACCESS_GRANTED";
+                const result = await authenticateWithSecretKey(key);
+                
+                if (result.success) {
+                    // ACCESS GRANTED
+                    statusDiv.innerText = `ACCESS_GRANTED: ${result.agentName}`;
                     statusDiv.classList.add('granted');
                     statusDiv.style.color = "var(--green)";
-
-                    // Save session to localStorage
-                    localStorage.setItem("cia_agent", agentName);
-                    localStorage.setItem("agent", agentName);
-                    localStorage.setItem("agent_verified", "true");
-                    localStorage.setItem("last_auth", new Date().toISOString());
-
+                    
+                    // Redirect to dashboard after 1 second
                     setTimeout(() => {
                         window.location.replace("dashboard.html");
                     }, 1000);
                 } else {
+                    // ACCESS DENIED
                     statusDiv.innerText = "INVALID_SECRET_KEY";
                     statusDiv.classList.add('denied');
                     localStorage.clear();
                 }
-            } catch (e) {
-                console.error("Auth error:", e);
+                
+            } catch (err) {
+                console.error("Auth error:", err);
                 statusDiv.innerText = "CONNECTION_ERROR";
                 statusDiv.classList.add('denied');
+            } finally {
+                authBtn.disabled = false;
+                authBtn.textContent = "AUTHORIZE";
+                keyInput.value = '';
             }
         });
-
+        
         // Allow Enter key to submit
-        document.getElementById('keyInput').addEventListener('keypress', (e) => {
+        keyInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                document.getElementById('authBtn').click();
+                authBtn.click();
             }
         });
+        
+        // Auto-focus sa input field
+        keyInput.focus();
+        
+        // I-check kung may existing session
+        if (localStorage.getItem('agent_verified') === 'true') {
+            const lastAuth = localStorage.getItem('last_auth');
+            const agentName = localStorage.getItem('cia_agent');
+            if (lastAuth && agentName) {
+                const hoursSinceAuth = (new Date() - new Date(lastAuth)) / (1000 * 60 * 60);
+                if (hoursSinceAuth < 24) {
+                    statusDiv.innerText = `SESSION_RESTORED: ${agentName}`;
+                    statusDiv.classList.add('granted');
+                    setTimeout(() => {
+                        window.location.replace("dashboard.html");
+                    }, 1500);
+                }
+            }
+        }
     </script>
 </body>
 </html>

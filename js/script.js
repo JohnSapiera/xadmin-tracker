@@ -254,11 +254,9 @@ window.closeNoir = () => {
   document.getElementById("noirOverlay").style.display = "none";
 };
 
-// ====== MEMOIRS FUNCTIONS (ENHANCED) ======
+// ====== MEMOIRS FUNCTIONS ======
 let currentMemoirsMode = null;
 let currentFilterMonth = null;
-let currentDeviceExpenses = [];     // flattened list of expense entries for current device/month
-let currentPage = 0;
 const ITEMS_PER_PAGE = 10;
 
 window.flipPage = (forward) => {
@@ -287,6 +285,8 @@ window.closeMemoirs = () => {
   if (selector) selector.remove();
   const prevBtn = document.getElementById("devicePrevBtn");
   if (prevBtn) prevBtn.remove();
+  const masterPagination = document.getElementById("masterPagination");
+  if (masterPagination) masterPagination.remove();
 };
 
 window.openMemoirs = (mode) => {
@@ -300,81 +300,207 @@ window.openMemoirs = (mode) => {
     renderAllMemoirs();
   } else {
     currentMemoirsMode = mode;
-    // Force April (month index 3) and disable month selector for now
     const FIXED_MONTH = 3; // April (0=Jan, 3=Apr)
     renderDevicePage(mode, FIXED_MONTH, 0);
   }
 };
 
+// ====== MASTER MEMOIRS (ALL DEVICES) ======
 function renderAllMemoirs() {
-  // Reset device-specific UI elements
-  const selector = document.getElementById("deviceMonthSelector");
-  if (selector) selector.remove();
-  const prevBtn = document.getElementById("devicePrevBtn");
-  if (prevBtn) prevBtn.remove();
+  // Remove existing pagination
+  const existingPagination = document.getElementById("masterPagination");
+  if (existingPagination) existingPagination.remove();
   
-  flipPage(false);
+  const MASTER_ITEMS_PER_PAGE = 10;
   
-  let filtered = allMissions;
-  const valid = filtered.filter((m) => (m.totalExpenses || 0) > 0);
-  const withV = valid.filter((m) => m.vAgentID && m.vAgentID !== "");
-  const withoutV = valid.filter((m) => !m.vAgentID);
-
-  withV.sort((a, b) => {
-    const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
-    const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
-    return timeB - timeA;
-  });
-  withoutV.sort((a, b) => (b.totalExpenses || 0) - (a.totalExpenses || 0));
-
-  const masterList = [
-    ...withV.map((m) => ({ ...m, isV: true })),
-    ...withoutV.map((m) => ({ ...m, isV: false })),
-  ];
-
-  let p1HTML = "";
-  let p2HTML = "";
-  let overallTotal = 0;
-
-  masterList.forEach((m, index) => {
-    overallTotal += m.totalExpenses || 0;
-    const missionRef = m.id.substring(0, 10).toUpperCase();
-    const agentName = m.agent || "UNKNOWN_OPERATIVE";
-
-    let rowContent = "";
-    const isFirstUnassigned = !m.isV && (index === 0 || masterList[index - 1].isV);
-    if (isFirstUnassigned) {
-      rowContent += `<div class="audit-separator">--- UNASSIGNED_RECORDS ---</div>`;
+  // Collect all devices with their expenses (filtered for April)
+  const devices = [];
+  for (const [deviceName, missions] of Object.entries(deviceData)) {
+    let totalExpenses = 0;
+    let expenseEntries = [];
+    
+    missions.forEach(mission => {
+      if (mission.expensesBreakdown && Array.isArray(mission.expensesBreakdown)) {
+        mission.expensesBreakdown.forEach(exp => {
+          const expDate = new Date(exp.timestamp);
+          const expMonth = expDate.getMonth();
+          if (expMonth === 3) { // April only
+            totalExpenses += exp.amount;
+            expenseEntries.push({
+              missionID: mission.missionID || "???",
+              vAgent: mission.vAgentID || null,
+              date: expDate,
+              amount: exp.amount,
+              description: exp.description || "FIELD_OPERATION"
+            });
+          }
+        });
+      }
+    });
+    
+    if (expenseEntries.length > 0) {
+      devices.push({
+        name: deviceName,
+        total: totalExpenses,
+        expenses: expenseEntries.sort((a, b) => b.date - a.date)
+      });
     }
-
-    rowContent += `
-      <div class="expense-row" style="padding: 8px 0;">
-        <div style="flex-grow:1;">
-          <div style="font-size:11px; font-weight:bold;">
-            ${m.isV ? `vAgent#: <span style="color:#8b0000;">${m.vAgentID}</span>` : `AGENT: ${agentName}`}
+  }
+  
+  // Sort by total expenses (highest first)
+  devices.sort((a, b) => b.total - a.total);
+  
+  const totalPages = Math.ceil(devices.length / MASTER_ITEMS_PER_PAGE);
+  
+  function renderMasterPage(pageNum) {
+    const startIdx = pageNum * MASTER_ITEMS_PER_PAGE;
+    const pageDevices = devices.slice(startIdx, startIdx + MASTER_ITEMS_PER_PAGE);
+    
+    const targetName = document.getElementById("target-name");
+    const activeList = document.getElementById("active-list");
+    const totalVal = document.getElementById("total-val");
+    const flipNextBtn = document.getElementById("flipNextBtn");
+    const p2Area = document.getElementById("weapon-system-breakdown");
+    const totalValP2 = document.getElementById("total-val-p2");
+    const p1 = document.getElementById("p1");
+    const p2 = document.getElementById("p2");
+    
+    // Title with month indicator (disabled)
+    targetName.innerHTML = `MASTER MEMOIRS <span style="font-size:9px; color:#5c7882; margin-left:10px;">📅 APRIL 2024 (Fixed)</span>`;
+    
+    // Build HTML
+    let devicesHTML = '';
+    let grandTotal = 0;
+    
+    pageDevices.forEach(device => {
+      grandTotal += device.total;
+      
+      devicesHTML += `
+        <div style="margin-bottom: 20px; border-left: 3px solid #8b0000; padding-left: 12px;">
+          <div style="font-size: 13px; font-weight: bold; color: #00f3ff; margin-bottom: 8px;">
+            🔧 ${device.name} <span style="color: #8b0000; font-size: 11px;">(Total: ₱${device.total.toLocaleString()})</span>
           </div>
-          ${m.isV ? `<div style="font-size:9px; opacity:0.7;">OPERATOR: ${agentName}</div>` : ""}
-          <div style="font-size:8px;">MO#: ${missionRef}</div>
-        </div>
-        <div><b>₱${(m.totalExpenses || 0).toLocaleString()}</b></div>
-      </div>`;
-
-    if (index < 10) p1HTML += rowContent;
-    else p2HTML += rowContent;
-  });
-
-  document.getElementById("active-list").innerHTML = p1HTML || "<center style='opacity:0.5;'>NO_RECORDS</center>";
-  document.getElementById("target-name").innerText = "ALL";
-  document.getElementById("total-val").innerText = overallTotal.toLocaleString();
-
-  const p2Area = document.getElementById("weapon-system-breakdown");
-  p2Area.innerHTML = p2HTML || "<center style='opacity:0.5;'>[ NO_OVERFLOW_DATA ]</center>";
-  document.getElementById("flipNextBtn").style.display = p2HTML ? "block" : "none";
-  document.getElementById("flipNextBtn").innerHTML = "[ VIEW_SUMMARY ] &gt;&gt;";
-  document.getElementById("flipNextBtn").onclick = () => flipPage(true);
-  document.getElementById("total-val-p2").innerText = overallTotal.toLocaleString();
+      `;
+      
+      device.expenses.forEach(exp => {
+        const dateStr = `${exp.date.getMonth()+1}/${exp.date.getDate()}`;
+        const vAgentDisplay = exp.vAgent ? `<span style="color:#8b0000;">vAgent# ${exp.vAgent}</span>` : `<span style="color:#5c7882;">[NO vAGENT]</span>`;
+        
+        devicesHTML += `
+          <div class="expense-row" style="padding: 6px 0; margin-left: 12px;">
+            <div style="flex-grow:1;">
+              <div style="font-size: 10px;">
+                <span style="color:#8b0000;">MO#${exp.missionID}</span> - ${vAgentDisplay} - ${dateStr} - ${exp.description}
+              </div>
+            </div>
+            <div><b>₱${exp.amount.toLocaleString()}</b></div>
+          </div>
+        `;
+      });
+      
+      devicesHTML += `</div>`;
+    });
+    
+    if (pageDevices.length === 0) {
+      devicesHTML = '<center style="opacity:0.5; padding:20px;">[ NO EXPENSES FOR APRIL ]</center>';
+    }
+    
+    activeList.innerHTML = devicesHTML;
+    
+    // Calculate overall grand total
+    const overallGrandTotal = devices.reduce((sum, d) => sum + d.total, 0);
+    
+    // Show total on last page only
+    const isLastPage = (pageNum === totalPages - 1) || totalPages === 0;
+    if (isLastPage) {
+      totalVal.innerHTML = `<span style="font-size:16px; color:#00f3ff;">GRAND TOTAL: ₱ ${overallGrandTotal.toLocaleString()}</span>`;
+    } else {
+      totalVal.innerHTML = `<span style="font-size:12px; opacity:0.7;">(Grand Total on last page)</span>`;
+    }
+    
+    // Pagination controls
+    const existingPag = document.getElementById("masterPagination");
+    if (existingPag) existingPag.remove();
+    
+    if (totalPages > 1) {
+      const paginationDiv = document.createElement('div');
+      paginationDiv.id = "masterPagination";
+      paginationDiv.style.cssText = `
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-top: 15px;
+        padding: 10px;
+        border-top: 1px solid var(--border);
+      `;
+      
+      const prevBtn = document.createElement('button');
+      prevBtn.innerHTML = '◀ PREV';
+      prevBtn.style.cssText = `
+        background: ${pageNum > 0 ? '#8b0000' : '#333'};
+        color: #fff;
+        border: none;
+        padding: 6px 15px;
+        border-radius: 20px;
+        font-family: monospace;
+        font-size: 10px;
+        cursor: ${pageNum > 0 ? 'pointer' : 'not-allowed'};
+        opacity: ${pageNum > 0 ? '1' : '0.5'};
+      `;
+      if (pageNum > 0) {
+        prevBtn.onclick = () => {
+          SoundFX.click();
+          renderMasterPage(pageNum - 1);
+        };
+      }
+      
+      const pageIndicator = document.createElement('span');
+      pageIndicator.innerHTML = `${pageNum + 1} / ${totalPages}`;
+      pageIndicator.style.cssText = `
+        color: var(--cyan);
+        font-family: monospace;
+        font-size: 11px;
+        padding: 0 10px;
+      `;
+      
+      const nextBtn = document.createElement('button');
+      nextBtn.innerHTML = 'NEXT ▶';
+      nextBtn.style.cssText = `
+        background: ${pageNum < totalPages - 1 ? '#8b0000' : '#333'};
+        color: #fff;
+        border: none;
+        padding: 6px 15px;
+        border-radius: 20px;
+        font-family: monospace;
+        font-size: 10px;
+        cursor: ${pageNum < totalPages - 1 ? 'pointer' : 'not-allowed'};
+        opacity: ${pageNum < totalPages - 1 ? '1' : '0.5'};
+      `;
+      if (pageNum < totalPages - 1) {
+        nextBtn.onclick = () => {
+          SoundFX.click();
+          renderMasterPage(pageNum + 1);
+        };
+      }
+      
+      paginationDiv.appendChild(prevBtn);
+      paginationDiv.appendChild(pageIndicator);
+      paginationDiv.appendChild(nextBtn);
+      activeList.parentNode.insertBefore(paginationDiv, activeList.nextSibling);
+    }
+    
+    // Hide original flip button and page 2
+    flipNextBtn.style.display = "none";
+    p1.classList.remove("flipped");
+    p2.style.display = "none";
+    p2Area.innerHTML = '';
+    totalValP2.innerText = '';
+  }
+  
+  renderMasterPage(0);
 }
 
+// ====== DEVICE MEMOIRS (SINGLE DEVICE) ======
 function renderDevicePage(deviceName, monthIndex, pageNum) {
   const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
   
@@ -383,7 +509,7 @@ function renderDevicePage(deviceName, monthIndex, pageNum) {
     (DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem) === deviceName
   );
   
-  // Collect all expense entries with missionID included
+  // Collect all expense entries with missionID
   let allExpenses = [];
   deviceMissions.forEach(mission => {
     if (mission.expensesBreakdown && Array.isArray(mission.expensesBreakdown)) {
@@ -423,7 +549,7 @@ function renderDevicePage(deviceName, monthIndex, pageNum) {
     return b.total - a.total;
   });
   
-  // Flatten logs with group information
+  // Flatten logs
   const flattenedLogs = [];
   sortedGroups.forEach(group => {
     group.logs.sort((x, y) => y.date - x.date);
@@ -435,7 +561,7 @@ function renderDevicePage(deviceName, monthIndex, pageNum) {
   const startIdx = pageNum * ITEMS_PER_PAGE;
   const pageLogs = flattenedLogs.slice(startIdx, startIdx + ITEMS_PER_PAGE);
   
-  // Build HTML with group headers
+  // Build HTML
   let logsHTML = '';
   let lastVAgent = null;
   pageLogs.forEach(log => {
@@ -452,7 +578,6 @@ function renderDevicePage(deviceName, monthIndex, pageNum) {
     }
     const dateStr = `${log.date.getMonth()+1}/${log.date.getDate()}`;
     
-    // For unassigned records, show Mission Order number
     if (log.vAgent === null) {
       logsHTML += `
         <div class="expense-row" style="padding: 6px 0; margin-left: 12px;">
@@ -490,7 +615,7 @@ function renderDevicePage(deviceName, monthIndex, pageNum) {
   
   targetName.innerHTML = `${deviceName} <span style="font-size:9px; color:#5c7882;">(April only)</span>`;
   
-  // Month selector - disabled, fixed to April
+  // Month selector - disabled
   let monthSelector = document.getElementById("deviceMonthSelector");
   if (!monthSelector) {
     monthSelector = document.createElement('select');
@@ -529,7 +654,7 @@ function renderDevicePage(deviceName, monthIndex, pageNum) {
     totalVal.innerHTML = `<span style="font-size:12px; opacity:0.7;">(Total on last page)</span>`;
   }
   
-  // Create pagination controls
+  // Pagination controls
   const existingPagination = document.getElementById("devicePagination");
   if (existingPagination) existingPagination.remove();
   

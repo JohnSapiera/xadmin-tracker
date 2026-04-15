@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>UPDATE_DB</title>
+    <title>UPDATE_DB - WEAPON MANAGER</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -17,12 +17,12 @@
             padding: 20px;
         }
         .container {
-            max-width: 500px;
+            max-width: 800px;
             width: 100%;
             background: #051014;
             border: 1px solid #00f3ff;
             border-radius: 12px;
-            padding: 30px;
+            padding: 25px;
             box-shadow: 0 0 30px rgba(0,243,255,0.1);
         }
         h2 {
@@ -32,47 +32,120 @@
             letter-spacing: 2px;
             font-size: 18px;
         }
-        .field-group {
-            margin-bottom: 20px;
+        .section {
+            margin-bottom: 25px;
+            border-bottom: 1px solid #1a2f37;
+            padding-bottom: 20px;
         }
-        label {
-            display: block;
+        .section-title {
             color: #00f3ff;
-            font-size: 11px;
-            margin-bottom: 8px;
+            font-size: 12px;
+            margin-bottom: 15px;
             letter-spacing: 1px;
         }
-        select, input {
-            width: 100%;
-            padding: 12px;
+        .radio-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #05ffa1;
+            font-size: 13px;
+            cursor: pointer;
+            padding: 6px 12px;
+            background: #000;
+            border: 1px solid #1a2f37;
+            border-radius: 20px;
+        }
+        .radio-group input[type="radio"] {
+            accent-color: #00f3ff;
+            width: 16px;
+            height: 16px;
+        }
+        .radio-group label:has(input:checked) {
+            border-color: #00f3ff;
+            background: rgba(0,243,255,0.1);
+            color: #00f3ff;
+        }
+        .weapon-list {
+            margin-top: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .weapon-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #1a2f37;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .weapon-name {
+            flex: 1;
+            color: #fff;
+            font-size: 12px;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        .weapon-left {
+            flex: 2;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .weapon-left select {
+            flex: 1;
             background: #000;
             border: 1px solid #1a2f37;
             color: #05ffa1;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 14px;
-            outline: none;
+            padding: 8px 12px;
+            font-family: monospace;
+            font-size: 11px;
             border-radius: 6px;
+            outline: none;
         }
-        select:focus, input:focus {
+        .weapon-left select:focus {
             border-color: #00f3ff;
         }
-        button {
-            width: 100%;
-            padding: 14px;
+        .weapon-right {
+            flex: 2;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .weapon-right input {
+            flex: 1;
+            background: #000;
+            border: 1px solid #1a2f37;
+            color: #05ffa1;
+            padding: 8px 12px;
+            font-family: monospace;
+            font-size: 11px;
+            border-radius: 6px;
+            outline: none;
+        }
+        .weapon-right input:focus {
+            border-color: #00f3ff;
+        }
+        .rename-btn {
             background: #00f3ff;
             color: #000;
             border: none;
-            font-weight: bold;
+            padding: 6px 12px;
+            border-radius: 4px;
             font-family: monospace;
-            font-size: 14px;
+            font-size: 10px;
+            font-weight: bold;
             cursor: pointer;
-            margin-top: 10px;
-            border-radius: 6px;
             transition: 0.3s;
         }
-        button:hover {
+        .rename-btn:hover {
             background: #05ffa1;
-            box-shadow: 0 0 15px rgba(5,255,161,0.3);
+            box-shadow: 0 0 8px rgba(5,255,161,0.3);
         }
         .status {
             margin-top: 20px;
@@ -84,35 +157,44 @@
         }
         .success { color: #05ffa1; }
         .error { color: #ff003c; }
+        .loading {
+            text-align: center;
+            color: #00f3ff;
+            padding: 20px;
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>🔐 AGENT KEY MANAGER</h2>
+        <h2>🔧 WEAPON SYSTEM MANAGER</h2>
 
-        <div class="field-group">
-            <label>SELECT AGENT</label>
-            <select id="agentSelect">
-                <option value="AGENT_JFSN">AGENT_JFSN</option>
-                <option value="AGENT_LZ">AGENT_LZ</option>
-            </select>
+        <!-- AGENT SELECTION (Radio Buttons from mission_orders) -->
+        <div class="section">
+            <div class="section-title">📡 SELECT AGENT</div>
+            <div id="agentRadioGroup" class="radio-group">
+                <div class="loading">Loading agents...</div>
+            </div>
         </div>
 
-        <div class="field-group">
-            <label>4-DIGIT SECRET KEY</label>
-            <input type="text" id="secretKey" maxlength="4" placeholder="0000" autocomplete="off">
+        <!-- WEAPON SYSTEMS LIST -->
+        <div class="section">
+            <div class="section-title">🔫 WEAPON SYSTEMS (Click radio button above to load)</div>
+            <div id="weaponListContainer" class="weapon-list">
+                <div class="loading">Select an agent first</div>
+            </div>
         </div>
 
-        <button id="updateBtn">💾 UPDATE DATABASE</button>
-
-        <div class="status" id="statusMsg">Ready to update</div>
+        <div class="status" id="statusMsg">Ready</div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
     <script>
-        // Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
             authDomain: "my-admin-portal-12691.firebaseapp.com",
@@ -124,71 +206,228 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
+        // Global variables
+        let allAgents = [];          // List of unique agent names
+        let currentAgent = null;     // Currently selected agent
+        let weaponSystems = [];       // List of weapon systems for current agent
+
         // DOM Elements
-        const agentSelect = document.getElementById('agentSelect');
-        const secretKeyInput = document.getElementById('secretKey');
-        const updateBtn = document.getElementById('updateBtn');
+        const agentRadioGroup = document.getElementById('agentRadioGroup');
+        const weaponListContainer = document.getElementById('weaponListContainer');
         const statusMsg = document.getElementById('statusMsg');
 
-        // Function to update database
-        async function updateAgentKey() {
-            const agent = agentSelect.value;
-            const newKey = secretKeyInput.value.trim();
-
-            // Validate 4-digit
-            if (!/^\d{4}$/.test(newKey)) {
-                statusMsg.innerHTML = '<span class="error">❌ Invalid: Must be exactly 4 digits</span>';
-                return;
-            }
-
-            statusMsg.innerHTML = '⏳ Updating database...';
-            updateBtn.disabled = true;
-
+        // ========== LOAD AGENTS FROM mission_orders ==========
+        async function loadAgents() {
+            statusMsg.innerHTML = '⏳ Loading agents from database...';
+            agentRadioGroup.innerHTML = '<div class="loading">Loading agents...</div>';
+            
             try {
-                // Update the agent document in Firestore
-                await db.collection("agents").doc(agent).set({
-                    agentName: agent,
-                    secretKey: newKey,
-                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true });
-
-                statusMsg.innerHTML = `<span class="success">✅ SUCCESS: ${agent} key updated to ${newKey}</span>`;
-                secretKeyInput.value = '';
-            } catch (error) {
-                statusMsg.innerHTML = `<span class="error">❌ ERROR: ${error.message}</span>`;
-            } finally {
-                updateBtn.disabled = false;
-            }
-        }
-
-        // Event listener
-        updateBtn.onclick = updateAgentKey;
-
-        // Optional: Load existing key when agent changes
-        async function loadExistingKey() {
-            const agent = agentSelect.value;
-            try {
-                const docRef = await db.collection("agents").doc(agent).get();
-                if (docRef.exists) {
-                    const data = docRef.data();
-                    if (data.secretKey) {
-                        secretKeyInput.value = data.secretKey;
-                        statusMsg.innerHTML = `📋 Loaded existing key for ${agent}`;
-                    } else {
-                        secretKeyInput.value = '';
-                        statusMsg.innerHTML = `📋 No existing key for ${agent}`;
+                const snapshot = await db.collection("mission_orders").get();
+                const agentSet = new Set();
+                
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.agent) {
+                        agentSet.add(data.agent);
                     }
+                });
+                
+                allAgents = Array.from(agentSet).sort();
+                
+                if (allAgents.length === 0) {
+                    agentRadioGroup.innerHTML = '<div style="color:#5c7882;">No agents found in mission_orders</div>';
+                    statusMsg.innerHTML = '<span class="error">⚠️ No agents found in database</span>';
                 } else {
-                    secretKeyInput.value = '';
-                    statusMsg.innerHTML = `📋 New agent: ${agent}`;
+                    renderAgentRadios();
+                    statusMsg.innerHTML = `<span class="success">✅ Loaded ${allAgents.length} agent(s)</span>`;
                 }
             } catch (error) {
-                console.error("Error loading key:", error);
+                console.error("Error loading agents:", error);
+                agentRadioGroup.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+                statusMsg.innerHTML = `<span class="error">❌ Failed to load agents</span>`;
             }
         }
 
-        agentSelect.onchange = loadExistingKey;
-        loadExistingKey();
+        // Render radio buttons for agents
+        function renderAgentRadios() {
+            agentRadioGroup.innerHTML = '';
+            allAgents.forEach(agent => {
+                const label = document.createElement('label');
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = 'agent';
+                radio.value = agent;
+                radio.onclick = () => selectAgent(agent);
+                
+                label.appendChild(radio);
+                label.appendChild(document.createTextNode(` ${agent}`));
+                agentRadioGroup.appendChild(label);
+            });
+        }
+
+        // ========== SELECT AGENT: LOAD WEAPON SYSTEMS ==========
+        async function selectAgent(agent) {
+            currentAgent = agent;
+            statusMsg.innerHTML = `⏳ Loading weapon systems for ${agent}...`;
+            weaponListContainer.innerHTML = '<div class="loading">Loading weapon systems...</div>';
+            
+            try {
+                const snapshot = await db.collection("mission_orders")
+                    .where("agent", "==", agent)
+                    .get();
+                
+                const weaponSet = new Set();
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.weaponSystem) {
+                        weaponSet.add(data.weaponSystem);
+                    }
+                });
+                
+                weaponSystems = Array.from(weaponSet).sort();
+                
+                if (weaponSystems.length === 0) {
+                    weaponListContainer.innerHTML = '<div style="color:#5c7882; text-align:center; padding:20px;">No weapon systems found for this agent</div>';
+                    statusMsg.innerHTML = `<span class="error">⚠️ No weapon systems for ${agent}</span>`;
+                } else {
+                    renderWeaponList();
+                    statusMsg.innerHTML = `<span class="success">✅ Loaded ${weaponSystems.length} weapon system(s) for ${agent}</span>`;
+                }
+            } catch (error) {
+                console.error("Error loading weapon systems:", error);
+                weaponListContainer.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+                statusMsg.innerHTML = `<span class="error">❌ Failed to load weapon systems</span>`;
+            }
+        }
+
+        // Render weapon systems with dropdown and rename input
+        function renderWeaponList() {
+            weaponListContainer.innerHTML = '';
+            
+            weaponSystems.forEach((weapon, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'weapon-item';
+                
+                // Left side: Dropdown (for selection, but we just display the weapon name)
+                // Since user wants dropdown field, we'll make a dropdown with the current weapon as selected
+                const leftDiv = document.createElement('div');
+                leftDiv.className = 'weapon-left';
+                
+                const select = document.createElement('select');
+                // Populate with all weapon systems for this agent (or just the current one)
+                weaponSystems.forEach(w => {
+                    const option = document.createElement('option');
+                    option.value = w;
+                    option.textContent = w;
+                    if (w === weapon) option.selected = true;
+                    select.appendChild(option);
+                });
+                select.onchange = (e) => {
+                    // Update the corresponding rename input with the selected weapon
+                    const renameInput = rightDiv.querySelector('input');
+                    if (renameInput) renameInput.value = e.target.value;
+                };
+                
+                leftDiv.appendChild(select);
+                
+                // Right side: Input field for new name + rename button
+                const rightDiv = document.createElement('div');
+                rightDiv.className = 'weapon-right';
+                
+                const renameInput = document.createElement('input');
+                renameInput.type = 'text';
+                renameInput.placeholder = 'New weapon name';
+                renameInput.value = weapon;
+                
+                const renameBtn = document.createElement('button');
+                renameBtn.textContent = 'RENAME';
+                renameBtn.className = 'rename-btn';
+                renameBtn.onclick = () => updateWeaponName(weapon, renameInput.value.trim(), select);
+                
+                rightDiv.appendChild(renameInput);
+                rightDiv.appendChild(renameBtn);
+                
+                itemDiv.appendChild(leftDiv);
+                itemDiv.appendChild(rightDiv);
+                weaponListContainer.appendChild(itemDiv);
+            });
+        }
+
+        // ========== UPDATE WEAPON NAME IN ALL MISSION ORDERS ==========
+        async function updateWeaponName(oldName, newName, selectElement) {
+            if (!currentAgent) {
+                statusMsg.innerHTML = '<span class="error">❌ No agent selected</span>';
+                return;
+            }
+            
+            if (!newName || newName === '') {
+                statusMsg.innerHTML = '<span class="error">❌ New weapon name cannot be empty</span>';
+                return;
+            }
+            
+            if (newName === oldName) {
+                statusMsg.innerHTML = '<span class="error">⚠️ New name is same as old name</span>';
+                return;
+            }
+            
+            // Confirm
+            if (!confirm(`Rename "${oldName}" to "${newName}" for agent ${currentAgent}?\n\nThis will update ALL mission orders with this weapon system.`)) {
+                return;
+            }
+            
+            statusMsg.innerHTML = `⏳ Updating "${oldName}" → "${newName}" for ${currentAgent}...`;
+            
+            try {
+                // Find all mission orders with this agent and weaponSystem
+                const snapshot = await db.collection("mission_orders")
+                    .where("agent", "==", currentAgent)
+                    .where("weaponSystem", "==", oldName)
+                    .get();
+                
+                if (snapshot.empty) {
+                    statusMsg.innerHTML = `<span class="error">❌ No mission orders found with weapon "${oldName}"</span>`;
+                    return;
+                }
+                
+                let updateCount = 0;
+                const batch = db.batch();
+                
+                snapshot.forEach(doc => {
+                    const docRef = db.collection("mission_orders").doc(doc.id);
+                    batch.update(docRef, { weaponSystem: newName });
+                    updateCount++;
+                });
+                
+                await batch.commit();
+                
+                // Update local array and re-render
+                const index = weaponSystems.indexOf(oldName);
+                if (index !== -1) weaponSystems[index] = newName;
+                
+                // Update the dropdown options
+                if (selectElement) {
+                    // Update all select elements in the weapon list
+                    document.querySelectorAll('.weapon-left select').forEach(select => {
+                        for (let i = 0; i < select.options.length; i++) {
+                            if (select.options[i].value === oldName) {
+                                select.options[i].value = newName;
+                                select.options[i].textContent = newName;
+                            }
+                        }
+                    });
+                }
+                
+                renderWeaponList(); // Re-render to reflect changes
+                statusMsg.innerHTML = `<span class="success">✅ SUCCESS: Renamed "${oldName}" → "${newName}" (${updateCount} mission(s) updated)</span>";
+                
+            } catch (error) {
+                console.error("Error updating weapon name:", error);
+                statusMsg.innerHTML = `<span class="error">❌ ERROR: ${error.message}</span>`;
+            }
+        }
+
+        // ========== INIT ==========
+        loadAgents();
     </script>
 </body>
 </html>

@@ -142,7 +142,6 @@ function activateDevice(name, element) {
     document.getElementById("vagentSection").style.display = "grid";
     document.getElementById("btnBack").style.display = "block";
 
-    // Device-specific memoirs button
     const deviceMemoirsContainer = document.getElementById("deviceMemoirsContainer");
     if (deviceMemoirsContainer) {
       deviceMemoirsContainer.innerHTML = `
@@ -182,7 +181,6 @@ if (btnBack) {
     document.getElementById("deviceSection").style.display = "grid";
     btnBack.style.display = "none";
     
-    // Clear device memoirs button
     const deviceMemoirsContainer = document.getElementById("deviceMemoirsContainer");
     if (deviceMemoirsContainer) {
       deviceMemoirsContainer.innerHTML = "";
@@ -256,9 +254,12 @@ window.closeNoir = () => {
   document.getElementById("noirOverlay").style.display = "none";
 };
 
-// ====== MEMOIRS FUNCTIONS (ENHANCED) ======
+// ====== MEMOIRS FUNCTIONS (ENHANCED WITH DROPDOWN & PAGE FLIP) ======
 let currentMemoirsMode = null;
 let currentFilterMonth = null;
+let currentDeviceExpenses = [];     // stored expenses for the selected month
+let currentPage = 0;
+const ITEMS_PER_PAGE = 10;
 
 window.flipPage = (forward) => {
   console.log("📖 Flipping page:", forward ? "forward" : "backward");
@@ -278,13 +279,166 @@ window.flipPage = (forward) => {
   }
 };
 
+// For device memoirs: custom page flip (next/previous) without using the book's two-page layout
+// We'll use the existing book pages but repurpose them for pagination.
+let currentDevicePage = 0;
+let totalDevicePages = 1;
+
+function renderDevicePage(deviceName, monthIndex, pageNum) {
+  const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+  const currentMonth = monthNames[monthIndex];
+  
+  // Filter expenses for this month
+  const deviceMissions = allMissions.filter(m => 
+    (DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem) === deviceName
+  );
+  
+  let allExpenses = [];
+  deviceMissions.forEach(mission => {
+    if (mission.expensesBreakdown && Array.isArray(mission.expensesBreakdown)) {
+      mission.expensesBreakdown.forEach(exp => {
+        const expDate = new Date(exp.timestamp);
+        const expMonth = expDate.getMonth();
+        if (expMonth === monthIndex) {
+          allExpenses.push({
+            vAgent: mission.vAgentID,
+            date: expDate,
+            amount: exp.amount,
+            description: exp.description || "FIELD_OPERATION",
+            injectedBy: exp.injectedBy
+          });
+        }
+      });
+    }
+  });
+  
+  allExpenses.sort((a, b) => b.date - a.date);
+  const total = allExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+  const totalPages = Math.ceil(allExpenses.length / ITEMS_PER_PAGE);
+  const start = pageNum * ITEMS_PER_PAGE;
+  const pageExpenses = allExpenses.slice(start, start + ITEMS_PER_PAGE);
+  
+  // Update DOM elements
+  const targetName = document.getElementById("target-name");
+  const activeList = document.getElementById("active-list");
+  const totalVal = document.getElementById("total-val");
+  const flipNextBtn = document.getElementById("flipNextBtn");
+  const p2Area = document.getElementById("weapon-system-breakdown");
+  const totalValP2 = document.getElementById("total-val-p2");
+  const p1 = document.getElementById("p1");
+  const p2 = document.getElementById("p2");
+  
+  // Set title and month dropdown
+  targetName.innerHTML = `${deviceName}`;
+  
+  // Create or update month dropdown
+  let monthSelector = document.getElementById("deviceMonthSelector");
+  if (!monthSelector) {
+    monthSelector = document.createElement('select');
+    monthSelector.id = "deviceMonthSelector";
+    monthSelector.style.cssText = `
+      background: #000;
+      border: 1px solid #8b0000;
+      color: #8b0000;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 10px;
+      margin-left: 10px;
+      cursor: pointer;
+    `;
+    targetName.parentNode.insertBefore(monthSelector, targetName.nextSibling);
+  }
+  // Populate dropdown
+  monthSelector.innerHTML = '';
+  for (let i = 0; i < monthNames.length; i++) {
+    const option = document.createElement('option');
+    option.value = i;
+    option.textContent = monthNames[i];
+    if (i === monthIndex) option.selected = true;
+    monthSelector.appendChild(option);
+  }
+  monthSelector.onchange = (e) => {
+    const newMonth = parseInt(e.target.value);
+    renderDevicePage(deviceName, newMonth, 0);
+  };
+  
+  // Build HTML for current page
+  let expensesHTML = '';
+  if (pageExpenses.length === 0) {
+    expensesHTML = '<center style="opacity:0.5; padding:20px;">[ NO EXPENSES FOR THIS MONTH ]</center>';
+  } else {
+    pageExpenses.forEach(exp => {
+      const dateStr = `${exp.date.getMonth()+1}/${exp.date.getDate()}`;
+      expensesHTML += `
+        <div class="expense-row" style="padding: 8px 0;">
+          <div style="flex-grow:1;">
+            <div style="font-size:11px; font-weight:bold;">vAgent#: <span style="color:#8b0000;">${exp.vAgent}</span></div>
+            <div style="font-size:9px; opacity:0.7;">${dateStr} - ${exp.description}</div>
+          </div>
+          <div><b>₱${exp.amount.toLocaleString()}</b></div>
+        </div>
+      `;
+    });
+  }
+  
+  activeList.innerHTML = expensesHTML;
+  totalVal.innerText = total.toLocaleString();
+  
+  // Pagination controls: use flipNextBtn for next page, and add a "BACK" button if needed.
+  if (totalPages > 1) {
+    // Show next button if not last page
+    if (pageNum < totalPages - 1) {
+      flipNextBtn.style.display = "block";
+      flipNextBtn.innerHTML = `[ NEXT PAGE ${pageNum+2}/${totalPages} &gt;&gt; ]`;
+      flipNextBtn.onclick = () => {
+        SoundFX.pageFlip();
+        renderDevicePage(deviceName, monthIndex, pageNum + 1);
+      };
+    } else {
+      flipNextBtn.style.display = "none";
+    }
+    // Handle previous page navigation: we need a previous button. We'll add it dynamically.
+    let prevBtn = document.getElementById("devicePrevBtn");
+    if (!prevBtn) {
+      prevBtn = document.createElement('div');
+      prevBtn.id = "devicePrevBtn";
+      prevBtn.className = "swipe-hint";
+      prevBtn.style.cssText = "text-align:left; margin-top:10px; cursor:pointer;";
+      activeList.parentNode.insertBefore(prevBtn, activeList.nextSibling);
+    }
+    if (pageNum > 0) {
+      prevBtn.innerHTML = `&lt;&lt; PREV PAGE ${pageNum}/${totalPages}`;
+      prevBtn.style.display = "block";
+      prevBtn.onclick = () => {
+        SoundFX.pageFlip();
+        renderDevicePage(deviceName, monthIndex, pageNum - 1);
+      };
+    } else {
+      prevBtn.style.display = "none";
+    }
+  } else {
+    flipNextBtn.style.display = "none";
+    const prevBtn = document.getElementById("devicePrevBtn");
+    if (prevBtn) prevBtn.style.display = "none";
+  }
+  
+  // Reset the book page view (ensure page 1 is shown)
+  p1.classList.remove("flipped");
+  p2.style.display = "none";
+  // Also clear page 2 content (unused in device memoirs)
+  p2Area.innerHTML = '';
+  totalValP2.innerText = total.toLocaleString();
+}
+
 window.closeMemoirs = () => {
   console.log("📚 Closing memoirs");
   SoundFX.click();
   document.getElementById("memoirsOverlay").style.display = "none";
-  // Remove temporary month selector if exists
   const selector = document.getElementById("deviceMonthSelector");
   if (selector) selector.remove();
+  const prevBtn = document.getElementById("devicePrevBtn");
+  if (prevBtn) prevBtn.remove();
 };
 
 window.openMemoirs = (mode) => {
@@ -295,17 +449,21 @@ window.openMemoirs = (mode) => {
   overlay.style.display = "flex";
   
   if (mode === "ALL") {
-    // Original ALL memoirs (no month filter)
     renderAllMemoirs();
   } else {
-    // Device-specific memoirs with month filter
     currentMemoirsMode = mode;
-    const currentMonth = new Date().getMonth(); // 0=Jan, 3=April
-    renderDeviceMemoirs(mode, currentMonth);
+    const currentMonth = new Date().getMonth(); // current month (0-11)
+    renderDevicePage(mode, currentMonth, 0);
   }
 };
 
 function renderAllMemoirs() {
+  // Reset any device-specific elements
+  const selector = document.getElementById("deviceMonthSelector");
+  if (selector) selector.remove();
+  const prevBtn = document.getElementById("devicePrevBtn");
+  if (prevBtn) prevBtn.remove();
+  
   flipPage(false);
   
   let filtered = allMissions;
@@ -335,7 +493,6 @@ function renderAllMemoirs() {
     const agentName = m.agent || "UNKNOWN_OPERATIVE";
 
     let rowContent = "";
-
     const isFirstUnassigned = !m.isV && (index === 0 || masterList[index - 1].isV);
     if (isFirstUnassigned) {
       rowContent += `<div class="audit-separator">--- UNASSIGNED_RECORDS ---</div>`;
@@ -364,150 +521,9 @@ function renderAllMemoirs() {
   const p2Area = document.getElementById("weapon-system-breakdown");
   p2Area.innerHTML = p2HTML || "<center style='opacity:0.5;'>[ NO_OVERFLOW_DATA ]</center>";
   document.getElementById("flipNextBtn").style.display = p2HTML ? "block" : "none";
+  document.getElementById("flipNextBtn").innerHTML = "[ VIEW_SUMMARY ] &gt;&gt;";
+  document.getElementById("flipNextBtn").onclick = () => flipPage(true);
   document.getElementById("total-val-p2").innerText = overallTotal.toLocaleString();
-}
-
-function renderDeviceMemoirs(deviceName, monthIndex) {
-  const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
-  const currentMonth = monthNames[monthIndex];
-  
-  // Get missions for this device
-  const deviceMissions = allMissions.filter(m => 
-    (DEVICE_REGISTRY[m.weaponSystem] || m.weaponSystem) === deviceName
-  );
-  
-  // Collect all expense entries with their vAgentID and date
-  let allExpenses = [];
-  deviceMissions.forEach(mission => {
-    if (mission.expensesBreakdown && Array.isArray(mission.expensesBreakdown)) {
-      mission.expensesBreakdown.forEach(exp => {
-        const expDate = new Date(exp.timestamp);
-        const expMonth = expDate.getMonth();
-        if (expMonth === monthIndex) {
-          allExpenses.push({
-            vAgent: mission.vAgentID,
-            date: expDate,
-            amount: exp.amount,
-            description: exp.description || "FIELD_OPERATION",
-            injectedBy: exp.injectedBy
-          });
-        }
-      });
-    }
-  });
-  
-  // Sort by date (newest first)
-  allExpenses.sort((a, b) => b.date - a.date);
-  
-  // Calculate total
-  const total = allExpenses.reduce((sum, exp) => sum + exp.amount, 0);
-  
-  // Get DOM elements
-  const p1 = document.getElementById("p1");
-  const p2 = document.getElementById("p2");
-  const activeList = document.getElementById("active-list");
-  const targetName = document.getElementById("target-name");
-  const totalVal = document.getElementById("total-val");
-  const flipBtn = document.getElementById("flipNextBtn");
-  const p2Area = document.getElementById("weapon-system-breakdown");
-  const totalValP2 = document.getElementById("total-val-p2");
-  
-  // Set title
-  targetName.innerHTML = `${deviceName} <span style="font-size:8px; margin-left:10px;">MONTH: ${currentMonth}</span>`;
-  
-  // Create or update month selector
-  let monthSelector = document.getElementById("deviceMonthSelector");
-  if (!monthSelector) {
-    monthSelector = document.createElement('div');
-    monthSelector.id = "deviceMonthSelector";
-    monthSelector.style.cssText = 'display: flex; gap: 4px; flex-wrap: wrap; margin-top: 8px; justify-content: center;';
-    targetName.parentNode.insertBefore(monthSelector, targetName.nextSibling);
-  }
-  monthSelector.innerHTML = '';
-  for (let i = 0; i < monthNames.length; i++) {
-    const btn = document.createElement('button');
-    btn.innerText = monthNames[i];
-    btn.style.cssText = `
-      background: ${i === monthIndex ? '#8b0000' : 'transparent'};
-      border: 1px solid #8b0000;
-      color: ${i === monthIndex ? '#fff' : '#8b0000'};
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 9px;
-      cursor: pointer;
-      font-family: monospace;
-    `;
-    btn.onclick = (function(m) { return function() { renderDeviceMemoirs(deviceName, m); }; })(i);
-    monthSelector.appendChild(btn);
-  }
-  
-  // Build expense list HTML
-  let expensesHTML = '';
-  if (allExpenses.length === 0) {
-    expensesHTML = '<center style="opacity:0.5; padding:20px;">[ NO EXPENSES FOR THIS MONTH ]</center>';
-  } else {
-    allExpenses.forEach(exp => {
-      const dateStr = `${exp.date.getMonth()+1}/${exp.date.getDate()}`;
-      expensesHTML += `
-        <div class="expense-row" style="padding: 8px 0;">
-          <div style="flex-grow:1;">
-            <div style="font-size:11px; font-weight:bold;">vAgent#: <span style="color:#8b0000;">${exp.vAgent}</span></div>
-            <div style="font-size:9px; opacity:0.7;">${dateStr} - ${exp.description}</div>
-          </div>
-          <div><b>₱${exp.amount.toLocaleString()}</b></div>
-        </div>
-      `;
-    });
-  }
-  
-  // Pagination (10 items per page)
-  const pageSize = 10;
-  const hasMore = allExpenses.length > pageSize;
-  let p1HTML = expensesHTML;
-  let p2HTML = '';
-  
-  if (hasMore) {
-    p1HTML = allExpenses.slice(0, pageSize).map(exp => {
-      const dateStr = `${exp.date.getMonth()+1}/${exp.date.getDate()}`;
-      return `
-        <div class="expense-row" style="padding: 8px 0;">
-          <div style="flex-grow:1;">
-            <div style="font-size:11px; font-weight:bold;">vAgent#: <span style="color:#8b0000;">${exp.vAgent}</span></div>
-            <div style="font-size:9px; opacity:0.7;">${dateStr} - ${exp.description}</div>
-          </div>
-          <div><b>₱${exp.amount.toLocaleString()}</b></div>
-        </div>
-      `;
-    }).join('');
-    p2HTML = allExpenses.slice(pageSize).map(exp => {
-      const dateStr = `${exp.date.getMonth()+1}/${exp.date.getDate()}`;
-      return `
-        <div class="expense-row" style="padding: 8px 0;">
-          <div style="flex-grow:1;">
-            <div style="font-size:11px; font-weight:bold;">vAgent#: <span style="color:#8b0000;">${exp.vAgent}</span></div>
-            <div style="font-size:9px; opacity:0.7;">${dateStr} - ${exp.description}</div>
-          </div>
-          <div><b>₱${exp.amount.toLocaleString()}</b></div>
-        </div>
-      `;
-    }).join('');
-  }
-  
-  activeList.innerHTML = p1HTML;
-  totalVal.innerText = total.toLocaleString();
-  
-  if (hasMore) {
-    p2Area.innerHTML = p2HTML;
-    flipBtn.style.display = "block";
-    totalValP2.innerText = total.toLocaleString();
-  } else {
-    flipBtn.style.display = "none";
-    p2Area.innerHTML = '';
-  }
-  
-  // Ensure page 1 is visible and page 2 hidden if not flipped
-  p1.classList.remove("flipped");
-  p2.style.display = "none";
 }
 
 // ====== TERMINATE AGENT ======

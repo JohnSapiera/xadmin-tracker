@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loadMissionData();
 });
 
-// ====== DATA LOADING ======
+// ====== DATA LOADING (INCLUDES ALL MISSIONS, EVEN WITHOUT vAgentID) ======
 async function loadMissionData() {
   console.log("📡 Loading mission data for agent:", currentAgent);
   SoundFX.terminalUpdate();
@@ -51,14 +51,12 @@ async function loadMissionData() {
       const docWithID = { ...data, id: doc.id };
       allMissions.push(docWithID);
 
-      if (data.vAgentID) {
-        const deviceName =
-          DEVICE_REGISTRY[data.weaponSystem] || data.weaponSystem;
-        if (!deviceData[deviceName]) {
-          deviceData[deviceName] = [];
-        }
-        deviceData[deviceName].push(docWithID);
+      // ✅ Isama ang lahat ng missions sa deviceData (kahit walang vAgentID)
+      const deviceName = DEVICE_REGISTRY[data.weaponSystem] || data.weaponSystem;
+      if (!deviceData[deviceName]) {
+        deviceData[deviceName] = [];
       }
+      deviceData[deviceName].push(docWithID);
     });
 
     console.log("Device Data:", deviceData);
@@ -151,9 +149,12 @@ function activateDevice(name, element) {
       `;
     }
 
-    const sorted = deviceData[name].sort(
+    // I-sort ang mga vAgent folders (kung may vAgentID)
+    const missionsForDevice = deviceData[name];
+    const sorted = missionsForDevice.filter(m => m.vAgentID).sort(
       (a, b) => parseInt(a.vAgentID) - parseInt(b.vAgentID)
     );
+    // Idagdag din ang mga walang vAgentID? Sa folder grid, hindi na kailangan, pero ilalagay natin sa memoirs.
     document.getElementById("vagentSection").innerHTML =
       sorted
         .map((v) => {
@@ -445,11 +446,11 @@ function renderMasterMemoirs() {
       activeList.innerHTML = devicesHTML;
     }
     
-    // Total display (no emoji, no cyan)
+    // Update total display (GRAND TOTAL EXPENDITURE)
     if (isLastPage) {
-      totalVal.innerHTML = `<div style="background: #8b0000; color: #fff; padding: 8px 16px; border-radius: 8px; display: inline-block; font-size: 16px; font-weight: bold;">TOTAL EXPENDITURE: ₱ ${overallGrandTotal.toLocaleString()}</div>`;
+      totalVal.innerHTML = `<div style="background: #8b0000; color: #fff; padding: 8px 16px; border-radius: 8px; display: inline-block; font-size: 16px; font-weight: bold;">GRAND TOTAL EXPENDITURE: ₱ ${overallGrandTotal.toLocaleString()}</div>`;
     } else {
-      totalVal.innerHTML = `<span style="font-size: 12px; color: #aaa;">Page ${pageNum+1} of ${masterTotalPages} — Total expenditure on last page</span>`;
+      totalVal.innerHTML = `<span style="font-size: 12px; color: #aaa;">Page ${pageNum+1} of ${masterTotalPages} — Grand total on last page</span>`;
     }
     
     updatePaginationControls(pageNum);

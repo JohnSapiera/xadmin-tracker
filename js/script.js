@@ -560,9 +560,42 @@ function renderDevicePage(deviceName, monthIndex, pageNum) {
     const prevBtn = document.getElementById("devicePrevBtn");
     if (prevBtn) prevBtn.style.display = "none";
   }
-  
+
   // Reset book pages (ensure page 1 visible)
   p1.classList.remove("flipped");
   p2.style.display = "none";
   p2Area.innerHTML = '';
-  totalV
+  totalValP2.innerText = '';  // no secondary total needed
+}
+
+// ====== TERMINATE AGENT ======
+window.terminateAgent = async (docID) => {
+    console.log("🔫 Terminating agent for mission:", docID);
+    
+    const confirmTerminate = confirm("⚠️ WARNING: This will permanently delete the mission order.\n\nAre you sure you want to TERMINATE this agent?");
+    if (!confirmTerminate) {
+        console.log("Termination cancelled");
+        return;
+    }
+    
+    const doubleConfirm = prompt("FINAL WARNING: This action cannot be undone!\n\nType 'TERMINATE' to confirm:");
+    if (doubleConfirm !== "TERMINATE") {
+        alert("Termination aborted.");
+        return;
+    }
+    
+    SoundFX.error();
+    
+    try {
+        await deleteDoc(doc(db, "mission_orders", docID));
+        console.log("✅ Mission terminated successfully:", docID);
+        SoundFX.success();
+        alert("✅ AGENT TERMINATED SUCCESSFULLY");
+        closeNoir();
+        location.reload();
+    } catch (error) {
+        console.error("❌ Termination failed:", error);
+        SoundFX.error();
+        alert("❌ TERMINATION FAILED: " + error.message);
+    }
+};

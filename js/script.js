@@ -8,6 +8,8 @@ import {
   query,
   where,
   getDocs,
+  deleteDoc,
+  doc,
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 console.log("✅ Modules loaded successfully");
@@ -140,7 +142,7 @@ function activateDevice(name, element) {
     document.getElementById("vagentSection").style.display = "grid";
     document.getElementById("btnBack").style.display = "block";
 
-    // ⭐ FIX: Use deviceMemoirsContainer for device-specific memoirs button
+    // Use deviceMemoirsContainer for device-specific memoirs button
     const deviceMemoirsContainer = document.getElementById("deviceMemoirsContainer");
     if (deviceMemoirsContainer) {
       deviceMemoirsContainer.innerHTML = `
@@ -180,7 +182,7 @@ if (btnBack) {
     document.getElementById("deviceSection").style.display = "grid";
     btnBack.style.display = "none";
     
-    // ⭐ FIX: Clear device memoirs container when exiting
+    // Clear device memoirs container when exiting
     const deviceMemoirsContainer = document.getElementById("deviceMemoirsContainer");
     if (deviceMemoirsContainer) {
       deviceMemoirsContainer.innerHTML = "";
@@ -241,7 +243,7 @@ window.openNoirModal = (docID) => {
     </div>
     <p style="font-size:10px; font-weight:bold; border-top:1px solid #000; padding-top:10px; margin-bottom:8px; letter-spacing:1.5px;">OPERATIONAL_LOGS:</p>
     <div style="max-height:160px; overflow-y:auto; margin-bottom:15px; padding-right:5px;">${expHTML}</div>
-    <center><button class="btn-terminate" onclick="alert('Auth Required')">TERMINATE_AGENT</button></center>
+    <center><button class="btn-terminate" onclick="terminateAgent('${docID}')">TERMINATE_AGENT</button></center>
   `;
   document.getElementById("n-total").innerText = `₱ ${(
     data.totalExpenses || 0
@@ -401,7 +403,7 @@ window.terminateAgent = async (docID) => {
     }
     
     // Second confirmation for safety
-    const doubleConfirm = confirm("FINAL WARNING: This action cannot be undone!\n\nType 'TERMINATE' to confirm:");
+    const doubleConfirm = prompt("FINAL WARNING: This action cannot be undone!\n\nType 'TERMINATE' to confirm:");
     if (doubleConfirm !== "TERMINATE") {
         alert("Termination aborted.");
         return;

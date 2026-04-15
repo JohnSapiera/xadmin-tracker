@@ -1,4 +1,4 @@
-// js/jsdash.js - CORE DASHBOARD WITH SOUNDS (COMPLETE)
+// js/jsdash.js - CORE DASHBOARD v30.5 with Sounds
 
 import SoundFX from './sound.js';
 import { DEVICE_REGISTRY } from './config.js';
@@ -32,7 +32,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // ====== AGENT FROM LOCALSTORAGE ======
-const currentAgent = localStorage.getItem("cia_agent") || localStorage.getItem("agent") || "AGENT_LZ";
+const currentAgent = localStorage.getItem("agent") || localStorage.getItem("cia_agent") || "AGENT_LZ";
 console.log("Agent:", currentAgent);
 
 // ====== STATE ======
@@ -66,8 +66,7 @@ function init() {
     setInterval(updateClock, 1000);
     setupTerminalListener();
     setupEventListeners();
-    setupNavigationSounds();
-    setupAudioActivator();
+    console.log("✅ Dashboard initialized, confirm button disabled until vAgent and weapon selected");
 }
 
 function updateClock() {
@@ -101,9 +100,12 @@ function resetUI() {
     reserveBtn.classList.remove('active');
 }
 
+// ====== CHECK FORM COMPLETE (ENABLE CONFIRM BUTTON) ======
 function checkFormComplete() {
     const vID = vAgentInput.value.trim();
     const hasWeapon = selectedWeaponID !== "";
+    
+    console.log("checkFormComplete: vID=", vID, "hasWeapon=", hasWeapon);
     
     if (vID !== "" && hasWeapon) {
         modalSubmit.disabled = false;
@@ -115,6 +117,7 @@ function checkFormComplete() {
     }
 }
 
+// ====== SEARCH MISSION ======
 async function searchMission() {
     const val = input.value.trim();
     if (val.length < 4) { resetUI(); return; }
@@ -152,23 +155,27 @@ async function searchMission() {
     }
 }
 
+// ====== RENDER WEAPONS ======
 function renderWeapons() {
     weaponList.innerHTML = "";
     agentSignatures.forEach(sig => {
         const btn = document.createElement('button');
         btn.className = "weapon-btn";
         btn.innerText = `> ${DEVICE_REGISTRY[sig] || sig}`;
+        btn.setAttribute('data-weapon-id', sig);
         btn.onclick = () => {
             SoundFX.click();
             document.querySelectorAll('.weapon-btn').forEach(x => x.classList.remove('selected'));
             btn.classList.add('selected');
             selectedWeaponID = sig;
-            checkFormComplete();
+            console.log("Weapon selected:", selectedWeaponID);
+            checkFormComplete(); // Re-check after weapon selection
         };
         weaponList.appendChild(btn);
     });
 }
 
+// ====== OPEN MODAL ======
 async function openModal() {
     if (input.value.length < 4) {
         SoundFX.error();
@@ -180,6 +187,7 @@ async function openModal() {
     modalOverlay.style.display = 'flex';
     document.getElementById('pop-header').innerText = `#${input.value}`;
     
+    // Reset form
     vAgentInput.value = "";
     selectedWeaponID = "";
     secureField.value = "";
@@ -188,6 +196,7 @@ async function openModal() {
     modalSubmit.disabled = true;
     modalSubmit.style.opacity = "0.5";
     
+    // Get agent signatures
     try {
         const snap = await getDoc(doc(db, "agents", currentAgent));
         agentSignatures = snap.exists() ? snap.data().linkedSignatures || [] : Object.keys(DEVICE_REGISTRY);
@@ -195,6 +204,7 @@ async function openModal() {
         agentSignatures = Object.keys(DEVICE_REGISTRY);
     }
     
+    // If retrieving existing mission
     if (currentMissionData) {
         vAgentInput.value = currentMissionData.vAgentID || "";
         selectedWeaponID = currentMissionData.weaponSystem || "";
@@ -211,15 +221,16 @@ async function openModal() {
     
     renderWeapons();
     
+    // Highlight selected weapon if any
     if (selectedWeaponID) {
         document.querySelectorAll('.weapon-btn').forEach(btn => {
-            if (btn.innerText.includes(DEVICE_REGISTRY[selectedWeaponID] || selectedWeaponID)) {
+            if (btn.getAttribute('data-weapon-id') === selectedWeaponID) {
                 btn.classList.add('selected');
             }
         });
     }
     
-    checkFormComplete();
+    checkFormComplete(); // Check initial state (will be disabled because vAgent empty unless retrieving)
 }
 
 function closeModal() {
@@ -227,7 +238,9 @@ function closeModal() {
     modalOverlay.style.display = 'none';
 }
 
+// ====== SUBMIT MISSION ======
 async function submitMission() {
+    console.log("🔘 SUBMIT MISSION CALLED");
     SoundFX.click();
     
     const missionID = input.value;
@@ -295,53 +308,6 @@ secureField.addEventListener('keypress', (e) => {
         SoundFX.keypadTone(e.key);
     }
 });
-
-// ====== NAVIGATION SOUNDS ======
-function setupNavigationSounds() {
-    const navLinks = document.querySelectorAll('.bottom-nav a');
-    navLinks.forEach(link => {
-        const url = link.getAttribute('href');
-        if (url && url !== '#') {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                
-                // Play click sound
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                oscillator.frequency.value = 600;
-                gainNode.gain.value = 0.15;
-                
-                oscillator.start();
-                gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.08);
-                oscillator.stop(audioContext.currentTime + 0.08);
-                
-                setTimeout(() => {
-                    audioContext.close();
-                    window.location.href = url;
-                }, 100);
-            });
-        }
-    });
-}
-
-// ====== AUDIO ACTIVATOR ======
-function setupAudioActivator() {
-    let audioEnabled = false;
-    document.body.addEventListener('click', function enableAudio() {
-        if (!audioEnabled) {
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            audioContext.resume().then(() => {
-                console.log("🔊 Audio enabled for dashboard");
-                audioContext.close();
-            });
-            audioEnabled = true;
-        }
-    }, { once: true });
-}
 
 // ====== EVENT LISTENERS ======
 function setupEventListeners() {

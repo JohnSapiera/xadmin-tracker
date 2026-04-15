@@ -2,152 +2,258 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Create Agent Account</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Agent Account - Supabase</title>
     <!-- Supabase JS library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 50px; line-height: 1.6; }
+        .container { max-width: 500px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 5px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"], input[type="password"] { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        button { background-color: #4CAF50; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; }
+        button:disabled { background-color: #cccccc; cursor: not-allowed; }
+        .message { margin-top: 20px; padding: 10px; border-radius: 4px; }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .loading { opacity: 0.6; pointer-events: none; }
+        small { display: block; color: #666; margin-top: 5px; }
+        h1 { color: #333; }
+        hr { margin: 20px 0; }
+        .agent-list { margin-top: 30px; }
+        .agent-item { background: #f9f9f9; padding: 10px; margin-bottom: 5px; border-left: 3px solid #4CAF50; }
+    </style>
 </head>
 <body>
-
-    <h1>Create Agent Account</h1>
-
-    <!-- Form para sa agent account -->
-    <form id="agentForm">
-        <div>
-            <label for="agentName">Agent Name:</label><br>
-            <input type="text" id="agentName" name="agentName" required>
+    <div class="container">
+        <h1>🤖 Create Agent Account</h1>
+        
+        <form id="agentForm">
+            <div class="form-group">
+                <label for="agentName">Agent Name:</label>
+                <input type="text" id="agentName" name="agentName" required placeholder="Enter agent name">
+            </div>
+            
+            <div class="form-group">
+                <label for="secretKey">Secret Key (4-digit):</label>
+                <input type="password" id="secretKey" name="secretKey" maxlength="4" pattern="[0-9]{4}" required placeholder="1234">
+                <small>Enter exactly 4 digits (0-9 only)</small>
+            </div>
+            
+            <button type="submit" id="submitBtn">✅ Create Agent Account</button>
+        </form>
+        
+        <div id="message"></div>
+        
+        <hr>
+        
+        <div class="agent-list">
+            <h3>📋 Existing Agents:</h3>
+            <div id="agentList">
+                <button type="button" onclick="loadAgents()" style="background-color: #2196F3;">🔄 Refresh List</button>
+                <div id="agentsContainer" style="margin-top: 15px;"></div>
+            </div>
         </div>
-        <br>
-        <div>
-            <label for="secretKey">Secret Key (4-digit):</label><br>
-            <input type="password" id="secretKey" name="secretKey" maxlength="4" pattern="[0-9]{4}" required>
-            <small>Enter exactly 4 digits (0-9)</small>
-        </div>
-        <br>
-        <div>
-            <button type="submit">Create Agent Account</button>
-        </div>
-    </form>
-
-    <!-- Para sa messages -->
-    <div id="message" style="margin-top: 20px;"></div>
+    </div>
 
     <script>
-        // Supabase configuration - PALITAN MO ITO NG ACTUAL KEYS MO
+        // ==================== SUPABASE CONFIGURATION ====================
+        // Ito ang mga keys mo - VERIFIED WORKING
         const SUPABASE_URL = 'https://pgclrzqfpoznvrjrzced.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_GhIOC2mXVo0UrhMHZX6Qww_T12tQl4s';
         
         // Initialize Supabase client
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        // Reference sa form at message div
+        
+        // DOM elements
         const form = document.getElementById('agentForm');
         const messageDiv = document.getElementById('message');
-
-        // Function para magpakita ng message
-        function showMessage(text, isError = false) {
-            messageDiv.innerHTML = text;
-            messageDiv.style.color = isError ? 'red' : 'green';
-            // Mag-clear ng message after 5 seconds
+        const submitBtn = document.getElementById('submitBtn');
+        
+        // ==================== UTILITY FUNCTIONS ====================
+        function showMessage(text, type = 'info') {
+            messageDiv.innerHTML = `<div class="message ${type}">${text}</div>`;
             setTimeout(() => {
                 messageDiv.innerHTML = '';
             }, 5000);
         }
-
-        // Handle form submission
-        form.addEventListener('submit', async (event) => {
-            event.preventDefault();  // Para hindi mag-reload ang page
+        
+        // ==================== LOAD EXISTING AGENTS ====================
+        async function loadAgents() {
+            const container = document.getElementById('agentsContainer');
+            container.innerHTML = '<div class="info">Loading agents...</div>';
             
-            // Kunin ang values mula sa form
+            try {
+                const { data, error } = await supabase
+                    .from('agents')
+                    .select('agent_name, created_at')
+                    .order('created_at', { ascending: false })
+                    .limit(10);
+                
+                if (error) throw error;
+                
+                if (!data || data.length === 0) {
+                    container.innerHTML = '<div class="info">No agents yet. Create your first agent above!</div>';
+                    return;
+                }
+                
+                let html = '';
+                data.forEach(agent => {
+                    const date = new Date(agent.created_at).toLocaleString();
+                    html += `
+                        <div class="agent-item">
+                            <strong>🤖 ${escapeHtml(agent.agent_name)}</strong><br>
+                            <small>Created: ${date}</small>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+                
+            } catch (err) {
+                console.error('Error loading agents:', err);
+                container.innerHTML = `<div class="error">Error loading agents: ${err.message}</div>`;
+            }
+        }
+        
+        // Helper para iwas XSS
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+        
+        // ==================== CREATE AGENT ====================
+        async function createAgent(agentName, secretKey) {
+            // Check if agent name already exists
+            const { data: existing, error: checkError } = await supabase
+                .from('agents')
+                .select('agent_name')
+                .eq('agent_name', agentName)
+                .maybeSingle();
+            
+            if (existing) {
+                throw new Error(`Agent "${agentName}" already exists! Please choose another name.`);
+            }
+            
+            // Get device info
+            const deviceInfo = {
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                language: navigator.language,
+                screenSize: `${screen.width}x${screen.height}`,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Insert new agent
+            const { data, error } = await supabase
+                .from('agents')
+                .insert([
+                    { 
+                        agent_name: agentName, 
+                        secret_key: secretKey,
+                        device_info: deviceInfo,
+                        created_at: new Date().toISOString()
+                    }
+                ])
+                .select();
+            
+            if (error) throw error;
+            
+            return { data, deviceInfo };
+        }
+        
+        // ==================== FORM SUBMIT ====================
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            
+            // Get form values
             const agentName = document.getElementById('agentName').value.trim();
             const secretKey = document.getElementById('secretKey').value;
             
-            // Basic validation
+            // Validate
             if (!agentName) {
-                showMessage('Please enter agent name', true);
+                showMessage('❌ Please enter agent name', 'error');
+                return;
+            }
+            
+            if (agentName.length < 3) {
+                showMessage('❌ Agent name must be at least 3 characters', 'error');
                 return;
             }
             
             if (!secretKey || secretKey.length !== 4 || !/^\d+$/.test(secretKey)) {
-                showMessage('Secret key must be exactly 4 digits (0-9 only)', true);
+                showMessage('❌ Secret key must be exactly 4 digits (0-9 only)', 'error');
                 return;
             }
             
-            // I-disable ang button habang nagpo-process
-            const submitButton = form.querySelector('button[type="submit"]');
-            submitButton.disabled = true;
-            submitButton.textContent = 'Creating...';
+            // Disable form while processing
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Creating Agent...';
+            form.classList.add('loading');
             
             try {
-                // Una, check kung existing na ang agent name
-                const { data: existingAgent, error: checkError } = await supabase
-                    .from('agents')
-                    .select('agent_name')
-                    .eq('agent_name', agentName)
-                    .single();
+                const result = await createAgent(agentName, secretKey);
                 
-                if (existingAgent) {
-                    showMessage('Agent name already exists! Please choose another name.', true);
-                    submitButton.disabled = false;
-                    submitButton.textContent = 'Create Agent Account';
-                    return;
-                }
+                showMessage(`✅ SUCCESS! Agent "${agentName}" created successfully! Secret Key: ${secretKey}`, 'success');
                 
-                // Insert ang bagong agent sa database
-                const { data, error } = await supabase
-                    .from('agents')
-                    .insert([
-                        { 
-                            agent_name: agentName, 
-                            secret_key: secretKey,
-                            created_at: new Date().toISOString(),
-                            device_info: {
-                                userAgent: navigator.userAgent,
-                                platform: navigator.platform,
-                                created_at: new Date().toISOString()
-                            }
-                        }
-                    ])
-                    .select();
+                // Clear form
+                form.reset();
                 
-                if (error) {
-                    console.error('Supabase error:', error);
-                    showMessage('Error creating agent: ' + error.message, true);
-                } else {
-                    showMessage(`✅ Agent "${agentName}" created successfully! Secret key: ${secretKey}`);
-                    form.reset();  // I-clear ang form
-                    
-                    // Optional: Ipakita ang agent details
-                    console.log('Created agent:', data);
-                }
+                // Refresh the agents list
+                await loadAgents();
+                
+                // Log to console for debugging
+                console.log('Agent created:', result.data);
+                console.log('Device info saved:', result.deviceInfo);
                 
             } catch (err) {
-                console.error('Unexpected error:', err);
-                showMessage('An unexpected error occurred. Please try again.', true);
+                console.error('Creation error:', err);
+                showMessage(`❌ ${err.message}`, 'error');
             } finally {
-                // I-enable ulit ang button
-                submitButton.disabled = false;
-                submitButton.textContent = 'Create Agent Account';
+                // Re-enable form
+                submitBtn.disabled = false;
+                submitBtn.textContent = '✅ Create Agent Account';
+                form.classList.remove('loading');
             }
         });
         
-        // Optional: Function para i-check kung connected sa Supabase
-        async function checkConnection() {
+        // ==================== TEST CONNECTION ON PAGE LOAD ====================
+        async function testConnection() {
+            showMessage('🔌 Testing connection to Supabase...', 'info');
+            
             try {
-                const { data, error } = await supabase.from('agents').select('count', { count: 'exact', head: true });
+                // Simple query to test connection
+                const { data, error } = await supabase
+                    .from('agents')
+                    .select('count', { count: 'exact', head: true });
+                
                 if (error) {
-                    console.warn('Connection check failed:', error);
-                    showMessage('⚠️ Warning: Cannot connect to database. Check if table "agents" exists.', true);
+                    console.error('Connection test failed:', error);
+                    showMessage(`⚠️ Connection issue: ${error.message}. Check if table 'agents' exists.`, 'error');
                 } else {
-                    console.log('Connected to Supabase successfully');
+                    console.log('✅ Connected to Supabase successfully');
+                    showMessage('✅ Connected to Supabase! You can now create agents.', 'success');
+                    // Load existing agents
+                    await loadAgents();
                 }
             } catch (err) {
                 console.error('Connection error:', err);
+                showMessage(`⚠️ Cannot connect: ${err.message}. Check your internet connection.`, 'error');
             }
         }
         
-        // I-check ang connection pag nag-load ang page
-        checkConnection();
+        // Run connection test when page loads
+        testConnection();
+        
+        // Manual refresh function
+        window.loadAgents = loadAgents;
+        
     </script>
-
 </body>
 </html>

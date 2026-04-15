@@ -16,13 +16,13 @@
       <p style="font-size: 9px; opacity: 0.5">MEMOIRS_PROTOCOL_ACTIVE</p>
     </header>
 
-    <!-- DEVICE GRID -->
+    <!-- DEVICE GRID (mga phone) -->
     <div id="deviceSection" class="device-grid"></div>
 
-    <!-- VAGENT FOLDER GRID -->
+    <!-- VAGENT FOLDER GRID (lalabas kapag nag-click ng phone) -->
     <div id="vagentSection" class="vagent-grid"></div>
 
-    <!-- DEVICE MEMOIRS BUTTON (dynamic) -->
+    <!-- DEVICE MEMOIRS BUTTON (dynamic - lalabas lang kapag may active device) -->
     <div id="deviceMemoirsContainer" style="margin-top: 10px;"></div>
 
     <!-- EXIT BUTTON -->
@@ -71,13 +71,7 @@
           <span id="target-name">---</span>
         </p>
         <div id="active-list" class="audit-list" style="height: 60%; overflow-y: auto"></div>
-        <div style="margin-top: auto; border-top: 3px double #000; padding-top: 10px">
-          <p style="font-size: 10px; font-weight: bold; color: #8b0000">TOTAL_EXPENDITURE:</p>
-          <h1 style="font-size: 26px; color: #000">
-            ₱
-            <span id="total-val">0.00</span>
-          </h1>
-        </div>
+        <!-- ✨ INAALIS ANG STATIC TOTAL_EXPENDITURE BOX – dynamic na ito sa script -->
         <div id="flipNextBtn" class="swipe-hint" onclick="flipPage(true)" style="display: none">
           [ VIEW_SUMMARY ] &gt;&gt;
         </div>

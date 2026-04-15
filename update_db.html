@@ -2,172 +2,124 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Agent Account</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <h1>🤖 Create Agent Account</h1>
-    
-    <form id="agentForm">
-        <div>
-            <label>Agent Name:</label><br>
-            <input type="text" id="agentName" required style="width: 200px; padding: 5px;">
-        </div>
-        <br>
-        <div>
-            <label>Secret Key (4-digit):</label><br>
-            <input type="password" id="secretKey" maxlength="4" pattern="[0-9]{4}" required style="width: 100px; padding: 5px;">
-            <small>Enter exactly 4 digits</small>
-        </div>
-        <br>
-        <button type="submit" style="padding: 8px 16px;">Create Agent Account</button>
-    </form>
-    
-    <div id="message" style="margin-top: 20px;"></div>
-    
-    <hr>
-    <h3>📋 Existing Agents:</h3>
-    <div id="agentList">Loading...</div>
 
-    <script>
-        // ========== SUPABASE SETUP - ISA LANG TO ==========
-        const SUPABASE_URL = 'https://pgclrzqfpoznvrjrzced.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_GhIOC2mXVo0UrhMHZX6Qww_T12tQl4s';
+<h1>Create Agent Account</h1>
+
+<form id="agentForm">
+    <label>Agent Name:</label><br>
+    <input type="text" id="agentName" required><br><br>
+    
+    <label>Secret Key (4-digit):</label><br>
+    <input type="password" id="secretKey" maxlength="4" pattern="[0-9]{4}" required><br>
+    <small>Enter exactly 4 digits</small><br><br>
+    
+    <button type="submit">Create Agent Account</button>
+</form>
+
+<div id="message"></div>
+
+<hr>
+<h3>Existing Agents:</h3>
+<div id="agentList">Loading...</div>
+
+<script>
+    // SUPABASE CONFIGURATION - NASA IISA LANG NA SCRIPT TAG LAHAT
+    const SUPABASE_URL = 'https://pgclrzqfpoznvrjrzced.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_GhIOC2mXVo0UrhMHZX6Qww_T12tQl4s';
+    
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    const form = document.getElementById('agentForm');
+    const messageDiv = document.getElementById('message');
+    const agentListDiv = document.getElementById('agentList');
+    
+    function showMessage(text, isError) {
+        messageDiv.innerHTML = '<div style="color:' + (isError ? 'red' : 'green') + '; padding:10px; margin:10px 0; border:1px solid ' + (isError ? 'red' : 'green') + '">' + text + '</div>';
+        setTimeout(function() { messageDiv.innerHTML = ''; }, 5000);
+    }
+    
+    async function loadAgents() {
+        agentListDiv.innerHTML = 'Loading...';
+        var result = await supabase.from('agents').select('agent_name, created_at').order('created_at', { ascending: false }).limit(10);
         
-        // IISA LANG NA DECLARATION NG supabase
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        
-        // ========== MGA ELEMENTS ==========
-        const form = document.getElementById('agentForm');
-        const messageDiv = document.getElementById('message');
-        const agentListDiv = document.getElementById('agentList');
-        
-        // ========== FUNCTION PARA MAGPAKITA NG MESSAGE ==========
-        function showMessage(text, isError = false) {
-            messageDiv.innerHTML = `<div style="padding: 10px; background: ${isError ? '#fee' : '#efe'}; border: 1px solid ${isError ? '#fcc' : '#cfc'};">${text}</div>`;
-            setTimeout(() => { messageDiv.innerHTML = ''; }, 5000);
+        if (result.error) {
+            agentListDiv.innerHTML = '<div style="color:red">Error: ' + result.error.message + '</div>';
+            return;
         }
         
-        // ========== FUNCTION PARA MAG-LOAD NG MGA AGENTS ==========
-        async function loadAgents() {
-            agentListDiv.innerHTML = 'Loading...';
-            
-            try {
-                const { data, error } = await supabase
-                    .from('agents')
-                    .select('agent_name, created_at')
-                    .order('created_at', { ascending: false })
-                    .limit(10);
-                
-                if (error) throw error;
-                
-                if (!data || data.length === 0) {
-                    agentListDiv.innerHTML = '<div>No agents yet. Create your first agent above!</div>';
-                    return;
-                }
-                
-                let html = '';
-                for (const agent of data) {
-                    const date = new Date(agent.created_at).toLocaleString();
-                    html += `<div style="padding: 8px; margin: 5px 0; background: #f5f5f5; border-left: 3px solid green;">🤖 <strong>${escapeHtml(agent.agent_name)}</strong> - created: ${date}</div>`;
-                }
-                agentListDiv.innerHTML = html;
-                
-            } catch (err) {
-                agentListDiv.innerHTML = `<div style="color: red;">Error loading agents: ${err.message}</div>`;
-            }
+        if (!result.data || result.data.length === 0) {
+            agentListDiv.innerHTML = 'No agents yet. Create your first agent above!';
+            return;
         }
         
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/[&<>]/g, function(m) {
-                if (m === '&') return '&amp;';
-                if (m === '<') return '&lt;';
-                if (m === '>') return '&gt;';
-                return m;
-            });
+        var html = '';
+        for (var i = 0; i < result.data.length; i++) {
+            var agent = result.data[i];
+            var date = new Date(agent.created_at).toLocaleString();
+            html += '<div style="padding:8px; margin:5px 0; background:#f5f5f5">🤖 <strong>' + agent.agent_name + '</strong> - created: ' + date + '</div>';
+        }
+        agentListDiv.innerHTML = html;
+    }
+    
+    form.onsubmit = async function(event) {
+        event.preventDefault();
+        
+        var agentName = document.getElementById('agentName').value.trim();
+        var secretKey = document.getElementById('secretKey').value;
+        
+        if (!agentName) {
+            showMessage('Please enter agent name', true);
+            return;
         }
         
-        // ========== FUNCTION PARA GUMAWA NG AGENT ==========
-        async function createAgent(agentName, secretKey) {
-            // Check if agent name already exists
-            const { data: existing, error: checkError } = await supabase
-                .from('agents')
-                .select('agent_name')
-                .eq('agent_name', agentName)
-                .maybeSingle();
-            
-            if (existing) {
-                throw new Error(`Agent "${agentName}" already exists!`);
-            }
-            
-            // Insert new agent
-            const { data, error } = await supabase
-                .from('agents')
-                .insert([{ 
-                    agent_name: agentName, 
-                    secret_key: secretKey,
-                    created_at: new Date().toISOString()
-                }])
-                .select();
-            
-            if (error) throw error;
-            
-            return data;
+        if (!secretKey || secretKey.length !== 4 || !/^\d+$/.test(secretKey)) {
+            showMessage('Secret key must be exactly 4 digits', true);
+            return;
         }
         
-        // ========== FORM SUBMIT HANDLER ==========
-        form.addEventListener('submit', async (event) => {
-            event.preventDefault();
+        var submitBtn = form.querySelector('button');
+        var originalText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Creating...';
+        
+        try {
+            var checkResult = await supabase.from('agents').select('agent_name').eq('agent_name', agentName).maybeSingle();
             
-            const agentName = document.getElementById('agentName').value.trim();
-            const secretKey = document.getElementById('secretKey').value;
-            
-            // Validation
-            if (!agentName) {
-                showMessage('❌ Please enter agent name', true);
-                return;
-            }
-            
-            if (agentName.length < 3) {
-                showMessage('❌ Agent name must be at least 3 characters', true);
-                return;
-            }
-            
-            if (!secretKey || secretKey.length !== 4 || !/^\d+$/.test(secretKey)) {
-                showMessage('❌ Secret key must be exactly 4 digits (0-9 only)', true);
-                return;
-            }
-            
-            // Disable button habang nagpo-process
-            const submitBtn = form.querySelector('button');
-            const originalText = submitBtn.textContent;
-            submitBtn.disabled = true;
-            submitBtn.textContent = '⏳ Creating...';
-            
-            try {
-                const result = await createAgent(agentName, secretKey);
-                showMessage(`✅ SUCCESS! Agent "${agentName}" created successfully! Secret Key: ${secretKey}`);
-                form.reset();
-                
-                // I-reload ang list ng agents
-                await loadAgents();
-                
-            } catch (err) {
-                console.error('Error:', err);
-                showMessage(`❌ ${err.message}`, true);
-            } finally {
+            if (checkResult.data) {
+                showMessage('Agent name already exists!', true);
                 submitBtn.disabled = false;
                 submitBtn.textContent = originalText;
+                return;
             }
-        });
-        
-        // ========== I-LOAD ANG AGENTS PAG-OPEN NG PAGE ==========
-        loadAgents();
-        
-        // I-expose sa window para sa manual refresh
-        window.loadAgents = loadAgents;
-    </script>
+            
+            var insertResult = await supabase.from('agents').insert([{ 
+                agent_name: agentName, 
+                secret_key: secretKey,
+                created_at: new Date().toISOString()
+            }]);
+            
+            if (insertResult.error) {
+                showMessage('Error: ' + insertResult.error.message, true);
+            } else {
+                showMessage('✅ Agent "' + agentName + '" created successfully!', false);
+                document.getElementById('agentName').value = '';
+                document.getElementById('secretKey').value = '';
+                loadAgents();
+            }
+        } catch(err) {
+            showMessage('Error: ' + err.message, true);
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+        }
+    };
+    
+    loadAgents();
+</script>
+
 </body>
 </html>

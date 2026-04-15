@@ -30,7 +30,11 @@
             color: var(--green); font-family: 'Share Tech Mono'; font-size: 12px;
             outline: none; border-radius: 0; appearance: none;
         }
-        select.input-field { background-image: linear-gradient(45deg, transparent 50%, var(--cyan) 50%), linear-gradient(135deg, var(--cyan) 50%, transparent 50%); background-position: calc(100% - 20px) calc(1em + 2px), calc(100% - 15px) calc(1em + 2px); background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; }
+        select.input-field { 
+            background-image: linear-gradient(45deg, transparent 50%, var(--cyan) 50%), linear-gradient(135deg, var(--cyan) 50%, transparent 50%); 
+            background-position: calc(100% - 20px) calc(1em + 2px), calc(100% - 15px) calc(1em + 2px); 
+            background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; 
+        }
         .btn-auth {
             width: 100%; padding: 18px; background: transparent; 
             color: var(--green); border: 2px solid var(--green);
@@ -49,17 +53,20 @@
         .ticker-item { display: inline-block; margin-right: 50px; }
         .ticker-item span { color: var(--cyan); }
         #status { font-size: 10px; text-align: center; margin-top: 20px; color: #4a5a61; min-height: 15px; font-weight: bold; }
+        .error { color: #ff003c; }
+        .success { color: var(--green); }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h2>HARDWARE_UPLINK</h2>
+        <h2>SECURE_UPLINK</h2>
 
         <div class="form-container">
+            <!-- Pinalitan: 4-digit secret key input sa halip na hardware fingerprint -->
             <div class="field-group">
-                <label>NODE_SIGNATURE_DETECTED:</label>
-                <input type="text" id="val-fp" class="input-field" readonly>
+                <label>4-DIGIT SECRET KEY:</label>
+                <input type="password" id="secretKey" class="input-field" maxlength="4" placeholder="****" autocomplete="off" inputmode="numeric">
             </div>
 
             <div class="field-group">
@@ -70,10 +77,10 @@
                 </select>
             </div>
 
-            <button class="btn-auth" id="syncBtn">EXECUTE_UPLINK</button>
+            <button class="btn-auth" id="syncBtn">AUTHORIZE_UPLINK</button>
         </div>
 
-        <div id="status">> WAITING_FOR_COMMAND...</div>
+        <div id="status">> WAITING_FOR_4DIGIT_KEY...</div>
 
         <div class="ticker-wrap">
             <div class="ticker-move" id="ticker-content"></div>
@@ -95,78 +102,69 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Hardware Fingerprinting
-        function getHardwareSpecs() {
-            const canvas = document.createElement('canvas');
-            const gl = canvas.getContext('webgl');
-            const debugInfo = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
-            const gpu = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "GENERIC_GPU";
-            
-            return {
-                brand: navigator.userAgent.match(/Android\s+([^\s;]+);?\s+([^\s;]+)/)?.[2] || "NODE_STATION",
-                gpu: gpu.split('/').pop().trim(),
-                res: `${window.screen.width}x${window.screen.height}`,
-                plt: navigator.platform
-            };
-        }
+        // Predefined 4-digit secret keys para sa bawat agent (maaaring palitan)
+        const AGENT_SECRETS = {
+            "AGENT_JFSN": "1234",
+            "AGENT_LZ": "5678"
+        };
 
-        function generateSignature(s) {
-            const raw = s.gpu + s.res + s.plt + s.brand;
-            let hash = 0;
-            for (let i = 0; i < raw.length; i++) {
-                hash = ((hash << 5) - hash) + raw.charCodeAt(i);
-                hash |= 0;
-            }
-            return "SIG-" + Math.abs(hash).toString(16).toUpperCase();
-        }
-
-        const specs = getHardwareSpecs();
-        const signature = generateSignature(specs);
-
-        // UI Initialization
-        document.getElementById('val-fp').value = signature;
+        // Simple ticker info (opsyonal)
         const tickerHtml = `
-            <div class="ticker-item">DEVICE: <span>${specs.brand}</span></div>
-            <div class="ticker-item">GPU: <span>${specs.gpu}</span></div>
-            <div class="ticker-item">RESOLVE: <span>${specs.res}</span></div>
-            <div class="ticker-item">OS: <span>${specs.plt}</span></div>
+            <div class="ticker-item">🔐 <span>4-DIGIT AUTH</span></div>
+            <div class="ticker-item">⚡ <span>SECURE UPLINK</span></div>
+            <div class="ticker-item">🛡️ <span>AGENT VERIFICATION</span></div>
         `;
         document.getElementById('ticker-content').innerHTML = tickerHtml + tickerHtml;
 
-        // Authorize Access Logic
+        // Authorize Access Logic gamit ang 4-digit secret key
         document.getElementById('syncBtn').onclick = async () => {
             const agent = document.getElementById('agentSelect').value;
-            const log = document.getElementById('status');
+            const secretInput = document.getElementById('secretKey').value.trim();
+            const statusDiv = document.getElementById('status');
             const btn = document.getElementById('syncBtn');
 
+            // I-reset ang status
+            statusDiv.innerHTML = `> VERIFYING_CREDENTIALS...`;
+
+            // Validate kung 4-digit number
+            if (!/^\d{4}$/.test(secretInput)) {
+                statusDiv.innerHTML = `> <span class="error">INVALID_SECRET_KEY (must be 4 digits)</span>`;
+                return;
+            }
+
+            // I-verify ang secret key laban sa agent
+            const expectedSecret = AGENT_SECRETS[agent];
+            if (secretInput !== expectedSecret) {
+                statusDiv.innerHTML = `> <span class="error">ACCESS_DENIED: Incorrect secret key for ${agent}</span>`;
+                return;
+            }
+
+            // Kung tama ang key, magpatuloy sa Firebase sync
             btn.disabled = true;
-            log.innerHTML = `> SYNCING_WITH_CORE_DATABASE...`;
+            statusDiv.innerHTML = `> SYNCING_WITH_CORE_DATABASE...`;
 
             try {
-                // Pinapunta nito sa collection 'agents' gamit ang AGENT_JFSN (o iba pang pili) bilang Doc ID
+                // I-update ang agent document sa Firestore (opsyonal: magdagdag ng timestamp at iba pang metadata)
                 await db.collection("agents").doc(agent).set({
                     agentName: agent,
-                    // LinkedSignatures: Dito i-se-save lahat ng phone/laptop na ginagamit ni Agent
-                    linkedSignatures: firebase.firestore.FieldValue.arrayUnion(signature),
-                    lastFingerprint: signature,
-                    brandName: specs.brand,
+                    lastAuthMethod: "4digit_key",
                     lastSync: firebase.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
 
-                // I-save din sa browser storage para sa auto-login
+                // I-save sa localStorage para sa auto-login
                 localStorage.setItem("cia_agent", agent);
                 localStorage.setItem("agent_verified", "true");
-                localStorage.setItem("device_signature", signature);
+                localStorage.setItem("auth_method", "4digit_key");
 
-                log.innerHTML = `> <span style="color:var(--green)">UPLINK_SUCCESSFUL</span>`;
+                statusDiv.innerHTML = `> <span class="success">UPLINK_SUCCESSFUL</span>`;
                 
                 setTimeout(() => {
-                    alert(`ACCESS GRANTED: Device ${signature} linked to ${agent}`);
+                    alert(`ACCESS GRANTED: Agent ${agent} authenticated.`);
                     window.location.href = "dashboard.html";
                 }, 1000);
 
             } catch (e) {
-                log.innerHTML = `> <span style="color:var(--red)">UPLINK_FAILED: ${e.message}</span>`;
+                statusDiv.innerHTML = `> <span class="error">UPLINK_FAILED: ${e.message}</span>`;
                 btn.disabled = false;
             }
         };

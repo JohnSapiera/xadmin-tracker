@@ -1,4 +1,4 @@
-// js/jsdash.js - CORE DASHBOARD v30.5 with Sounds
+// js/jsdash.js - CORE DASHBOARD v30.5
 
 import SoundFX from './sound.js';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -155,17 +155,17 @@ async function searchMission() {
 // ====== RENDER WEAPONS ======
 function renderWeapons() {
     weaponList.innerHTML = "";
-    agentSignatures.forEach(sig => {
+    // ✅ Gumamit ng weaponSystem names (readable names) mula sa agentSignatures
+    agentSignatures.forEach(weaponName => {
         const btn = document.createElement('button');
         btn.className = "weapon-btn";
-        // ✅ Diretso na, hindi na gumagamit ng DEVICE_REGISTRY
-        btn.innerText = `> ${sig}`;
-        btn.setAttribute('data-weapon-id', sig);
+        btn.innerText = `> ${weaponName}`;
+        btn.setAttribute('data-weapon-id', weaponName);
         btn.onclick = () => {
             SoundFX.click();
             document.querySelectorAll('.weapon-btn').forEach(x => x.classList.remove('selected'));
             btn.classList.add('selected');
-            selectedWeaponID = sig;
+            selectedWeaponID = weaponName;
             console.log("Weapon selected:", selectedWeaponID);
             checkFormComplete();
         };
@@ -194,12 +194,28 @@ async function openModal() {
     modalSubmit.disabled = true;
     modalSubmit.style.opacity = "0.5";
     
-    // Get agent signatures
+    // ✅ Kunin ang mga weapon system names mula sa mission_orders ng agent na ito
     try {
-        const snap = await getDoc(doc(db, "agents", currentAgent));
-        // ✅ Kung walang linkedSignatures, gumamit ng fallback list (empty array)
-        agentSignatures = snap.exists() ? snap.data().linkedSignatures || [] : [];
+        // Hanapin ang lahat ng mission orders ng agent na ito
+        const missionsSnap = await getDocs(query(
+            collection(db, "mission_orders"), 
+            where("agent", "==", currentAgent)
+        ));
+        
+        // Kunin ang unique weaponSystem names
+        const weaponSet = new Set();
+        missionsSnap.forEach(doc => {
+            const data = doc.data();
+            if (data.weaponSystem && data.weaponSystem !== 'INIT') {
+                weaponSet.add(data.weaponSystem);
+            }
+        });
+        
+        agentSignatures = Array.from(weaponSet).sort();
+        console.log("Weapon systems found:", agentSignatures);
+        
     } catch(e) {
+        console.error("Error loading weapon systems:", e);
         agentSignatures = [];
     }
     

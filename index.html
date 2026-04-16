@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SECURE_ACCESS_TERMINAL</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>AGENT_ACCESS_TERMINAL</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         * {
@@ -22,19 +22,19 @@
             justify-content: center;
             align-items: center;
             background-image: radial-gradient(circle at center, #0a1f29 0%, #01080b 100%);
-            padding: 20px;
+            padding: 16px;
         }
 
-        /* Main Container */
+        /* Main Container - Optimized for Mobile */
         .terminal {
             width: 100%;
-            max-width: 400px;
+            max-width: 380px;
             background: rgba(2, 10, 13, 0.95);
             border: 1px solid rgba(0, 242, 255, 0.3);
-            padding: 30px 20px;
+            padding: 20px 16px;
             position: relative;
-            backdrop-filter: blur(8px);
-            box-shadow: 0 0 40px rgba(0, 242, 255, 0.05);
+            backdrop-filter: blur(4px);
+            border-radius: 4px;
         }
 
         /* Scan Line Effect */
@@ -45,7 +45,7 @@
             width: 100%;
             height: 2px;
             background: #00f2ff;
-            box-shadow: 0 0 15px #00f2ff;
+            box-shadow: 0 0 10px #00f2ff;
             animation: scanMove 2.5s ease-in-out infinite;
             opacity: 0.6;
             pointer-events: none;
@@ -61,16 +61,16 @@
         /* Header */
         .header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
         .badge {
-            font-size: 10px;
-            letter-spacing: 4px;
+            font-size: 9px;
+            letter-spacing: 3px;
             color: #4a5a61;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
         }
         .status-text {
-            font-size: 14px;
+            font-size: 12px;
             font-weight: bold;
             color: #00f2ff;
             text-transform: uppercase;
@@ -81,36 +81,37 @@
         .trace-container {
             background: #000;
             border: 1px solid #1a2f37;
-            padding: 12px;
-            margin-bottom: 25px;
+            padding: 8px 10px;
+            margin-bottom: 20px;
             text-align: center;
+            border-radius: 4px;
         }
         .trace-label {
-            font-size: 9px;
+            font-size: 8px;
             color: #5c7882;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
         }
         .trace-value {
-            font-size: 11px;
+            font-size: 9px;
             color: #05ffa1;
             word-break: break-all;
-            margin-top: 5px;
+            margin-top: 4px;
             font-family: monospace;
         }
 
-        /* Keypad Grid */
+        /* Keypad Grid - Optimized for Mobile */
         .keypad {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin: 20px 0;
+            gap: 12px;
+            margin: 20px 0 16px;
         }
         .key-btn {
             aspect-ratio: 1 / 1;
             background: #000;
             border: 1px solid #1a2f37;
             color: #00f2ff;
-            font-size: 28px;
+            font-size: 24px;
             font-weight: bold;
             font-family: 'Share Tech Mono', monospace;
             display: flex;
@@ -119,20 +120,20 @@
             cursor: pointer;
             transition: all 0.1s ease;
             border-radius: 50%;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+            width: 100%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
         }
         .key-btn:active {
             transform: scale(0.92);
             background: #00f2ff;
             color: #000;
             border-color: #00f2ff;
-            box-shadow: 0 0 15px rgba(0, 242, 255, 0.4);
+            box-shadow: 0 0 12px rgba(0, 242, 255, 0.4);
         }
         .key-zero {
             grid-column: 2 / 3;
         }
 
-        /* Hidden initially */
         .hidden {
             display: none;
         }
@@ -141,39 +142,42 @@
         .code-area {
             background: #000;
             border: 1px solid #1a2f37;
-            padding: 12px;
+            padding: 10px;
             text-align: center;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
+            border-radius: 4px;
         }
         .code-digits {
-            font-size: 28px;
-            letter-spacing: 8px;
+            font-size: 26px;
+            letter-spacing: 6px;
             color: #05ffa1;
             font-family: monospace;
+            font-weight: bold;
         }
         .helper-text {
-            font-size: 9px;
+            font-size: 8px;
             color: #5c7882;
-            margin-top: 5px;
+            margin-top: 4px;
         }
 
         /* Action Buttons */
         .action-buttons {
             display: flex;
-            gap: 15px;
-            margin-top: 10px;
+            gap: 12px;
+            margin-top: 8px;
         }
         .btn {
             flex: 1;
             background: transparent;
             border: 1px solid #1a2f37;
-            padding: 12px;
+            padding: 10px;
             color: #5c7882;
             font-family: monospace;
-            font-size: 12px;
+            font-size: 11px;
             cursor: pointer;
             transition: 0.2s;
             text-align: center;
+            border-radius: 4px;
         }
         .btn-primary {
             border-color: #00f2ff;
@@ -188,18 +192,18 @@
             color: #ff003c;
         }
 
-        /* Error / Success Messages */
+        /* Message Area */
         .message-area {
-            margin-top: 20px;
+            margin-top: 16px;
             text-align: center;
-            font-size: 11px;
-            min-height: 45px;
-            padding: 8px;
+            font-size: 10px;
+            min-height: 40px;
+            padding: 6px;
         }
         .error-msg {
             color: #ff003c;
             border-top: 1px solid rgba(255,0,60,0.2);
-            padding-top: 8px;
+            padding-top: 6px;
         }
         .success-msg {
             color: #00ff66;
@@ -208,13 +212,13 @@
         /* Loading Animation */
         .loader {
             display: inline-block;
-            width: 12px;
-            height: 12px;
+            width: 10px;
+            height: 10px;
             border: 1px solid #00f2ff;
             border-top-color: transparent;
             border-radius: 50%;
             animation: spin 0.6s linear infinite;
-            margin-left: 8px;
+            margin-left: 6px;
             vertical-align: middle;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -226,7 +230,7 @@
     <div class="scan-line" id="scanLine"></div>
     
     <div class="header">
-        <div class="badge">HARDWARE_AUDIT_TERMINAL</div>
+        <div class="badge">AGENT_ACCESS_TERMINAL</div>
         <div class="status-text" id="statusLabel">INITIALIZING_SCAN</div>
     </div>
 
@@ -243,9 +247,7 @@
             <div class="helper-text">ENTER 4-DIGIT SECRET KEY</div>
         </div>
         
-        <div class="keypad" id="numericKeypad">
-            <!-- Dynamic buttons will be injected -->
-        </div>
+        <div class="keypad" id="numericKeypad"></div>
         
         <div class="action-buttons">
             <div class="btn btn-danger" id="clearBtn">CLEAR</div>
@@ -261,7 +263,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
 <script>
-    // Firebase Configuration
     const firebaseConfig = { 
         apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
         authDomain: "my-admin-portal-12691.firebaseapp.com", 
@@ -273,20 +274,16 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // DOM Elements
     const statusLabel = document.getElementById('statusLabel');
     const deviceSigSpan = document.getElementById('deviceSig');
     const keypadSection = document.getElementById('keypadSection');
     const codeDisplay = document.getElementById('codeDisplay');
     const messageArea = document.getElementById('messageArea');
-    const scanLine = document.getElementById('scanLine');
 
-    // State
     let currentSignature = "";
     let enteredCode = "";
     let isProcessing = false;
 
-    // Helper: Show message
     function showMessage(text, isError = false) {
         messageArea.innerHTML = `<div class="${isError ? 'error-msg' : 'success-msg'}">${text}</div>`;
         setTimeout(() => {
@@ -296,20 +293,18 @@
         }, 3000);
     }
 
-    // Helper: Clear keypad input
     function clearCode() {
         enteredCode = "";
         codeDisplay.innerText = "----";
     }
 
-    // Helper: Add digit to code
     function addDigit(digit) {
         if (enteredCode.length < 4) {
             enteredCode += digit;
             let displayStr = enteredCode + "----".substring(enteredCode.length);
             codeDisplay.innerText = displayStr;
             
-            // Animate button press effect (blink)
+            // Blink animation on press
             const buttons = document.querySelectorAll('.key-btn');
             buttons.forEach(btn => {
                 if (btn.innerText === digit) {
@@ -324,14 +319,12 @@
                 }
             });
 
-            // If 4 digits are entered, auto-submit
             if (enteredCode.length === 4) {
                 verifySecretKey(enteredCode);
             }
         }
     }
 
-    // Generate Device Signature (Fingerprint)
     function generateSignature() {
         const canvas = document.createElement('canvas');
         const gl = canvas.getContext('webgl');
@@ -354,7 +347,6 @@
         return "SIG-" + Math.abs(hash).toString(16).toUpperCase();
     }
 
-    // Register new fingerprint to existing agent (using secret key)
     async function registerFingerprint(agentName, signature) {
         try {
             const agentRef = db.collection("agents").doc(agentName);
@@ -370,7 +362,6 @@
         }
     }
 
-    // Verify Secret Key from agents collection
     async function verifySecretKey(secretKey) {
         if (isProcessing) return;
         isProcessing = true;
@@ -390,14 +381,12 @@
                 showMessage(`Key verified. Registering device...`);
                 statusLabel.innerHTML = "REGISTERING_DEVICE";
                 
-                // Register the fingerprint to this agent
                 const success = await registerFingerprint(agentName, currentSignature);
                 
                 if (success) {
                     showMessage(`Device registered successfully. Access granted.`);
                     statusLabel.innerHTML = "ACCESS_GRANTED";
                     
-                    // Save to localStorage
                     localStorage.setItem("cia_agent", agentName);
                     localStorage.setItem("agent", agentName);
                     localStorage.setItem("agent_verified", "true");
@@ -426,7 +415,6 @@
         }
     }
 
-    // Main Authentication: Check if device signature exists in Firebase
     async function authenticateDevice(signature) {
         statusLabel.innerHTML = "SCANNING_DATABASE";
         deviceSigSpan.innerText = signature;
@@ -452,11 +440,10 @@
                     window.location.href = "dashboard.html";
                 }, 1200);
             } else {
-                // No match found -> Show keypad for registration
                 statusLabel.innerHTML = "DEVICE_NOT_REGISTERED";
                 showMessage("Device not recognized. Please enter your 4-digit secret key to register.", true);
                 keypadSection.classList.remove("hidden");
-                scanLine.style.opacity = "0.2";
+                document.getElementById('scanLine').style.opacity = "0.2";
             }
         } catch (error) {
             console.error(error);
@@ -465,7 +452,6 @@
         }
     }
 
-    // Initialize Keypad UI
     function buildKeypad() {
         const keypadContainer = document.getElementById('numericKeypad');
         const layout = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
@@ -481,22 +467,19 @@
         });
     }
 
-    // Event Listeners for Buttons
     document.getElementById('clearBtn').onclick = () => clearCode();
     document.getElementById('cancelBtn').onclick = () => {
         keypadSection.classList.add("hidden");
-        scanLine.style.opacity = "0.6";
+        document.getElementById('scanLine').style.opacity = "0.6";
         statusLabel.innerHTML = "SCAN_CANCELLED";
         showMessage("Registration cancelled. Reloading...", true);
         setTimeout(() => location.reload(), 1500);
     };
 
-    // Start the process
     function init() {
         buildKeypad();
         currentSignature = generateSignature();
         deviceSigSpan.innerText = currentSignature;
-        
         setTimeout(() => {
             authenticateDevice(currentSignature);
         }, 1000);

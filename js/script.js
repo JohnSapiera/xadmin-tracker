@@ -56,16 +56,9 @@ async function loadMissionData() {
       const docWithID = { ...data, id: doc.id };
       allMissions.push(docWithID);
 
-      // ✅ Skip kung walang weaponSystem
+      // ✅ PARA SA DEVICE GRID: Dapat may weaponSystem at vAgentID para lumabas sa phone grid
       const deviceName = data.weaponSystem;
-      if (!deviceName || deviceName === "" || deviceName === "undefined" || deviceName === "null") {
-        console.log("Skipping mission - no weaponSystem:", docWithID);
-        return;
-      }
-      
-      // ✅ PARA SA DEVICE GRID: Dapat may vAgentID para lumabas sa phone grid
-      // Pero para sa memoirs, nasa allMissions pa rin ang lahat
-      if (data.vAgentID && data.vAgentID !== "") {
+      if (deviceName && deviceName !== "" && deviceName !== "undefined" && deviceName !== "null" && data.vAgentID && data.vAgentID !== "") {
         if (!deviceData[deviceName]) {
           deviceData[deviceName] = [];
         }
@@ -89,13 +82,12 @@ async function loadMissionData() {
   }
 }
 
-
 // ====== DEVICE RENDERING ======
 function renderDevices() {
   const grid = document.getElementById("deviceSection");
   if (!grid) return;
 
-  const keys = Object.keys(deviceData);
+  const keys = Object.keys(deviceData).filter(key => key && key !== "" && key !== "undefined" && key !== "null");
   console.log("Rendering devices:", keys);
 
   if (keys.length === 0) {
@@ -262,7 +254,7 @@ window.closeNoir = () => {
 };
 
 // ====== MEMOIRS FUNCTIONS ======
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 15;
 
 window.flipPage = (forward) => {
   SoundFX.pageFlip();
@@ -301,11 +293,11 @@ window.openMemoirs = (mode) => {
   if (mode === "ALL") {
     renderMasterMemoirs();
   } else {
-    renderDevicePage(mode, 3, 0); // April fixed
+    renderDevicePage(mode, 3, 0);
   }
 };
 
-// ====== MASTER MEMOIRS ======
+// ====== MASTER MEMOIRS (LAHAT ng missions - kasama walang vAgent at walang weaponSystem) ======
 let masterCurrentPage = 0;
 let masterTotalPages = 0;
 let masterPages = [];
@@ -315,66 +307,66 @@ function renderMasterMemoirs() {
   masterPages = [];
   const FIXED_MONTH = 3; // April
   
-  // Step 1: Group by weaponSystem (may laman)
+  // Step 1: Kunin ang LAHAT ng missions mula sa allMissions (hindi lang deviceData)
   const weaponGroups = new Map();
-  const noWeaponEntries = []; // Para sa mga walang weaponSystem
+  const noWeaponEntries = [];
   
-  for (const [deviceName, missions] of Object.entries(deviceData)) {
-    // Skip kung invalid ang deviceName
-    if (!deviceName || deviceName === "" || deviceName === "undefined" || deviceName === "null") {
-      // Idagdag sa noWeaponEntries para sa hiwalay na section
-      missions.forEach(mission => {
-        if (mission.expensesBreakdown && Array.isArray(mission.expensesBreakdown)) {
-          mission.expensesBreakdown.forEach(exp => {
-            const expDate = new Date(exp.timestamp);
-            if (expDate.getMonth() === FIXED_MONTH) {
-              noWeaponEntries.push({
-                missionID: mission.missionID || "???",
-                vAgent: mission.vAgentID || null,
-                date: expDate,
-                amount: exp.amount,
-                description: exp.description || getRandomIntelTerm(),
-                originalDevice: deviceName
-              });
-            }
-          });
-        }
-      });
-      continue;
-    }
+  // I-process ang LAHAT ng missions (hindi lang ang may vAgent)
+  for (const mission of allMissions) {
+    const weaponName = mission.weaponSystem;
+    const isValidWeapon = weaponName && weaponName !== "" && weaponName !== "undefined" && weaponName !== "null";
     
-    if (!weaponGroups.has(deviceName)) {
-      weaponGroups.set(deviceName, { total: 0, vAgents: new Map(), unassigned: [] });
-    }
-    const group = weaponGroups.get(deviceName);
-    
-    missions.forEach(mission => {
+    if (!isValidWeapon) {
+      // Walang weaponSystem - idagdag sa noWeaponEntries
       if (mission.expensesBreakdown && Array.isArray(mission.expensesBreakdown)) {
         mission.expensesBreakdown.forEach(exp => {
           const expDate = new Date(exp.timestamp);
           if (expDate.getMonth() === FIXED_MONTH) {
-            group.total += exp.amount;
-            const entry = {
+            noWeaponEntries.push({
               missionID: mission.missionID || "???",
               vAgent: mission.vAgentID || null,
               date: expDate,
               amount: exp.amount,
-              description: exp.description || getRandomIntelTerm()
-            };
-            if (mission.vAgentID) {
-              if (!group.vAgents.has(mission.vAgentID)) {
-                group.vAgents.set(mission.vAgentID, { total: 0, logs: [] });
-              }
-              const vAgentData = group.vAgents.get(mission.vAgentID);
-              vAgentData.total += exp.amount;
-              vAgentData.logs.push(entry);
-            } else {
-              group.unassigned.push(entry);
-            }
+              description: exp.description || getRandomIntelTerm(),
+              originalWeapon: weaponName || "MISSING"
+            });
           }
         });
       }
-    });
+      continue;
+    }
+    
+    // May weaponSystem
+    if (!weaponGroups.has(weaponName)) {
+      weaponGroups.set(weaponName, { total: 0, vAgents: new Map(), unassigned: [] });
+    }
+    const group = weaponGroups.get(weaponName);
+    
+    if (mission.expensesBreakdown && Array.isArray(mission.expensesBreakdown)) {
+      mission.expensesBreakdown.forEach(exp => {
+        const expDate = new Date(exp.timestamp);
+        if (expDate.getMonth() === FIXED_MONTH) {
+          group.total += exp.amount;
+          const entry = {
+            missionID: mission.missionID || "???",
+            vAgent: mission.vAgentID || null,
+            date: expDate,
+            amount: exp.amount,
+            description: exp.description || getRandomIntelTerm()
+          };
+          if (mission.vAgentID) {
+            if (!group.vAgents.has(mission.vAgentID)) {
+              group.vAgents.set(mission.vAgentID, { total: 0, logs: [] });
+            }
+            const vAgentData = group.vAgents.get(mission.vAgentID);
+            vAgentData.total += exp.amount;
+            vAgentData.logs.push(entry);
+          } else {
+            group.unassigned.push(entry);
+          }
+        }
+      });
+    }
   }
   
   // Convert weapon groups to array and sort by total
@@ -394,13 +386,10 @@ function renderMasterMemoirs() {
   
   // Add weapon systems (with vAgent and unassigned)
   for (const weapon of weaponArray) {
-    // Weapon header
     flatItems.push({ type: 'weaponHeader', name: weapon.name, total: weapon.total });
-    // Add vAgents
     for (const vAgent of weapon.vAgents) {
       flatItems.push({ type: 'vAgent', weaponName: weapon.name, vAgent: vAgent.vAgent, total: vAgent.total, logs: vAgent.logs });
     }
-    // Add unassigned (walang vAgent pero may weaponSystem)
     if (weapon.unassigned.length > 0) {
       flatItems.push({ type: 'weaponUnassignedHeader', weaponName: weapon.name });
       for (const entry of weapon.unassigned) {
@@ -409,7 +398,7 @@ function renderMasterMemoirs() {
     }
   }
   
-  // Add NO WEAPON SYSTEM section (kung may laman)
+  // Add NO WEAPON SYSTEM section
   if (noWeaponEntries.length > 0) {
     flatItems.push({ type: 'noWeaponHeader' });
     for (const entry of noWeaponEntries) {
@@ -417,12 +406,12 @@ function renderMasterMemoirs() {
     }
   }
   
-  // Calculate total grand total (including unassigned and no weapon)
+  // Calculate overall grand total
   const overallGrandTotal = weaponArray.reduce((sum, w) => sum + w.total, 0) + 
                             noWeaponEntries.reduce((sum, e) => sum + e.amount, 0);
   
-  // Pagination: group into pages (each page can have multiple items)
-  const itemsPerPage = 15; // 15 items per page (headers + entries)
+  // Pagination
+  const itemsPerPage = 15;
   masterTotalPages = Math.ceil(flatItems.length / itemsPerPage);
   for (let i = 0; i < masterTotalPages; i++) {
     masterPages[i] = flatItems.slice(i * itemsPerPage, (i + 1) * itemsPerPage);
@@ -447,7 +436,6 @@ function renderMasterMemoirs() {
     const isLastPage = (pageNum === masterTotalPages - 1);
     
     let html = '';
-    let lastWeaponName = null;
     
     for (const item of pageItems) {
       if (item.type === 'weaponHeader') {
@@ -456,7 +444,6 @@ function renderMasterMemoirs() {
             🔧 ${item.name} <span style="color: #8b0000; font-size: 12px;">(Total: ₱${item.total.toLocaleString()})</span>
           </div>
         `;
-        lastWeaponName = item.name;
       } else if (item.type === 'vAgent') {
         html += `
           <div style="margin: 8px 0 4px 12px; font-weight: bold; color: #8b0000; font-size: 12px;">📌 vAgent# ${item.vAgent} (Total: ₱${item.total.toLocaleString()})</div>
@@ -502,7 +489,6 @@ function renderMasterMemoirs() {
       html = '<center style="opacity:0.5; padding:20px;">[ NO EXPENSES FOR APRIL ]</center>';
     }
     
-    // Flip animation
     if (animate) {
       activeList.style.transition = 'transform 0.4s ease-in-out';
       activeList.style.transform = 'rotateY(90deg)';
@@ -515,7 +501,6 @@ function renderMasterMemoirs() {
       activeList.innerHTML = html;
     }
     
-    // Grand total on last page
     if (isLastPage) {
       totalVal.innerHTML = `<div style="background: #8b0000; color: #fff; padding: 10px 20px; border-radius: 8px; display: inline-block; font-size: 18px; font-weight: bold;">GRAND TOTAL EXPENDITURE: ₱ ${overallGrandTotal.toLocaleString()}</div>`;
     } else {
@@ -561,7 +546,6 @@ function renderMasterMemoirs() {
 function renderDevicePage(deviceName, monthIndex, pageNum) {
   const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
   
-  // Get all missions for this device
   const deviceMissions = allMissions.filter(m => m.weaponSystem === deviceName);
   
   let allExpenses = [];
@@ -583,7 +567,6 @@ function renderDevicePage(deviceName, monthIndex, pageNum) {
     }
   });
   
-  // Group by vAgent
   const groups = new Map();
   allExpenses.forEach(exp => {
     const key = exp.vAgent === null ? "__UNASSIGNED__" : exp.vAgent;

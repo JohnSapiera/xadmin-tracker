@@ -1,7 +1,6 @@
 // js/jsdash.js - CORE DASHBOARD v30.5 with Sounds
 
 import SoundFX from './sound.js';
-import { DEVICE_REGISTRY } from './config.js';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { 
     getFirestore, 
@@ -66,7 +65,7 @@ function init() {
     setInterval(updateClock, 1000);
     setupTerminalListener();
     setupEventListeners();
-    console.log("✅ Dashboard initialized, confirm button disabled until vAgent and weapon selected");
+    console.log("✅ Dashboard initialized");
 }
 
 function updateClock() {
@@ -104,8 +103,6 @@ function resetUI() {
 function checkFormComplete() {
     const vID = vAgentInput.value.trim();
     const hasWeapon = selectedWeaponID !== "";
-    
-    console.log("checkFormComplete: vID=", vID, "hasWeapon=", hasWeapon);
     
     if (vID !== "" && hasWeapon) {
         modalSubmit.disabled = false;
@@ -161,7 +158,8 @@ function renderWeapons() {
     agentSignatures.forEach(sig => {
         const btn = document.createElement('button');
         btn.className = "weapon-btn";
-        btn.innerText = `> ${DEVICE_REGISTRY[sig] || sig}`;
+        // ✅ Diretso na, hindi na gumagamit ng DEVICE_REGISTRY
+        btn.innerText = `> ${sig}`;
         btn.setAttribute('data-weapon-id', sig);
         btn.onclick = () => {
             SoundFX.click();
@@ -169,7 +167,7 @@ function renderWeapons() {
             btn.classList.add('selected');
             selectedWeaponID = sig;
             console.log("Weapon selected:", selectedWeaponID);
-            checkFormComplete(); // Re-check after weapon selection
+            checkFormComplete();
         };
         weaponList.appendChild(btn);
     });
@@ -199,9 +197,10 @@ async function openModal() {
     // Get agent signatures
     try {
         const snap = await getDoc(doc(db, "agents", currentAgent));
-        agentSignatures = snap.exists() ? snap.data().linkedSignatures || [] : Object.keys(DEVICE_REGISTRY);
+        // ✅ Kung walang linkedSignatures, gumamit ng fallback list (empty array)
+        agentSignatures = snap.exists() ? snap.data().linkedSignatures || [] : [];
     } catch(e) {
-        agentSignatures = Object.keys(DEVICE_REGISTRY);
+        agentSignatures = [];
     }
     
     // If retrieving existing mission
@@ -230,7 +229,7 @@ async function openModal() {
         });
     }
     
-    checkFormComplete(); // Check initial state (will be disabled because vAgent empty unless retrieving)
+    checkFormComplete();
 }
 
 function closeModal() {

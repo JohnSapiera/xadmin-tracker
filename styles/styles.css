@@ -654,3 +654,181 @@ header p {
 .phone-body:hover {
   transform: rotateX(5deg) rotateY(5deg) translateZ(10px);
 }
+
+/* ====== ADDITIONAL STYLES FOR PROFILE PAGE ====== */
+
+/* Device Name Label */
+.device-name-label {
+    text-align: center;
+    margin-top: 8px;
+    font-size: 11px;
+    font-weight: bold;
+    color: #00f3ff;
+    font-family: var(--font-mono);
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+}
+
+/* Blink Animation for Device Name */
+.device-name-label.blink {
+    animation: deviceBlink 0.8s ease-in-out 3;
+}
+
+@keyframes deviceBlink {
+    0%, 100% { opacity: 1; text-shadow: 0 0 2px #00f3ff; }
+    50% { opacity: 0.3; text-shadow: 0 0 8px #00f3ff; }
+}
+
+/* Dynamic Island (iPhone style) */
+.phone-body .dynamic-island {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 28px;
+    background: linear-gradient(145deg, #1a1a1a, #0a0a0a);
+    border-radius: 20px;
+    z-index: 10;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 2px 5px rgba(0,0,0,0.3);
+}
+
+.phone-body .dynamic-island::before {
+    content: '';
+    position: absolute;
+    top: 6px;
+    right: 12px;
+    width: 10px;
+    height: 10px;
+    background: radial-gradient(circle, #1a3a6e, #0a1a3e);
+    border-radius: 50%;
+    box-shadow: 0 0 2px #00f3ff;
+}
+
+.phone-body .dynamic-island::after {
+    content: '';
+    position: absolute;
+    top: 9px;
+    left: 15px;
+    width: 40px;
+    height: 4px;
+    background: #2a2a2a;
+    border-radius: 2px;
+}
+
+/* Left Phone Hover Effect - Turn Right */
+.phone-wrapper.left-phone .phone-body:hover {
+    transform: rotateY(-12deg) rotateX(3deg) translateX(10px) translateZ(15px);
+    transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* Right Phone Hover Effect - Turn Left */
+.phone-wrapper.right-phone .phone-body:hover {
+    transform: rotateY(12deg) rotateX(3deg) translateX(-10px) translateZ(15px);
+    transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* Center Phone Hover Effect */
+.phone-wrapper.center-phone .phone-body:hover {
+    transform: rotateX(3deg) translateZ(20px);
+    transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* Lights On Animation */
+.phone-wrapper.lights-on .phone-body {
+    animation: phoneBoot 0.6s ease-out forwards;
+}
+
+@keyframes phoneBoot {
+    0% { transform: scale(0.98); filter: brightness(0.5); }
+    50% { transform: scale(1.02); filter: brightness(1.3); box-shadow: 0 0 25px rgba(0,243,255,0.6); }
+    100% { transform: scale(1); filter: brightness(1); }
+}
+
+.phone-wrapper.lights-on .phone-screen {
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    animation: screenGlow 0.5s ease-out;
+}
+
+@keyframes screenGlow {
+    0% { opacity: 0.5; transform: scale(0.95); filter: blur(2px); }
+    50% { opacity: 1; filter: blur(0px); box-shadow: 0 0 20px rgba(0,243,255,0.4); }
+    100% { opacity: 1; }
+}
+
+.phone-wrapper.lights-on .typing-text {
+    display: block;
+    animation: typingFade 0.6s steps(20) 0.2s forwards;
+}
+
+@keyframes typingFade {
+    from { width: 0; opacity: 0; }
+    to { width: 90%; opacity: 1; }
+}
+
+/* ====== TERMINATED FOLDER STYLES ====== */
+.folder-box.terminated {
+    opacity: 0.7;
+    filter: grayscale(0.3);
+}
+
+.folder-box.terminated .folder-main {
+    background: #8b0000 !important;
+    box-shadow: 0 0 5px rgba(139, 0, 0, 0.5);
+}
+
+.folder-box.terminated .file-label {
+    color: #8b0000;
+    text-shadow: none;
+}
+
+.folder-box.terminated:hover .paper-sheet {
+    transform: translateY(-5px);
+}
+
+/* Folder Box Hover Effects */
+.folder-box {
+    transition: transform 0.2s ease;
+}
+
+.folder-box:hover {
+    transform: translateY(-3px);
+}
+
+/* ====== UPLINK SYNC ANIMATION ====== */
+.uplink-sync {
+    animation: uplinkPulse 0.6s ease-in-out;
+}
+
+@keyframes uplinkPulse {
+    0% { opacity: 0.5; letter-spacing: 1px; }
+    50% { opacity: 1; letter-spacing: 3px; text-shadow: 0 0 5px #00f3ff; }
+    100% { opacity: 1; letter-spacing: 1px; }
+}
+
+/* ====== RESPONSIVE ADJUSTMENTS ====== */
+@media (max-width: 600px) {
+    .device-name-label {
+        font-size: 9px;
+    }
+    
+    .phone-body .dynamic-island {
+        width: 80px;
+        height: 24px;
+        top: 10px;
+    }
+    
+    .phone-body .dynamic-island::before {
+        width: 8px;
+        height: 8px;
+        top: 5px;
+        right: 10px;
+    }
+    
+    .phone-body .dynamic-island::after {
+        width: 30px;
+        height: 3px;
+        top: 7px;
+        left: 12px;
+    }
+}

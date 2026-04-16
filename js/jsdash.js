@@ -30,9 +30,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// ====== AGENT FROM LOCALSTORAGE ======
-const currentAgent = localStorage.getItem("agent") || localStorage.getItem("cia_agent") || "AGENT_LZ";
-console.log("🔐 Agent:", currentAgent);
+// ====== AGENT FROM LOCALSTORAGE (dynamic, hindi hard-coded) ======
+const currentAgent = localStorage.getItem("agent") || localStorage.getItem("cia_agent") || "UNKNOWN_AGENT";
+console.log("🔐 Current Agent:", currentAgent);
 
 // ====== STATE ======
 let selectedWeaponID = "";
@@ -58,7 +58,7 @@ const clockSpan = document.getElementById('clock');
 const profName = document.getElementById('prof-name');
 const avatarInit = document.getElementById('avatar-init');
 
-// ====== HELPER: Pad mission ID to 5 digits ======
+// ====== HELPER FUNCTIONS ======
 function padMissionID(value) {
     const digits = value.replace(/\D/g, '');
     if (digits.length === 0) return '';
@@ -66,7 +66,6 @@ function padMissionID(value) {
     return digits.padStart(5, '0');
 }
 
-// ====== HELPER: Format date ======
 function formatDate(date) {
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const day = date.getDate().toString().padStart(2, '0');
@@ -80,17 +79,26 @@ function calculateRelieveDate(deploymentDate) {
     return relieveDate;
 }
 
-// ====== INIT ======
+// ====== INITIALIZATION ======
 function init() {
-    console.log("🚀 Dashboard initializing...");
+    console.log("🚀 Dashboard initializing for agent:", currentAgent);
+    
+    // Check if agent is valid
+    if (!currentAgent || currentAgent === "UNKNOWN_AGENT") {
+        console.log("❌ No agent found in localStorage. Redirecting to login...");
+        alert("No active session. Please login first.");
+        window.location.href = "index.html";
+        return;
+    }
+    
     profName.innerText = currentAgent;
     avatarInit.innerText = currentAgent.charAt(0).toUpperCase();
     updateClock();
     setInterval(updateClock, 1000);
     setupTerminalListener();
-    loadAgentWeapons(); // Load weapons for this agent
+    loadAgentWeapons();
     setupEventListeners();
-    console.log("✅ Dashboard initialized");
+    console.log("✅ Dashboard initialized for agent:", currentAgent);
 }
 
 function updateClock() {
@@ -110,29 +118,37 @@ function setupTerminalListener() {
 
 async function addLog(msg, color) {
     try {
-        await addDoc(collection(db, "terminal_logs"), { agent: currentAgent, message: msg, color: color, timestamp: serverTimestamp() });
+        await addDoc(collection(db, "terminal_logs"), { 
+            agent: currentAgent, 
+            message: msg, 
+            color: color, 
+            timestamp: serverTimestamp() 
+        });
     } catch(e) { console.error("Log error:", e); }
 }
 
-// ====== LOAD WEAPONS FOR THIS AGENT ======
+// ====== LOAD WEAPONS FOR CURRENT AGENT ======
 async function loadAgentWeapons() {
     console.log("🔫 Loading weapons for agent:", currentAgent);
+    
     try {
         const agentDoc = await getDoc(doc(db, "agents", currentAgent));
         
         if (agentDoc.exists()) {
             const agentData = agentDoc.data();
-            // Get weapons from linkedSignatures (these are the readable weapon names)
+            // Get weapons from linkedSignatures
             agentWeapons = agentData.linkedSignatures || [];
             console.log("✅ Weapons loaded from agents collection:", agentWeapons);
+            addLog(`Weapons loaded for agent ${currentAgent}: ${agentWeapons.length} available`, '#00f3ff');
         } else {
-            console.log("⚠️ Agent document not found, using default weapons");
-            // Fallback default weapons
-            agentWeapons = ["REDMI NOTE 14 PRO", "REALME 8 PRO", "TECHNO CAMON 40 PRO 5G", "REDMI NOTE 12"];
+            console.log("⚠️ Agent document not found in 'agents' collection");
+            addLog(`⚠️ Agent ${currentAgent} not found in database`, '#ffbd00');
+            agentWeapons = [];
         }
     } catch (error) {
         console.error("Error loading agent weapons:", error);
-        agentWeapons = ["REDMI NOTE 14 PRO", "REALME 8 PRO", "TECHNO CAMON 40 PRO 5G", "REDMI NOTE 12"];
+        agentWeapons = [];
+        addLog(`❌ Error loading weapons: ${error.message}`, '#ff003c');
     }
 }
 
@@ -153,7 +169,7 @@ function checkFormComplete() {
     const vID = vAgentInput.value.trim();
     const hasWeapon = selectedWeaponID !== "";
     
-    if (vID !== "" && hasWeapon && !isMissionTerminated) {
+    if (vID !== "" && hasWeapon && !isMissionTerminated && agentWeapons.length > 0) {
         modalSubmit.disabled = false;
         modalSubmit.style.opacity = "1";
         SoundFX.beep(800, 0.05, 0.1);
@@ -232,7 +248,7 @@ async function performSearch() {
     }
 }
 
-// ====== SEARCH MISSION with delay ======
+// ====== SEARCH MISSION ======
 async function searchMission() {
     const val = input.value.trim();
     
@@ -255,11 +271,12 @@ async function searchMission() {
     }, delay);
 }
 
-// ====== RENDER WEAPONS (from agent's weapons) ======
+// ====== RENDER WEAPONS ======
 function renderWeapons() {
     weaponList.innerHTML = "";
+    
     if (!agentWeapons || agentWeapons.length === 0) {
-        weaponList.innerHTML = '<div style="text-align:center; padding:10px; color:#5c7882;">No weapons available for this agent</div>';
+        weaponList.innerHTML = '<div style="text-align:center; padding:10px; color:#ffbd00;">⚠️ No weapons assigned to this agent. Contact administrator.</div>';
         return;
     }
     
@@ -448,5 +465,5 @@ function setupEventListeners() {
     };
 }
 
-// Start
+// Start the dashboard
 init();

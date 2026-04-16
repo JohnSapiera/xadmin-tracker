@@ -2,124 +2,177 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Create Agent Account</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TERMINAL_UPLINK_v19.0</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --cyan: #00f2ff; --bg: #020a0d; --green: #00ff66; --border: rgba(0, 242, 255, 0.2); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { 
+            background: var(--bg); color: #fff; font-family: 'Share Tech Mono', monospace; 
+            display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0;
+            background-image: radial-gradient(circle at center, #0a1f29 0%, #020a0d 100%);
+        }
+        .card { 
+            width: 360px; background: rgba(1, 15, 20, 0.95); padding: 30px; 
+            border: 1px solid var(--border); backdrop-filter: blur(10px);
+            box-shadow: 0 0 50px rgba(0,0,0,0.9); position: relative;
+        }
+        h2 { 
+            font-size: 16px; margin: 0 0 25px 0; color: var(--cyan); 
+            text-align: center; letter-spacing: 4px; text-transform: uppercase;
+            border-bottom: 2px solid var(--cyan); padding-bottom: 12px;
+        }
+        .form-container { display: flex; flex-direction: column; gap: 20px; }
+        label { font-size: 10px; color: var(--cyan); text-transform: uppercase; margin-bottom: 8px; display: block; opacity: 0.8; letter-spacing: 1px; }
+        .input-field {
+            width: 100%; padding: 14px; background: #000; border: 1px solid var(--border);
+            color: var(--green); font-family: 'Share Tech Mono'; font-size: 12px;
+            outline: none; border-radius: 0; appearance: none;
+        }
+        select.input-field { 
+            background-image: linear-gradient(45deg, transparent 50%, var(--cyan) 50%), linear-gradient(135deg, var(--cyan) 50%, transparent 50%); 
+            background-position: calc(100% - 20px) calc(1em + 2px), calc(100% - 15px) calc(1em + 2px); 
+            background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; 
+        }
+        .btn-auth {
+            width: 100%; padding: 18px; background: transparent; 
+            color: var(--green); border: 2px solid var(--green);
+            font-family: 'Rajdhani'; font-weight: 700; cursor: pointer;
+            text-transform: uppercase; letter-spacing: 3px; font-size: 14px;
+            margin-top: 10px; transition: 0.4s;
+        }
+        .btn-auth:hover { background: var(--green); color: #000; box-shadow: 0 0 30px rgba(0, 255, 102, 0.4); }
+        .ticker-wrap {
+            margin-top: 30px; background: rgba(0, 242, 255, 0.03);
+            border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+            overflow: hidden; white-space: nowrap; padding: 10px 0;
+        }
+        .ticker-move { display: inline-block; animation: marquee 15s linear infinite; font-size: 10px; color: #556b73; }
+        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        .ticker-item { display: inline-block; margin-right: 50px; }
+        .ticker-item span { color: var(--cyan); }
+        #status { font-size: 10px; text-align: center; margin-top: 20px; color: #4a5a61; min-height: 15px; font-weight: bold; }
+    </style>
 </head>
 <body>
 
-<h1>Create Agent Account</h1>
+    <div class="card">
+        <h2>HARDWARE_UPLINK</h2>
 
-<form id="agentForm">
-    <label>Agent Name:</label><br>
-    <input type="text" id="agentName" required><br><br>
-    
-    <label>Secret Key (4-digit):</label><br>
-    <input type="password" id="secretKey" maxlength="4" pattern="[0-9]{4}" required><br>
-    <small>Enter exactly 4 digits</small><br><br>
-    
-    <button type="submit">Create Agent Account</button>
-</form>
+        <div class="form-container">
+            <div class="field-group">
+                <label>NODE_SIGNATURE_DETECTED:</label>
+                <input type="text" id="val-fp" class="input-field" readonly>
+            </div>
 
-<div id="message"></div>
+            <div class="field-group">
+                <label>AGENT_IDENTITY_PROFILE:</label>
+                <select id="agentSelect" class="input-field">
+                    <option value="AGENT_JFSN">AGENT_JFSN</option>
+                    <option value="AGENT_LZ">AGENT_LZ</option>
+                </select>
+            </div>
 
-<hr>
-<h3>Existing Agents:</h3>
-<div id="agentList">Loading...</div>
+            <button class="btn-auth" id="syncBtn">EXECUTE_UPLINK</button>
+        </div>
 
-<script>
-    // SUPABASE CONFIGURATION - NASA IISA LANG NA SCRIPT TAG LAHAT
-    const SUPABASE_URL = 'https://pgclrzqfpoznvrjrzced.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_GhIOC2mXVo0UrhMHZX6Qww_T12tQl4s';
-    
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    
-    const form = document.getElementById('agentForm');
-    const messageDiv = document.getElementById('message');
-    const agentListDiv = document.getElementById('agentList');
-    
-    function showMessage(text, isError) {
-        messageDiv.innerHTML = '<div style="color:' + (isError ? 'red' : 'green') + '; padding:10px; margin:10px 0; border:1px solid ' + (isError ? 'red' : 'green') + '">' + text + '</div>';
-        setTimeout(function() { messageDiv.innerHTML = ''; }, 5000);
-    }
-    
-    async function loadAgents() {
-        agentListDiv.innerHTML = 'Loading...';
-        var result = await supabase.from('agents').select('agent_name, created_at').order('created_at', { ascending: false }).limit(10);
-        
-        if (result.error) {
-            agentListDiv.innerHTML = '<div style="color:red">Error: ' + result.error.message + '</div>';
-            return;
-        }
-        
-        if (!result.data || result.data.length === 0) {
-            agentListDiv.innerHTML = 'No agents yet. Create your first agent above!';
-            return;
-        }
-        
-        var html = '';
-        for (var i = 0; i < result.data.length; i++) {
-            var agent = result.data[i];
-            var date = new Date(agent.created_at).toLocaleString();
-            html += '<div style="padding:8px; margin:5px 0; background:#f5f5f5">🤖 <strong>' + agent.agent_name + '</strong> - created: ' + date + '</div>';
-        }
-        agentListDiv.innerHTML = html;
-    }
-    
-    form.onsubmit = async function(event) {
-        event.preventDefault();
-        
-        var agentName = document.getElementById('agentName').value.trim();
-        var secretKey = document.getElementById('secretKey').value;
-        
-        if (!agentName) {
-            showMessage('Please enter agent name', true);
-            return;
-        }
-        
-        if (!secretKey || secretKey.length !== 4 || !/^\d+$/.test(secretKey)) {
-            showMessage('Secret key must be exactly 4 digits', true);
-            return;
-        }
-        
-        var submitBtn = form.querySelector('button');
-        var originalText = submitBtn.textContent;
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Creating...';
-        
-        try {
-            var checkResult = await supabase.from('agents').select('agent_name').eq('agent_name', agentName).maybeSingle();
+        <div id="status">> WAITING_FOR_COMMAND...</div>
+
+        <div class="ticker-wrap">
+            <div class="ticker-move" id="ticker-content"></div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+    <script>
+        const firebaseConfig = { 
+            apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
+            authDomain: "my-admin-portal-12691.firebaseapp.com", 
+            projectId: "my-admin-portal-12691", 
+            storageBucket: "my-admin-portal-12691.firebasestorage.app", 
+            messagingSenderId: "317015091563", 
+            appId: "1:317015091563:web:baab5171d8e0a58acd442e" 
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Hardware Fingerprinting
+        function getHardwareSpecs() {
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl');
+            const debugInfo = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
+            const gpu = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "GENERIC_GPU";
             
-            if (checkResult.data) {
-                showMessage('Agent name already exists!', true);
-                submitBtn.disabled = false;
-                submitBtn.textContent = originalText;
-                return;
+            return {
+                brand: navigator.userAgent.match(/Android\s+([^\s;]+);?\s+([^\s;]+)/)?.[2] || "NODE_STATION",
+                gpu: gpu.split('/').pop().trim(),
+                res: `${window.screen.width}x${window.screen.height}`,
+                plt: navigator.platform
+            };
+        }
+
+        function generateSignature(s) {
+            const raw = s.gpu + s.res + s.plt + s.brand;
+            let hash = 0;
+            for (let i = 0; i < raw.length; i++) {
+                hash = ((hash << 5) - hash) + raw.charCodeAt(i);
+                hash |= 0;
             }
-            
-            var insertResult = await supabase.from('agents').insert([{ 
-                agent_name: agentName, 
-                secret_key: secretKey,
-                created_at: new Date().toISOString()
-            }]);
-            
-            if (insertResult.error) {
-                showMessage('Error: ' + insertResult.error.message, true);
-            } else {
-                showMessage('✅ Agent "' + agentName + '" created successfully!', false);
-                document.getElementById('agentName').value = '';
-                document.getElementById('secretKey').value = '';
-                loadAgents();
-            }
-        } catch(err) {
-            showMessage('Error: ' + err.message, true);
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.textContent = originalText;
+            return "SIG-" + Math.abs(hash).toString(16).toUpperCase();
         }
-    };
-    
-    loadAgents();
-</script>
 
+        const specs = getHardwareSpecs();
+        const signature = generateSignature(specs);
+
+        // UI Initialization
+        document.getElementById('val-fp').value = signature;
+        const tickerHtml = `
+            <div class="ticker-item">DEVICE: <span>${specs.brand}</span></div>
+            <div class="ticker-item">GPU: <span>${specs.gpu}</span></div>
+            <div class="ticker-item">RESOLVE: <span>${specs.res}</span></div>
+            <div class="ticker-item">OS: <span>${specs.plt}</span></div>
+        `;
+        document.getElementById('ticker-content').innerHTML = tickerHtml + tickerHtml;
+
+        // Register Device Logic
+        document.getElementById('syncBtn').onclick = async () => {
+            const agent = document.getElementById('agentSelect').value;
+            const log = document.getElementById('status');
+            const btn = document.getElementById('syncBtn');
+
+            btn.disabled = true;
+            log.innerHTML = `> SYNCING_WITH_CORE_DATABASE...`;
+
+            try {
+                // I-register ang device signature sa agents collection
+                await db.collection("agents").doc(agent).set({
+                    agentName: agent,
+                    linkedSignatures: firebase.firestore.FieldValue.arrayUnion(signature),
+                    lastFingerprint: signature,
+                    brandName: specs.brand,
+                    lastSync: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+
+                // I-save din sa browser storage para sa auto-login
+                localStorage.setItem("cia_agent", agent);
+                localStorage.setItem("agent_verified", "true");
+                localStorage.setItem("device_signature", signature);
+
+                log.innerHTML = `> <span style="color:var(--green)">UPLINK_SUCCESSFUL</span>`;
+                
+                setTimeout(() => {
+                    alert(`ACCESS GRANTED: Device ${signature} linked to ${agent}`);
+                    window.location.href = "dashboard.html";
+                }, 1000);
+
+            } catch (e) {
+                log.innerHTML = `> <span style="color:var(--red)">UPLINK_FAILED: ${e.message}</span>`;
+                btn.disabled = false;
+            }
+        };
+    </script>
 </body>
 </html>

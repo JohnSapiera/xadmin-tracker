@@ -98,16 +98,6 @@ function init() {
     loadAgentWeapons();
     setupEventListeners();
     
-    // Ensure SAVE button is enabled by default
-    setTimeout(() => {
-        if (actionBtn && actionBtn.innerText === "SAVE") {
-            actionBtn.disabled = false;
-            actionBtn.style.opacity = "1";
-            actionBtn.style.pointerEvents = "auto";
-            console.log("SAVE button force enabled");
-        }
-    }, 500);
-    
     console.log("Dashboard ready for agent:", currentAgent);
 }
 
@@ -116,7 +106,7 @@ function updateClock() {
 }
 
 function setupTerminalListener() {
-    onSnapshot(query(collection(db, "terminal_logs"), orderBy("timestamp", "desc"), limit(15)), (snap) => {
+    onSnapshot(query(collection(db, "terminal_logs"), orderBy("timestamp", "desc"), limit(10)), (snap) => {
         terminal.innerHTML = "";
         snap.forEach(doc => {
             const d = doc.data();
@@ -160,12 +150,9 @@ async function loadAgentWeapons() {
         
         if (agentWeapons.length === 0) {
             console.log("No weapons found for agent:", currentAgent);
-            // Add default weapons for first time users
             agentWeapons = ["REDMI NOTE 14 PRO", "REALME 8 PRO", "TECHNO CAMON 40 PRO 5G", "REDMI NOTE 12"];
-            console.log("Using default weapons:", agentWeapons);
-        } else {
-            console.log("Weapons loaded:", agentWeapons);
         }
+        console.log("Weapons loaded:", agentWeapons);
     } catch (error) {
         console.error("Error loading weapons:", error);
         agentWeapons = ["REDMI NOTE 14 PRO", "REALME 8 PRO", "TECHNO CAMON 40 PRO 5G", "REDMI NOTE 12"];
@@ -192,10 +179,6 @@ function updateConfirmButton() {
     
     modalSubmit.disabled = !isValid;
     modalSubmit.style.opacity = isValid ? "1" : "0.5";
-    
-    if (isValid) {
-        SoundFX.beep(800, 0.05, 0.1);
-    }
 }
 
 // ====== PERFORM SEARCH ======
@@ -256,20 +239,15 @@ async function performSearch() {
             actionBtn.textContent = "SAVE";
             actionBtn.className = "btn btn-save";
             actionBtn.disabled = false;
-            actionBtn.style.opacity = "1";
-            actionBtn.style.pointerEvents = "auto";
             statusLabel.innerHTML = 'STATUS: AVAILABLE';
             reserveBtn.classList.add('active');
-            addLog(`Mission ${paddedMissionID} is AVAILABLE. Ready to SAVE.`, '#00f3ff');
+            addLog(`Mission ${paddedMissionID} is AVAILABLE. Ready to DEPLOY.`, '#00f3ff');
         }
     } catch (error) {
         console.error("Search error:", error);
         statusLabel.innerHTML = '<span style="color:#ff003c;">DATABASE ERROR</span>';
         addLog(`Database error scanning mission ${paddedMissionID}`, '#ff003c');
-        // Ensure button is still clickable on error
         actionBtn.disabled = false;
-        actionBtn.style.opacity = "1";
-        actionBtn.style.pointerEvents = "auto";
     }
 }
 
@@ -353,10 +331,9 @@ async function openModal() {
     modalSubmit.disabled = true;
     modalSubmit.style.opacity = "0.5";
     
-    // Load weapons
     await loadAgentWeapons();
     
-    // If retrieving existing mission
+    // If retrieving existing mission (UPDATE mode)
     if (currentMissionData && !isMissionTerminated) {
         vAgentInput.value = currentMissionData.vAgentID || "";
         selectedWeaponID = currentMissionData.weaponSystem || "";
@@ -365,10 +342,12 @@ async function openModal() {
             secureField.classList.add('show');
             secureBtn.style.display = 'none';
         }
-        modalSubmit.textContent = "UPDATE";
+        modalSubmit.textContent = "UPDATE";  // UPDATE button for retrieve
+        modalSubmit.classList.add("btn-retrieve");
         SoundFX.folderOpen();
     } else {
-        modalSubmit.textContent = "CONFIRM";
+        modalSubmit.textContent = "DEPLOY";  // DEPLOY button for new mission
+        modalSubmit.classList.remove("btn-retrieve");
     }
     
     renderWeapons();
@@ -389,9 +368,9 @@ function closeModal() {
     modalOverlay.style.display = 'none';
 }
 
-// ====== SUBMIT MISSION ======
+// ====== SUBMIT MISSION (DEPLOY or UPDATE) ======
 async function submitMission() {
-    console.log("SUBMIT MISSION CALLED");
+    console.log("SUBMIT MISSION CALLED - Mode:", currentMissionData ? 'UPDATE' : 'DEPLOY');
     
     if (isMissionTerminated) {
         SoundFX.error();
@@ -444,7 +423,7 @@ async function submitMission() {
         }, { merge: true });
         
         SoundFX.success();
-        addLog(`Mission #${missionID} ${currentMissionData ? 'UPDATED' : 'SAVED'} by ${currentAgent}`, '#05ffa1');
+        addLog(`Mission #${missionID} ${currentMissionData ? 'UPDATED' : 'DEPLOYED'} by ${currentAgent}`, '#05ffa1');
         closeModal();
         input.value = "";
         resetUI();
@@ -452,21 +431,11 @@ async function submitMission() {
         
         await loadAgentWeapons();
         
-        alert("MISSION SAVED SUCCESSFULLY!");
+        alert(`✅ MISSION ${currentMissionData ? 'UPDATED' : 'DEPLOYED'} SUCCESSFULLY!`);
     } catch(e) {
         SoundFX.error();
         console.error(e);
         alert("ERROR: " + e.message);
-    }
-}
-
-// ====== ENSURE SAVE BUTTON IS CLICKABLE ======
-function ensureSaveButtonClickable() {
-    if (actionBtn && actionBtn.innerText === "SAVE" && actionBtn.disabled) {
-        actionBtn.disabled = false;
-        actionBtn.style.opacity = "1";
-        actionBtn.style.pointerEvents = "auto";
-        console.log("SAVE button re-enabled");
     }
 }
 
@@ -483,9 +452,6 @@ function setupEventListeners() {
         secureField.classList.add('show');
         secureField.focus();
     };
-    
-    // Periodically check and enable SAVE button
-    setInterval(ensureSaveButtonClickable, 1000);
 }
 
 // Start

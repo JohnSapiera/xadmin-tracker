@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loadMissionData();
 });
 
-// ====== DATA LOADING (includes all missions) ======
+// ====== DATA LOADING ======
 async function loadMissionData() {
   console.log("📡 Loading mission data for agent:", currentAgent);
   SoundFX.terminalUpdate();
@@ -56,7 +56,6 @@ async function loadMissionData() {
       const docWithID = { ...data, id: doc.id };
       allMissions.push(docWithID);
 
-      // ✅ Diretso na ang weaponSystem (readable name na)
       const deviceName = data.weaponSystem;
       if (!deviceData[deviceName]) {
         deviceData[deviceName] = [];
@@ -192,7 +191,7 @@ if (btnBack) {
   });
 }
 
-// ====== NOIR MODAL (vAgent Dossier) ======
+// ====== NOIR MODAL ======
 window.openNoirModal = (docID) => {
   console.log("📋 Opening noir modal for:", docID);
   SoundFX.folderOpen();
@@ -275,6 +274,8 @@ window.closeMemoirs = () => {
   if (selector) selector.remove();
   const masterPagination = document.getElementById("masterPagination");
   if (masterPagination) masterPagination.remove();
+  const devicePagination = document.getElementById("devicePagination");
+  if (devicePagination) devicePagination.remove();
   const p1 = document.getElementById("p1");
   const p2 = document.getElementById("p2");
   if (p1) p1.classList.remove("flipped");
@@ -292,78 +293,320 @@ window.openMemoirs = (mode) => {
   }
 };
 
-// ====== MASTER MEMOIRS (remastered) ======
+// ====== MASTER MEMOIRS ======
 let masterCurrentPage = 0;
-let masterPages = [];
 let masterTotalPages = 0;
+let masterDevicesList = [];
 
 function renderMasterMemoirs() {
   masterCurrentPage = 0;
-  masterPages = [];
+  const FIXED_MONTH = 3; // April
   
-  // Group expenses by weapon system (device name)
-  const weaponGroups = new Map();
-  
+  // Collect all devices with their April expenses
+  masterDevicesList = [];
   for (const [deviceName, missions] of Object.entries(deviceData)) {
-    if (!weaponGroups.has(deviceName)) {
-      weaponGroups.set(deviceName, { total: 0, vAgents: new Map(), unassigned: [] });
-    }
-    const group = weaponGroups.get(deviceName);
+    let totalExpenses = 0;
+    let expenseEntries = [];
     
     missions.forEach(mission => {
       if (mission.expensesBreakdown && Array.isArray(mission.expensesBreakdown)) {
         mission.expensesBreakdown.forEach(exp => {
           const expDate = new Date(exp.timestamp);
-          group.total += exp.amount;
-          const entry = {
-            missionID: mission.missionID || "???",
-            vAgent: mission.vAgentID || null,
-            date: expDate,
-            amount: exp.amount,
-            description: exp.description || getRandomIntelTerm()
-          };
-          if (mission.vAgentID) {
-            if (!group.vAgents.has(mission.vAgentID)) {
-              group.vAgents.set(mission.vAgentID, { total: 0, logs: [] });
-            }
-            const vAgentData = group.vAgents.get(mission.vAgentID);
-            vAgentData.total += exp.amount;
-            vAgentData.logs.push(entry);
-          } else {
-            group.unassigned.push(entry);
+          const expMonth = expDate.getMonth();
+          if (expMonth === FIXED_MONTH) {
+            totalExpenses += exp.amount;
+            expenseEntries.push({
+              missionID: mission.missionID || "???",
+              vAgent: mission.vAgentID || null,
+              date: expDate,
+              amount: exp.amount,
+              description: exp.description || getRandomIntelTerm()
+            });
           }
         });
       }
     });
+    
+    if (expenseEntries.length > 0) {
+      masterDevicesList.push({
+        name: deviceName,
+        total: totalExpenses,
+        expenses: expenseEntries.sort((a, b) => b.date - a.date)
+      });
+    }
   }
   
-  // Convert to array and sort
-  const weaponArray = Array.from(weaponGroups.entries()).map(([name, data]) => ({
-    name,
-    total: data.total,
-    vAgents: Array.from(data.vAgents.entries()).map(([id, vData]) => ({
-      vAgent: id,
-      total: vData.total,
-      logs: vData.logs.sort((a,b) => b.date - a.date)
-    })).sort((a,b) => b.total - a.total),
-    unassigned: data.unassigned.sort((a,b) => b.date - a.date)
-  })).sort((a,b) => b.total - a.total);
+  // Sort by total expenses (highest first)
+  masterDevicesList.sort((a, b) => b.total - a.total);
+  masterTotalPages = Math.ceil(masterDevicesList.length / ITEMS_PER_PAGE);
   
-  // Build pages (simplified for brevity - keep existing logic but remove DEVICE_REGISTRY)
-  // ... (rest of master memoirs logic remains the same)
+  const targetName = document.getElementById("target-name");
+  const activeList = document.getElementById("active-list");
+  const totalVal = document.getElementById("total-val");
+  const flipNextBtn = document.getElementById("flipNextBtn");
+  const p2Area = document.getElementById("weapon-system-breakdown");
+  const totalValP2 = document.getElementById("total-val-p2");
+  const p1 = document.getElementById("p1");
+  const p2 = document.getElementById("p2");
   
-  // For brevity, I'll show the key fix - the rest of your master memoirs code can stay
-  // Just remove any DEVICE_REGISTRY references
+  targetName.innerHTML = `📜 MASTER MEMOIRS <span style="font-size:9px; color:#888; margin-left:10px;">📅 APRIL 2024</span>`;
+  flipNextBtn.style.display = "none";
+  p2.style.display = "none";
+  p1.classList.remove("flipped");
+  
+  function showPage(pageNum, animate = false) {
+    const start = pageNum * ITEMS_PER_PAGE;
+    const pageDevices = masterDevicesList.slice(start, start + ITEMS_PER_PAGE);
+    const overallGrandTotal = masterDevicesList.reduce((sum, d) => sum + d.total, 0);
+    const isLastPage = (pageNum === masterTotalPages - 1) || masterTotalPages === 0;
+    
+    let devicesHTML = '';
+    pageDevices.forEach(device => {
+      const assignedExpenses = device.expenses.filter(exp => exp.vAgent !== null);
+      const unassignedExpenses = device.expenses.filter(exp => exp.vAgent === null);
+      
+      devicesHTML += `
+        <div style="margin-bottom: 20px; border-left: 3px solid #8b0000; padding-left: 12px; background: rgba(0,0,0,0.2); border-radius: 0 8px 8px 0;">
+          <div style="font-size: 14px; font-weight: bold; color: #fff; margin-bottom: 8px; padding-top: 6px;">
+            🔧 ${device.name} <span style="color: #8b0000; font-size: 12px;">(Total: ₱${device.total.toLocaleString()})</span>
+          </div>
+      `;
+      
+      if (assignedExpenses.length > 0) {
+        devicesHTML += `<div style="margin-left: 8px; margin-bottom: 6px;"><span style="color:#aaa; font-size:10px;">▶ WITH vAGENT</span></div>`;
+        assignedExpenses.forEach(exp => {
+          const dateStr = `${exp.date.getMonth()+1}/${exp.date.getDate()}`;
+          devicesHTML += `
+            <div style="display: flex; justify-content: space-between; padding: 6px 0; margin-left: 12px; border-bottom: 1px dotted #333;">
+              <div style="flex-grow:1; font-size: 11px;">
+                <span style="color:#8b0000;">MO#${exp.missionID}</span> - <span style="color:#8b0000;">vAgent# ${exp.vAgent}</span> - ${dateStr} - ${exp.description}
+              </div>
+              <div style="font-weight: bold; color: #fff;">₱${exp.amount.toLocaleString()}</div>
+            </div>
+          `;
+        });
+      }
+      
+      if (unassignedExpenses.length > 0) {
+        devicesHTML += `<div style="margin-left: 8px; margin-top: 8px; margin-bottom: 6px;"><span style="color:#aaa; font-size:10px;">⚠️ WITHOUT vAGENT</span></div>`;
+        unassignedExpenses.forEach(exp => {
+          const dateStr = `${exp.date.getMonth()+1}/${exp.date.getDate()}`;
+          devicesHTML += `
+            <div style="display: flex; justify-content: space-between; padding: 6px 0; margin-left: 12px; border-bottom: 1px dotted #333;">
+              <div style="flex-grow:1; font-size: 11px;">
+                <span style="color:#8b0000;">MO#${exp.missionID}</span> - <span style="color:#aaa;">[NO vAGENT]</span> - ${dateStr} - ${exp.description}
+              </div>
+              <div style="font-weight: bold; color: #fff;">₱${exp.amount.toLocaleString()}</div>
+            </div>
+          `;
+        });
+      }
+      
+      devicesHTML += `</div>`;
+    });
+    
+    if (pageDevices.length === 0) {
+      devicesHTML = '<center style="opacity:0.5; padding:20px;">[ NO EXPENSES FOR APRIL ]</center>';
+    }
+    
+    // Flip animation
+    if (animate) {
+      activeList.style.transition = 'transform 0.4s ease-in-out';
+      activeList.style.transform = 'rotateY(90deg)';
+      setTimeout(() => {
+        activeList.innerHTML = devicesHTML;
+        activeList.style.transform = 'rotateY(0deg)';
+        setTimeout(() => { activeList.style.transition = ''; }, 400);
+      }, 200);
+    } else {
+      activeList.innerHTML = devicesHTML;
+    }
+    
+    // Grand total on last page
+    if (isLastPage) {
+      totalVal.innerHTML = `<div style="background: #8b0000; color: #fff; padding: 10px 20px; border-radius: 8px; display: inline-block; font-size: 18px; font-weight: bold;">GRAND TOTAL EXPENDITURE: ₱ ${overallGrandTotal.toLocaleString()}</div>`;
+    } else {
+      totalVal.innerHTML = `<span style="font-size: 12px; color: #aaa;">Page ${pageNum+1} of ${masterTotalPages} — Grand total on last page</span>`;
+    }
+    
+    updatePagination(pageNum);
+  }
+  
+  function updatePagination(pageNum) {
+    const existing = document.getElementById("masterPagination");
+    if (existing) existing.remove();
+    if (masterTotalPages <= 1) return;
+    
+    const paginationDiv = document.createElement('div');
+    paginationDiv.id = "masterPagination";
+    paginationDiv.style.cssText = `display: flex; justify-content: center; gap: 20px; margin-top: 20px; padding: 12px; border-top: 1px solid #333;`;
+    
+    const prevBtn = document.createElement('button');
+    prevBtn.innerHTML = '◀ PREV PAGE';
+    prevBtn.style.cssText = `background: ${pageNum > 0 ? '#8b0000' : '#444'}; color: white; border: none; padding: 8px 20px; border-radius: 30px; font-family: monospace; font-size: 11px; cursor: ${pageNum > 0 ? 'pointer' : 'not-allowed'};`;
+    if (pageNum > 0) prevBtn.onclick = () => { SoundFX.click(); showPage(pageNum - 1, true); masterCurrentPage = pageNum - 1; };
+    
+    const pageInd = document.createElement('span');
+    pageInd.innerHTML = `${pageNum+1} / ${masterTotalPages}`;
+    pageInd.style.cssText = `color: #fff; background: #222; padding: 4px 12px; border-radius: 20px; font-family: monospace;`;
+    
+    const nextBtn = document.createElement('button');
+    nextBtn.innerHTML = 'NEXT PAGE ▶';
+    nextBtn.style.cssText = `background: ${pageNum < masterTotalPages-1 ? '#8b0000' : '#444'}; color: white; border: none; padding: 8px 20px; border-radius: 30px; font-family: monospace; font-size: 11px; cursor: ${pageNum < masterTotalPages-1 ? 'pointer' : 'not-allowed'};`;
+    if (pageNum < masterTotalPages-1) nextBtn.onclick = () => { SoundFX.click(); showPage(pageNum + 1, true); masterCurrentPage = pageNum + 1; };
+    
+    paginationDiv.appendChild(prevBtn);
+    paginationDiv.appendChild(pageInd);
+    paginationDiv.appendChild(nextBtn);
+    activeList.parentNode.insertBefore(paginationDiv, activeList.nextSibling);
+  }
+  
+  showPage(0, false);
 }
 
 // ====== DEVICE MEMOIRS ======
 function renderDevicePage(deviceName, monthIndex, pageNum) {
   const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
   
-  // ✅ Diretso na, hindi na gumagamit ng DEVICE_REGISTRY
+  // Get all missions for this device
   const deviceMissions = allMissions.filter(m => m.weaponSystem === deviceName);
   
-  // ... rest of the function remains the same
+  let allExpenses = [];
+  deviceMissions.forEach(mission => {
+    if (mission.expensesBreakdown && Array.isArray(mission.expensesBreakdown)) {
+      mission.expensesBreakdown.forEach(exp => {
+        const expDate = new Date(exp.timestamp);
+        const expMonth = expDate.getMonth();
+        if (expMonth === monthIndex) {
+          allExpenses.push({
+            vAgent: mission.vAgentID || null,
+            missionID: mission.missionID || "???",
+            date: expDate,
+            amount: exp.amount,
+            description: exp.description || getRandomIntelTerm()
+          });
+        }
+      });
+    }
+  });
+  
+  // Group by vAgent
+  const groups = new Map();
+  allExpenses.forEach(exp => {
+    const key = exp.vAgent === null ? "__UNASSIGNED__" : exp.vAgent;
+    if (!groups.has(key)) {
+      groups.set(key, { vAgent: exp.vAgent, total: 0, logs: [] });
+    }
+    const group = groups.get(key);
+    group.total += exp.amount;
+    group.logs.push(exp);
+  });
+  
+  const sortedGroups = Array.from(groups.values()).sort((a, b) => {
+    if (a.vAgent === null) return 1;
+    if (b.vAgent === null) return -1;
+    return b.total - a.total;
+  });
+  
+  const flattenedLogs = [];
+  sortedGroups.forEach(group => {
+    group.logs.sort((x, y) => y.date - x.date);
+    flattenedLogs.push(...group.logs);
+  });
+  
+  const totalExpenses = flattenedLogs.reduce((sum, log) => sum + log.amount, 0);
+  const totalPages = Math.ceil(flattenedLogs.length / ITEMS_PER_PAGE);
+  const startIdx = pageNum * ITEMS_PER_PAGE;
+  const pageLogs = flattenedLogs.slice(startIdx, startIdx + ITEMS_PER_PAGE);
+  
+  let logsHTML = '';
+  let lastVAgent = null;
+  pageLogs.forEach(log => {
+    const currentVAgent = log.vAgent === null ? null : log.vAgent;
+    if (currentVAgent !== lastVAgent) {
+      if (currentVAgent === null) {
+        logsHTML += `<div class="audit-separator" style="margin:15px 0 10px 0;">--- UNASSIGNED RECORDS (No vAgent#) ---</div>`;
+      } else {
+        const group = groups.get(currentVAgent);
+        const totalAmt = group ? group.total : 0;
+        logsHTML += `<div style="font-size:12px; font-weight:bold; color:#8b0000; margin-top:12px; margin-bottom:6px;">📌 vAgent# ${currentVAgent} (Total: ₱${totalAmt.toLocaleString()})</div>`;
+      }
+      lastVAgent = currentVAgent;
+    }
+    const dateStr = `${log.date.getMonth()+1}/${log.date.getDate()}`;
+    logsHTML += `
+      <div class="expense-row" style="padding: 4px 0; margin-left: 12px;">
+        <div style="flex-grow:1; font-size: 10px;">
+          ${log.vAgent === null ? `<span style="color:#8b0000;">MO#${log.missionID}</span> - ` : ''}${dateStr} - ${log.description}
+        </div>
+        <div><b>₱${log.amount.toLocaleString()}</b></div>
+      </div>
+    `;
+  });
+  
+  if (pageLogs.length === 0) logsHTML = '<center style="opacity:0.5; padding:20px;">[ NO EXPENSES FOR THIS MONTH ]</center>';
+  
+  const targetName = document.getElementById("target-name");
+  const activeList = document.getElementById("active-list");
+  const totalVal = document.getElementById("total-val");
+  const flipNextBtn = document.getElementById("flipNextBtn");
+  const p1 = document.getElementById("p1");
+  const p2 = document.getElementById("p2");
+  
+  targetName.innerHTML = `${deviceName} <span style="font-size:9px; color:#888;">(April only)</span>`;
+  
+  let monthSelector = document.getElementById("deviceMonthSelector");
+  if (!monthSelector) {
+    monthSelector = document.createElement('select');
+    monthSelector.id = "deviceMonthSelector";
+    monthSelector.style.cssText = `background:#222; border:1px solid #5c7882; color:#5c7882; padding:4px 8px; border-radius:4px; margin-left:10px; cursor:not-allowed; opacity:0.6;`;
+    monthSelector.disabled = true;
+    targetName.parentNode.insertBefore(monthSelector, targetName.nextSibling);
+  }
+  monthSelector.innerHTML = '';
+  for (let i=0; i<monthNames.length; i++) {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = monthNames[i];
+    if (i === monthIndex) opt.selected = true;
+    monthSelector.appendChild(opt);
+  }
+  
+  activeList.innerHTML = logsHTML;
+  const isLastPage = (pageNum === totalPages - 1) || totalPages === 0;
+  if (isLastPage) {
+    totalVal.innerHTML = `<div style="background: #8b0000; color: #fff; padding: 6px 12px; border-radius: 6px; display: inline-block; font-size: 14px; font-weight: bold;">TOTAL EXPENDITURE: ₱ ${totalExpenses.toLocaleString()}</div>`;
+  } else {
+    totalVal.innerHTML = `<span style="font-size: 12px; color: #aaa;">Page ${pageNum+1} of ${totalPages} — Total on last page</span>`;
+  }
+  
+  const existingPagination = document.getElementById("devicePagination");
+  if (existingPagination) existingPagination.remove();
+  
+  if (totalPages > 1) {
+    const paginationDiv = document.createElement('div');
+    paginationDiv.id = "devicePagination";
+    paginationDiv.style.cssText = `display: flex; justify-content: center; gap: 15px; margin-top: 15px; padding: 10px; border-top: 1px solid #333;`;
+    const prevBtn = document.createElement('button');
+    prevBtn.innerHTML = '◀ PREV';
+    prevBtn.style.cssText = `background: ${pageNum > 0 ? '#8b0000' : '#444'}; color: white; border: none; padding: 6px 15px; border-radius: 20px; font-size: 10px; cursor: ${pageNum > 0 ? 'pointer' : 'not-allowed'};`;
+    if (pageNum > 0) prevBtn.onclick = () => { SoundFX.click(); renderDevicePage(deviceName, monthIndex, pageNum - 1); };
+    const pageInd = document.createElement('span');
+    pageInd.innerHTML = `${pageNum+1} / ${totalPages}`;
+    pageInd.style.cssText = `color: #fff; background: #222; padding: 2px 8px; border-radius: 12px;`;
+    const nextBtn = document.createElement('button');
+    nextBtn.innerHTML = 'NEXT ▶';
+    nextBtn.style.cssText = `background: ${pageNum < totalPages-1 ? '#8b0000' : '#444'}; color: white; border: none; padding: 6px 15px; border-radius: 20px; font-size: 10px; cursor: ${pageNum < totalPages-1 ? 'pointer' : 'not-allowed'};`;
+    if (pageNum < totalPages-1) nextBtn.onclick = () => { SoundFX.click(); renderDevicePage(deviceName, monthIndex, pageNum + 1); };
+    paginationDiv.appendChild(prevBtn);
+    paginationDiv.appendChild(pageInd);
+    paginationDiv.appendChild(nextBtn);
+    activeList.parentNode.insertBefore(paginationDiv, activeList.nextSibling);
+  }
+  
+  flipNextBtn.style.display = "none";
+  p1.classList.remove("flipped");
+  p2.style.display = "none";
 }
 
 // ====== TERMINATE AGENT ======

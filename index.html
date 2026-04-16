@@ -27,48 +27,44 @@
 
         .header { font-size: 10px; letter-spacing: 5px; opacity: 0.5; margin-bottom: 30px; text-align: center; }
         
-        input {
-            width: 100%; background: rgba(0, 242, 255, 0.05);
-            border: 1px solid rgba(0, 242, 255, 0.2);
-            padding: 15px; color: var(--cyan);
-            font-family: 'Share Tech Mono'; text-align: center;
-            font-size: 18px; outline: none; margin-bottom: 20px;
-            transition: 0.3s;
+        .status-text { 
+            font-size: 16px; 
+            font-weight: bold; 
+            text-align: center; 
+            height: 24px; 
+            letter-spacing: 2px; 
+            margin-bottom: 20px;
         }
-
-        input:focus { border-color: var(--cyan); box-shadow: 0 0 15px rgba(0, 242, 255, 0.2); }
-
-        button {
-            width: 100%; padding: 15px; background: transparent;
-            border: 1px solid var(--cyan); color: var(--cyan);
-            font-family: 'Share Tech Mono'; cursor: pointer;
-            text-transform: uppercase; letter-spacing: 2px; transition: 0.3s;
-        }
-
-        button:hover { background: var(--cyan); color: var(--bg); font-weight: bold; }
-
-        #status {
-            margin-top: 25px; font-size: 12px; text-align: center;
-            height: 40px; letter-spacing: 1px;
-            line-height: 1.4;
-        }
-
-        .denied { color: var(--red) !important; animation: shake 0.2s infinite; }
-        .granted { color: var(--green) !important; }
-        @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(2px); } 50% { transform: translateX(-2px); } 100% { transform: translateX(0); } }
         
-        .trace-id { font-size: 8px; color: #233138; margin-top: 20px; text-align: center; border-top: 1px dotted #1a252b; padding-top: 10px; }
+        .trace-id { 
+            font-size: 8px; 
+            color: #233138; 
+            margin-top: 20px; 
+            text-align: center; 
+            border-top: 1px dotted #1a252b; 
+            padding-top: 10px; 
+        }
+        
+        .error-msg { 
+            display: none; 
+            color: var(--red); 
+            font-size: 11px; 
+            margin-top: 20px; 
+            text-align: center;
+            line-height: 1.6;
+        }
     </style>
 </head>
 <body>
 
     <div class="auth-container">
         <div class="header">HARDWARE_SECURITY_AUDIT</div>
-        
-        <input type="text" id="keyInput" placeholder="DEVICE SIGNATURE" autocomplete="off" readonly>
-        <button id="authBtn">AUTHORIZE</button>
-
-        <div id="status">INITIATING_SCAN...</div>
+        <div id="status" class="status-text">INITIATING_SCAN...</div>
+        <div id="error-msg" class="error-msg">
+            ACCESS_DENIED<br>
+            UNREGISTERED_HARDWARE_SIGNATURE<br>
+            <span style="font-size:9px; opacity:0.6;">ENROLL VIA UPLINK</span>
+        </div>
         <div class="trace-id" id="trace-id">SIG-PENDING</div>
     </div>
 
@@ -111,13 +107,12 @@
         }
 
         async function verifyDevice() {
-            const status = document.getElementById('status');
-            const trace = document.getElementById('trace-id');
-            const keyInput = document.getElementById('keyInput');
+            const statusDiv = document.getElementById('status');
+            const errorDiv = document.getElementById('error-msg');
+            const traceDiv = document.getElementById('trace-id');
             const currentSIG = getSignature();
             
-            trace.innerText = currentSIG;
-            keyInput.value = currentSIG;
+            traceDiv.innerText = currentSIG;
 
             try {
                 // Hanapin kung itong SIG ay registered sa 'linkedSignatures' array sa agents collection
@@ -127,9 +122,8 @@
 
                 if (!snap.empty) {
                     const agentData = snap.docs[0].data();
-                    status.innerText = "ACCESS_GRANTED";
-                    status.classList.add('granted');
-                    status.style.color = "var(--green)";
+                    statusDiv.innerText = "ACCESS_GRANTED";
+                    statusDiv.style.color = "var(--green)";
                     
                     // Save to localStorage
                     localStorage.setItem("cia_agent", agentData.agentName);
@@ -138,23 +132,23 @@
                     localStorage.setItem("device_signature", currentSIG);
                     
                     console.log("✅ Agent stored:", agentData.agentName);
-                    console.log("📦 localStorage:", localStorage.getItem("cia_agent"));
                     
                     setTimeout(() => {
                         window.location.href = "dashboard.html";
                     }, 1500);
                 } else {
-                    status.innerText = "ACCESS_DENIED";
-                    status.classList.add('denied');
-                    status.style.color = "var(--red)";
+                    statusDiv.innerText = "ACCESS_DENIED";
+                    statusDiv.style.color = "var(--red)";
+                    errorDiv.style.display = "block";
                     localStorage.clear();
                 }
             } catch (e) {
-                status.innerText = "COMMS_OFFLINE";
+                statusDiv.innerText = "COMMS_OFFLINE";
                 console.error("FIREBASE_AUTH_ERROR:", e);
             }
         }
 
+        // Auto-scan on page load
         window.onload = () => {
             setTimeout(verifyDevice, 1200);
         };

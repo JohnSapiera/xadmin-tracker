@@ -3,56 +3,161 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LOGIN</title>
+    <title>TERMINAL_AUTH_v2.0</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
-        body { background: #01080b; color: #00f3ff; font-family: monospace; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        .box { background: #051014; border: 1px solid #00f3ff; padding: 40px; width: 320px; text-align: center; border-radius: 8px; }
-        input, button { width: 100%; padding: 12px; margin: 10px 0; background: #000; border: 1px solid #00f3ff; color: #05ffa1; font-family: monospace; font-size: 16px; }
-        button { background: #00f3ff; color: #000; font-weight: bold; cursor: pointer; }
-        .note { font-size: 11px; color: #5c7882; margin-top: 15px; }
+        :root { --bg: #01080b; --cyan: #00f2ff; --red: #ff003c; --green: #00ff66; }
+        * { box-sizing: border-box; margin: 0; padding: 0; overflow: hidden; }
+        
+        body { 
+            background: var(--bg); color: var(--cyan); 
+            font-family: 'Share Tech Mono', monospace;
+            height: 100vh; display: flex; align-items: center; justify-content: center;
+            background-image: radial-gradient(circle at center, #0a1f29 0%, #01080b 100%);
+        }
+
+        .auth-container {
+            width: 350px; padding: 40px;
+            background: rgba(2, 10, 13, 0.95);
+            border: 1px solid var(--cyan);
+            position: relative;
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.1);
+            clip-path: polygon(0 15%, 10% 0, 100% 0, 100% 85%, 90% 100%, 0 100%);
+        }
+
+        .header { font-size: 10px; letter-spacing: 5px; opacity: 0.5; margin-bottom: 30px; text-align: center; }
+        
+        input {
+            width: 100%; background: rgba(0, 242, 255, 0.05);
+            border: 1px solid rgba(0, 242, 255, 0.2);
+            padding: 15px; color: var(--cyan);
+            font-family: 'Share Tech Mono'; text-align: center;
+            font-size: 18px; outline: none; margin-bottom: 20px;
+            transition: 0.3s;
+        }
+
+        input:focus { border-color: var(--cyan); box-shadow: 0 0 15px rgba(0, 242, 255, 0.2); }
+
+        button {
+            width: 100%; padding: 15px; background: transparent;
+            border: 1px solid var(--cyan); color: var(--cyan);
+            font-family: 'Share Tech Mono'; cursor: pointer;
+            text-transform: uppercase; letter-spacing: 2px; transition: 0.3s;
+        }
+
+        button:hover { background: var(--cyan); color: var(--bg); font-weight: bold; }
+
+        #status {
+            margin-top: 25px; font-size: 12px; text-align: center;
+            height: 40px; letter-spacing: 1px;
+            line-height: 1.4;
+        }
+
+        .denied { color: var(--red) !important; animation: shake 0.2s infinite; }
+        .granted { color: var(--green) !important; }
+        @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(2px); } 50% { transform: translateX(-2px); } 100% { transform: translateX(0); } }
+        
+        .trace-id { font-size: 8px; color: #233138; margin-top: 20px; text-align: center; border-top: 1px dotted #1a252b; padding-top: 10px; }
     </style>
 </head>
 <body>
-    <div class="box">
-        <h2>🔐 LOGIN</h2>
-        <input type="text" id="agentInput" placeholder="Enter Agent Name">
-        <button id="loginBtn">LOGIN</button>
-        <div id="status" style="margin-top: 10px; font-size: 12px;"></div>
-        <div class="note">Example: AGENT_LZ or AGENT_JFSN</div>
+
+    <div class="auth-container">
+        <div class="header">HARDWARE_SECURITY_AUDIT</div>
+        
+        <input type="text" id="keyInput" placeholder="DEVICE SIGNATURE" autocomplete="off" readonly>
+        <button id="authBtn">AUTHORIZE</button>
+
+        <div id="status">INITIATING_SCAN...</div>
+        <div class="trace-id" id="trace-id">SIG-PENDING</div>
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
     <script>
-        document.getElementById('loginBtn').onclick = () => {
-            const agentName = document.getElementById('agentInput').value.trim();
-            const statusDiv = document.getElementById('status');
-            
-            if (!agentName) {
-                statusDiv.innerHTML = "❌ Enter agent name";
-                statusDiv.style.color = "#ff003c";
-                return;
-            }
-            
-            // Save to localStorage
-            localStorage.setItem("cia_agent", agentName);
-            localStorage.setItem("agent", agentName);
-            localStorage.setItem("agent_verified", "true");
-            
-            console.log("✅ Saved:", agentName);
-            console.log("localStorage:", localStorage.getItem("cia_agent"));
-            
-            statusDiv.innerHTML = `✅ Logged in as ${agentName}`;
-            statusDiv.style.color = "#00ff66";
-            
-            // Go to dashboard
-            setTimeout(() => {
-                window.location.href = "dashboard.html";
-            }, 1000);
+        const firebaseConfig = { 
+            apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
+            authDomain: "my-admin-portal-12691.firebaseapp.com", 
+            projectId: "my-admin-portal-12691", 
+            storageBucket: "my-admin-portal-12691.firebasestorage.app", 
+            messagingSenderId: "317015091563", 
+            appId: "1:317015091563:web:baab5171d8e0a58acd442e" 
         };
-        
-        // Enter key support
-        document.getElementById('agentInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') document.getElementById('loginBtn').click();
-        });
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Kinukuha ang unique hardware hash (fingerprint)
+        function getSignature() {
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl');
+            const debugInfo = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
+            const gpu = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "GENERIC_GPU";
+            
+            const specs = {
+                brand: navigator.userAgent.match(/Android\s+([^\s;]+);?\s+([^\s;]+)/)?.[2] || "NODE_STATION",
+                gpu: gpu.split('/').pop().trim(),
+                res: `${window.screen.width}x${window.screen.height}`,
+                plt: navigator.platform
+            };
+
+            const raw = specs.gpu + specs.res + specs.plt + specs.brand;
+            let hash = 0;
+            for (let i = 0; i < raw.length; i++) {
+                hash = ((hash << 5) - hash) + raw.charCodeAt(i);
+                hash |= 0;
+            }
+            return "SIG-" + Math.abs(hash).toString(16).toUpperCase();
+        }
+
+        async function verifyDevice() {
+            const status = document.getElementById('status');
+            const trace = document.getElementById('trace-id');
+            const keyInput = document.getElementById('keyInput');
+            const currentSIG = getSignature();
+            
+            trace.innerText = currentSIG;
+            keyInput.value = currentSIG;
+
+            try {
+                // Hanapin kung itong SIG ay registered sa 'linkedSignatures' array sa agents collection
+                const snap = await db.collection("agents")
+                                     .where("linkedSignatures", "array-contains", currentSIG)
+                                     .get();
+
+                if (!snap.empty) {
+                    const agentData = snap.docs[0].data();
+                    status.innerText = "ACCESS_GRANTED";
+                    status.classList.add('granted');
+                    status.style.color = "var(--green)";
+                    
+                    // Save to localStorage
+                    localStorage.setItem("cia_agent", agentData.agentName);
+                    localStorage.setItem("agent", agentData.agentName);
+                    localStorage.setItem("agent_verified", "true");
+                    localStorage.setItem("device_signature", currentSIG);
+                    
+                    console.log("✅ Agent stored:", agentData.agentName);
+                    console.log("📦 localStorage:", localStorage.getItem("cia_agent"));
+                    
+                    setTimeout(() => {
+                        window.location.href = "dashboard.html";
+                    }, 1500);
+                } else {
+                    status.innerText = "ACCESS_DENIED";
+                    status.classList.add('denied');
+                    status.style.color = "var(--red)";
+                    localStorage.clear();
+                }
+            } catch (e) {
+                status.innerText = "COMMS_OFFLINE";
+                console.error("FIREBASE_AUTH_ERROR:", e);
+            }
+        }
+
+        window.onload = () => {
+            setTimeout(verifyDevice, 1200);
+        };
     </script>
 </body>
 </html>

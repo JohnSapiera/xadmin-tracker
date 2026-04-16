@@ -57,6 +57,31 @@ const weaponList = document.getElementById('weapon-list');
 const clockSpan = document.getElementById('clock');
 const profName = document.getElementById('prof-name');
 const avatarInit = document.getElementById('avatar-init');
+const deploymentDateInput = document.getElementById('deployment-date');
+const relieveDateInput = document.getElementById('relieve-date');
+
+// ====== HELPER: Format date as MM/DD/YYYY ======
+function formatDate(date) {
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${month}/${day}/${year}`;
+}
+
+// ====== HELPER: Calculate relieve date (deployment + 30 days) ======
+function calculateRelieveDate(deploymentDate) {
+    const relieveDate = new Date(deploymentDate);
+    relieveDate.setDate(relieveDate.getDate() + 30);
+    return relieveDate;
+}
+
+// ====== HELPER: Pad mission ID to 5 digits ======
+function padMissionID(value) {
+    const digits = value.replace(/\D/g, '');
+    if (digits.length === 0) return '';
+    if (digits.length >= 5) return digits.slice(0, 5);
+    return digits.padStart(5, '0');
+}
 
 // ====== INIT ======
 function init() {
@@ -129,34 +154,33 @@ function checkFormComplete() {
     const vID = vAgentInput.value.trim();
     const hasWeapon = selectedWeaponID !== "";
     
-    console.log("🔍 checkFormComplete - vID:", vID, "hasWeapon:", hasWeapon, "isTerminated:", isMissionTerminated);
-    
     if (vID !== "" && hasWeapon && !isMissionTerminated) {
         modalSubmit.disabled = false;
         modalSubmit.style.opacity = "1";
         SoundFX.beep(800, 0.05, 0.1);
-        console.log("✅ CONFIRM button ENABLED");
     } else {
         modalSubmit.disabled = true;
         modalSubmit.style.opacity = "0.5";
-        console.log("❌ CONFIRM button DISABLED");
     }
 }
 
 // ====== PERFORM SEARCH ======
 async function performSearch() {
-    const val = input.value.trim();
+    let rawValue = input.value.trim();
     
-    if (val.length === 0) {
+    if (rawValue.length === 0) {
         resetUI();
         return;
     }
+    
+    const paddedMissionID = padMissionID(rawValue);
+    console.log(`🔍 Searching for mission ID: ${paddedMissionID}`);
     
     statusLabel.innerHTML = '<span class="blink">SCANNING DATABASE...</span>';
     SoundFX.terminalUpdate();
     
     try {
-        const qM = query(collection(db, "mission_orders"), where("missionID", "==", val));
+        const qM = query(collection(db, "mission_orders"), where("missionID", "==", paddedMissionID));
         const snapM = await getDocs(qM);
         
         if (!snapM.empty) {
@@ -171,7 +195,7 @@ async function performSearch() {
                 actionBtn.className = "btn btn-locked";
                 disableAllButtons();
                 reserveBtn.classList.remove('active');
-                addLog(`BLOCKED: ${currentAgent} ATTEMPTED ACCESS TO TERMINATED MISSION ${val}`, 'var(--red)');
+                addLog(`BLOCKED: ${currentAgent} ATTEMPTED ACCESS TO TERMINATED MISSION ${paddedMissionID}`, 'var(--red)');
                 return;
             }
             
@@ -184,7 +208,6 @@ async function performSearch() {
                 enableActionButton();
                 reserveBtn.classList.remove('active');
                 statusLabel.innerHTML = `<span class="status-deployed">STATUS: YOUR MISSION</span>`;
-                console.log("📋 Mission found - RETRIEVE mode");
             } else {
                 SoundFX.error();
                 statusLabel.innerHTML = `<span style="color:var(--red);">ALREADY DEPLOYED BY ${owner}</span>`;
@@ -203,7 +226,6 @@ async function performSearch() {
             statusLabel.innerHTML = 'STATUS: AVAILABLE';
             reserveBtn.classList.add('active');
             enableReserveButton();
-            console.log("📋 No mission found - SAVE mode");
         }
     } catch (error) {
         console.error("Search error:", error);
@@ -211,26 +233,21 @@ async function performSearch() {
     }
 }
 
-// ====== SEARCH MISSION with delay for 3 digits or less ======
+// ====== SEARCH MISSION with delay ======
 async function searchMission() {
     const val = input.value.trim();
     
-    // Clear previous timeout
     if (searchTimeout) {
         clearTimeout(searchTimeout);
         searchTimeout = null;
     }
     
-    // If empty, reset immediately
     if (val.length === 0) {
         resetUI();
         return;
     }
     
-    // Determine delay: 5 seconds for 3 digits or less, 300ms for 4+ digits
     const delay = val.length <= 3 ? 5000 : 300;
-    
-    console.log(`Search delay: ${delay}ms for ${val.length} digit(s)`);
     statusLabel.innerHTML = `<span class="blink">SCANNING IN ${delay/1000}s...</span>`;
     
     searchTimeout = setTimeout(() => {
@@ -239,7 +256,7 @@ async function searchMission() {
     }, delay);
 }
 
-// ====== RENDER WEAPONS ======
+// ====== RENDER WEAPONS (direct from database, no registry) ======
 function renderWeapons() {
     weaponList.innerHTML = "";
     if (!agentSignatures || agentSignatures.length === 0) {
@@ -257,30 +274,39 @@ function renderWeapons() {
             document.querySelectorAll('.weapon-btn').forEach(x => x.classList.remove('selected'));
             btn.classList.add('selected');
             selectedWeaponID = weaponName;
-            console.log("🔫 Weapon selected:", selectedWeaponID);
             checkFormComplete();
         };
         weaponList.appendChild(btn);
     });
 }
 
+// ====== UPDATE DATES ======
+function updateDates() {
+    const now = new Date();
+    const deploymentDate = formatDate(now);
+    const relieveDateObj = calculateRelieveDate(now);
+    const relieveDate = formatDate(relieveDateObj);
+    
+    deploymentDateInput.value = deploymentDate;
+    relieveDateInput.value = relieveDate;
+}
+
 // ====== OPEN MODAL ======
 async function openModal() {
-    console.log("📂 Opening modal...");
-    
-    // Check if mission is terminated
     if (isMissionTerminated) {
         SoundFX.error();
         alert("MISSION IS TERMINATED - CANNOT EDIT");
         return;
     }
     
-    const missionID = input.value.trim();
-    if (missionID.length === 0) {
+    let rawMissionID = input.value.trim();
+    if (rawMissionID.length === 0) {
         SoundFX.error();
         alert("ENTER MISSION ID FIRST");
         return;
     }
+    
+    const missionID = padMissionID(rawMissionID);
     
     SoundFX.click();
     modalOverlay.style.display = 'flex';
@@ -295,7 +321,10 @@ async function openModal() {
     modalSubmit.disabled = true;
     modalSubmit.style.opacity = "0.5";
     
-    // Get weapon systems from mission_orders
+    // Set dates (Deployment = today, Relieve = today + 30 days)
+    updateDates();
+    
+    // Get weapon systems from mission_orders (no registry)
     try {
         const missionsSnap = await getDocs(query(
             collection(db, "mission_orders"), 
@@ -311,16 +340,25 @@ async function openModal() {
         });
         
         agentSignatures = Array.from(weaponSet).sort();
-        console.log("🔫 Weapon systems found:", agentSignatures);
+        console.log("Weapon systems found:", agentSignatures);
     } catch(e) {
         console.error("Error loading weapon systems:", e);
         agentSignatures = [];
     }
     
-    // If retrieving existing mission
+    // If retrieving existing mission (auto-fill vAgentID)
     if (currentMissionData && !isMissionTerminated) {
         vAgentInput.value = currentMissionData.vAgentID || "";
         selectedWeaponID = currentMissionData.weaponSystem || "";
+        
+        // If mission has existing dates, use them
+        if (currentMissionData.deploymentDate) {
+            deploymentDateInput.value = currentMissionData.deploymentDate;
+        }
+        if (currentMissionData.relieveDate) {
+            relieveDateInput.value = currentMissionData.relieveDate;
+        }
+        
         if (currentMissionData.SecureLine) {
             secureField.value = currentMissionData.SecureLine;
             secureField.classList.add('show');
@@ -328,15 +366,12 @@ async function openModal() {
         }
         modalSubmit.textContent = "UPDATE";
         SoundFX.folderOpen();
-        console.log("📝 EDITING existing mission");
     } else {
         modalSubmit.textContent = "CONFIRM";
-        console.log("📝 NEW mission");
     }
     
     renderWeapons();
     
-    // Highlight selected weapon if any
     if (selectedWeaponID) {
         document.querySelectorAll('.weapon-btn').forEach(btn => {
             if (btn.getAttribute('data-weapon-id') === selectedWeaponID) {
@@ -349,7 +384,6 @@ async function openModal() {
 }
 
 function closeModal() {
-    console.log("📂 Closing modal");
     SoundFX.click();
     modalOverlay.style.display = 'none';
 }
@@ -358,7 +392,6 @@ function closeModal() {
 async function submitMission() {
     console.log("🔘 SUBMIT MISSION CALLED");
     
-    // Check if mission is terminated
     if (isMissionTerminated) {
         SoundFX.error();
         alert("MISSION IS TERMINATED - CANNOT MODIFY");
@@ -367,15 +400,19 @@ async function submitMission() {
     
     SoundFX.click();
     
-    const missionID = input.value.trim();
-    const vID = vAgentInput.value.trim();
-    const sLine = secureField.value.trim();
-    
-    if (!missionID || missionID.length === 0) {
+    let rawMissionID = input.value.trim();
+    if (rawMissionID.length === 0) {
         SoundFX.error();
         alert("INVALID MISSION ID");
         return;
     }
+    
+    const missionID = padMissionID(rawMissionID);
+    const vID = vAgentInput.value.trim();
+    const sLine = secureField.value.trim();
+    const deploymentDate = deploymentDateInput.value;
+    const relieveDate = relieveDateInput.value;
+    
     if (!vID) {
         SoundFX.error();
         alert("INCOMPLETE DATA: Missing vAgent ID");
@@ -390,7 +427,6 @@ async function submitMission() {
     try {
         SoundFX.terminalUpdate();
         
-        // Update or create mission_orders document
         await setDoc(doc(db, "mission_orders", missionID), {
             missionID: missionID,
             agent: currentAgent,
@@ -398,6 +434,8 @@ async function submitMission() {
             weaponSystem: selectedWeaponID,
             SecureLine: sLine || "",
             status: "DEPLOYED",
+            deploymentDate: deploymentDate,
+            relieveDate: relieveDate,
             timestamp: serverTimestamp()
         }, { merge: true });
         

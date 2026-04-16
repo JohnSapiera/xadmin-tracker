@@ -8,7 +8,7 @@ import {
   query,
   where,
   getDocs,
-  deleteDoc,
+  updateDoc,
   doc,
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loadMissionData();
 });
 
-// ====== DATA LOADING ======
+// ====== DATA LOADING (Exclude terminated missions from device grid) ======
 async function loadMissionData() {
   console.log("📡 Loading mission data for agent:", currentAgent);
   SoundFX.terminalUpdate();
@@ -56,7 +56,9 @@ async function loadMissionData() {
       const docWithID = { ...data, id: doc.id };
       allMissions.push(docWithID);
 
-      // ✅ PARA SA DEVICE GRID: Dapat may weaponSystem at vAgentID para lumabas sa phone grid
+      // Skip terminated missions for device grid
+      if (data.status === "TERMINATED") return;
+      
       const deviceName = data.weaponSystem;
       if (deviceName && deviceName !== "" && deviceName !== "undefined" && deviceName !== "null" && data.vAgentID && data.vAgentID !== "") {
         if (!deviceData[deviceName]) {
@@ -82,7 +84,7 @@ async function loadMissionData() {
   }
 }
 
-// ====== DEVICE RENDERING ======
+// ====== DEVICE RENDERING with animations ======
 function renderDevices() {
   const grid = document.getElementById("deviceSection");
   if (!grid) return;
@@ -103,6 +105,7 @@ function renderDevices() {
     wrapper.className = "phone-wrapper";
     wrapper.setAttribute("data-neon", neonNumber);
     
+    // Assign position class for hover effects
     if (idx === 0) {
       wrapper.classList.add('left-phone');
     } else if (idx === keys.length - 1) {
@@ -117,10 +120,12 @@ function renderDevices() {
         <div class="volume-up"></div>
         <div class="volume-down"></div>
         <div class="action-btn"></div>
+        <div class="dynamic-island"></div>
         <div class="phone-screen">
-          <div class="typing-text">WELCOME<br>${name}</div>
+          <div class="typing-text">WELCOME<br>${currentAgent}</div>
         </div>
       </div>
+      <div class="device-name-label">${name}</div>
       <div class="status-label">[ STANDBY_LINK ]</div>
     `;
     
@@ -133,12 +138,23 @@ function renderDevices() {
   });
 }
 
-// ====== DEVICE ACTIVATION ======
+// ====== DEVICE ACTIVATION with blink effect ======
 function activateDevice(name, element) {
   console.log("🎯 Activating device:", name);
   SoundFX.success();
   
+  // Add lights-on class for animation
   element.classList.add("lights-on");
+  
+  // Blink effect on device name label
+  const deviceLabel = element.querySelector(".device-name-label");
+  if (deviceLabel) {
+    deviceLabel.classList.add("blink");
+    setTimeout(() => {
+      deviceLabel.classList.remove("blink");
+    }, 2000);
+  }
+  
   const statusLabel = element.querySelector(".status-label");
   statusLabel.innerHTML = "[ UPLINK_SYNC_DATA ]";
   statusLabel.classList.add("uplink-sync");
@@ -166,8 +182,10 @@ function activateDevice(name, element) {
         .map((v) => {
           const hasHistory =
             v.expensesBreakdown && v.expensesBreakdown.length > 0;
+          // Check if mission is terminated
+          const isTerminated = v.status === "TERMINATED";
           return `
-          <div class="folder-box ${hasHistory ? "has-expenses" : ""}" onclick="openNoirModal('${v.id}')">
+          <div class="folder-box ${hasHistory ? "has-expenses" : ""} ${isTerminated ? "terminated" : ""}" onclick="${isTerminated ? '' : `openNoirModal('${v.id}')`}">
             <div class="paper-sheet"></div>
             <div class="folder-main"></div>
             <div class="file-label">#${v.vAgentID}</div>
@@ -204,6 +222,13 @@ window.openNoirModal = (docID) => {
   if (!data) {
     console.error("Document not found:", docID);
     SoundFX.error();
+    return;
+  }
+  
+  // Check if mission is terminated
+  if (data.status === "TERMINATED") {
+    SoundFX.error();
+    alert("This mission has been TERMINATED. No access.");
     return;
   }
 
@@ -253,6 +278,35 @@ window.closeNoir = () => {
   document.getElementById("noirOverlay").style.display = "none";
 };
 
+// ====== TERMINATE AGENT - UPDATE STATUS, REMOVE vAgentID and weaponSystem ======
+window.terminateAgent = async (docID) => {
+  const confirmTerminate = confirm("⚠️ WARNING: This will TERMINATE the mission. vAgent# and Weapon System will be removed. Are you sure?");
+  if (!confirmTerminate) return;
+  
+  const doubleConfirm = prompt("Type 'TERMINATE' to confirm:");
+  if (doubleConfirm !== "TERMINATE") { alert("Aborted."); return; }
+  
+  SoundFX.error();
+  try {
+    // Update mission: set status to TERMINATED, remove vAgentID and weaponSystem
+    await updateDoc(doc(db, "mission_orders", docID), {
+      status: "TERMINATED",
+      vAgentID: null,
+      weaponSystem: null,
+      terminatedAt: new Date().toISOString(),
+      terminatedBy: currentAgent
+    });
+    
+    SoundFX.success();
+    alert("✅ MISSION TERMINATED - vAgent# and Weapon System removed");
+    closeNoir();
+    location.reload();
+  } catch (error) {
+    SoundFX.error();
+    alert("❌ TERMINATION FAILED: " + error.message);
+  }
+};
+
 // ====== MEMOIRS FUNCTIONS ======
 const ITEMS_PER_PAGE = 15;
 
@@ -297,7 +351,7 @@ window.openMemoirs = (mode) => {
   }
 };
 
-// ====== MASTER MEMOIRS (LAHAT ng missions - kasama walang vAgent at walang weaponSystem) ======
+// ====== MASTER MEMOIRS (includes terminated but shows status) ======
 let masterCurrentPage = 0;
 let masterTotalPages = 0;
 let masterPages = [];
@@ -307,17 +361,15 @@ function renderMasterMemoirs() {
   masterPages = [];
   const FIXED_MONTH = 3; // April
   
-  // Step 1: Kunin ang LAHAT ng missions mula sa allMissions (hindi lang deviceData)
   const weaponGroups = new Map();
   const noWeaponEntries = [];
   
-  // I-process ang LAHAT ng missions (hindi lang ang may vAgent)
   for (const mission of allMissions) {
     const weaponName = mission.weaponSystem;
     const isValidWeapon = weaponName && weaponName !== "" && weaponName !== "undefined" && weaponName !== "null";
+    const isTerminated = mission.status === "TERMINATED";
     
-    if (!isValidWeapon) {
-      // Walang weaponSystem - idagdag sa noWeaponEntries
+    if (!isValidWeapon && !isTerminated) {
       if (mission.expensesBreakdown && Array.isArray(mission.expensesBreakdown)) {
         mission.expensesBreakdown.forEach(exp => {
           const expDate = new Date(exp.timestamp);
@@ -328,7 +380,7 @@ function renderMasterMemoirs() {
               date: expDate,
               amount: exp.amount,
               description: exp.description || getRandomIntelTerm(),
-              originalWeapon: weaponName || "MISSING"
+              status: isTerminated ? "TERMINATED" : "ACTIVE"
             });
           }
         });
@@ -336,40 +388,41 @@ function renderMasterMemoirs() {
       continue;
     }
     
-    // May weaponSystem
-    if (!weaponGroups.has(weaponName)) {
+    if (!weaponGroups.has(weaponName) && !isTerminated) {
       weaponGroups.set(weaponName, { total: 0, vAgents: new Map(), unassigned: [] });
     }
-    const group = weaponGroups.get(weaponName);
     
-    if (mission.expensesBreakdown && Array.isArray(mission.expensesBreakdown)) {
-      mission.expensesBreakdown.forEach(exp => {
-        const expDate = new Date(exp.timestamp);
-        if (expDate.getMonth() === FIXED_MONTH) {
-          group.total += exp.amount;
-          const entry = {
-            missionID: mission.missionID || "???",
-            vAgent: mission.vAgentID || null,
-            date: expDate,
-            amount: exp.amount,
-            description: exp.description || getRandomIntelTerm()
-          };
-          if (mission.vAgentID) {
-            if (!group.vAgents.has(mission.vAgentID)) {
-              group.vAgents.set(mission.vAgentID, { total: 0, logs: [] });
+    if (!isTerminated && weaponGroups.has(weaponName)) {
+      const group = weaponGroups.get(weaponName);
+      
+      if (mission.expensesBreakdown && Array.isArray(mission.expensesBreakdown)) {
+        mission.expensesBreakdown.forEach(exp => {
+          const expDate = new Date(exp.timestamp);
+          if (expDate.getMonth() === FIXED_MONTH) {
+            group.total += exp.amount;
+            const entry = {
+              missionID: mission.missionID || "???",
+              vAgent: mission.vAgentID || null,
+              date: expDate,
+              amount: exp.amount,
+              description: exp.description || getRandomIntelTerm()
+            };
+            if (mission.vAgentID) {
+              if (!group.vAgents.has(mission.vAgentID)) {
+                group.vAgents.set(mission.vAgentID, { total: 0, logs: [] });
+              }
+              const vAgentData = group.vAgents.get(mission.vAgentID);
+              vAgentData.total += exp.amount;
+              vAgentData.logs.push(entry);
+            } else {
+              group.unassigned.push(entry);
             }
-            const vAgentData = group.vAgents.get(mission.vAgentID);
-            vAgentData.total += exp.amount;
-            vAgentData.logs.push(entry);
-          } else {
-            group.unassigned.push(entry);
           }
-        }
-      });
+        });
+      }
     }
   }
   
-  // Convert weapon groups to array and sort by total
   const weaponArray = Array.from(weaponGroups.entries()).map(([name, data]) => ({
     name,
     total: data.total,
@@ -381,10 +434,8 @@ function renderMasterMemoirs() {
     unassigned: data.unassigned.sort((a,b) => b.date - a.date)
   })).sort((a,b) => b.total - a.total);
   
-  // Build flat items list for pagination
   let flatItems = [];
   
-  // Add weapon systems (with vAgent and unassigned)
   for (const weapon of weaponArray) {
     flatItems.push({ type: 'weaponHeader', name: weapon.name, total: weapon.total });
     for (const vAgent of weapon.vAgents) {
@@ -398,7 +449,6 @@ function renderMasterMemoirs() {
     }
   }
   
-  // Add NO WEAPON SYSTEM section
   if (noWeaponEntries.length > 0) {
     flatItems.push({ type: 'noWeaponHeader' });
     for (const entry of noWeaponEntries) {
@@ -406,11 +456,9 @@ function renderMasterMemoirs() {
     }
   }
   
-  // Calculate overall grand total
   const overallGrandTotal = weaponArray.reduce((sum, w) => sum + w.total, 0) + 
                             noWeaponEntries.reduce((sum, e) => sum + e.amount, 0);
   
-  // Pagination
   const itemsPerPage = 15;
   masterTotalPages = Math.ceil(flatItems.length / itemsPerPage);
   for (let i = 0; i < masterTotalPages; i++) {
@@ -476,9 +524,10 @@ function renderMasterMemoirs() {
       } else if (item.type === 'noWeaponEntry') {
         const dateStr = `${item.date.getMonth()+1}/${item.date.getDate()}`;
         const vAgentDisplay = item.vAgent ? `vAgent# ${item.vAgent}` : "[NO vAGENT]";
+        const statusBadge = item.status === "TERMINATED" ? '<span style="color:#ff003c; margin-left:8px;">[TERMINATED]</span>' : '';
         html += `
           <div style="display: flex; justify-content: space-between; padding: 4px 0 4px 12px; border-bottom: 1px dotted #555; font-size: 10px;">
-            <div><span style="color:#ffaa00;">MO#${item.missionID}</span> - ${vAgentDisplay} - ${dateStr} - ${item.description}</div>
+            <div><span style="color:#ffaa00;">MO#${item.missionID}</span> - ${vAgentDisplay} - ${dateStr} - ${item.description} ${statusBadge}</div>
             <div><b>₱${item.amount.toLocaleString()}</b></div>
           </div>
         `;
@@ -546,7 +595,7 @@ function renderMasterMemoirs() {
 function renderDevicePage(deviceName, monthIndex, pageNum) {
   const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
   
-  const deviceMissions = allMissions.filter(m => m.weaponSystem === deviceName);
+  const deviceMissions = allMissions.filter(m => m.weaponSystem === deviceName && m.status !== "TERMINATED");
   
   let allExpenses = [];
   deviceMissions.forEach(mission => {
@@ -684,22 +733,3 @@ function renderDevicePage(deviceName, monthIndex, pageNum) {
   p1.classList.remove("flipped");
   p2.style.display = "none";
 }
-
-// ====== TERMINATE AGENT ======
-window.terminateAgent = async (docID) => {
-  const confirmTerminate = confirm("⚠️ WARNING: This will permanently delete the mission order. Are you sure?");
-  if (!confirmTerminate) return;
-  const doubleConfirm = prompt("Type 'TERMINATE' to confirm:");
-  if (doubleConfirm !== "TERMINATE") { alert("Aborted."); return; }
-  SoundFX.error();
-  try {
-    await deleteDoc(doc(db, "mission_orders", docID));
-    SoundFX.success();
-    alert("✅ AGENT TERMINATED");
-    closeNoir();
-    location.reload();
-  } catch (error) {
-    SoundFX.error();
-    alert("❌ TERMINATION FAILED: " + error.message);
-  }
-};

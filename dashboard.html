@@ -16,63 +16,75 @@
 </head>
 <body>
 
-<header>
-    <span style="font-weight: 700; color: #fff; letter-spacing: 2px;">CORE_DASH</span>
-</header>
+    <header>
+        <span style="font-weight: 700; color: #fff; letter-spacing: 2px;">CORE_DASH</span>
+    </header>
 
-<div class="status-bar">
-    <div>SYS_TIME: <span id="clock">00:00:00</span></div>
-    <div style="color: var(--green);">UPLINK_STABLE</div>
-</div>
+    <div class="status-bar">
+        <div>SYS_TIME: <span id="clock">00:00:00</span></div>
+        <div style="color: var(--green);">UPLINK_STABLE</div>
+    </div>
 
-<main>
-    <div class="command-module">
-        <input type="tel" id="mission-input" placeholder="0000" maxlength="5" autocomplete="off">
-        <div id="mission-status"></div>
-        <div class="btn-row">
-            <button id="action-btn" class="btn btn-save">SAVE</button>
-            <button id="reserve-btn" class="btn btn-reserve">RESERVE</button>
+    <main>
+        <div class="command-module">
+            <input type="tel" id="mission-input" placeholder="0000" maxlength="5" autocomplete="off">
+            <div id="mission-status"></div>
+            <div class="btn-row">
+                <button id="action-btn" class="btn btn-save">SAVE</button>
+                <button id="reserve-btn" class="btn btn-reserve">RESERVE</button>
+            </div>
+        </div>
+        <div id="terminal"></div>
+        <div class="profile-mini">
+            <div class="avatar" id="avatar-init">?</div>
+            <div class="profile-info">
+                <div id="prof-name">AGENT_PENDING</div>
+                <div>AUTH_LEVEL: OMEGA</div>
+            </div>
+        </div>
+    </main>
+
+    <div class="overlay" id="modal-overlay">
+        <div class="popup">
+            <div id="pop-header">#0000</div>
+            
+            <span>vAGENT_IDENTIFIER:</span>
+            <input type="text" id="v-agent-input" class="pop-input" placeholder="V_ID_REQUIRED">
+            
+            <div class="secure-line-wrapper">
+                <span id="add-secure-btn">+add Secure Line</span>
+                <input type="tel" id="secure-input-field" maxlength="11" placeholder="09XXXXXXXXX">
+            </div>
+
+            <span>SYSTEM_LINK:</span>
+            <div class="weapon-selector" id="weapon-list"></div>
+
+            <!-- NEW: Deployment Date and Relieve Date -->
+            <div style="display: flex; gap: 10px; margin: 15px 0;">
+                <div style="flex: 1;">
+                    <span>DEPLOYMENT DATE:</span>
+                    <input type="text" id="deployment-date" class="pop-input" placeholder="MM/DD/YYYY" readonly style="background:#0a1a1f;">
+                </div>
+                <div style="flex: 1;">
+                    <span>RELIEVE DATE:</span>
+                    <input type="text" id="relieve-date" class="pop-input" placeholder="MM/DD/YYYY" readonly style="background:#0a1a1f;">
+                </div>
+            </div>
+
+            <div class="btn-row">
+                <button id="modal-submit" class="btn btn-save" disabled>CONFIRM</button>
+                <button id="modal-close" class="btn">ABORT</button>
+            </div>
         </div>
     </div>
-    <div id="terminal"></div>
-    
-    <div class="profile-mini">
-        <div class="avatar" id="avatar-init">?</div>
-        <div class="profile-info">
-            <div id="prof-name">AGENT_PENDING</div>
-            <div>AUTH_LEVEL: OMEGA</div>
-        </div>
-    </div>
-</main>
 
-<div class="overlay" id="modal-overlay">
-    <div class="popup">
-        <div id="pop-header">#0000</div>
-        <span>vAGENT_IDENTIFIER:</span>
-        <input type="text" id="v-agent-input" class="pop-input" placeholder="V_ID_REQUIRED">
-        
-        <div class="secure-line-wrapper">
-            <span id="add-secure-btn">+add Secure Line</span>
-            <input type="tel" id="secure-input-field" maxlength="11" placeholder="09XXXXXXXXX">
-        </div>
+    <nav class="bottom-nav">
+        <a href="#" class="nav-item active">DASHBOARD</a>
+        <a href="intel.html" class="nav-item">INTEL</a>
+        <a href="profile.html" class="nav-item">PROFILE</a>
+    </nav>
 
-        <span>SYSTEM_LINK:</span>
-        <div class="weapon-selector" id="weapon-list"></div>
-
-        <div class="btn-row">
-            <button id="modal-submit" class="btn btn-save" disabled>CONFIRM</button>
-            <button id="modal-close" class="btn">ABORT</button>
-        </div>
-    </div>
-</div>
-
-<nav class="bottom-nav">
-    <a href="#" class="nav-item active">DASHBOARD</a>
-    <a href="intel.html" class="nav-item">INTEL</a>
-    <a href="profile.html" class="nav-item">PROFILE</a>
-</nav>
-
-<script type="module" src="js/jsdash.js"></script>
+    <script type="module" src="js/jsdash.js"></script>
 
 </body>
 </html>

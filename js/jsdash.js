@@ -32,7 +32,7 @@ const db = getFirestore(app);
 
 // ====== AGENT FROM LOCALSTORAGE ======
 const currentAgent = localStorage.getItem("agent") || localStorage.getItem("cia_agent") || "AGENT_LZ";
-console.log("Agent:", currentAgent);
+console.log("🔐 Agent:", currentAgent);
 
 // ====== STATE ======
 let selectedWeaponID = "";
@@ -58,6 +58,11 @@ const avatarInit = document.getElementById('avatar-init');
 
 // ====== INIT ======
 function init() {
+    console.log("🚀 Dashboard initializing...");
+    console.log("📦 DOM Elements check:");
+    console.log("  - actionBtn:", actionBtn ? "FOUND" : "NOT FOUND");
+    console.log("  - modalSubmit:", modalSubmit ? "FOUND" : "NOT FOUND");
+    
     SoundFX.success();
     profName.innerText = currentAgent;
     avatarInit.innerText = currentAgent.charAt(0).toUpperCase();
@@ -99,10 +104,12 @@ function resetUI() {
     reserveBtn.classList.remove('active');
 }
 
-// ====== CHECK FORM COMPLETE (ENABLE CONFIRM BUTTON) ======
+// ====== CHECK FORM COMPLETE ======
 function checkFormComplete() {
     const vID = vAgentInput.value.trim();
     const hasWeapon = selectedWeaponID !== "";
+    
+    console.log("🔍 checkFormComplete: vID=", vID, "hasWeapon=", hasWeapon);
     
     if (vID !== "" && hasWeapon) {
         modalSubmit.disabled = false;
@@ -155,7 +162,6 @@ async function searchMission() {
 // ====== RENDER WEAPONS ======
 function renderWeapons() {
     weaponList.innerHTML = "";
-    // ✅ Gumamit ng weaponSystem names (readable names) mula sa agentSignatures
     agentSignatures.forEach(weaponName => {
         const btn = document.createElement('button');
         btn.className = "weapon-btn";
@@ -166,7 +172,7 @@ function renderWeapons() {
             document.querySelectorAll('.weapon-btn').forEach(x => x.classList.remove('selected'));
             btn.classList.add('selected');
             selectedWeaponID = weaponName;
-            console.log("Weapon selected:", selectedWeaponID);
+            console.log("🔫 Weapon selected:", selectedWeaponID);
             checkFormComplete();
         };
         weaponList.appendChild(btn);
@@ -194,15 +200,13 @@ async function openModal() {
     modalSubmit.disabled = true;
     modalSubmit.style.opacity = "0.5";
     
-    // ✅ Kunin ang mga weapon system names mula sa mission_orders ng agent na ito
+    // Get weapon systems
     try {
-        // Hanapin ang lahat ng mission orders ng agent na ito
         const missionsSnap = await getDocs(query(
             collection(db, "mission_orders"), 
             where("agent", "==", currentAgent)
         ));
         
-        // Kunin ang unique weaponSystem names
         const weaponSet = new Set();
         missionsSnap.forEach(doc => {
             const data = doc.data();
@@ -212,15 +216,15 @@ async function openModal() {
         });
         
         agentSignatures = Array.from(weaponSet).sort();
-        console.log("Weapon systems found:", agentSignatures);
-        
+        console.log("🔫 Weapon systems found:", agentSignatures);
     } catch(e) {
         console.error("Error loading weapon systems:", e);
         agentSignatures = [];
     }
     
-    // If retrieving existing mission
+    // RETRIEVE LOGIC: Load existing data if editing
     if (currentMissionData) {
+        console.log("📝 RETRIEVE: Loading existing mission", currentMissionData);
         vAgentInput.value = currentMissionData.vAgentID || "";
         selectedWeaponID = currentMissionData.weaponSystem || "";
         if (currentMissionData.SecureLine) {
@@ -241,6 +245,7 @@ async function openModal() {
         document.querySelectorAll('.weapon-btn').forEach(btn => {
             if (btn.getAttribute('data-weapon-id') === selectedWeaponID) {
                 btn.classList.add('selected');
+                console.log("🎯 Weapon highlighted:", selectedWeaponID);
             }
         });
     }

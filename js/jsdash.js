@@ -97,6 +97,17 @@ function init() {
     setupTerminalListener();
     loadAgentWeapons();
     setupEventListeners();
+    
+    // Ensure SAVE button is enabled by default
+    setTimeout(() => {
+        if (actionBtn && actionBtn.innerText === "SAVE") {
+            actionBtn.disabled = false;
+            actionBtn.style.opacity = "1";
+            actionBtn.style.pointerEvents = "auto";
+            console.log("SAVE button force enabled");
+        }
+    }, 500);
+    
     console.log("Dashboard ready for agent:", currentAgent);
 }
 
@@ -149,12 +160,15 @@ async function loadAgentWeapons() {
         
         if (agentWeapons.length === 0) {
             console.log("No weapons found for agent:", currentAgent);
+            // Add default weapons for first time users
+            agentWeapons = ["REDMI NOTE 14 PRO", "REALME 8 PRO", "TECHNO CAMON 40 PRO 5G", "REDMI NOTE 12"];
+            console.log("Using default weapons:", agentWeapons);
         } else {
             console.log("Weapons loaded:", agentWeapons);
         }
     } catch (error) {
         console.error("Error loading weapons:", error);
-        agentWeapons = [];
+        agentWeapons = ["REDMI NOTE 14 PRO", "REALME 8 PRO", "TECHNO CAMON 40 PRO 5G", "REDMI NOTE 12"];
     }
 }
 
@@ -242,6 +256,8 @@ async function performSearch() {
             actionBtn.textContent = "SAVE";
             actionBtn.className = "btn btn-save";
             actionBtn.disabled = false;
+            actionBtn.style.opacity = "1";
+            actionBtn.style.pointerEvents = "auto";
             statusLabel.innerHTML = 'STATUS: AVAILABLE';
             reserveBtn.classList.add('active');
             addLog(`Mission ${paddedMissionID} is AVAILABLE. Ready to SAVE.`, '#00f3ff');
@@ -250,9 +266,11 @@ async function performSearch() {
         console.error("Search error:", error);
         statusLabel.innerHTML = '<span style="color:#ff003c;">DATABASE ERROR</span>';
         addLog(`Database error scanning mission ${paddedMissionID}`, '#ff003c');
+        // Ensure button is still clickable on error
+        actionBtn.disabled = false;
+        actionBtn.style.opacity = "1";
+        actionBtn.style.pointerEvents = "auto";
     }
-    
-    updateConfirmButton();
 }
 
 // ====== SEARCH MISSION ======
@@ -442,6 +460,16 @@ async function submitMission() {
     }
 }
 
+// ====== ENSURE SAVE BUTTON IS CLICKABLE ======
+function ensureSaveButtonClickable() {
+    if (actionBtn && actionBtn.innerText === "SAVE" && actionBtn.disabled) {
+        actionBtn.disabled = false;
+        actionBtn.style.opacity = "1";
+        actionBtn.style.pointerEvents = "auto";
+        console.log("SAVE button re-enabled");
+    }
+}
+
 // ====== EVENT LISTENERS ======
 function setupEventListeners() {
     input.addEventListener('input', searchMission);
@@ -455,6 +483,9 @@ function setupEventListeners() {
         secureField.classList.add('show');
         secureField.focus();
     };
+    
+    // Periodically check and enable SAVE button
+    setInterval(ensureSaveButtonClickable, 1000);
 }
 
 // Start

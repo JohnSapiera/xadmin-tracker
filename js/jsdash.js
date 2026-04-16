@@ -57,8 +57,6 @@ const weaponList = document.getElementById('weapon-list');
 const clockSpan = document.getElementById('clock');
 const profName = document.getElementById('prof-name');
 const avatarInit = document.getElementById('avatar-init');
-const deploymentDateInput = document.getElementById('deployment-date');
-const relieveDateInput = document.getElementById('relieve-date');
 
 // ====== HELPER: Format date as MM/DD/YYYY ======
 function formatDate(date) {
@@ -256,7 +254,7 @@ async function searchMission() {
     }, delay);
 }
 
-// ====== RENDER WEAPONS (direct from database, no registry) ======
+// ====== RENDER WEAPONS ======
 function renderWeapons() {
     weaponList.innerHTML = "";
     if (!agentSignatures || agentSignatures.length === 0) {
@@ -278,17 +276,6 @@ function renderWeapons() {
         };
         weaponList.appendChild(btn);
     });
-}
-
-// ====== UPDATE DATES ======
-function updateDates() {
-    const now = new Date();
-    const deploymentDate = formatDate(now);
-    const relieveDateObj = calculateRelieveDate(now);
-    const relieveDate = formatDate(relieveDateObj);
-    
-    deploymentDateInput.value = deploymentDate;
-    relieveDateInput.value = relieveDate;
 }
 
 // ====== OPEN MODAL ======
@@ -321,10 +308,7 @@ async function openModal() {
     modalSubmit.disabled = true;
     modalSubmit.style.opacity = "0.5";
     
-    // Set dates (Deployment = today, Relieve = today + 30 days)
-    updateDates();
-    
-    // Get weapon systems from mission_orders (no registry)
+    // Get weapon systems from mission_orders
     try {
         const missionsSnap = await getDocs(query(
             collection(db, "mission_orders"), 
@@ -346,19 +330,10 @@ async function openModal() {
         agentSignatures = [];
     }
     
-    // If retrieving existing mission (auto-fill vAgentID)
+    // If retrieving existing mission
     if (currentMissionData && !isMissionTerminated) {
         vAgentInput.value = currentMissionData.vAgentID || "";
         selectedWeaponID = currentMissionData.weaponSystem || "";
-        
-        // If mission has existing dates, use them
-        if (currentMissionData.deploymentDate) {
-            deploymentDateInput.value = currentMissionData.deploymentDate;
-        }
-        if (currentMissionData.relieveDate) {
-            relieveDateInput.value = currentMissionData.relieveDate;
-        }
-        
         if (currentMissionData.SecureLine) {
             secureField.value = currentMissionData.SecureLine;
             secureField.classList.add('show');
@@ -388,7 +363,7 @@ function closeModal() {
     modalOverlay.style.display = 'none';
 }
 
-// ====== SUBMIT MISSION ======
+// ====== SUBMIT MISSION (with hidden deploymentDate and relieveDate) ======
 async function submitMission() {
     console.log("🔘 SUBMIT MISSION CALLED");
     
@@ -410,8 +385,6 @@ async function submitMission() {
     const missionID = padMissionID(rawMissionID);
     const vID = vAgentInput.value.trim();
     const sLine = secureField.value.trim();
-    const deploymentDate = deploymentDateInput.value;
-    const relieveDate = relieveDateInput.value;
     
     if (!vID) {
         SoundFX.error();
@@ -423,6 +396,12 @@ async function submitMission() {
         alert("INCOMPLETE DATA: No weapon selected");
         return;
     }
+    
+    // Calculate hidden dates (only for SAVE, not visible to user)
+    const now = new Date();
+    const deploymentDate = formatDate(now);
+    const relieveDateObj = calculateRelieveDate(now);
+    const relieveDate = formatDate(relieveDateObj);
     
     try {
         SoundFX.terminalUpdate();

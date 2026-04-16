@@ -1,4 +1,4 @@
-// js/jsintel.js - CORE INTEL with Mobile-Friendly Sounds
+// js/jsintel.js - Simplified Authentication First
 
 import SoundFX from './sound.js';
 import { DEVICE_REGISTRY } from './config.js';
@@ -17,6 +17,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// ===== AUTHENTICATION FIRST =====
+const currentAgent = localStorage.getItem("cia_agent") || localStorage.getItem("agent");
+
+// DOM Elements
 const vAgentInput = document.getElementById('vagent-input');
 const scanStatus = document.getElementById('scan-status');
 const deviceList = document.getElementById('device-list');
@@ -26,25 +30,52 @@ const submitBtn = document.getElementById('submit-btn');
 const expenseInput = document.getElementById('expense-input');
 
 let selectedMissionDocId = null;
-const currentAgent = localStorage.getItem("agent") || localStorage.getItem("cia_agent") || "AGENT_LZ";
 
-function establishSession() {
-    if (currentAgent) {
-        SoundFX.success();
+// ===== CHECK AUTHENTICATION =====
+function checkAuth() {
+    console.log("🔐 Checking authentication...");
+    console.log("localStorage cia_agent:", localStorage.getItem("cia_agent"));
+    console.log("currentAgent variable:", currentAgent);
+    
+    if (currentAgent && currentAgent !== "null" && currentAgent !== "undefined") {
         authStatus.innerText = `AGENT: ${currentAgent}`;
+        authStatus.style.color = "var(--green)";
         vAgentInput.disabled = false;
         scanStatus.innerText = "INPUT TARGET vAGENT# FOR VERIFICATION";
+        console.log("✅ Authentication successful for:", currentAgent);
+        return true;
     } else {
-        SoundFX.error();
         authStatus.innerHTML = `<span style="color:var(--red)">[ UNAUTHORIZED ]</span>`;
-        scanStatus.innerHTML = "ACCESS DENIED: REDIRECTING TO DASHBOARD...";
-        setTimeout(() => location.href = "dashboard.html", 3000);
+        scanStatus.innerHTML = "ACCESS DENIED: No active session";
+        vAgentInput.disabled = true;
+        expenseModule.style.opacity = "0.1";
+        expenseModule.style.pointerEvents = "none";
+        
+        console.log("❌ Authentication failed - No agent in localStorage");
+        
+        setTimeout(() => {
+            window.location.href = "index.html";
+        }, 3000);
+        return false;
     }
+}
+
+function init() {
+    console.log("🚀 Intel page initializing...");
+    
+    const isAuth = checkAuth();
+    if (!isAuth) return;
+    
+    updateClock();
+    setInterval(updateClock, 1000);
+}
+
+function updateClock() {
+    document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB');
 }
 
 async function addLog(msg, color) {
     try {
-        SoundFX.terminalUpdate();
         await addDoc(collection(db, "terminal_logs"), {
             agent: currentAgent, message: msg, color: color, timestamp: serverTimestamp()
         });
@@ -60,7 +91,7 @@ function resetUI() {
     expenseInput.value = "";
 }
 
-// ====== MOBILE-FRIENDLY KEYPAD SOUNDS FOR vAGENT INPUT ======
+// ===== KEYPAD SOUNDS =====
 let lastVAgentLength = 0;
 vAgentInput.addEventListener('input', (e) => {
     const currentLength = e.target.value.length;
@@ -68,38 +99,13 @@ vAgentInput.addEventListener('input', (e) => {
         const lastChar = e.target.value.slice(-1);
         if (lastChar >= '0' && lastChar <= '9') {
             SoundFX.keypadTone(lastChar);
-        } else if (lastChar >= 'a' && lastChar <= 'z') {
-            SoundFX.beep(700, 0.05, 0.1);
-        } else if (lastChar >= 'A' && lastChar <= 'Z') {
-            SoundFX.beep(750, 0.05, 0.1);
         } else {
-            SoundFX.beep(800, 0.03, 0.1);
+            SoundFX.beep(700, 0.05, 0.1);
         }
     } else if (currentLength < lastVAgentLength) {
-        // Backspace sound
         SoundFX.beep(400, 0.03, 0.08);
     }
     lastVAgentLength = currentLength;
-});
-
-// ====== MOBILE-FRIENDLY KEYPAD SOUNDS FOR EXPENSE AMOUNT ======
-let lastExpenseLength = 0;
-expenseInput.addEventListener('input', (e) => {
-    const currentLength = e.target.value.length;
-    if (currentLength > lastExpenseLength) {
-        const lastChar = e.target.value.slice(-1);
-        if (lastChar >= '0' && lastChar <= '9') {
-            SoundFX.keypadTone(lastChar);
-        } else if (lastChar === '.') {
-            SoundFX.beep(900, 0.03, 0.15);
-        } else {
-            SoundFX.beep(600, 0.03, 0.1);
-        }
-    } else if (currentLength < lastExpenseLength) {
-        // Backspace sound
-        SoundFX.beep(400, 0.03, 0.08);
-    }
-    lastExpenseLength = currentLength;
 });
 
 let typingTimer;
@@ -107,7 +113,6 @@ vAgentInput.addEventListener('input', () => {
     clearTimeout(typingTimer);
     const vInput = vAgentInput.value.trim();
     
-    // Don't resetUI on every keystroke, only when needed
     if (vInput.length === 0) {
         resetUI();
     }
@@ -143,7 +148,6 @@ async function performHierarchySearch(vInput) {
         SoundFX.success();
         scanStatus.innerHTML = `<span style="color:var(--green)">[IDENTITY MATCH] RETRIEVING WEAPON SYSTEM...</span>`;
         
-        // Clear and rebuild device list
         deviceList.innerHTML = "";
         
         snapMatch.forEach(doc => {
@@ -163,7 +167,6 @@ async function performHierarchySearch(vInput) {
                 expenseModule.style.pointerEvents = "auto";
                 submitBtn.classList.add('ready');
                 SoundFX.folderOpen();
-                // Focus on expense input for quick entry
                 expenseInput.focus();
             };
             deviceList.appendChild(btn);
@@ -209,18 +212,5 @@ submitBtn.onclick = async () => {
     }
 };
 
-// Clock update
-setInterval(() => { 
-    document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB'); 
-}, 1000);
-
-// Force audio activation on first click (mobile fallback)
-document.body.addEventListener('click', function activateAudio() {
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    audioCtx.resume().then(() => {
-        console.log("🔊 Audio activated for intel page");
-        audioCtx.close();
-    });
-}, { once: true });
-
-establishSession();
+// ===== START =====
+init();

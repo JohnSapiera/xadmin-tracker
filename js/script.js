@@ -56,14 +56,25 @@ async function loadMissionData() {
       const docWithID = { ...data, id: doc.id };
       allMissions.push(docWithID);
 
+      // ✅ Skip kung walang weaponSystem
       const deviceName = data.weaponSystem;
-      if (!deviceData[deviceName]) {
-        deviceData[deviceName] = [];
+      if (!deviceName || deviceName === "" || deviceName === "undefined" || deviceName === "null") {
+        console.log("Skipping mission - no weaponSystem:", docWithID);
+        return;
       }
-      deviceData[deviceName].push(docWithID);
+      
+      // ✅ PARA SA DEVICE GRID: Dapat may vAgentID para lumabas sa phone grid
+      // Pero para sa memoirs, nasa allMissions pa rin ang lahat
+      if (data.vAgentID && data.vAgentID !== "") {
+        if (!deviceData[deviceName]) {
+          deviceData[deviceName] = [];
+        }
+        deviceData[deviceName].push(docWithID);
+      }
     });
 
-    console.log("Device Data:", deviceData);
+    console.log("Device Data (with vAgent only):", deviceData);
+    console.log("All Missions (for memoirs):", allMissions.length);
     renderDevices();
     
     if (snap.size > 0) {
@@ -77,6 +88,7 @@ async function loadMissionData() {
     renderDevices();
   }
 }
+
 
 // ====== DEVICE RENDERING ======
 function renderDevices() {

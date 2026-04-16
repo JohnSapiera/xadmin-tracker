@@ -36,7 +36,7 @@ console.log("🔐 Agent:", currentAgent);
 
 // ====== STATE ======
 let selectedWeaponID = "";
-let agentSignatures = [];
+let agentWeapons = [];
 let currentMissionData = null;
 let isMissionTerminated = false;
 let searchTimeout = null;
@@ -58,21 +58,6 @@ const clockSpan = document.getElementById('clock');
 const profName = document.getElementById('prof-name');
 const avatarInit = document.getElementById('avatar-init');
 
-// ====== HELPER: Format date as MM/DD/YYYY ======
-function formatDate(date) {
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
-    const year = date.getFullYear();
-    return `${month}/${day}/${year}`;
-}
-
-// ====== HELPER: Calculate relieve date (deployment + 30 days) ======
-function calculateRelieveDate(deploymentDate) {
-    const relieveDate = new Date(deploymentDate);
-    relieveDate.setDate(relieveDate.getDate() + 30);
-    return relieveDate;
-}
-
 // ====== HELPER: Pad mission ID to 5 digits ======
 function padMissionID(value) {
     const digits = value.replace(/\D/g, '');
@@ -81,15 +66,29 @@ function padMissionID(value) {
     return digits.padStart(5, '0');
 }
 
+// ====== HELPER: Format date ======
+function formatDate(date) {
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${month}/${day}/${year}`;
+}
+
+function calculateRelieveDate(deploymentDate) {
+    const relieveDate = new Date(deploymentDate);
+    relieveDate.setDate(relieveDate.getDate() + 30);
+    return relieveDate;
+}
+
 // ====== INIT ======
 function init() {
     console.log("🚀 Dashboard initializing...");
-    SoundFX.success();
     profName.innerText = currentAgent;
     avatarInit.innerText = currentAgent.charAt(0).toUpperCase();
     updateClock();
     setInterval(updateClock, 1000);
     setupTerminalListener();
+    loadAgentWeapons(); // Load weapons for this agent
     setupEventListeners();
     console.log("✅ Dashboard initialized");
 }
@@ -111,43 +110,45 @@ function setupTerminalListener() {
 
 async function addLog(msg, color) {
     try {
-        SoundFX.terminalUpdate();
         await addDoc(collection(db, "terminal_logs"), { agent: currentAgent, message: msg, color: color, timestamp: serverTimestamp() });
     } catch(e) { console.error("Log error:", e); }
 }
 
-function disableAllButtons() {
-    actionBtn.disabled = true;
-    actionBtn.style.opacity = "0.5";
-    actionBtn.style.pointerEvents = "none";
-    reserveBtn.disabled = true;
-    reserveBtn.style.opacity = "0.5";
-    reserveBtn.style.pointerEvents = "none";
-}
-
-function enableActionButton() {
-    actionBtn.disabled = false;
-    actionBtn.style.opacity = "1";
-    actionBtn.style.pointerEvents = "auto";
-}
-
-function enableReserveButton() {
-    reserveBtn.disabled = false;
-    reserveBtn.style.opacity = "1";
-    reserveBtn.style.pointerEvents = "auto";
+// ====== LOAD WEAPONS FOR THIS AGENT ======
+async function loadAgentWeapons() {
+    console.log("🔫 Loading weapons for agent:", currentAgent);
+    try {
+        const agentDoc = await getDoc(doc(db, "agents", currentAgent));
+        
+        if (agentDoc.exists()) {
+            const agentData = agentDoc.data();
+            // Get weapons from linkedSignatures (these are the readable weapon names)
+            agentWeapons = agentData.linkedSignatures || [];
+            console.log("✅ Weapons loaded from agents collection:", agentWeapons);
+        } else {
+            console.log("⚠️ Agent document not found, using default weapons");
+            // Fallback default weapons
+            agentWeapons = ["REDMI NOTE 14 PRO", "REALME 8 PRO", "TECHNO CAMON 40 PRO 5G", "REDMI NOTE 12"];
+        }
+    } catch (error) {
+        console.error("Error loading agent weapons:", error);
+        agentWeapons = ["REDMI NOTE 14 PRO", "REALME 8 PRO", "TECHNO CAMON 40 PRO 5G", "REDMI NOTE 12"];
+    }
 }
 
 function resetUI() {
     statusLabel.innerHTML = "";
     actionBtn.textContent = "SAVE";
     actionBtn.className = "btn btn-save";
-    enableActionButton();
+    actionBtn.disabled = false;
+    actionBtn.style.opacity = "1";
+    actionBtn.style.pointerEvents = "auto";
     reserveBtn.classList.remove('active');
     isMissionTerminated = false;
     currentMissionData = null;
 }
 
-// ====== CHECK FORM COMPLETE (ENABLE CONFIRM BUTTON) ======
+// ====== CHECK FORM COMPLETE ======
 function checkFormComplete() {
     const vID = vAgentInput.value.trim();
     const hasWeapon = selectedWeaponID !== "";
@@ -175,7 +176,7 @@ async function performSearch() {
     console.log(`🔍 Searching for mission ID: ${paddedMissionID}`);
     
     statusLabel.innerHTML = '<span class="blink">SCANNING DATABASE...</span>';
-    SoundFX.terminalUpdate();
+    addLog(`Scanning mission ID: ${paddedMissionID}`, '#5c7882');
     
     try {
         const qM = query(collection(db, "mission_orders"), where("missionID", "==", paddedMissionID));
@@ -188,46 +189,46 @@ async function performSearch() {
             
             if (status === "TERMINATED") {
                 isMissionTerminated = true;
-                statusLabel.innerHTML = `<span style="color:var(--red);">⚠️ MISSION TERMINATED - ACCESS DENIED</span>`;
+                statusLabel.innerHTML = `<span style="color:var(--red);">⚠️ MISSION TERMINATED</span>`;
                 actionBtn.textContent = "TERMINATED";
                 actionBtn.className = "btn btn-locked";
-                disableAllButtons();
+                actionBtn.disabled = true;
                 reserveBtn.classList.remove('active');
-                addLog(`BLOCKED: ${currentAgent} ATTEMPTED ACCESS TO TERMINATED MISSION ${paddedMissionID}`, 'var(--red)');
+                addLog(`⚠️ MISSION ${paddedMissionID} IS TERMINATED - ACCESS DENIED`, '#ff003c');
                 return;
             }
             
             isMissionTerminated = false;
             
             if (owner === currentAgent) {
-                SoundFX.success();
                 actionBtn.textContent = "RETRIEVE";
                 actionBtn.className = "btn btn-retrieve";
-                enableActionButton();
+                actionBtn.disabled = false;
                 reserveBtn.classList.remove('active');
                 statusLabel.innerHTML = `<span class="status-deployed">STATUS: YOUR MISSION</span>`;
+                addLog(`✅ Mission ${paddedMissionID} found. Ready to RETRIEVE.`, '#05ffa1');
             } else {
-                SoundFX.error();
                 statusLabel.innerHTML = `<span style="color:var(--red);">ALREADY DEPLOYED BY ${owner}</span>`;
                 actionBtn.textContent = "LOCKED";
                 actionBtn.className = "btn btn-locked";
-                disableAllButtons();
+                actionBtn.disabled = true;
                 reserveBtn.classList.remove('active');
-                addLog(`RESTRICTED: ${currentAgent} SCANNED ${owner}'S MISSION`, 'var(--red)');
+                addLog(`🔒 Mission ${paddedMissionID} is DEPLOYED by ${owner}`, '#ff003c');
             }
         } else {
             currentMissionData = null;
             isMissionTerminated = false;
             actionBtn.textContent = "SAVE";
             actionBtn.className = "btn btn-save";
-            enableActionButton();
+            actionBtn.disabled = false;
             statusLabel.innerHTML = 'STATUS: AVAILABLE';
             reserveBtn.classList.add('active');
-            enableReserveButton();
+            addLog(`📝 Mission ${paddedMissionID} is AVAILABLE. Ready to SAVE.`, '#00f3ff');
         }
     } catch (error) {
         console.error("Search error:", error);
         statusLabel.innerHTML = '<span style="color:var(--red);">DATABASE ERROR</span>';
+        addLog(`❌ Database error scanning mission ${paddedMissionID}`, '#ff003c');
     }
 }
 
@@ -254,15 +255,15 @@ async function searchMission() {
     }, delay);
 }
 
-// ====== RENDER WEAPONS ======
+// ====== RENDER WEAPONS (from agent's weapons) ======
 function renderWeapons() {
     weaponList.innerHTML = "";
-    if (!agentSignatures || agentSignatures.length === 0) {
-        weaponList.innerHTML = '<div style="text-align:center; padding:10px; color:#5c7882;">No weapons available</div>';
+    if (!agentWeapons || agentWeapons.length === 0) {
+        weaponList.innerHTML = '<div style="text-align:center; padding:10px; color:#5c7882;">No weapons available for this agent</div>';
         return;
     }
     
-    agentSignatures.forEach(weaponName => {
+    agentWeapons.forEach(weaponName => {
         const btn = document.createElement('button');
         btn.className = "weapon-btn";
         btn.innerText = `> ${weaponName}`;
@@ -272,6 +273,7 @@ function renderWeapons() {
             document.querySelectorAll('.weapon-btn').forEach(x => x.classList.remove('selected'));
             btn.classList.add('selected');
             selectedWeaponID = weaponName;
+            console.log("🔫 Weapon selected:", selectedWeaponID);
             checkFormComplete();
         };
         weaponList.appendChild(btn);
@@ -308,28 +310,6 @@ async function openModal() {
     modalSubmit.disabled = true;
     modalSubmit.style.opacity = "0.5";
     
-    // Get weapon systems from mission_orders
-    try {
-        const missionsSnap = await getDocs(query(
-            collection(db, "mission_orders"), 
-            where("agent", "==", currentAgent)
-        ));
-        
-        const weaponSet = new Set();
-        missionsSnap.forEach(doc => {
-            const data = doc.data();
-            if (data.weaponSystem && data.weaponSystem !== 'INIT' && data.status !== "TERMINATED") {
-                weaponSet.add(data.weaponSystem);
-            }
-        });
-        
-        agentSignatures = Array.from(weaponSet).sort();
-        console.log("Weapon systems found:", agentSignatures);
-    } catch(e) {
-        console.error("Error loading weapon systems:", e);
-        agentSignatures = [];
-    }
-    
     // If retrieving existing mission
     if (currentMissionData && !isMissionTerminated) {
         vAgentInput.value = currentMissionData.vAgentID || "";
@@ -363,7 +343,7 @@ function closeModal() {
     modalOverlay.style.display = 'none';
 }
 
-// ====== SUBMIT MISSION (with hidden deploymentDate and relieveDate) ======
+// ====== SUBMIT MISSION ======
 async function submitMission() {
     console.log("🔘 SUBMIT MISSION CALLED");
     
@@ -397,7 +377,7 @@ async function submitMission() {
         return;
     }
     
-    // Calculate hidden dates (only for SAVE, not visible to user)
+    // Calculate dates (hidden)
     const now = new Date();
     const deploymentDate = formatDate(now);
     const relieveDateObj = calculateRelieveDate(now);
@@ -419,7 +399,7 @@ async function submitMission() {
         }, { merge: true });
         
         SoundFX.success();
-        addLog(`MISSION #${missionID} ${currentMissionData ? 'UPDATED' : 'SAVED'} BY ${currentAgent}`, 'var(--green)');
+        addLog(`MISSION #${missionID} ${currentMissionData ? 'UPDATED' : 'SAVED'} BY ${currentAgent}`, '#05ffa1');
         closeModal();
         input.value = "";
         resetUI();

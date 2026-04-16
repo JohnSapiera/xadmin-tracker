@@ -63,7 +63,7 @@
     <div class="auth-container">
         <div class="header">DECRYPT_ACCESS_KEY</div>
         
-        <input type="password" id="keyInput" placeholder="********" autocomplete="off">
+        <input type="password" id="keyInput" placeholder="ENTER SECRET KEY" autocomplete="off">
         <button id="authBtn">AUTHORIZE</button>
 
         <div id="status">SYSTEM_IDLE</div>
@@ -100,12 +100,13 @@
             statusDiv.style.color = "var(--cyan)";
 
             try {
-                // ⭐ CORRECTED: Collection name is "agents" (plural)
+                // Hanapin sa Firebase kung kaninong agent ang secret key na ito
                 const snap = await db.collection("agents")
                                      .where("secretKey", "==", key)
                                      .get();
 
                 if (!snap.empty) {
+                    // Kunin ang agent data mula sa Firebase
                     const agentData = snap.docs[0].data();
                     const agentName = agentData.agentName || snap.docs[0].id;
                     
@@ -113,12 +114,16 @@
                     statusDiv.classList.add('granted');
                     statusDiv.style.color = "var(--green)";
 
-                    // Save session to localStorage
+                    // I-store sa localStorage para magamit ng ibang pages
                     localStorage.setItem("cia_agent", agentName);
                     localStorage.setItem("agent", agentName);
                     localStorage.setItem("agent_verified", "true");
                     localStorage.setItem("last_auth", new Date().toISOString());
 
+                    console.log("✅ Agent stored:", agentName);
+                    console.log("📦 localStorage:", localStorage.getItem("cia_agent"));
+
+                    // Mag-redirect sa dashboard
                     setTimeout(() => {
                         window.location.replace("dashboard.html");
                     }, 1000);
@@ -126,6 +131,7 @@
                     statusDiv.innerText = "INVALID_SECRET_KEY";
                     statusDiv.classList.add('denied');
                     localStorage.clear();
+                    console.log("❌ No agent found for secret key:", key);
                 }
             } catch (e) {
                 console.error("Auth error:", e);

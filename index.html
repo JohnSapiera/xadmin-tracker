@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>AGENT ACCESS TERMINAL</title>
+    <title>AGENT TERMINAL</title>
     <style>
         * {
             margin: 0;
@@ -12,249 +12,170 @@
             user-select: none;
         }
         body {
-            background: #01080b;
+            background: #0a0a0a;
             font-family: 'Courier New', monospace;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 16px;
+            padding: 20px;
         }
         .terminal {
+            background: #1a1a1a;
+            border-radius: 20px;
+            padding: 25px;
             width: 100%;
-            max-width: 380px;
-            background: rgba(2, 10, 13, 0.95);
-            border: 1px solid #00f2ff;
+            max-width: 350px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            border: 1px solid #333;
+        }
+        .screen {
+            background: #000;
+            border-radius: 12px;
             padding: 20px;
-            border-radius: 4px;
-            box-shadow: 0 0 20px rgba(0,242,255,0.1);
-            position: relative;
-        }
-        .scan-line {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background: #00f2ff;
-            animation: scanMove 2s ease-in-out infinite;
-            opacity: 0.6;
-        }
-        @keyframes scanMove {
-            0% { top: 0; opacity: 0; }
-            20% { opacity: 0.8; }
-            80% { opacity: 0.8; }
-            100% { top: 100%; opacity: 0; }
-        }
-        .header {
+            margin-bottom: 25px;
             text-align: center;
-            margin-bottom: 20px;
+            border: 1px solid #2a2a2a;
         }
-        .badge {
-            font-size: 9px;
-            letter-spacing: 3px;
-            color: #4a5a61;
+        .fingerprint {
+            font-size: 10px;
+            color: #4a4a4a;
+            margin-bottom: 15px;
+            word-break: break-all;
+        }
+        .code {
+            font-size: 48px;
+            letter-spacing: 12px;
+            color: #0f0;
+            font-weight: bold;
+            font-family: monospace;
+            margin: 10px 0;
         }
         .status {
             font-size: 11px;
-            color: #00f2ff;
-            margin-top: 8px;
-            text-transform: uppercase;
-        }
-        .device-box {
-            background: #000;
-            border: 1px solid #1a2f37;
-            padding: 10px;
-            margin-bottom: 20px;
-            border-radius: 4px;
-        }
-        .device-label {
-            font-size: 8px;
-            color: #5c7882;
-        }
-        .device-sig {
-            font-size: 9px;
-            color: #05ffa1;
-            word-break: break-all;
-            margin-top: 4px;
-        }
-        .code-area {
-            background: #000;
-            border: 1px solid #1a2f37;
-            padding: 15px;
-            text-align: center;
-            border-radius: 4px;
-            margin-bottom: 15px;
-        }
-        .code-digits {
-            font-size: 32px;
-            letter-spacing: 10px;
-            color: #05ffa1;
-            font-weight: bold;
-        }
-        .helper {
-            font-size: 8px;
-            color: #5c7882;
-            margin-top: 5px;
+            color: #ff6600;
+            margin-top: 10px;
         }
         .keypad {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 12px;
-            margin: 20px 0;
+            margin-bottom: 15px;
         }
         .key {
-            aspect-ratio: 1;
-            background: #000;
-            border: 1px solid #1a2f37;
-            color: #00f2ff;
+            background: #2a2a2a;
+            border: none;
+            border-radius: 12px;
+            padding: 18px;
             font-size: 24px;
             font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            color: #fff;
             cursor: pointer;
-            border-radius: 50%;
-            transition: 0.05s linear;
+            text-align: center;
+            transition: all 0.05s linear;
+            font-family: monospace;
         }
         .key:active {
-            background: #00f2ff;
+            background: #0f0;
             color: #000;
-            transform: scale(0.92);
+            transform: scale(0.95);
         }
         .key-zero {
             grid-column: 2 / 3;
         }
-        .hidden {
-            display: none;
-        }
-        .action-buttons {
+        .row {
             display: flex;
             gap: 12px;
-            margin-top: 10px;
+            margin-top: 12px;
         }
-        .btn {
+        .row .key {
             flex: 1;
-            background: transparent;
-            border: 1px solid #1a2f37;
-            padding: 10px;
-            color: #5c7882;
-            font-family: monospace;
-            font-size: 11px;
-            cursor: pointer;
-            text-align: center;
-            border-radius: 4px;
         }
-        .btn-clear {
-            border-color: #ff003c;
-            color: #ff003c;
+        .clear {
+            background: #3a1a1a;
+            color: #ff4444;
+        }
+        .clear:active {
+            background: #ff4444;
+            color: #fff;
         }
         .message {
-            margin-top: 16px;
-            padding: 8px;
+            background: #0a0a0a;
+            border-radius: 10px;
+            padding: 12px;
+            margin-top: 20px;
+            font-size: 11px;
             text-align: center;
-            font-size: 10px;
-            border-radius: 4px;
+            color: #888;
+            border: 1px solid #2a2a2a;
         }
-        .error {
-            color: #ff003c;
-            background: rgba(255,0,60,0.1);
+        .message.error {
+            color: #ff4444;
+            border-color: #ff4444;
+            background: #1a0a0a;
         }
-        .success {
-            color: #00ff66;
-            background: rgba(0,255,102,0.1);
+        .message.success {
+            color: #0f0;
+            border-color: #0f0;
+            background: #0a1a0a;
         }
-        .info {
-            color: #00f2ff;
-            background: rgba(0,242,255,0.1);
+        .agent-info {
+            margin-top: 15px;
+            padding: 12px;
+            background: #0a0a0a;
+            border-radius: 10px;
+            border: 1px solid #2a2a2a;
         }
-        .agent-name {
-            margin-top: 10px;
-            padding: 8px;
-            background: #000;
-            border: 1px solid #00f2ff;
-            border-radius: 4px;
-            text-align: center;
-        }
-        .agent-name span {
-            color: #00f2ff;
+        .agent-label {
             font-size: 9px;
+            color: #666;
+            letter-spacing: 1px;
         }
-        .agent-name div {
-            color: #05ffa1;
+        .agent-value {
             font-size: 14px;
+            color: #0f0;
             font-weight: bold;
             margin-top: 4px;
         }
         .devices {
             margin-top: 10px;
-            padding: 8px;
-            background: #000;
-            border: 1px solid #1a2f37;
-            border-radius: 4px;
         }
-        .devices span {
-            color: #00f2ff;
-            font-size: 9px;
-        }
-        .device-item {
+        .device-tag {
             display: inline-block;
-            background: #0a1f29;
-            padding: 3px 8px;
+            background: #1a3a1a;
+            padding: 4px 8px;
             margin: 3px;
-            border-radius: 3px;
-            color: #05ffa1;
+            border-radius: 6px;
             font-size: 9px;
+            color: #0f0;
         }
-        .footer {
-            text-align: center;
-            margin-top: 15px;
-            font-size: 8px;
-            color: #4a5a61;
+        .hidden {
+            display: none;
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <div class="terminal">
-    <div class="scan-line"></div>
+    <div class="screen">
+        <div class="fingerprint" id="fingerprint">🖨️ DEVICE: -- SCANNING --</div>
+        <div class="code" id="codeDisplay">────</div>
+        <div class="status" id="statusLabel">ENTER 4-DIGIT KEY</div>
+    </div>
+
+    <div class="keypad" id="keypad"></div>
     
-    <div class="header">
-        <div class="badge">🔐 AGENT ACCESS TERMINAL</div>
-        <div class="status" id="statusLabel">INITIALIZING SCAN</div>
+    <div class="row">
+        <div class="key clear" id="clearBtn">CLEAR</div>
     </div>
 
-    <div class="device-box">
-        <div class="device-label">🖨️ DEVICE FINGERPRINT</div>
-        <div class="device-sig" id="deviceSig">-- SCANNING --</div>
-    </div>
-
-    <div id="keypadSection">
-        <div class="code-area">
-            <div class="code-digits" id="codeDisplay">────</div>
-            <div class="helper">ENTER 4-DIGIT SECRET KEY</div>
-        </div>
-        
-        <div class="keypad" id="keypad"></div>
-        
-        <div class="action-buttons">
-            <div class="btn btn-clear" id="clearBtn">⌫ CLEAR</div>
-            <div class="btn" id="cancelBtn">✗ RESET</div>
-        </div>
-    </div>
-
-    <div id="message" class="message"></div>
-    <div id="agentDisplay" class="agent-name hidden">
-        <span>👤 CURRENT AGENT</span>
-        <div id="agentName"></div>
-    </div>
-    <div id="devicesDisplay" class="devices hidden">
-        <span>📱 REGISTERED DEVICES</span>
-        <div id="devicesList"></div>
-    </div>
-
-    <div class="footer">
-        AUTHORIZED: AGENT_LZ | AGENT_JFSN
+    <div id="messageBox" class="message"></div>
+    
+    <div id="agentPanel" class="agent-info hidden">
+        <div class="agent-label">👤 AGENT NAME</div>
+        <div class="agent-value" id="agentName"></div>
+        <div class="agent-label" style="margin-top: 10px;">📱 DEVICES</div>
+        <div class="devices" id="devicesList"></div>
     </div>
 </div>
 
@@ -263,74 +184,74 @@
     const SUPABASE_ANON_KEY = "sb_publishable_GhIOC2mXVo0UrhMHZX6Qww_T12tQl4s";
     
     let supabase = null;
-    let deviceFingerprint = "";
+    let deviceId = "";
     let enteredCode = "";
     let isProcessing = false;
     
-    const statusLabel = document.getElementById('statusLabel');
-    const deviceSigSpan = document.getElementById('deviceSig');
+    const fingerprintEl = document.getElementById('fingerprint');
     const codeDisplay = document.getElementById('codeDisplay');
-    const messageDiv = document.getElementById('message');
-    const agentDisplay = document.getElementById('agentDisplay');
-    const agentNameSpan = document.getElementById('agentName');
-    const devicesDisplay = document.getElementById('devicesDisplay');
-    const devicesList = document.getElementById('devicesList');
+    const statusLabel = document.getElementById('statusLabel');
+    const messageBox = document.getElementById('messageBox');
+    const agentPanel = document.getElementById('agentPanel');
+    const agentNameEl = document.getElementById('agentName');
+    const devicesListEl = document.getElementById('devicesList');
     
-    function showMessage(text, type = 'info') {
-        messageDiv.className = `message ${type}`;
-        messageDiv.innerHTML = text;
+    function showMessage(text, isError = false) {
+        messageBox.className = 'message';
+        if (isError) {
+            messageBox.classList.add('error');
+        } else {
+            messageBox.classList.add('success');
+        }
+        messageBox.innerHTML = text;
         setTimeout(() => {
-            if (messageDiv.innerHTML === text) {
-                messageDiv.className = 'message';
-                messageDiv.innerHTML = '';
+            if (messageBox.innerHTML === text) {
+                messageBox.className = 'message';
+                messageBox.innerHTML = '';
             }
-        }, 4000);
+        }, 3000);
     }
     
-    function generateFingerprint() {
+    function generateDeviceId() {
         const canvas = document.createElement('canvas');
         const gl = canvas.getContext('webgl');
         const debugInfo = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
         const gpu = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "GENERIC";
         
-        const data = {
-            gpu: gpu,
-            screen: `${window.screen.width}x${window.screen.height}`,
-            platform: navigator.platform
-        };
-        
-        const raw = JSON.stringify(data);
         let hash = 0;
+        const raw = gpu + window.screen.width + window.screen.height + navigator.platform;
         for (let i = 0; i < raw.length; i++) {
             hash = ((hash << 5) - hash) + raw.charCodeAt(i);
             hash |= 0;
         }
-        return "SIG-" + Math.abs(hash).toString(16).toUpperCase().slice(0, 12);
+        return "DEV-" + Math.abs(hash).toString(16).toUpperCase().slice(0, 10);
     }
     
     function clearCode() {
         enteredCode = "";
         codeDisplay.innerText = "────";
+        statusLabel.innerHTML = "ENTER 4-DIGIT KEY";
+        statusLabel.style.color = "#ff6600";
     }
     
     function addDigit(digit) {
-        if (enteredCode.length < 4 && !isProcessing) {
+        if (isProcessing) return;
+        if (enteredCode.length < 4) {
             enteredCode += digit;
             let display = enteredCode + "────".substring(enteredCode.length);
             codeDisplay.innerText = display;
             
             if (enteredCode.length === 4) {
-                setTimeout(() => verifySecretKey(enteredCode), 100);
+                verifyKey(enteredCode);
             }
         }
     }
     
-    async function verifySecretKey(secretKey) {
-        if (isProcessing) return;
+    async function verifyKey(secretKey) {
         isProcessing = true;
-        
-        statusLabel.innerHTML = "VERIFYING KEY";
-        showMessage(`Verifying secret key: ${secretKey}...`, 'info');
+        statusLabel.innerHTML = "VERIFYING...";
+        statusLabel.style.color = "#ffaa00";
+        showMessage(`🔍 Verifying key: ${secretKey}...`, false);
         
         try {
             const { data: agent, error } = await supabase
@@ -340,16 +261,18 @@
                 .maybeSingle();
             
             if (error) {
-                showMessage(`Database error: ${error.message}`, 'error');
+                showMessage(`DB Error: ${error.message}`, true);
                 statusLabel.innerHTML = "ERROR";
+                statusLabel.style.color = "#ff4444";
                 clearCode();
                 isProcessing = false;
                 return;
             }
             
             if (!agent) {
-                showMessage(`Invalid secret key: ${secretKey}. Access denied.`, 'error');
+                showMessage(`❌ INVALID KEY: ${secretKey}`, true);
                 statusLabel.innerHTML = "ACCESS DENIED";
+                statusLabel.style.color = "#ff4444";
                 clearCode();
                 isProcessing = false;
                 return;
@@ -358,32 +281,30 @@
             const agentName = agent.agent_name;
             const devices = agent.weapon_system || [];
             
-            showMessage(`✅ ACCESS GRANTED! Welcome, ${agentName}`, 'success');
+            showMessage(`✅ ACCESS GRANTED: ${agentName}`, false);
             statusLabel.innerHTML = "ACCESS GRANTED";
+            statusLabel.style.color = "#0f0";
             
-            agentNameSpan.innerText = agentName;
-            agentDisplay.classList.remove('hidden');
-            
-            if (devices.length > 0) {
-                devicesList.innerHTML = devices.map(d => `<div class="device-item">📱 ${d}</div>`).join('');
-                devicesDisplay.classList.remove('hidden');
-            }
+            agentNameEl.innerHTML = agentName;
+            devicesListEl.innerHTML = devices.map(d => `<span class="device-tag">📱 ${d}</span>`).join('');
+            agentPanel.classList.remove('hidden');
             
             localStorage.setItem("agent_name", agentName);
             localStorage.setItem("secret_key", secretKey);
-            localStorage.setItem("device_fingerprint", deviceFingerprint);
+            localStorage.setItem("device_id", deviceId);
             localStorage.setItem("devices", JSON.stringify(devices));
+            localStorage.setItem("last_auth", new Date().toISOString());
             
-            console.log("STORED IN LOCALSTORAGE:");
-            console.log("  agent_name:", agentName);
-            console.log("  secret_key:", secretKey);
-            console.log("  device_fingerprint:", deviceFingerprint);
-            console.log("  devices:", devices);
+            console.log("✅ STORED IN LOCAL DATABASE (localStorage):");
+            console.log("   agent_name:", agentName);
+            console.log("   secret_key:", secretKey);
+            console.log("   device_id:", deviceId);
+            console.log("   devices:", devices);
             
             isProcessing = false;
             
         } catch (err) {
-            showMessage(`Error: ${err.message}`, 'error');
+            showMessage(`Error: ${err.message}`, true);
             statusLabel.innerHTML = "ERROR";
             clearCode();
             isProcessing = false;
@@ -391,9 +312,9 @@
     }
     
     function buildKeypad() {
-        const keypadContainer = document.getElementById('keypad');
+        const keypad = document.getElementById('keypad');
         const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
-        keypadContainer.innerHTML = '';
+        keypad.innerHTML = '';
         
         keys.forEach(key => {
             const btn = document.createElement('div');
@@ -401,51 +322,51 @@
             if (key === '0') btn.classList.add('key-zero');
             btn.innerText = key;
             btn.onclick = () => addDigit(key);
-            keypadContainer.appendChild(btn);
+            keypad.appendChild(btn);
         });
     }
     
-    document.getElementById('clearBtn').onclick = () => clearCode();
-    document.getElementById('cancelBtn').onclick = () => {
+    function checkExistingSession() {
+        const savedAgent = localStorage.getItem("agent_name");
+        if (savedAgent) {
+            agentNameEl.innerHTML = savedAgent;
+            const savedDevices = localStorage.getItem("devices");
+            if (savedDevices) {
+                const devices = JSON.parse(savedDevices);
+                devicesListEl.innerHTML = devices.map(d => `<span class="device-tag">📱 ${d}</span>`).join('');
+            }
+            agentPanel.classList.remove('hidden');
+            statusLabel.innerHTML = "SESSION ACTIVE";
+            statusLabel.style.color = "#0f0";
+            showMessage(`Welcome back, ${savedAgent}`, false);
+        }
+    }
+    
+    document.getElementById('clearBtn').onclick = () => {
         clearCode();
-        showMessage("Reset. Enter your 4-digit key.", 'info');
-        statusLabel.innerHTML = "ENTER KEY";
+        showMessage("Cleared. Enter 4-digit key.", false);
     };
     
     async function init() {
         buildKeypad();
         
-        deviceFingerprint = generateFingerprint();
-        deviceSigSpan.innerText = deviceFingerprint;
+        deviceId = generateDeviceId();
+        fingerprintEl.innerHTML = `🖨️ DEVICE: ${deviceId}`;
         
         try {
             supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             const { error } = await supabase.from('agents').select('count', { count: 'exact', head: true });
             if (error) {
-                showMessage(`Connection issue: ${error.message}`, 'error');
-                statusLabel.innerHTML = "CONNECTION ERROR";
+                showMessage(`Supabase error: ${error.message}`, true);
+                statusLabel.innerHTML = "DB ERROR";
             } else {
-                showMessage("Connected to Supabase. Enter your 4-digit key.", 'info');
-                statusLabel.innerHTML = "READY";
+                console.log("Supabase connected");
             }
         } catch (err) {
-            showMessage(`Init error: ${err.message}`, 'error');
-            statusLabel.innerHTML = "ERROR";
+            showMessage(`Connection error: ${err.message}`, true);
         }
         
-        const savedAgent = localStorage.getItem("agent_name");
-        if (savedAgent) {
-            agentNameSpan.innerText = savedAgent;
-            agentDisplay.classList.remove('hidden');
-            const savedDevices = localStorage.getItem("devices");
-            if (savedDevices) {
-                const devices = JSON.parse(savedDevices);
-                if (devices.length > 0) {
-                    devicesList.innerHTML = devices.map(d => `<div class="device-item">📱 ${d}</div>`).join('');
-                    devicesDisplay.classList.remove('hidden');
-                }
-            }
-        }
+        checkExistingSession();
     }
     
     init();

@@ -374,7 +374,8 @@ async function openModal() {
             }
         });
     }
-    updateConfirmButton();
+    
+    updateConfirmButton();  // ✅ CRITICAL: Call this here
 }
 
 function closeModal() {

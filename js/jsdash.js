@@ -91,21 +91,19 @@ function setupTerminalListener() {
     });
 }
 
-// ====== LOAD WEAPON SYSTEMS FROM AGENTS COLLECTION ======
+// ====== LOAD WEAPON SYSTEMS ======
 async function loadAgentWeapons() {
-    console.log("Loading weapon systems for agent:", currentAgent);
+    console.log("Loading weapons for agent:", currentAgent);
     try {
-        // Hanapin ang agent document gamit ang agentName
         const agentQuery = query(collection(db, "agents"), where("agentName", "==", currentAgent));
         const agentSnap = await getDocs(agentQuery);
         
         if (!agentSnap.empty) {
             const agentData = agentSnap.docs[0].data();
-            // Kunin ang weaponSystem array (hindi linkedSignatures)
             agentWeapons = agentData.weaponSystem || [];
-            console.log("Weapon systems found:", agentWeapons);
+            console.log("Weapon systems loaded:", agentWeapons);
         } else {
-            console.log("Agent not found, using default weapons");
+            console.log("Agent not found:", currentAgent);
             agentWeapons = ["REDMI NOTE 14 PRO", "REALME 8 PRO", "TECHNO CAMON 40 PRO 5G", "REDMI NOTE 12"];
         }
         
@@ -133,12 +131,12 @@ function renderWeapons(highlightWeapon = null) {
             document.querySelectorAll('.weapon-btn').forEach(x => x.classList.remove('selected'));
             btn.classList.add('selected');
             selectedWeaponID = weaponName;
+            console.log("Weapon selected:", selectedWeaponID);
         };
         weaponList.appendChild(btn);
     });
 }
 
-// ====== BUTTON TRANSITION ======
 function transitionButton(button, newText, newClass) {
     button.style.transition = 'all 0.3s ease';
     button.style.transform = 'scale(0.95)';
@@ -252,7 +250,12 @@ async function searchMission() {
 // ====== OPEN MODAL FOR DEPLOY (SAVE) ======
 async function openModal() {
     const missionID = padMissionID(input.value.trim());
-    if (!missionID) return;
+    if (!missionID) {
+        alert("Invalid Mission ID");
+        return;
+    }
+    
+    console.log("Opening DEPLOY modal for mission:", missionID);
     
     modalOverlay.style.display = 'flex';
     document.getElementById('pop-header').innerHTML = `<span style="color:#00f3ff;">#${missionID}</span> <span style="font-size:12px; color:#5c7882;">[NEW]</span>`;
@@ -269,12 +272,21 @@ async function openModal() {
     await loadAgentWeapons();
     renderWeapons();
     
-    // FORCE ENABLE DEPLOY BUTTON
+    // ✅ FORCE ENABLE DEPLOY BUTTON
     modalSubmit.disabled = false;
     modalSubmit.style.opacity = "1";
+    modalSubmit.style.cursor = "pointer";
     modalSubmit.textContent = "DEPLOY";
     modalSubmit.className = "btn btn-save";
-    modalSubmit.onclick = () => submitMission(missionID, false);
+    
+    // Remove any existing listeners and attach new one
+    modalSubmit.onclick = null;
+    modalSubmit.onclick = () => {
+        console.log("🔥 DEPLOY button clicked!");
+        submitMission(missionID, false);
+    };
+    
+    console.log("✅ DEPLOY button is now clickable");
 }
 
 // ====== OPEN MODAL FOR UPDATE (RETRIEVE) ======
@@ -282,6 +294,8 @@ async function openRetrieveModal() {
     if (!currentMissionData) return;
     
     const missionID = currentMissionData.missionID;
+    console.log("Opening UPDATE modal for mission:", missionID);
+    
     modalOverlay.style.display = 'flex';
     document.getElementById('pop-header').innerHTML = `<span style="color:#00f3ff;">#${missionID}</span> <span style="font-size:12px; color:#5c7882;">[UPDATE]</span>`;
     
@@ -304,13 +318,23 @@ async function openRetrieveModal() {
     
     modalSubmit.disabled = false;
     modalSubmit.style.opacity = "1";
+    modalSubmit.style.cursor = "pointer";
     modalSubmit.textContent = "UPDATE";
     modalSubmit.className = "btn btn-retrieve";
-    modalSubmit.onclick = () => submitMission(missionID, true);
+    
+    modalSubmit.onclick = null;
+    modalSubmit.onclick = () => {
+        console.log("🔥 UPDATE button clicked!");
+        submitMission(missionID, true);
+    };
+    
+    console.log("✅ UPDATE button is now clickable");
 }
 
 // ====== OPEN MODAL FOR VIEW ONLY ======
 async function openViewModal(missionID) {
+    console.log("Opening VIEW modal for mission:", missionID);
+    
     const qM = query(collection(db, "mission_orders"), where("missionID", "==", missionID));
     const snapM = await getDocs(qM);
     if (snapM.empty) {
@@ -350,8 +374,15 @@ async function openViewModal(missionID) {
 
 // ====== SUBMIT MISSION ======
 async function submitMission(missionID, isUpdate) {
+    console.log("🚀 SUBMIT MISSION CALLED");
+    console.log("Mission ID:", missionID);
+    console.log("Is Update:", isUpdate);
+    
     const vID = vAgentInput.value.trim();
     const sLine = secureField.value.trim();
+    
+    console.log("vAgent ID:", vID);
+    console.log("Selected Weapon:", selectedWeaponID);
     
     if (!vID) {
         alert("Enter vAgent ID");
@@ -367,6 +398,7 @@ async function submitMission(missionID, isUpdate) {
     const relieveDate = formatDate(calculateRelieveDate(now));
     
     try {
+        console.log("Saving to Firebase mission_orders...");
         await setDoc(doc(db, "mission_orders", missionID), {
             missionID: missionID,
             agent: currentAgent,
@@ -379,6 +411,7 @@ async function submitMission(missionID, isUpdate) {
             timestamp: serverTimestamp()
         }, { merge: true });
         
+        console.log("✅ Mission saved successfully!");
         addLog(`Mission #${missionID} ${isUpdate ? 'UPDATED' : 'DEPLOYED'} by ${currentAgent}`, '#05ffa1');
         closeModal();
         input.value = "";
@@ -396,12 +429,13 @@ async function submitMission(missionID, isUpdate) {
         });
         
     } catch(e) {
-        console.error(e);
+        console.error("❌ Error saving mission:", e);
         alert("ERROR: " + e.message);
     }
 }
 
 function closeModal() {
+    console.log("Closing modal");
     modalOverlay.style.display = 'none';
     vAgentInput.disabled = false;
     secureField.disabled = false;
@@ -425,6 +459,7 @@ function toggleSecureLine() {
 
 // ====== INIT ======
 function init() {
+    console.log("Dashboard initializing...");
     profName.innerText = currentAgent;
     avatarInit.innerText = currentAgent.charAt(0).toUpperCase();
     updateClock();
@@ -436,7 +471,7 @@ function init() {
     modalClose.onclick = closeModal;
     secureBtn.onclick = toggleSecureLine;
     
-    console.log("Dashboard ready");
+    console.log("Dashboard ready for agent:", currentAgent);
 }
 
 function updateClock() {

@@ -134,7 +134,6 @@ async function addLog(msg, color) {
     } catch(e) { console.error("Log error:", e); }
 }
 
-// ====== LOAD WEAPONS FROM MISSION_ORDERS ======
 async function loadAgentWeapons() {
     console.log("Loading weapons for agent:", currentAgent);
     try {
@@ -174,13 +173,10 @@ function resetUI() {
     currentMissionData = null;
 }
 
-// ====== UPDATE CONFIRM BUTTON ======
 function updateConfirmButton() {
     const vID = vAgentInput.value.trim();
     const hasWeapon = selectedWeaponID !== "";
     const isValid = vID !== "" && hasWeapon && !isMissionTerminated;
-    
-    console.log("updateConfirmButton - vID:", vID, "hasWeapon:", hasWeapon, "isValid:", isValid);
     
     if (modalSubmit) {
         modalSubmit.disabled = !isValid;
@@ -189,7 +185,6 @@ function updateConfirmButton() {
     }
 }
 
-// ====== SEARCH FUNCTIONS ======
 async function promptScanConfirmation(rawValue) {
     return new Promise((resolve) => {
         const confirmScan = confirm(`Mission ID "${rawValue}" will be scanned as "${padMissionID(rawValue)}".\n\nDo you want to continue?`);
@@ -219,6 +214,7 @@ async function performSearch(rawValue) {
                 actionBtn.textContent = "TERMINATED";
                 actionBtn.className = "btn btn-locked";
                 actionBtn.disabled = true;
+                actionBtn.onclick = null;
                 reserveBtn.classList.remove('active');
                 addLog(`Mission ${paddedMissionID} is TERMINATED. Access denied.`, '#8b0000');
                 return;
@@ -231,6 +227,7 @@ async function performSearch(rawValue) {
                 actionBtn.textContent = "RETRIEVE";
                 actionBtn.className = "btn btn-retrieve";
                 actionBtn.disabled = false;
+                actionBtn.style.opacity = "1";
                 actionBtn.onclick = openModal;
                 reserveBtn.classList.remove('active');
                 addLog(`Mission ${paddedMissionID} found. Ready to RETRIEVE.`, '#00f3ff');
@@ -239,6 +236,7 @@ async function performSearch(rawValue) {
                 actionBtn.textContent = "LOCKED";
                 actionBtn.className = "btn btn-locked";
                 actionBtn.disabled = true;
+                actionBtn.onclick = null;
                 reserveBtn.classList.remove('active');
                 addLog(`Mission ${paddedMissionID} is owned by ${owner}. Access denied.`, '#ff003c');
             }
@@ -249,6 +247,7 @@ async function performSearch(rawValue) {
             actionBtn.textContent = "SAVE";
             actionBtn.className = "btn btn-save";
             actionBtn.disabled = false;
+            actionBtn.style.opacity = "1";
             actionBtn.onclick = openModal;
             reserveBtn.classList.add('active');
             addLog(`Mission ${paddedMissionID} is AVAILABLE. Ready to DEPLOY.`, '#05ffa1');
@@ -257,6 +256,8 @@ async function performSearch(rawValue) {
         console.error("Search error:", error);
         setStatusColor('terminated', 'DATABASE ERROR');
         addLog(`Database error scanning mission ${paddedMissionID}`, '#ff003c');
+        actionBtn.textContent = "SAVE";
+        actionBtn.className = "btn btn-save";
         actionBtn.disabled = false;
         actionBtn.onclick = openModal;
     }
@@ -288,6 +289,9 @@ async function searchMission() {
     
     if (digitCount >= 4) {
         setStatusColor('available', `SCANNING IN 0.3s...`);
+        actionBtn.disabled = true;
+        actionBtn.style.opacity = "0.5";
+        
         searchTimeout = setTimeout(async () => {
             await performSearch(rawValue);
             searchTimeout = null;
@@ -297,7 +301,6 @@ async function searchMission() {
 
 function renderWeapons() {
     weaponList.innerHTML = "";
-    console.log("renderWeapons called, agentWeapons:", agentWeapons);
     
     if (!agentWeapons || agentWeapons.length === 0) {
         weaponList.innerHTML = '<div style="text-align:center; padding:10px; color:#ffbd00;">No weapons available.</div>';

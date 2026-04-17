@@ -1,4 +1,4 @@
-// js/jsdash.js - CORE DASHBOARD v30.5 (FORCE CLICK DEPLOY BUTTON)
+// js/jsdash.js - CORE DASHBOARD v30.5
 
 import SoundFX from './sound.js';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -38,6 +38,7 @@ let agentWeapons = [];
 let currentMissionData = null;
 let isMissionTerminated = false;
 let searchTimeout = null;
+let isReserveMode = false;
 
 // DOM Elements
 const input = document.getElementById('mission-input');
@@ -123,6 +124,7 @@ function setupTerminalListener() {
             if (d.message.includes("OVERRIDE")) color = "#ffbd00";
             if (d.message.includes("RESTRICTED")) color = "#ff003c";
             if (d.message.includes("TERMINATED")) color = "#8b0000";
+            if (d.message.includes("VIEWED")) color = "#ffbd00";
             terminal.innerHTML += `<div class="term-line"><span style="color:#5c7882">[${time}]</span> <span style="color:${color}">${d.message}</span></div>`;
         });
     });
@@ -168,18 +170,22 @@ function resetUI() {
     actionBtn.style.opacity = "1";
     actionBtn.style.pointerEvents = "auto";
     actionBtn.onclick = openModal;
-    reserveBtn.classList.remove('active');
+    reserveBtn.textContent = "RESERVE";
+    reserveBtn.className = "btn btn-reserve";
+    reserveBtn.disabled = false;
+    reserveBtn.style.opacity = "1";
+    reserveBtn.style.pointerEvents = "auto";
+    reserveBtn.onclick = openReserveModal;
     isMissionTerminated = false;
     currentMissionData = null;
+    isReserveMode = false;
 }
 
-// ====== FORCE ENABLE DEPLOY BUTTON (NO CONDITIONS) ======
 function forceEnableDeployButton() {
     if (modalSubmit) {
         modalSubmit.disabled = false;
         modalSubmit.style.opacity = "1";
         modalSubmit.style.cursor = "pointer";
-        console.log("🔥 DEPLOY button force enabled");
     }
 }
 
@@ -213,7 +219,10 @@ async function performSearch(rawValue) {
                 actionBtn.className = "btn btn-locked";
                 actionBtn.disabled = true;
                 actionBtn.onclick = null;
-                reserveBtn.classList.remove('active');
+                reserveBtn.textContent = "TERMINATED";
+                reserveBtn.className = "btn btn-locked";
+                reserveBtn.disabled = true;
+                reserveBtn.onclick = null;
                 addLog(`Mission ${paddedMissionID} is TERMINATED. Access denied.`, '#8b0000');
                 return;
             }
@@ -225,9 +234,11 @@ async function performSearch(rawValue) {
                 actionBtn.textContent = "RETRIEVE";
                 actionBtn.className = "btn btn-retrieve";
                 actionBtn.disabled = false;
-                actionBtn.style.opacity = "1";
                 actionBtn.onclick = openModal;
-                reserveBtn.classList.remove('active');
+                reserveBtn.textContent = "RESERVE";
+                reserveBtn.className = "btn btn-reserve";
+                reserveBtn.disabled = false;
+                reserveBtn.onclick = openReserveModal;
                 addLog(`Mission ${paddedMissionID} found. Ready to RETRIEVE.`, '#00f3ff');
             } else {
                 setStatusColor('other_agent', `OWNED BY ${owner}`);
@@ -235,29 +246,40 @@ async function performSearch(rawValue) {
                 actionBtn.className = "btn btn-locked";
                 actionBtn.disabled = true;
                 actionBtn.onclick = null;
-                reserveBtn.classList.remove('active');
-                addLog(`Mission ${paddedMissionID} is owned by ${owner}. Access denied.`, '#ff003c');
+                reserveBtn.textContent = "VIEW";
+                reserveBtn.className = "btn btn-view";
+                reserveBtn.disabled = false;
+                reserveBtn.style.background = "#ff003c";
+                reserveBtn.style.color = "#fff";
+                reserveBtn.onclick = openReserveModal;
+                addLog(`Mission ${paddedMissionID} is owned by ${owner}. View only.`, '#ffbd00');
             }
         } else {
             currentMissionData = null;
             isMissionTerminated = false;
             setStatusColor('available', 'STATUS: AVAILABLE');
-            actionBtn.textContent = "SAVE";
+            actionBtn.textContent = "DEPLOY";
             actionBtn.className = "btn btn-save";
             actionBtn.disabled = false;
-            actionBtn.style.opacity = "1";
             actionBtn.onclick = openModal;
-            reserveBtn.classList.add('active');
+            reserveBtn.textContent = "RESERVE";
+            reserveBtn.className = "btn btn-reserve";
+            reserveBtn.disabled = false;
+            reserveBtn.onclick = openReserveModal;
             addLog(`Mission ${paddedMissionID} is AVAILABLE. Ready to DEPLOY.`, '#05ffa1');
         }
     } catch (error) {
         console.error("Search error:", error);
         setStatusColor('terminated', 'DATABASE ERROR');
         addLog(`Database error scanning mission ${paddedMissionID}`, '#ff003c');
-        actionBtn.textContent = "SAVE";
+        actionBtn.textContent = "DEPLOY";
         actionBtn.className = "btn btn-save";
         actionBtn.disabled = false;
         actionBtn.onclick = openModal;
+        reserveBtn.textContent = "RESERVE";
+        reserveBtn.className = "btn btn-reserve";
+        reserveBtn.disabled = false;
+        reserveBtn.onclick = openReserveModal;
     }
 }
 
@@ -314,13 +336,12 @@ function renderWeapons() {
             document.querySelectorAll('.weapon-btn').forEach(x => x.classList.remove('selected'));
             btn.classList.add('selected');
             selectedWeaponID = weaponName;
-            console.log("Weapon selected:", selectedWeaponID);
-            // No need to call update function, button is already force-enabled
         };
         weaponList.appendChild(btn);
     });
 }
 
+// ====== OPEN MODAL FOR DEPLOY/UPDATE ======
 async function openModal() {
     console.log("openModal called");
     if (isMissionTerminated) {
@@ -347,12 +368,15 @@ async function openModal() {
     secureField.classList.remove('show');
     secureBtn.style.display = 'block';
     
-    // ✅ FORCE ENABLE DEPLOY BUTTON IMMEDIATELY
+    // Hide secure line for view mode? No, keep for edit
+    isReserveMode = false;
+    
     forceEnableDeployButton();
     
     await loadAgentWeapons();
     
     if (currentMissionData && !isMissionTerminated) {
+        // RETRIEVE mode - UPDATE button (BLUE)
         vAgentInput.value = currentMissionData.vAgentID || "";
         selectedWeaponID = currentMissionData.weaponSystem || "";
         if (currentMissionData.SecureLine) {
@@ -361,9 +385,16 @@ async function openModal() {
             secureBtn.style.display = 'none';
         }
         modalSubmit.textContent = "UPDATE";
+        modalSubmit.className = "btn btn-retrieve";
+        modalSubmit.style.background = "#007bff";
+        modalSubmit.style.color = "#fff";
         SoundFX.folderOpen();
     } else {
+        // SAVE mode - DEPLOY button (GREEN)
         modalSubmit.textContent = "DEPLOY";
+        modalSubmit.className = "btn btn-save";
+        modalSubmit.style.background = "#05ffa1";
+        modalSubmit.style.color = "#000";
     }
     
     renderWeapons();
@@ -376,17 +407,96 @@ async function openModal() {
         });
     }
     
-    // Additional safety: force enable again after a short delay
     setTimeout(forceEnableDeployButton, 200);
+}
+
+// ====== OPEN MODAL FOR VIEW ONLY (RESERVE/VIEW) ======
+async function openReserveModal() {
+    console.log("openReserveModal called");
+    
+    let rawMissionID = input.value.trim();
+    if (rawMissionID.length === 0) {
+        SoundFX.error();
+        alert("ENTER MISSION ID FIRST");
+        return;
+    }
+    
+    const missionID = padMissionID(rawMissionID);
+    SoundFX.click();
+    modalOverlay.style.display = 'flex';
+    document.getElementById('pop-header').innerText = `#${missionID} (VIEW ONLY)`;
+    
+    // Disable editing
+    isReserveMode = true;
+    vAgentInput.disabled = true;
+    secureField.disabled = true;
+    secureBtn.style.display = 'none';
+    
+    // Load mission data for viewing
+    try {
+        const qM = query(collection(db, "mission_orders"), where("missionID", "==", missionID));
+        const snapM = await getDocs(qM);
+        
+        if (!snapM.empty) {
+            const data = snapM.docs[0].data();
+            vAgentInput.value = data.vAgentID || "";
+            selectedWeaponID = data.weaponSystem || "";
+            if (data.SecureLine) {
+                secureField.value = data.SecureLine;
+            }
+            
+            // Show weapons for reference
+            agentWeapons = [data.weaponSystem];
+            renderWeapons();
+            
+            // Highlight the weapon
+            document.querySelectorAll('.weapon-btn').forEach(btn => {
+                if (btn.getAttribute('data-weapon-id') === selectedWeaponID) {
+                    btn.classList.add('selected');
+                }
+            });
+            
+            addLog(`Mission #${missionID} viewed by ${currentAgent}`, '#ffbd00');
+        } else {
+            alert("Mission not found");
+            closeModal();
+            return;
+        }
+    } catch(e) {
+        console.error(e);
+        alert("Error loading mission");
+        closeModal();
+        return;
+    }
+    
+    // Set button to CLOSE (not save)
+    modalSubmit.textContent = "CLOSE";
+    modalSubmit.className = "btn btn-view";
+    modalSubmit.style.background = "#ff003c";
+    modalSubmit.style.color = "#fff";
+    modalSubmit.onclick = closeModal;
+    
+    forceEnableDeployButton();
 }
 
 function closeModal() {
     SoundFX.click();
     modalOverlay.style.display = 'none';
+    // Re-enable inputs for next time
+    vAgentInput.disabled = false;
+    secureField.disabled = false;
+    isReserveMode = false;
 }
 
 async function submitMission() {
     console.log("SUBMIT MISSION CALLED");
+    
+    // If in reserve mode, just close
+    if (isReserveMode) {
+        closeModal();
+        return;
+    }
+    
     if (isMissionTerminated) {
         SoundFX.error();
         alert("MISSION IS TERMINATED - CANNOT MODIFY");
@@ -455,16 +565,11 @@ function setupEventListeners() {
     input.addEventListener('input', searchMission);
     modalClose.onclick = closeModal;
     modalSubmit.onclick = submitMission;
-    // vAgent input no longer needed to enable button, but we keep for data collection
     secureBtn.onclick = () => {
         SoundFX.click();
         secureBtn.style.display = 'none';
         secureField.classList.add('show');
         secureField.focus();
-    };
-    reserveBtn.onclick = () => {
-        SoundFX.click();
-        alert("RESERVE function - coming soon");
     };
 }
 

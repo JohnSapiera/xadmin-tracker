@@ -17,6 +17,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// ===== AUTHENTICATION FIRST =====
+const currentAgent = localStorage.getItem("cia_agent") || localStorage.getItem("agent");
+
+
 const vAgentInput = document.getElementById('vagent-input');
 const scanStatus = document.getElementById('scan-status');
 const deviceList = document.getElementById('device-list');

@@ -225,7 +225,7 @@
     <div id="keypadSection" class="hidden">
         <div class="code-area">
             <div class="code-digits" id="codeDisplay">----</div>
-            <div class="helper-text">ENTER 4-DIGIT SECRET KEY</div>
+            <div class="helper-text">ENTER 4-DIGIT MASTER KEY</div>
         </div>
         
         <div class="keypad" id="numericKeypad"></div>
@@ -243,7 +243,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
 <script>
-    // ========== SOUND MANAGER (Built-in, no external files) ==========
+    // ========== SOUND MANAGER ==========
     const SoundFX = {
         beep(frequency = 800, duration = 0.1, volume = 0.2) {
             try {
@@ -290,6 +290,7 @@
         }
     };
 
+    // Firebase Configuration
     const firebaseConfig = { 
         apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
         authDomain: "my-admin-portal-12691.firebaseapp.com", 
@@ -348,7 +349,7 @@
             });
 
             if (enteredCode.length === 4) {
-                setTimeout(() => verifySecretKey(enteredCode), 50);
+                setTimeout(() => verifyMasterKey(enteredCode), 50);
             }
         }
     }
@@ -377,37 +378,49 @@
 
     async function registerFingerprint(agentName, signature) {
         try {
-            const agentRef = db.collection("agents").doc(agentName);
-            await agentRef.update({
-                linkedSignatures: firebase.firestore.FieldValue.arrayUnion(signature),
-                lastFingerprint: signature,
-                lastSync: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            return true;
+            // Hanapin ang agent document gamit ang agentName field
+            const snapshot = await db.collection("agents")
+                .where("agentName", "==", agentName)
+                .get();
+            
+            if (!snapshot.empty) {
+                const docRef = snapshot.docs[0].ref;
+                await docRef.update({
+                    linkedSignatures: firebase.firestore.FieldValue.arrayUnion(signature),
+                    lastFingerprint: signature,
+                    lastSync: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                return true;
+            }
+            return false;
         } catch (error) {
             console.error("Registration error:", error);
             return false;
         }
     }
 
-    async function verifySecretKey(secretKey) {
+    // ITO ANG PINAKAIMPORTANTE - VERIFY MASTER KEY
+    async function verifyMasterKey(masterKey) {
         if (isProcessing) return;
         isProcessing = true;
         
         statusLabel.innerHTML = "VERIFYING_KEY";
-        showMessage("Authenticating secret key...");
+        showMessage("Authenticating master key...");
         SoundFX.scanBeep();
         
         try {
+            // Hanapin ang agent gamit ang masterKey field
             const snapshot = await db.collection("agents")
-                .where("secretKey", "==", secretKey)
+                .where("masterKey", "==", masterKey)
                 .get();
             
             if (!snapshot.empty) {
-                const agentData = snapshot.docs[0].data();
-                const agentName = agentData.agentName || snapshot.docs[0].id;
+                const agentDoc = snapshot.docs[0];
+                const agentData = agentDoc.data();
+                const agentName = agentData.agentName;
+                const weaponSystem = agentData.weaponSystem || "STANDARD_ISSUE";
                 
-                showMessage(`Key verified. Registering device...`);
+                showMessage(`Master key verified. Agent: ${agentName}`);
                 statusLabel.innerHTML = "REGISTERING_DEVICE";
                 SoundFX.register();
                 
@@ -418,10 +431,17 @@
                     showMessage(`Device registered successfully. Access granted.`);
                     statusLabel.innerHTML = "ACCESS_GRANTED";
                     
+                    // STORE SA LOCAL STORAGE - ITO ANG GINAGAWA MO
                     localStorage.setItem("cia_agent", agentName);
                     localStorage.setItem("agent", agentName);
+                    localStorage.setItem("weapon_system", weaponSystem);
+                    localStorage.setItem("master_key", masterKey);
                     localStorage.setItem("agent_verified", "true");
                     localStorage.setItem("device_signature", currentSignature);
+                    
+                    console.log("Stored in localStorage:");
+                    console.log("- Agent Name:", agentName);
+                    console.log("- Weapon System:", weaponSystem);
                     
                     setTimeout(() => {
                         window.location.href = "dashboard.html";
@@ -435,13 +455,13 @@
                 }
             } else {
                 SoundFX.error();
-                showMessage("Invalid secret key. Access denied.", true);
+                showMessage("Invalid master key. Access denied.", true);
                 statusLabel.innerHTML = "ACCESS_DENIED";
                 clearCode();
                 isProcessing = false;
             }
         } catch (error) {
-            console.error(error);
+            console.error("Verification error:", error);
             SoundFX.error();
             showMessage("Connection error. Please try again.", true);
             statusLabel.innerHTML = "ERROR";
@@ -461,7 +481,8 @@
             
             if (!snapshot.empty) {
                 const agentData = snapshot.docs[0].data();
-                const agentName = agentData.agentName || snapshot.docs[0].id;
+                const agentName = agentData.agentName;
+                const weaponSystem = agentData.weaponSystem || "STANDARD_ISSUE";
                 
                 SoundFX.success();
                 statusLabel.innerHTML = "ACCESS_GRANTED";
@@ -469,6 +490,7 @@
                 
                 localStorage.setItem("cia_agent", agentName);
                 localStorage.setItem("agent", agentName);
+                localStorage.setItem("weapon_system", weaponSystem);
                 localStorage.setItem("agent_verified", "true");
                 localStorage.setItem("device_signature", signature);
                 
@@ -478,7 +500,7 @@
             } else {
                 SoundFX.error();
                 statusLabel.innerHTML = "DEVICE_NOT_REGISTERED";
-                showMessage("Device not recognized. Please enter your 4-digit secret key to register.", true);
+                showMessage("Device not recognized. Please enter your 4-digit master key to register.", true);
                 keypadSection.classList.remove("hidden");
                 document.getElementById('scanLine').style.opacity = "0.2";
             }

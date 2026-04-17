@@ -225,7 +225,7 @@
     <div id="keypadSection" class="hidden">
         <div class="code-area">
             <div class="code-digits" id="codeDisplay">----</div>
-            <div class="helper-text">ENTER 4-DIGIT MASTER KEY</div>
+            <div class="helper-text">ENTER 4-DIGIT SECRET KEY</div>
         </div>
         
         <div class="keypad" id="numericKeypad"></div>
@@ -349,7 +349,7 @@
             });
 
             if (enteredCode.length === 4) {
-                setTimeout(() => verifyMasterKey(enteredCode), 50);
+                setTimeout(() => verifySecretKey(enteredCode), 50);
             }
         }
     }
@@ -399,19 +399,19 @@
         }
     }
 
-    // ITO ANG PINAKAIMPORTANTE - VERIFY MASTER KEY
-    async function verifyMasterKey(masterKey) {
+    // ITO ANG PINAKAIMPORTANTE - VERIFY SECRET KEY
+    async function verifySecretKey(secretKey) {
         if (isProcessing) return;
         isProcessing = true;
         
         statusLabel.innerHTML = "VERIFYING_KEY";
-        showMessage("Authenticating master key...");
+        showMessage("Authenticating secret key...");
         SoundFX.scanBeep();
         
         try {
-            // Hanapin ang agent gamit ang masterKey field
+            // Hanapin ang agent gamit ang secretKey field
             const snapshot = await db.collection("agents")
-                .where("masterKey", "==", masterKey)
+                .where("secretKey", "==", secretKey)
                 .get();
             
             if (!snapshot.empty) {
@@ -420,7 +420,7 @@
                 const agentName = agentData.agentName;
                 const weaponSystem = agentData.weaponSystem || "STANDARD_ISSUE";
                 
-                showMessage(`Master key verified. Agent: ${agentName}`);
+                showMessage(`Secret key verified. Agent: ${agentName}`);
                 statusLabel.innerHTML = "REGISTERING_DEVICE";
                 SoundFX.register();
                 
@@ -431,17 +431,18 @@
                     showMessage(`Device registered successfully. Access granted.`);
                     statusLabel.innerHTML = "ACCESS_GRANTED";
                     
-                    // STORE SA LOCAL STORAGE - ITO ANG GINAGAWA MO
+                    // STORE SA LOCAL STORAGE - Agent Name at Weapon System
                     localStorage.setItem("cia_agent", agentName);
                     localStorage.setItem("agent", agentName);
                     localStorage.setItem("weapon_system", weaponSystem);
-                    localStorage.setItem("master_key", masterKey);
+                    localStorage.setItem("secret_key", secretKey);
                     localStorage.setItem("agent_verified", "true");
                     localStorage.setItem("device_signature", currentSignature);
                     
                     console.log("Stored in localStorage:");
                     console.log("- Agent Name:", agentName);
                     console.log("- Weapon System:", weaponSystem);
+                    console.log("- Secret Key:", secretKey);
                     
                     setTimeout(() => {
                         window.location.href = "dashboard.html";
@@ -455,7 +456,7 @@
                 }
             } else {
                 SoundFX.error();
-                showMessage("Invalid master key. Access denied.", true);
+                showMessage("Invalid secret key. Access denied.", true);
                 statusLabel.innerHTML = "ACCESS_DENIED";
                 clearCode();
                 isProcessing = false;
@@ -500,7 +501,7 @@
             } else {
                 SoundFX.error();
                 statusLabel.innerHTML = "DEVICE_NOT_REGISTERED";
-                showMessage("Device not recognized. Please enter your 4-digit master key to register.", true);
+                showMessage("Device not recognized. Please enter your 4-digit secret key to register.", true);
                 keypadSection.classList.remove("hidden");
                 document.getElementById('scanLine').style.opacity = "0.2";
             }

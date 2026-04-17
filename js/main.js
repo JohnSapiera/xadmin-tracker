@@ -13,7 +13,7 @@ const agentPanel = document.getElementById('agentPanel');
 const agentNameSpan = document.getElementById('agentName');
 const devicesList = document.getElementById('devicesList');
 
-// Signal Bar Animation - White bars with fade effect
+// Signal Bar Animation
 let signalLevel = 0;
 function animateSignal() {
     const bar1 = document.getElementById('bar1');
@@ -29,41 +29,17 @@ function animateSignal() {
         bar1.classList.remove('active');
         bar2.classList.remove('active');
         bar3.classList.remove('active');
-        bar1.style.opacity = '1';
-        bar2.style.opacity = '1';
-        bar3.style.opacity = '1';
         
-        // Activate bars based on level
+        // Activate bars based on level (1 bar = pinakamahina, 3 bars = pinakamalakas)
         if (signalLevel === 1) {
             bar1.classList.add('active');
-            // Fade animation
-            setTimeout(() => { bar1.style.opacity = '0.5'; }, 100);
-            setTimeout(() => { bar1.style.opacity = '1'; }, 300);
         } else if (signalLevel === 2) {
             bar1.classList.add('active');
             bar2.classList.add('active');
-            setTimeout(() => { 
-                bar1.style.opacity = '0.5';
-                bar2.style.opacity = '0.5';
-            }, 100);
-            setTimeout(() => { 
-                bar1.style.opacity = '1';
-                bar2.style.opacity = '1';
-            }, 300);
         } else if (signalLevel === 3) {
             bar1.classList.add('active');
             bar2.classList.add('active');
             bar3.classList.add('active');
-            setTimeout(() => { 
-                bar1.style.opacity = '0.5';
-                bar2.style.opacity = '0.5';
-                bar3.style.opacity = '0.5';
-            }, 100);
-            setTimeout(() => { 
-                bar1.style.opacity = '1';
-                bar2.style.opacity = '1';
-                bar3.style.opacity = '1';
-            }, 300);
         }
     }, 2000);
 }
@@ -71,16 +47,9 @@ function animateSignal() {
 function showMessage(msg, isError = false) {
     displayMessage.innerHTML = msg;
     displayMessage.className = isError ? 'display-message error' : 'display-message success';
-    
-    // Clear after 3 seconds
     setTimeout(() => {
-        if (displayMessage.innerHTML === msg) {
-            // Don't clear if it's a success message with redirect
-            if (!isError && msg === "Synchronization") {
-                // Keep it
-            } else {
-                displayMessage.innerHTML = '';
-            }
+        if (displayMessage.innerHTML === msg && msg !== "Synchronization") {
+            displayMessage.innerHTML = '';
         }
     }, 3000);
 }
@@ -93,7 +62,7 @@ function updateTypedDisplay() {
         }
         typedDigits.innerText = displayText;
     }
-    console.log("Current PIN:", enteredPin); // Debug log
+    console.log("Current PIN entered:", enteredPin);
 }
 
 function clearPin() {
@@ -105,21 +74,20 @@ function clearPin() {
 function resetTerminal() {
     clearPin();
     agentPanel.classList.remove('show');
-    showMessage("Terminal reset. Ready.", false);
+    showMessage("Terminal reset.", false);
 }
 
 async function verifyPin(pin) {
     if (isProcessing) return;
     isProcessing = true;
     
-    console.log("Verifying PIN:", pin); // Debug log
-    
+    console.log("Verifying PIN with Supabase:", pin);
     showMessage(`Verifying key: ${pin}...`, false);
     
     try {
         const { data: agent, error } = await supabase
             .from('agents')
-            .select('agent_name, secret_key, brand_name, weapon_system')
+            .select('agent_name, secret_key, weapon_system')
             .eq('secret_key', pin)
             .maybeSingle();
         
@@ -143,7 +111,7 @@ async function verifyPin(pin) {
         const agentName = agent.agent_name;
         const devices = agent.weapon_system || [];
         
-        console.log("Login successful for:", agentName);
+        console.log("✅ LOGIN SUCCESS:", agentName);
         showMessage("Synchronization", false);
         
         // Display agent info
@@ -156,14 +124,14 @@ async function verifyPin(pin) {
         localStorage.setItem("secret_key", pin);
         localStorage.setItem("agent_devices", JSON.stringify(devices));
         localStorage.setItem("last_auth", new Date().toISOString());
-        localStorage.setItem("device_fingerprint", "DEV-" + Math.random().toString(36).substring(2, 10).toUpperCase());
         
-        console.log("✅ STORED IN LOCALSTORAGE:");
-        console.log("   Agent:", agentName);
-        console.log("   Secret Key:", pin);
-        console.log("   Devices:", devices);
+        console.log("STORED IN LOCALSTORAGE:", {
+            agent: agentName,
+            secret_key: pin,
+            devices: devices
+        });
         
-        // Redirect to dashboard after 1.5 seconds
+        // Redirect to dashboard
         setTimeout(() => {
             window.location.href = "dashboard.html";
         }, 1500);
@@ -179,14 +147,14 @@ async function verifyPin(pin) {
 }
 
 function addDigit(digit) {
-    console.log("Digit pressed:", digit, "Current length:", enteredPin.length); // Debug log
+    console.log("Digit pressed:", digit);
     
     if (isProcessing) return;
     if (enteredPin.length < 4) {
         enteredPin += digit;
         updateTypedDisplay();
         
-        // Add key press animation
+        // Key press animation
         const btns = document.querySelectorAll('.key-circle');
         btns.forEach(btn => {
             if (btn.innerText === digit) {
@@ -203,76 +171,39 @@ function addDigit(digit) {
         
         // Auto-verify on 4th digit
         if (enteredPin.length === 4) {
-            console.log("4 digits entered, verifying...");
             verifyPin(enteredPin);
         }
-    }
-}
-
-function checkExistingSession() {
-    const savedAgent = localStorage.getItem("cia_agent");
-    if (savedAgent) {
-        agentNameSpan.innerText = savedAgent;
-        const savedDevices = localStorage.getItem("agent_devices");
-        if (savedDevices) {
-            try {
-                const devs = JSON.parse(savedDevices);
-                devicesList.innerHTML = devs.map(d => `<span class="device-tag">📱 ${d}</span>`).join('');
-            } catch(e) {}
-        }
-        agentPanel.classList.add('show');
-        showMessage(`Session active: ${savedAgent}`, false);
-        
-        // Auto redirect to dashboard
-        setTimeout(() => {
-            window.location.href = "dashboard.html";
-        }, 2000);
     }
 }
 
 // Event Listeners
 document.querySelectorAll('.key-circle').forEach(btn => {
     btn.addEventListener('click', (e) => {
-        e.stopPropagation();
+        e.preventDefault();
         const digit = btn.getAttribute('data-digit');
-        if (digit) {
-            console.log("Button clicked:", digit);
-            addDigit(digit);
-        }
+        if (digit) addDigit(digit);
     });
     
-    // Touch event for mobile
     btn.addEventListener('touchstart', (e) => {
         e.preventDefault();
         const digit = btn.getAttribute('data-digit');
-        if (digit) {
-            console.log("Touch detected:", digit);
-            addDigit(digit);
-        }
+        if (digit) addDigit(digit);
     });
 });
 
-const clearBtn = document.getElementById('clearBtn');
-const resetBtn = document.getElementById('resetBtn');
+document.getElementById('clearBtn')?.addEventListener('click', () => {
+    clearPin();
+    showMessage("Cleared.", false);
+});
 
-if (clearBtn) {
-    clearBtn.addEventListener('click', () => {
-        clearPin();
-        showMessage("Cleared.", false);
-    });
-}
-
-if (resetBtn) {
-    resetBtn.addEventListener('click', () => {
-        resetTerminal();
-    });
-}
+document.getElementById('resetBtn')?.addEventListener('click', () => {
+    resetTerminal();
+});
 
 // Initialize
 async function init() {
-    console.log("Initializing...");
+    console.log("Initializing terminal...");
     
-    // Initialize Supabase
     try {
         supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         console.log("Supabase client created");
@@ -280,22 +211,17 @@ async function init() {
         // Test connection
         const { error } = await supabase.from('agents').select('count', { count: 'exact', head: true });
         if (error) {
-            console.warn("Supabase connection warning:", error.message);
-            showMessage("Database connection issue. Check console.", true);
+            console.warn("Supabase warning:", error.message);
         } else {
-            console.log("✅ Supabase connected successfully!");
+            console.log("✅ Supabase connected!");
         }
     } catch(e) {
         console.error("Init error:", e);
-        showMessage("Failed to connect to database.", true);
     }
     
     animateSignal();
-    checkExistingSession();
     updateTypedDisplay();
-    
-    console.log("Ready. Enter 4-digit key.");
+    console.log("Ready. Enter 4-digit key. Test with: 4646 or 1010");
 }
 
-// Start
 init();

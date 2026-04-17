@@ -359,48 +359,50 @@
         return "SIG-" + Math.abs(hash).toString(16).toUpperCase().slice(0, 12);
     }
 
+    // Register device fingerprint sa existing agents table
     async function registerFingerprintToSupabase(agentName, secretKey, signature) {
         try {
+            // Hanapin ang agent gamit ang secret_key (since unix yan sa table mo)
             const { data: agentData, error: fetchError } = await supabaseClient
                 .from('agents')
-                .select('id, agentName, linkedSignatures, weaponSystem')
-                .eq('secretKey', secretKey)
+                .select('*')
+                .eq('secret_key', secretKey)
                 .maybeSingle();
             
             if (fetchError || !agentData) {
-                console.error("Fetch error:", fetchError);
+                console.error("Agent not found:", fetchError);
                 return { success: false, reason: "agent_not_found" };
             }
             
-            const currentSignatures = agentData.linkedSignatures || [];
+            // Kunin ang existing linked_signatures or gawa ng bago
+            const currentSignatures = agentData.linked_signatures || [];
+            let updateData = {
+                last_fingerprint: signature,
+                updated_at: new Date().toISOString()
+            };
+            
             if (!currentSignatures.includes(signature)) {
-                const { error: updateError } = await supabaseClient
-                    .from('agents')
-                    .update({
-                        linkedSignatures: [...currentSignatures, signature],
-                        lastFingerprint: signature,
-                        lastSync: new Date().toISOString()
-                    })
-                    .eq('id', agentData.id);
-                
-                if (updateError) {
-                    console.error("Update failed:", updateError);
-                    return { success: false, reason: "update_failed" };
-                }
-            } else {
-                await supabaseClient
-                    .from('agents')
-                    .update({ lastFingerprint: signature, lastSync: new Date().toISOString() })
-                    .eq('id', agentData.id);
+                updateData.linked_signatures = [...currentSignatures, signature];
             }
             
-            return { success: true, agentName: agentData.agentName, weaponSystem: agentData.weaponSystem || "STANDARD_ISSUE" };
+            const { error: updateError } = await supabaseClient
+                .from('agents')
+                .update(updateData)
+                .eq('secret_key', secretKey);
+            
+            if (updateError) {
+                console.error("Update failed:", updateError);
+                return { success: false, reason: "update_failed" };
+            }
+            
+            return { success: true, agentName: agentData.agent_name, weaponSystem: agentData.weapon_system || "STANDARD_ISSUE" };
         } catch (err) {
             console.error("registerFingerprint error:", err);
             return { success: false, reason: "exception" };
         }
     }
 
+    // I-verify ang secret key at kunin ang agent_name
     async function verifySecretKeyWithSupabase(secretKey) {
         if (isProcessing) return;
         isProcessing = true;
@@ -410,17 +412,18 @@
         SoundFX.scanBeep();
         
         try {
+            // Query gamit ang secret_key column ng existing table
             const { data: agent, error } = await supabaseClient
                 .from('agents')
-                .select('agentName, secretKey, weaponSystem, linkedSignatures')
-                .eq('secretKey', secretKey)
+                .select('agent_name, secret_key, weapon_system, linked_signatures')
+                .eq('secret_key', secretKey)
                 .maybeSingle();
             
             if (error) throw new Error(error.message);
             
             if (agent) {
-                const agentName = agent.agentName;
-                const weaponSystem = agent.weaponSystem || "STANDARD_ISSUE";
+                const agentName = agent.agent_name;
+                const weaponSystem = agent.weapon_system || "STANDARD_ISSUE";
                 
                 showMessage(`✓ Secret key verified. Agent: ${agentName}`);
                 statusLabel.innerHTML = "REGISTERING_DEVICE";
@@ -433,23 +436,30 @@
                     showMessage(`Device registered successfully. Welcome, ${agentName}.`);
                     statusLabel.innerHTML = "ACCESS_GRANTED";
                     
-                    // STORE SA LOCAL DATABASE (localStorage)
+                    // STORE SA LOCAL DATABASE (localStorage) - ITO ANG HINIHINGI MO
                     localStorage.setItem("supabase_agent", agentName);
                     localStorage.setItem("agent_name", agentName);
                     localStorage.setItem("weapon_system", weaponSystem);
                     localStorage.setItem("secret_key", secretKey);
                     localStorage.setItem("agent_verified", "true");
                     localStorage.setItem("device_signature", currentSignature);
+                    localStorage.setItem("device_print", currentSignature);
                     localStorage.setItem("last_auth", new Date().toISOString());
                     
                     console.log("✅ LOCAL DATABASE STORED (localStorage):");
-                    console.log("   - agent_name:", agentName);
-                    console.log("   - secret_key:", secretKey);
-                    console.log("   - device_print:", currentSignature);
-                    console.log("   - weapon_system:", weaponSystem);
+                    console.log("   📱 agent_name:", agentName);
+                    console.log("   🔑 secret_key:", secretKey);
+                    console.log("   🖨️ device_print:", currentSignature);
+                    console.log("   🔫 weapon_system:", weaponSystem);
+                    
+                    // Ipakita sa screen na na-save na
+                    showMessage(`✅ Stored: ${agentName} | Device: ${currentSignature.substring(0,10)}...`);
                     
                     setTimeout(() => {
-                        window.location.href = "dashboard.html";
+                        // Mag-redirect sa dashboard (kung meron)
+                        // window.location.href = "dashboard.html";
+                        showMessage("Access granted! Redirecting...");
+                        statusLabel.innerHTML = "REDIRECTING";
                     }, 1500);
                 } else {
                     SoundFX.error();
@@ -474,44 +484,49 @@
         }
     }
 
+    // Suriin kung registered na ang device fingerprint
     async function authenticateDeviceWithSupabase(signature) {
         statusLabel.innerHTML = "SCANNING_SUPABASE";
         deviceSigSpan.innerText = signature;
         SoundFX.scanBeep();
         
         try {
+            // Hanapin ang agent kung saan ang linked_signatures array ay naglalaman ng signature
             const { data: agents, error } = await supabaseClient
                 .from('agents')
-                .select('agentName, weaponSystem, linkedSignatures')
-                .contains('linkedSignatures', [signature]);
+                .select('agent_name, weapon_system, linked_signatures')
+                .contains('linked_signatures', [signature]);
             
             if (error) throw error;
             
             if (agents && agents.length > 0) {
                 const agentData = agents[0];
-                const agentName = agentData.agentName;
-                const weaponSystem = agentData.weaponSystem || "STANDARD_ISSUE";
+                const agentName = agentData.agent_name;
+                const weaponSystem = agentData.weapon_system || "STANDARD_ISSUE";
                 
                 SoundFX.success();
                 statusLabel.innerHTML = "ACCESS_GRANTED";
                 showMessage(`Welcome back, ${agentName}. Device recognized.`);
                 
+                // Store sa localStorage
                 localStorage.setItem("supabase_agent", agentName);
                 localStorage.setItem("agent_name", agentName);
                 localStorage.setItem("weapon_system", weaponSystem);
                 localStorage.setItem("agent_verified", "true");
                 localStorage.setItem("device_signature", signature);
+                localStorage.setItem("device_print", signature);
                 localStorage.setItem("last_auth", new Date().toISOString());
                 
                 console.log("🔄 Existing device detected. Stored agent_name:", agentName);
+                console.log("🖨️ Device print:", signature);
                 
                 setTimeout(() => {
-                    window.location.href = "dashboard.html";
+                    showMessage("Access granted! Loading...");
                 }, 1200);
             } else {
                 SoundFX.error();
                 statusLabel.innerHTML = "DEVICE_NOT_REGISTERED";
-                showMessage("Device not recognized. Enter your 4-digit SECRET KEY to register.", true);
+                showMessage("Device not recognized. Enter your SECRET KEY to register.", true);
                 keypadSection.classList.remove("hidden");
                 document.getElementById('scanLine').style.opacity = "0.2";
             }
@@ -551,15 +566,16 @@
     async function init() {
         try {
             supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            console.log("✅ Supabase client initialized with your project URL");
+            console.log("✅ Supabase client initialized!");
             
             // Test connection
-            const { error: testError } = await supabaseClient.from('agents').select('count', { count: 'exact', head: true });
+            const { data, error: testError } = await supabaseClient.from('agents').select('count', { count: 'exact', head: true });
             if (testError) {
-                console.warn("⚠️ Table 'agents' might not exist yet:", testError.message);
-                showMessage("⚠️ Table 'agents' not found. Please create it first in Supabase.", true);
+                console.warn("⚠️ Table access issue:", testError.message);
+                showMessage("⚠️ Cannot access 'agents' table. Check RLS policies.", true);
             } else {
-                console.log("✅ Supabase connection successful!");
+                console.log("✅ Connected to agents table!");
+                showMessage("Connected to Supabase. Scanning device...");
             }
         } catch (err) {
             console.error("Fatal: Cannot init Supabase client", err);

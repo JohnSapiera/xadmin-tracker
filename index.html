@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>SECURE TERMINAL • CIA INTELLIGENCE</title>
-    <link rel="stylesheet" href="styles/index.css">
+    <link rel="stylesheet" href="styles/main.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/index.js" defer></script>
+    <script src="js/main.js" defer></script>
 </head>
 <body>
 <div class="terminal">
@@ -33,6 +33,7 @@
         <div class="terminal-screen">
             <div class="typed-line" id="typedLine">
                 <span class="prompt">&gt;</span>
+                <span class="typed-digits" id="typedDigits"></span>
                 <span class="cursor" id="cursor">_</span>
             </div>
             <div class="display-message" id="displayMessage"></div>

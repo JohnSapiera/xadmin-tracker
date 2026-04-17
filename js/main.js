@@ -7,12 +7,11 @@ let enteredPin = "";
 let isProcessing = false;
 
 // DOM Elements
-const typedLine = document.getElementById('typedLine');
+const typedDigits = document.getElementById('typedDigits');
 const displayMessage = document.getElementById('displayMessage');
 const agentPanel = document.getElementById('agentPanel');
 const agentNameSpan = document.getElementById('agentName');
 const devicesList = document.getElementById('devicesList');
-const cursorSpan = document.getElementById('cursor');
 
 // Signal Bar Animation - White fading effect
 let signalLevel = 0;
@@ -29,32 +28,29 @@ function animateSignal() {
         bar2.classList.remove('active');
         bar3.classList.remove('active');
         
-        // Animate bars with fade effect
+        // Animate bars based on level
         if (signalLevel === 1) {
             bar1.classList.add('active');
-            bar2.classList.remove('active');
-            bar3.classList.remove('active');
         } else if (signalLevel === 2) {
             bar1.classList.add('active');
             bar2.classList.add('active');
-            bar3.classList.remove('active');
         } else if (signalLevel === 3) {
             bar1.classList.add('active');
             bar2.classList.add('active');
             bar3.classList.add('active');
         }
         
-        // Add pulsing effect
+        // Add pulsing white fade effect
         setTimeout(() => {
             if (signalLevel === 3) {
-                bar3.style.opacity = '0.7';
+                bar3.style.opacity = '0.5';
                 setTimeout(() => { bar3.style.opacity = '1'; }, 200);
             }
             if (signalLevel >= 2) {
-                bar2.style.opacity = '0.7';
+                bar2.style.opacity = '0.5';
                 setTimeout(() => { bar2.style.opacity = '1'; }, 200);
             }
-            bar1.style.opacity = '0.7';
+            bar1.style.opacity = '0.5';
             setTimeout(() => { bar1.style.opacity = '1'; }, 200);
         }, 100);
         
@@ -76,11 +72,7 @@ function updateTypedDisplay() {
     for (let i = 0; i < enteredPin.length; i++) {
         displayText += '● ';
     }
-    typedLine.innerHTML = `<span class="prompt">&gt;</span> <span class="typed-digits">${displayText}</span><span class="cursor" id="cursor">_</span>`;
-    
-    if (enteredPin.length === 0) {
-        typedLine.innerHTML = `<span class="prompt">&gt;</span> <span class="typed-digits"></span><span class="cursor" id="cursor">_</span>`;
-    }
+    typedDigits.innerText = displayText;
 }
 
 function clearPin() {

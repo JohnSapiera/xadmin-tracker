@@ -66,16 +66,6 @@ body {
     box-shadow: 0 0 6px #ffffff;
 }
 
-.bar.active-2 {
-    background: #ffffff;
-    box-shadow: 0 0 6px #ffffff;
-}
-
-.bar.active-3 {
-    background: #ffffff;
-    box-shadow: 0 0 6px #ffffff;
-}
-
 /* Battery */
 .battery {
     display: flex;

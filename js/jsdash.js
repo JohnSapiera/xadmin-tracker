@@ -217,51 +217,22 @@ async function performSearch(rawValue) {
         const snapM = await getDocs(qM);
         
         if (!snapM.empty) {
-            currentMissionData = snapM.docs[0].data();
-            const owner = currentMissionData.agent;
-            const status = currentMissionData.status;
-            
-            if (status === "TERMINATED") {
-                isMissionTerminated = true;
-                setStatusColor('terminated', 'MISSION TERMINATED - ACCESS DENIED');
-                actionBtn.textContent = "TERMINATED";
-                actionBtn.className = "btn btn-locked";
-                actionBtn.disabled = true;
-                actionBtn.onclick = null;
-                reserveBtn.classList.remove('active');
-                addLog(`Mission ${paddedMissionID} is TERMINATED. Access denied.`, '#8b0000');
-                return;
-            }
-            
-            isMissionTerminated = false;
-            
-            if (owner === currentAgent) {
-                setStatusColor('your_mission', 'STATUS: YOUR MISSION');
-                actionBtn.textContent = "RETRIEVE";
-                actionBtn.className = "btn btn-retrieve";
-                actionBtn.disabled = false;
-                actionBtn.style.opacity = "1";
-                actionBtn.onclick = openModal;
-                reserveBtn.classList.remove('active');
-                addLog(`Mission ${paddedMissionID} found. Ready to RETRIEVE.`, '#00f3ff');
-            } else {
-                setStatusColor('other_agent', `OWNED BY ${owner}`);
-                actionBtn.textContent = "LOCKED";
-                actionBtn.className = "btn btn-locked";
-                actionBtn.disabled = true;
-                actionBtn.onclick = null;
-                reserveBtn.classList.remove('active');
-                addLog(`Mission ${paddedMissionID} is owned by ${owner}. Access denied.`, '#ff003c');
-            }
+            // Existing mission logic...
+            // (keep your existing code for terminated, own, other)
         } else {
+            // ✅ MISSION AVAILABLE
             currentMissionData = null;
             isMissionTerminated = false;
             setStatusColor('available', 'STATUS: AVAILABLE');
+            
+            // 👇 CRITICAL FIX: Enable and make SAVE button clickable
             actionBtn.textContent = "SAVE";
             actionBtn.className = "btn btn-save";
-            actionBtn.disabled = false;
+            actionBtn.disabled = false;           // Enable button
             actionBtn.style.opacity = "1";
-            actionBtn.onclick = openModal;
+            actionBtn.style.pointerEvents = "auto";
+            actionBtn.onclick = openModal;        // Attach click handler
+            
             reserveBtn.classList.add('active');
             addLog(`Mission ${paddedMissionID} is AVAILABLE. Ready to DEPLOY.`, '#05ffa1');
         }
@@ -269,13 +240,15 @@ async function performSearch(rawValue) {
         console.error("Search error:", error);
         setStatusColor('terminated', 'DATABASE ERROR');
         addLog(`Database error scanning mission ${paddedMissionID}`, '#ff003c');
+        
+        // Still enable SAVE button as fallback
         actionBtn.textContent = "SAVE";
         actionBtn.className = "btn btn-save";
         actionBtn.disabled = false;
+        actionBtn.style.opacity = "1";
         actionBtn.onclick = openModal;
     }
 }
-
 async function searchMission() {
     const rawValue = input.value.trim();
     if (searchTimeout) clearTimeout(searchTimeout);

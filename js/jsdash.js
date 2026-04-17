@@ -1,6 +1,5 @@
-// js/jsdash.js - CORE DASHBOARD v30.5 (REFINED)
+// js/jsdash.js - CORE DASHBOARD (NO SOUNDS)
 
-import SoundFX from './sound.js';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { 
     getFirestore, 
@@ -12,12 +11,12 @@ import {
     setDoc, 
     addDoc, 
     serverTimestamp, 
+    getDoc, 
     onSnapshot, 
     orderBy, 
     limit 
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// 1. FIREBASE CONFIG
 const firebaseConfig = { 
     apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
     authDomain: "my-admin-portal-12691.firebaseapp.com", 
@@ -30,15 +29,15 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 2. STATE VARIABLES
 const currentAgent = localStorage.getItem("agent") || localStorage.getItem("cia_agent") || "UNKNOWN_AGENT";
+console.log("Agent:", currentAgent);
+
 let selectedWeaponID = "";
 let agentWeapons = [];
 let currentMissionData = null;
-let isMissionTerminated = false;
 let searchTimeout = null;
 
-// 3. DOM ELEMENTS
+// DOM Elements
 const input = document.getElementById('mission-input');
 const actionBtn = document.getElementById('action-btn');
 const reserveBtn = document.getElementById('reserve-btn');
@@ -55,211 +54,301 @@ const clockSpan = document.getElementById('clock');
 const profName = document.getElementById('prof-name');
 const avatarInit = document.getElementById('avatar-init');
 
-// --- UTILITIES ---
 function padMissionID(value) {
     const digits = value.replace(/\D/g, '');
     if (digits.length === 0) return '';
+    if (digits.length >= 5) return digits.slice(0, 5);
     return digits.padStart(5, '0');
 }
 
 function formatDate(date) {
-    return `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}/${date.getFullYear()}`;
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${month}/${day}/${year}`;
 }
 
-function updateClock() {
-    if (clockSpan) clockSpan.textContent = new Date().toLocaleTimeString('en-GB');
+function calculateRelieveDate(deploymentDate) {
+    const relieveDate = new Date(deploymentDate);
+    relieveDate.setDate(relieveDate.getDate() + 30);
+    return relieveDate;
 }
 
-// --- CORE FUNCTIONS ---
-async function addLog(msg, color) {
-    try {
-        await addDoc(collection(db, "terminal_logs"), { 
-            agent: currentAgent, 
-            message: msg, 
-            color: color || "#5c7882", 
-            timestamp: serverTimestamp() 
+function addLog(msg, color) {
+    addDoc(collection(db, "terminal_logs"), { 
+        agent: currentAgent, 
+        message: msg, 
+        color: color, 
+        timestamp: serverTimestamp() 
+    }).catch(e => console.error(e));
+}
+
+function setupTerminalListener() {
+    onSnapshot(query(collection(db, "terminal_logs"), orderBy("timestamp", "desc"), limit(15)), (snap) => {
+        terminal.innerHTML = "";
+        snap.forEach(doc => {
+            const d = doc.data();
+            const time = d.timestamp ? new Date(d.timestamp.seconds * 1000).toLocaleTimeString('en-GB') : "--";
+            terminal.innerHTML += `<div class="term-line"><span style="color:#5c7882">[${time}]</span> <span style="color:${d.color}">${d.message}</span></div>`;
         });
-    } catch(e) { console.error("Log error:", e); }
+    });
 }
 
-function setStatusColor(status, message) {
-    let color = '#5c7882';
-    if (status === 'available') color = '#05ffa1';
-    if (status === 'reserve') color = '#ffbd00';
-    if (status === 'terminated') color = '#8b0000';
-    if (status === 'other_agent') color = '#ff003c';
-    if (status === 'your_mission') color = '#00f3ff';
-    statusLabel.innerHTML = `<span style="color:${color};">${message}</span>`;
-}
-
-// --- SEARCH LOGIC ---
-async function performSearch(rawValue) {
-    const paddedMissionID = padMissionID(rawValue);
-    addLog(`Scanning mission ID: ${paddedMissionID}`);
-    
-    try {
-        const qM = query(collection(db, "mission_orders"), where("missionID", "==", paddedMissionID));
-        const snapM = await getDocs(qM);
-        
-        if (!snapM.empty) {
-            currentMissionData = snapM.docs[0].data();
-            const owner = currentMissionData.agent;
-            if (currentMissionData.status === "TERMINATED") {
-                isMissionTerminated = true;
-                setStatusColor('terminated', 'MISSION TERMINATED');
-                actionBtn.textContent = "LOCKED";
-                actionBtn.disabled = true;
-            } else if (owner === currentAgent) {
-                setStatusColor('your_mission', 'STATUS: YOUR MISSION');
-                actionBtn.textContent = "RETRIEVE";
-                actionBtn.disabled = false;
-            } else {
-                setStatusColor('other_agent', `OWNED BY ${owner}`);
-                actionBtn.textContent = "LOCKED";
-                actionBtn.disabled = true;
-            }
-        } else {
-            currentMissionData = null;
-            setStatusColor('available', 'STATUS: AVAILABLE');
-            actionBtn.textContent = "SAVE";
-            actionBtn.disabled = false;
-        }
-    } catch (e) { console.error(e); }
-}
-
-async function searchMission() {
-    const rawValue = input.value.trim();
-    if (searchTimeout) clearTimeout(searchTimeout);
-    if (!rawValue) return;
-
-    searchTimeout = setTimeout(() => performSearch(rawValue), 500);
-}
-
-// --- MODAL & WEAPON RENDER ---
 async function loadAgentWeapons() {
-    // Default list kung sakaling walang makuha sa DB
-    agentWeapons = ["REDMI NOTE 14 PRO", "REALME 8 PRO", "TECHNO CAMON 40 PRO 5G", "REDMI NOTE 12"];
-    renderWeapons();
+    try {
+        const agentQuery = query(collection(db, "agents"), where("agentName", "==", currentAgent));
+        const agentSnap = await getDocs(agentQuery);
+        
+        if (!agentSnap.empty) {
+            const agentData = agentSnap.docs[0].data();
+            agentWeapons = agentData.weaponSystem || [];
+        }
+        if (agentWeapons.length === 0) {
+            agentWeapons = ["REDMI NOTE 14 PRO", "REALME 8 PRO", "TECHNO CAMON 40 PRO 5G", "REDMI NOTE 12"];
+        }
+    } catch (error) {
+        agentWeapons = ["REDMI NOTE 14 PRO", "REALME 8 PRO", "TECHNO CAMON 40 PRO 5G", "REDMI NOTE 12"];
+    }
 }
 
-function renderWeapons() {
+function renderWeapons(highlightWeapon = null) {
     weaponList.innerHTML = "";
     agentWeapons.forEach(weaponName => {
         const btn = document.createElement('button');
         btn.className = "weapon-btn";
         btn.innerText = `> ${weaponName}`;
-        if (selectedWeaponID === weaponName) btn.classList.add('selected');
+        btn.setAttribute('data-weapon-id', weaponName);
+        if (highlightWeapon === weaponName) {
+            btn.classList.add('selected');
+            selectedWeaponID = weaponName;
+        }
         btn.onclick = () => {
-            SoundFX.click();
             document.querySelectorAll('.weapon-btn').forEach(x => x.classList.remove('selected'));
             btn.classList.add('selected');
             selectedWeaponID = weaponName;
-            updateConfirmButton();
         };
         weaponList.appendChild(btn);
     });
 }
 
-function updateConfirmButton() {
-    // Kinukontrol nito ang itsura ng button
-    const isValid = vAgentInput.value.trim() !== "" && selectedWeaponID !== "";
-    modalSubmit.disabled = !isValid;
-    modalSubmit.style.opacity = isValid ? "1" : "0.5";
+function transitionButton(button, newText, newClass) {
+    button.style.transition = 'all 0.3s ease';
+    button.style.transform = 'scale(0.95)';
+    setTimeout(() => {
+        button.textContent = newText;
+        button.className = `btn ${newClass}`;
+        button.style.transform = 'scale(1)';
+        setTimeout(() => {
+            button.style.transition = '';
+        }, 300);
+    }, 150);
+}
+
+function enableButtons() {
+    actionBtn.disabled = false;
+    actionBtn.style.opacity = "1";
+    reserveBtn.disabled = false;
+    reserveBtn.style.opacity = "1";
+    reserveBtn.style.borderColor = "#ffbd00";
+    reserveBtn.style.color = "#ffbd00";
+}
+
+async function searchMission() {
+    const val = input.value.trim();
+    if (searchTimeout) clearTimeout(searchTimeout);
+    
+    if (val.length === 0) {
+        actionBtn.textContent = "SAVE";
+        actionBtn.className = "btn btn-save";
+        reserveBtn.textContent = "RESERVE";
+        reserveBtn.className = "btn btn-reserve";
+        statusLabel.innerHTML = "";
+        return;
+    }
+    
+    if (val.length < 4) {
+        statusLabel.innerHTML = 'Enter 4-5 digits';
+        return;
+    }
+    
+    const missionID = padMissionID(val);
+    statusLabel.innerHTML = '<span class="blink">SCANNING...</span>';
+    
+    actionBtn.disabled = true;
+    reserveBtn.disabled = true;
+    
+    searchTimeout = setTimeout(async () => {
+        try {
+            const qM = query(collection(db, "mission_orders"), where("missionID", "==", missionID));
+            const snapM = await getDocs(qM);
+            
+            if (!snapM.empty) {
+                currentMissionData = snapM.docs[0].data();
+                const owner = currentMissionData.agent;
+                const status = currentMissionData.status;
+                
+                if (status === "TERMINATED") {
+                    statusLabel.innerHTML = '<span style="color:#8b0000;">STATUS: TERMINATED</span>';
+                    transitionButton(actionBtn, "LOCKED", "btn-locked");
+                    actionBtn.disabled = true;
+                    transitionButton(reserveBtn, "VIEW", "btn-view");
+                    reserveBtn.disabled = false;
+                } else if (owner === currentAgent) {
+                    statusLabel.innerHTML = '<span style="color:#00f3ff;">STATUS: YOUR MISSION</span>';
+                    transitionButton(actionBtn, "RETRIEVE", "btn-retrieve");
+                    actionBtn.disabled = false;
+                    actionBtn.onclick = openRetrieveModal;
+                    transitionButton(reserveBtn, "RESERVE", "btn-reserve");
+                    reserveBtn.disabled = false;
+                } else {
+                    statusLabel.innerHTML = `<span style="color:#ff003c;">OWNED BY ${owner}</span>`;
+                    transitionButton(actionBtn, "LOCKED", "btn-locked");
+                    actionBtn.disabled = true;
+                    transitionButton(reserveBtn, "VIEW", "btn-view");
+                    reserveBtn.disabled = false;
+                }
+            } else {
+                currentMissionData = null;
+                statusLabel.innerHTML = '<span style="color:#05ffa1;">STATUS: AVAILABLE</span>';
+                transitionButton(actionBtn, "DEPLOY", "btn-save");
+                actionBtn.disabled = false;
+                actionBtn.onclick = openModal;
+                transitionButton(reserveBtn, "RESERVE", "btn-reserve");
+                reserveBtn.disabled = false;
+            }
+            enableButtons();
+        } catch(e) {
+            console.error(e);
+            statusLabel.innerHTML = '<span style="color:#ff003c;">DATABASE ERROR</span>';
+            actionBtn.disabled = false;
+            reserveBtn.disabled = false;
+        }
+    }, 300);
 }
 
 async function openModal() {
-    const rawMissionID = input.value.trim();
-    if (!rawMissionID) { alert("ENTER MISSION ID"); return; }
+    const missionID = padMissionID(input.value.trim());
+    if (!missionID) return;
     
-    SoundFX.click();
     modalOverlay.style.display = 'flex';
-    document.getElementById('pop-header').innerText = `#${padMissionID(rawMissionID)}`;
+    document.getElementById('pop-header').innerHTML = `<span style="color:#00f3ff;">#${missionID}</span>`;
     
-    // Reset or Load Data
-    vAgentInput.value = currentMissionData ? currentMissionData.vAgentID : "";
-    selectedWeaponID = currentMissionData ? currentMissionData.weaponSystem : "";
+    vAgentInput.value = "";
+    selectedWeaponID = "";
+    secureField.value = "";
+    secureField.classList.remove('show');
+    secureBtn.style.display = 'block';
     
     await loadAgentWeapons();
+    renderWeapons();
+}
+
+async function openRetrieveModal() {
+    if (!currentMissionData) return;
     
-    // 🔥 FORCE ENABLE para sa iyong emergency button requirement
-    modalSubmit.disabled = false;
-    modalSubmit.style.opacity = "1";
-    modalSubmit.style.pointerEvents = "auto";
+    const missionID = currentMissionData.missionID;
+    modalOverlay.style.display = 'flex';
+    document.getElementById('pop-header').innerHTML = `<span style="color:#00f3ff;">#${missionID} [UPDATE]</span>`;
+    
+    vAgentInput.value = currentMissionData.vAgentID || "";
+    selectedWeaponID = currentMissionData.weaponSystem || "";
+    secureField.value = currentMissionData.SecureLine || "";
+    if (secureField.value) {
+        secureField.classList.add('show');
+        secureBtn.style.display = 'none';
+    } else {
+        secureField.classList.remove('show');
+        secureBtn.style.display = 'block';
+    }
+    
+    await loadAgentWeapons();
+    renderWeapons(selectedWeaponID);
 }
 
-function closeModal() {
-    modalOverlay.style.display = 'none';
-    SoundFX.click();
-}
-
-// --- SUBMIT TO FIREBASE ---
-async function submitMission() {
-    const missionID = padMissionID(input.value.trim());
+async function submitMission(missionID, isUpdate) {
     const vID = vAgentInput.value.trim();
+    const sLine = secureField.value.trim();
     
-    if (!missionID || !vID || !selectedWeaponID) {
-        alert("INCOMPLETE DATA: Please check V_ID and System Link.");
+    if (!vID) {
+        alert("Enter vAgent ID");
         return;
     }
-
+    if (!selectedWeaponID) {
+        alert("Select a weapon system");
+        return;
+    }
+    
+    const now = new Date();
+    const deploymentDate = formatDate(now);
+    const relieveDate = formatDate(calculateRelieveDate(now));
+    
     try {
-        const now = new Date();
         await setDoc(doc(db, "mission_orders", missionID), {
             missionID: missionID,
             agent: currentAgent,
             vAgentID: vID,
             weaponSystem: selectedWeaponID,
-            SecureLine: secureField.value.trim(),
+            SecureLine: sLine || "",
             status: "DEPLOYED",
-            deploymentDate: formatDate(now),
+            deploymentDate: deploymentDate,
+            relieveDate: relieveDate,
             timestamp: serverTimestamp()
         }, { merge: true });
-
-        SoundFX.success();
-        addLog(`Mission #${missionID} DEPLOYED by ${currentAgent}`, '#05ffa1');
-        alert("SUCCESS: DATA UPLOADED");
+        
+        addLog(`Mission #${missionID} ${isUpdate ? 'UPDATED' : 'DEPLOYED'} by ${currentAgent}`, '#05ffa1');
         closeModal();
-        location.reload(); // Reload para malinis ang dashboard
+        input.value = "";
+        statusLabel.innerHTML = "";
+        actionBtn.textContent = "SAVE";
+        actionBtn.className = "btn btn-save";
+        currentMissionData = null;
+        alert(`✅ MISSION ${isUpdate ? 'UPDATED' : 'DEPLOYED'} SUCCESSFULLY!`);
     } catch(e) {
-        alert("UPLOAD ERROR: " + e.message);
+        console.error(e);
+        alert("ERROR: " + e.message);
     }
 }
 
-// --- INITIALIZATION ---
-function init() {
-    if (!currentAgent || currentAgent === "UNKNOWN_AGENT") {
-        window.location.href = "index.html";
-        return;
+function closeModal() {
+    modalOverlay.style.display = 'none';
+}
+
+function toggleSecureLine() {
+    if (secureField.classList.contains('show')) {
+        secureField.classList.remove('show');
+        secureBtn.style.display = 'block';
+    } else {
+        secureField.classList.add('show');
+        secureBtn.style.display = 'none';
+        secureField.focus();
     }
+}
+
+function init() {
     profName.innerText = currentAgent;
     avatarInit.innerText = currentAgent.charAt(0).toUpperCase();
-    
+    updateClock();
     setInterval(updateClock, 1000);
+    setupTerminalListener();
+    loadAgentWeapons();
     
-    // Realtime Terminal Logs
-    onSnapshot(query(collection(db, "terminal_logs"), orderBy("timestamp", "desc"), limit(10)), (snap) => {
-        terminal.innerHTML = "";
-        snap.forEach(doc => {
-            const d = doc.data();
-            terminal.innerHTML += `<div class="term-line"><span style="color:${d.color}">${d.message}</span></div>`;
-        });
-    });
-
-    // Event Listeners
     input.addEventListener('input', searchMission);
-    actionBtn.onclick = openModal;
     modalClose.onclick = closeModal;
-    vAgentInput.addEventListener('input', updateConfirmButton);
+    secureBtn.onclick = toggleSecureLine;
     
-    secureBtn.onclick = () => {
-        secureBtn.style.display = 'none';
-        secureField.classList.add('show');
-        secureField.focus();
+    // Attach submit to modal submit button
+    modalSubmit.onclick = () => {
+        const missionID = padMissionID(input.value.trim());
+        if (missionID) {
+            submitMission(missionID, false);
+        }
     };
+    
+    console.log("Dashboard ready");
+}
 
-    // --- GLOBAL BINDING ---
-    // Ito ang kailangan para gumana ang onclick="window.emergencyDeploy()" sa HTML
-    window.emergencyDeploy = submitMission;
+function updateClock() {
+    clockSpan.textContent = new Date().toLocaleTimeString('en-GB');
 }
 
 init();

@@ -16,64 +16,97 @@
 </head>
 <body>
 
-    <header>
-        <span style="font-weight: 700; color: #fff; letter-spacing: 2px;">CORE_DASH</span>
-    </header>
+<!-- ✅ SESSION CHECK ✅ -->
+<script>
+    // Check kung naka-login
+    const agentName = localStorage.getItem('cia_agent');
+    const isVerified = localStorage.getItem('agent_verified');
+    
+    if (!isVerified || !agentName) {
+        // Walang login, balik sa login page
+        window.location.replace("index.html");
+    }
+    
+    // I-save ang agent data para magamit ng jsdash.js
+    window.agentData = {
+        name: agentName,
+        secretKey: localStorage.getItem('secret_key')
+    };
+    
+    console.log('✅ Logged in as:', agentName);
+</script>
 
-    <div class="status-bar">
-        <div>SYS_TIME: <span id="clock">00:00:00</span></div>
-        <div style="color: var(--green);">UPLINK_STABLE</div>
-    </div>
+<header>
+    <span style="font-weight: 700; color: #fff; letter-spacing: 2px;">CORE_DASH</span>
+</header>
 
-    <main>
-        <div class="command-module">
-            <input type="tel" id="mission-input" placeholder="0000" maxlength="5" autocomplete="off">
-            <div id="mission-status"></div>
-            <div class="btn-row">
-                <button id="action-btn" class="btn btn-save">SAVE</button>
-                <button id="reserve-btn" class="btn btn-reserve">RESERVE</button>
-            </div>
+<div class="status-bar">
+    <div>SYS_TIME: <span id="clock">00:00:00</span></div>
+    <div style="color: var(--green);">UPLINK_STABLE</div>
+</div>
+
+<main>
+    <div class="command-module">
+        <input type="tel" id="mission-input" placeholder="0000" maxlength="5" autocomplete="off">
+        <div id="mission-status"></div>
+        <div class="btn-row">
+            <button id="action-btn" class="btn btn-save">SAVE</button>
+            <button id="reserve-btn" class="btn btn-reserve">RESERVE</button>
         </div>
-        <div id="terminal"></div>
+    </div>
+    <div id="terminal"></div>
+    
+    <div class="profile-mini">
+        <div class="avatar" id="avatar-init">?</div>
+        <div class="profile-info">
+            <div id="prof-name" class="agent-name-display"></div>
+            <div>AUTH_LEVEL: OMEGA</div>
+        </div>
+    </div>
+</main>
+
+<div class="overlay" id="modal-overlay">
+    <div class="popup">
+        <div id="pop-header">#0000</div>
+        <span>vAGENT_IDENTIFIER:</span>
+        <input type="text" id="v-agent-input" class="pop-input" placeholder="V_ID_REQUIRED">
         
-        <div class="profile-mini">
-            <div class="avatar" id="avatar-init">?</div>
-            <div class="profile-info">
-                <div id="prof-name">AGENT_PENDING</div>
-                <div>AUTH_LEVEL: OMEGA</div>
-            </div>
+        <div class="secure-line-wrapper">
+            <span id="add-secure-btn">+add Secure Line</span>
+            <input type="tel" id="secure-input-field" maxlength="11" placeholder="09XXXXXXXXX">
         </div>
-    </main>
 
-    <div class="overlay" id="modal-overlay">
-        <div class="popup">
-            <div id="pop-header">#0000</div>
-            <span>vAGENT_IDENTIFIER:</span>
-            <input type="text" id="v-agent-input" class="pop-input" placeholder="V_ID_REQUIRED">
-            
-            <div class="secure-line-wrapper">
-                <span id="add-secure-btn">+add Secure Line</span>
-                <input type="tel" id="secure-input-field" maxlength="11" placeholder="09XXXXXXXXX">
-            </div>
+        <span>SYSTEM_LINK:</span>
+        <div class="weapon-selector" id="weapon-list"></div>
 
-            <span>SYSTEM_LINK:</span>
-            <div class="weapon-selector" id="weapon-list"></div>
-
-            <div class="btn-row">
-                <button id="modal-submit" class="btn btn-save" disabled>DEPLOY</button>
-                <button id="modal-close" class="btn">ABORT</button>
-            </div>
+        <div class="btn-row">
+            <button id="modal-submit" class="btn btn-save" disabled>DEPLOY</button>
+            <button id="modal-close" class="btn">ABORT</button>
         </div>
     </div>
+</div>
 
-    <nav class="bottom-nav">
-        <a href="#" class="nav-item active">DASHBOARD</a>
-        <a href="intel.html" class="nav-item">INTEL</a>
-        <a href="profile.html" class="nav-item">PROFILE</a>
-    </nav>
+<nav class="bottom-nav">
+    <a href="#" class="nav-item active">DASHBOARD</a>
+    <a href="intel.html" class="nav-item">INTEL</a>
+    <a href="profile.html" class="nav-item">PROFILE</a>
+</nav>
 
-    <!-- ISANG SCRIPT LANG - ginamit ang jsdash.js -->
-    <script type="module" src="js/jsdash.js"></script>
+<script type="module" src="js/jsdash.js"></script>
+
+<!-- ✅ Ipakita ang agent name sa profile section ✅ -->
+<script>
+    const profNameElem = document.getElementById('prof-name');
+    if (profNameElem && window.agentData && window.agentData.name) {
+        profNameElem.textContent = window.agentData.name;
+    }
+    
+    // Logout function (optional)
+    window.logout = function() {
+        localStorage.clear();
+        window.location.replace("index.html");
+    };
+</script>
 
 </body>
 </html>

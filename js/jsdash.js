@@ -91,7 +91,7 @@ function setStatusColor(status, message) {
 }
 
 function init() {
-    console.log("Dashboard initializing...");
+    console.log("Dashboard initializing for agent:", currentAgent);
     if (!currentAgent || currentAgent === "UNKNOWN_AGENT") {
         alert("No active session. Please login first.");
         window.location.href = "index.html";
@@ -134,9 +134,15 @@ async function addLog(msg, color) {
     } catch(e) { console.error("Log error:", e); }
 }
 
+// ====== LOAD WEAPONS FROM MISSION_ORDERS ======
 async function loadAgentWeapons() {
+    console.log("Loading weapons for agent:", currentAgent);
     try {
-        const missionsSnap = await getDocs(query(collection(db, "mission_orders"), where("agent", "==", currentAgent)));
+        const missionsSnap = await getDocs(query(
+            collection(db, "mission_orders"), 
+            where("agent", "==", currentAgent)
+        ));
+        
         const weaponSet = new Set();
         missionsSnap.forEach(doc => {
             const data = doc.data();
@@ -144,11 +150,14 @@ async function loadAgentWeapons() {
                 weaponSet.add(data.weaponSystem);
             }
         });
+        
         agentWeapons = Array.from(weaponSet).sort();
         if (agentWeapons.length === 0) {
             agentWeapons = ["REDMI NOTE 14 PRO", "REALME 8 PRO", "TECHNO CAMON 40 PRO 5G", "REDMI NOTE 12"];
         }
+        console.log("Weapons loaded:", agentWeapons);
     } catch (error) {
+        console.error("Error loading weapons:", error);
         agentWeapons = ["REDMI NOTE 14 PRO", "REALME 8 PRO", "TECHNO CAMON 40 PRO 5G", "REDMI NOTE 12"];
     }
 }
@@ -171,9 +180,12 @@ function updateConfirmButton() {
     const hasWeapon = selectedWeaponID !== "";
     const isValid = vID !== "" && hasWeapon && !isMissionTerminated;
     
+    console.log("updateConfirmButton - vID:", vID, "hasWeapon:", hasWeapon, "isValid:", isValid);
+    
     if (modalSubmit) {
         modalSubmit.disabled = !isValid;
         modalSubmit.style.opacity = isValid ? "1" : "0.5";
+        modalSubmit.style.cursor = isValid ? "pointer" : "not-allowed";
     }
 }
 
@@ -285,11 +297,14 @@ async function searchMission() {
 
 function renderWeapons() {
     weaponList.innerHTML = "";
+    console.log("renderWeapons called, agentWeapons:", agentWeapons);
+    
     if (!agentWeapons || agentWeapons.length === 0) {
         weaponList.innerHTML = '<div style="text-align:center; padding:10px; color:#ffbd00;">No weapons available.</div>';
         updateConfirmButton();
         return;
     }
+    
     agentWeapons.forEach(weaponName => {
         const btn = document.createElement('button');
         btn.className = "weapon-btn";
@@ -300,6 +315,7 @@ function renderWeapons() {
             document.querySelectorAll('.weapon-btn').forEach(x => x.classList.remove('selected'));
             btn.classList.add('selected');
             selectedWeaponID = weaponName;
+            console.log("Weapon selected:", selectedWeaponID);
             updateConfirmButton();
         };
         weaponList.appendChild(btn);
@@ -361,15 +377,6 @@ async function openModal() {
     }
     
     updateConfirmButton();
-    
-    // ===== EMERGENCY FORCE ENABLE DEPLOY BUTTON =====
-    setTimeout(() => {
-        if (modalSubmit) {
-            modalSubmit.disabled = false;
-            modalSubmit.style.opacity = "1";
-            console.log("🔥 DEPLOY button force enabled");
-        }
-    }, 500);
 }
 
 function closeModal() {

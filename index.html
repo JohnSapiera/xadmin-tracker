@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SUPABASE_AGENT_TERMINAL</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AGENT_ACCESS_TERMINAL</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         * {
@@ -11,9 +11,7 @@
             padding: 0;
             box-sizing: border-box;
             user-select: none;
-            -webkit-tap-highlight-color: transparent;
         }
-
         body {
             background: #01080b;
             font-family: 'Share Tech Mono', monospace;
@@ -21,42 +19,34 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background-image: radial-gradient(circle at center, #0a1f29 0%, #01080b 100%);
             padding: 16px;
         }
-
         .terminal {
             width: 100%;
-            max-width: 380px;
+            max-width: 400px;
             background: rgba(2, 10, 13, 0.95);
-            border: 1px solid rgba(0, 242, 255, 0.3);
-            padding: 20px 16px;
-            position: relative;
-            backdrop-filter: blur(4px);
+            border: 1px solid rgba(0, 242, 255, 0.4);
+            padding: 20px;
             border-radius: 4px;
             box-shadow: 0 0 20px rgba(0,242,255,0.1);
         }
-
         .scan-line {
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 2px;
             background: #00f2ff;
-            box-shadow: 0 0 10px #00f2ff;
-            animation: scanMove 2.5s ease-in-out infinite;
+            animation: scanMove 2s ease-in-out infinite;
             opacity: 0.6;
             pointer-events: none;
         }
-
         @keyframes scanMove {
             0% { top: 0; opacity: 0; }
             20% { opacity: 0.8; }
             80% { opacity: 0.8; }
             100% { top: 100%; opacity: 0; }
         }
-
         .header {
             text-align: center;
             margin-bottom: 20px;
@@ -73,94 +63,75 @@
             color: #00f2ff;
             text-transform: uppercase;
             letter-spacing: 2px;
-            text-shadow: 0 0 4px rgba(0,242,255,0.4);
         }
-
         .trace-container {
             background: #000;
             border: 1px solid #1a2f37;
-            padding: 8px 10px;
+            padding: 10px;
             margin-bottom: 20px;
-            text-align: center;
             border-radius: 4px;
         }
         .trace-label {
             font-size: 8px;
             color: #5c7882;
-            letter-spacing: 1px;
         }
         .trace-value {
             font-size: 9px;
             color: #05ffa1;
             word-break: break-all;
-            margin-top: 4px;
-            font-family: monospace;
+            margin-top: 5px;
         }
-
         .keypad {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 12px;
-            margin: 20px 0 16px;
+            margin: 20px 0;
         }
         .key-btn {
-            aspect-ratio: 1 / 1;
+            aspect-ratio: 1;
             background: #000;
             border: 1px solid #1a2f37;
             color: #00f2ff;
             font-size: 24px;
             font-weight: bold;
-            font-family: 'Share Tech Mono', monospace;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.1s ease;
             border-radius: 50%;
-            width: 100%;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            transition: all 0.1s ease;
         }
         .key-btn:active {
             transform: scale(0.92);
             background: #00f2ff;
             color: #000;
-            border-color: #00f2ff;
-            box-shadow: 0 0 12px rgba(0, 242, 255, 0.4);
         }
-        .key-zero {
-            grid-column: 2 / 3;
-        }
-
-        .hidden {
-            display: none;
-        }
-
         .code-area {
             background: #000;
             border: 1px solid #1a2f37;
-            padding: 10px;
+            padding: 15px;
             text-align: center;
-            margin-bottom: 12px;
             border-radius: 4px;
+            margin-bottom: 10px;
         }
         .code-digits {
-            font-size: 28px;
+            font-size: 32px;
             letter-spacing: 8px;
             color: #05ffa1;
-            font-family: monospace;
             font-weight: bold;
-            text-shadow: 0 0 3px #00ff66;
         }
         .helper-text {
             font-size: 8px;
             color: #5c7882;
-            margin-top: 4px;
+            margin-top: 5px;
         }
-
+        .hidden {
+            display: none;
+        }
         .action-buttons {
             display: flex;
             gap: 12px;
-            margin-top: 8px;
+            margin-top: 10px;
         }
         .btn {
             flex: 1;
@@ -171,7 +142,6 @@
             font-family: monospace;
             font-size: 11px;
             cursor: pointer;
-            transition: 0.2s;
             text-align: center;
             border-radius: 4px;
         }
@@ -185,43 +155,38 @@
         .btn:active {
             background: #1a2f3740;
         }
-
         .message-area {
             margin-top: 16px;
-            text-align: center;
             font-size: 10px;
             min-height: 40px;
             padding: 6px;
         }
         .error-msg {
             color: #ff003c;
-            border-top: 1px solid rgba(255,0,60,0.2);
-            padding-top: 6px;
         }
         .success-msg {
             color: #00ff66;
         }
-
         .weapons-list {
             margin-top: 10px;
             padding: 8px;
             background: #000;
             border: 1px solid #1a2f37;
             border-radius: 4px;
-            font-size: 9px;
         }
         .weapons-list span {
             color: #00f2ff;
+            font-size: 9px;
         }
         .weapon-item {
             display: inline-block;
             background: #0a1f29;
-            padding: 2px 6px;
-            margin: 2px;
+            padding: 3px 8px;
+            margin: 3px;
             border-radius: 3px;
             color: #05ffa1;
+            font-size: 9px;
         }
-
         .loader {
             display: inline-block;
             width: 10px;
@@ -238,31 +203,30 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-
-<div class="terminal" id="app">
-    <div class="scan-line" id="scanLine"></div>
+<div class="terminal">
+    <div class="scan-line"></div>
     
     <div class="header">
-        <div class="badge">SUPABASE_AGENT_NEXUS</div>
+        <div class="badge">🔐 SUPABASE_AGENT_NEXUS</div>
         <div class="status-text" id="statusLabel">INITIALIZING_SCAN</div>
     </div>
 
     <div class="trace-container">
-        <div class="trace-label">DEVICE_FINGERPRINT</div>
+        <div class="trace-label">🖨️ DEVICE_FINGERPRINT</div>
         <div class="trace-value" id="deviceSig">-- SCANNING --</div>
     </div>
 
     <div id="keypadSection" class="hidden">
         <div class="code-area">
-            <div class="code-digits" id="codeDisplay">----</div>
+            <div class="code-digits" id="codeDisplay">────</div>
             <div class="helper-text">ENTER 4-DIGIT SECRET KEY</div>
         </div>
         
         <div class="keypad" id="numericKeypad"></div>
         
         <div class="action-buttons">
-            <div class="btn btn-danger" id="clearBtn">CLEAR</div>
-            <div class="btn" id="cancelBtn">CANCEL</div>
+            <div class="btn btn-danger" id="clearBtn">⌫ CLEAR</div>
+            <div class="btn" id="cancelBtn">✗ CANCEL</div>
         </div>
     </div>
 
@@ -271,60 +235,31 @@
 </div>
 
 <script>
-    // ========================
-    // 🔐 SUPABASE CONFIGURATION
-    // ========================
     const SUPABASE_URL = "https://pgclrzqfpoznvrjrzced.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_GhIOC2mXVo0UrhMHZX6Qww_T12tQl4s";
     
-    // ========================
-    // SOUND FX
-    // ========================
-    const SoundFX = {
-        beep(frequency = 800, duration = 0.1, volume = 0.2) {
-            try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
-                oscillator.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                oscillator.frequency.value = frequency;
-                gainNode.gain.value = volume;
-                oscillator.start();
-                gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
-                oscillator.stop(audioCtx.currentTime + duration);
-                setTimeout(() => audioCtx.close(), duration * 1000);
-            } catch(e) { console.log("Audio error:", e); }
-        },
-        scanBeep() { this.beep(1200, 0.08, 0.15); },
-        keypadTone(digit) { const freqs = { '1':697, '2':697, '3':697, '4':770, '5':770, '6':770, '7':852, '8':852, '9':852, '0':941 }; this.beep(freqs[digit] || 800, 0.06, 0.12); },
-        click() { this.beep(600, 0.04, 0.1); },
-        success() { this.beep(880, 0.12, 0.2); setTimeout(() => this.beep(1100, 0.12, 0.2), 120); },
-        error() { this.beep(400, 0.3, 0.25); },
-        register() { this.beep(660, 0.1, 0.2); setTimeout(() => this.beep(880, 0.1, 0.2), 100); setTimeout(() => this.beep(1320, 0.2, 0.2), 200); }
-    };
-
     const statusLabel = document.getElementById('statusLabel');
     const deviceSigSpan = document.getElementById('deviceSig');
     const keypadSection = document.getElementById('keypadSection');
     const codeDisplay = document.getElementById('codeDisplay');
     const messageArea = document.getElementById('messageArea');
     const weaponsDisplay = document.getElementById('weaponsDisplay');
-
+    
     let currentSignature = "";
     let enteredCode = "";
     let isProcessing = false;
     let supabaseClient = null;
-
+    
     function showMessage(text, isError = false) {
         messageArea.innerHTML = `<div class="${isError ? 'error-msg' : 'success-msg'}">${text}</div>`;
+        console.log(`${isError ? '❌' : '✅'}`, text);
         setTimeout(() => {
-            if (messageArea.innerHTML === `<div class="${isError ? 'error-msg' : 'success-msg'}">${text}</div>`) {
+            if (messageArea.innerHTML.includes(text)) {
                 messageArea.innerHTML = "";
             }
-        }, 3500);
+        }, 4000);
     }
-
+    
     function displayWeapons(weaponsArray) {
         if (!weaponsArray || weaponsArray.length === 0) {
             weaponsDisplay.classList.add('hidden');
@@ -338,55 +273,38 @@
         weaponsDisplay.innerHTML = weaponsHtml;
         weaponsDisplay.classList.remove('hidden');
     }
-
+    
     function clearCode() {
-        SoundFX.click();
         enteredCode = "";
-        codeDisplay.innerText = "----";
+        codeDisplay.innerText = "────";
     }
-
+    
     function addDigit(digit) {
-        if (enteredCode.length < 4) {
-            SoundFX.keypadTone(digit);
+        if (enteredCode.length < 4 && !isProcessing) {
             enteredCode += digit;
-            let displayStr = enteredCode + "----".substring(enteredCode.length);
+            let displayStr = enteredCode + "────".substring(enteredCode.length);
             codeDisplay.innerText = displayStr;
             
-            const buttons = document.querySelectorAll('.key-btn');
-            buttons.forEach(btn => {
-                if (btn.innerText === digit) {
-                    btn.style.transform = 'scale(0.92)';
-                    btn.style.background = '#00f2ff';
-                    btn.style.color = '#000';
-                    setTimeout(() => {
-                        btn.style.transform = '';
-                        btn.style.background = '';
-                        btn.style.color = '';
-                    }, 150);
-                }
-            });
-
             if (enteredCode.length === 4) {
-                setTimeout(() => verifySecretKeyWithSupabase(enteredCode), 50);
+                setTimeout(() => verifySecretKey(enteredCode), 100);
             }
         }
     }
-
+    
     function generateSignature() {
         const canvas = document.createElement('canvas');
         const gl = canvas.getContext('webgl');
         const debugInfo = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
-        const gpu = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "GENERIC_GPU";
+        const gpu = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "GENERIC";
         
         const specs = {
-            brand: navigator.userAgent.match(/Android\s+([^\s;]+);?\s+([^\s;]+)/)?.[2] || navigator.platform || "UNKNOWN_STATION",
             gpu: gpu.split('/').pop().trim(),
             res: `${window.screen.width}x${window.screen.height}`,
             plt: navigator.platform,
-            tz: Intl.DateTimeFormat().resolvedOptions().timeZone
+            ua: navigator.userAgent.substring(0, 50)
         };
-
-        const raw = specs.gpu + specs.res + specs.plt + specs.brand + specs.tz;
+        
+        const raw = specs.gpu + specs.res + specs.plt + specs.ua;
         let hash = 0;
         for (let i = 0; i < raw.length; i++) {
             hash = ((hash << 5) - hash) + raw.charCodeAt(i);
@@ -394,197 +312,143 @@
         }
         return "SIG-" + Math.abs(hash).toString(16).toUpperCase().slice(0, 12);
     }
-
-    // Register device fingerprint sa existing agents table
-    async function registerFingerprintToSupabase(agentName, secretKey, signature) {
+    
+    async function verifySecretKey(secretKey) {
+        if (isProcessing) return;
+        isProcessing = true;
+        
+        statusLabel.innerHTML = "VERIFYING_KEY";
+        showMessage(`Verifying secret key: ${secretKey}...`);
+        
         try {
-            const { data: agentData, error: fetchError } = await supabaseClient
+            // Query the agents table
+            const { data: agent, error } = await supabaseClient
                 .from('agents')
                 .select('*')
                 .eq('secret_key', secretKey)
                 .maybeSingle();
             
-            if (fetchError || !agentData) {
-                console.error("Agent not found:", fetchError);
-                return { success: false, reason: "agent_not_found" };
+            if (error) {
+                console.error("Query error:", error);
+                showMessage(`Database error: ${error.message}`, true);
+                statusLabel.innerHTML = "ERROR";
+                clearCode();
+                isProcessing = false;
+                return;
             }
-            
-            const currentSignatures = agentData.linked_signatures || [];
-            let updateData = {
-                last_fingerprint: signature,
-                updated_at: new Date().toISOString()
-            };
-            
-            if (!currentSignatures.includes(signature)) {
-                updateData.linked_signatures = [...currentSignatures, signature];
-            }
-            
-            const { error: updateError } = await supabaseClient
-                .from('agents')
-                .update(updateData)
-                .eq('secret_key', secretKey);
-            
-            if (updateError) {
-                console.error("Update failed:", updateError);
-                return { success: false, reason: "update_failed" };
-            }
-            
-            return { 
-                success: true, 
-                agentName: agentData.agent_name, 
-                weaponSystem: agentData.weapons_array || [] // Gamit ang weapons_array column
-            };
-        } catch (err) {
-            console.error("registerFingerprint error:", err);
-            return { success: false, reason: "exception" };
-        }
-    }
-
-    // I-verify ang secret key at kunin ang agent_name
-    async function verifySecretKeyWithSupabase(secretKey) {
-        if (isProcessing) return;
-        isProcessing = true;
-        
-        statusLabel.innerHTML = "VERIFYING_KEY";
-        showMessage("Authenticating secret key via Supabase...");
-        SoundFX.scanBeep();
-        
-        try {
-            const { data: agent, error } = await supabaseClient
-                .from('agents')
-                .select('agent_name, secret_key, weapons_array, linked_signatures')
-                .eq('secret_key', secretKey)
-                .maybeSingle();
-            
-            if (error) throw new Error(error.message);
             
             if (agent) {
                 const agentName = agent.agent_name;
-                const weaponSystem = agent.weapons_array || [];
+                const weaponsArray = agent.weapons_array || [];
                 
-                showMessage(`✓ Secret key verified. Agent: ${agentName}`);
+                showMessage(`✓ Verified! Welcome, ${agentName}`, false);
+                statusLabel.innerHTML = "ACCESS_GRANTED";
                 
-                if (weaponSystem.length > 0) {
-                    displayWeapons(weaponSystem);
-                    showMessage(`✓ Agent has ${weaponSystem.length} weapon system(s) assigned`);
+                // Display weapons if any
+                if (weaponsArray.length > 0) {
+                    displayWeapons(weaponsArray);
+                    showMessage(`✓ Agent has ${weaponsArray.length} weapon system(s)`, false);
                 }
                 
-                statusLabel.innerHTML = "REGISTERING_DEVICE";
-                SoundFX.register();
+                // STORE TO LOCAL DATABASE (localStorage)
+                localStorage.setItem("agent_name", agentName);
+                localStorage.setItem("secret_key", secretKey);
+                localStorage.setItem("device_signature", currentSignature);
+                localStorage.setItem("device_print", currentSignature);
+                localStorage.setItem("agent_verified", "true");
+                localStorage.setItem("weapon_systems", JSON.stringify(weaponsArray));
+                localStorage.setItem("last_auth", new Date().toISOString());
                 
-                const regResult = await registerFingerprintToSupabase(agentName, secretKey, currentSignature);
+                console.log("✅ LOCAL DATABASE STORED:");
+                console.log("   - agent_name:", agentName);
+                console.log("   - secret_key:", secretKey);
+                console.log("   - device_print:", currentSignature);
+                console.log("   - weapons:", weaponsArray);
                 
-                if (regResult.success) {
-                    SoundFX.success();
-                    showMessage(`Device registered successfully. Welcome, ${agentName}.`);
-                    statusLabel.innerHTML = "ACCESS_GRANTED";
-                    
-                    // STORE SA LOCAL DATABASE (localStorage)
-                    localStorage.setItem("supabase_agent", agentName);
-                    localStorage.setItem("agent_name", agentName);
-                    localStorage.setItem("weapon_system", JSON.stringify(weaponSystem));
-                    localStorage.setItem("weapon_system_array", JSON.stringify(weaponSystem));
-                    localStorage.setItem("secret_key", secretKey);
-                    localStorage.setItem("agent_verified", "true");
-                    localStorage.setItem("device_signature", currentSignature);
-                    localStorage.setItem("device_print", currentSignature);
-                    localStorage.setItem("last_auth", new Date().toISOString());
-                    
-                    console.log("✅ LOCAL DATABASE STORED (localStorage):");
-                    console.log("   📱 agent_name:", agentName);
-                    console.log("   🔑 secret_key:", secretKey);
-                    console.log("   🖨️ device_print:", currentSignature);
-                    console.log("   🔫 weapon_system (ARRAY):", weaponSystem);
-                    console.log("   🔫 weapon_system (count):", weaponSystem.length);
-                    
-                    displayWeapons(weaponSystem);
-                    
-                    setTimeout(() => {
-                        showMessage("Access granted! System ready.");
-                        statusLabel.innerHTML = "SYSTEM_READY";
-                    }, 1500);
-                } else {
-                    SoundFX.error();
-                    showMessage("Registration failed. Could not update device signature.", true);
-                    statusLabel.innerHTML = "REGISTRATION_FAILED";
-                    clearCode();
-                    isProcessing = false;
+                // Update last_fingerprint in Supabase
+                await supabaseClient
+                    .from('agents')
+                    .update({ 
+                        last_fingerprint: currentSignature,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('secret_key', secretKey);
+                
+                // Add to linked_signatures if not already there
+                const currentSignatures = agent.linked_signatures || [];
+                if (!currentSignatures.includes(currentSignature)) {
+                    await supabaseClient
+                        .from('agents')
+                        .update({ 
+                            linked_signatures: [...currentSignatures, currentSignature]
+                        })
+                        .eq('secret_key', secretKey);
                 }
+                
+                showMessage(`Device registered successfully!`, false);
+                
+                setTimeout(() => {
+                    keypadSection.classList.add("hidden");
+                    statusLabel.innerHTML = "SYSTEM_READY";
+                }, 2000);
+                
             } else {
-                SoundFX.error();
-                showMessage("Invalid secret key. Access denied.", true);
+                showMessage(`Invalid secret key: ${secretKey}. Access denied.`, true);
                 statusLabel.innerHTML = "ACCESS_DENIED";
                 clearCode();
-                isProcessing = false;
             }
+            
         } catch (err) {
-            console.error("Supabase verification error:", err);
-            SoundFX.error();
-            showMessage("Connection error. Check Supabase table/RLS.", true);
+            console.error("Verification error:", err);
+            showMessage(`Error: ${err.message}`, true);
             statusLabel.innerHTML = "ERROR";
-            isProcessing = false;
+            clearCode();
         }
+        
+        isProcessing = false;
     }
-
-    // Suriin kung registered na ang device fingerprint
-    async function authenticateDeviceWithSupabase(signature) {
-        statusLabel.innerHTML = "SCANNING_SUPABASE";
-        deviceSigSpan.innerText = signature;
-        SoundFX.scanBeep();
+    
+    async function checkExistingDevice() {
+        statusLabel.innerHTML = "SCANNING_DEVICE";
+        showMessage("Checking if device is already registered...");
         
         try {
             const { data: agents, error } = await supabaseClient
                 .from('agents')
                 .select('agent_name, weapons_array, linked_signatures')
-                .contains('linked_signatures', [signature]);
+                .contains('linked_signatures', [currentSignature]);
             
-            if (error) throw error;
+            if (error) {
+                console.error("Check error:", error);
+                showMessage(`Database error: ${error.message}`, true);
+                return false;
+            }
             
             if (agents && agents.length > 0) {
-                const agentData = agents[0];
-                const agentName = agentData.agent_name;
-                const weaponSystem = agentData.weapons_array || [];
-                
-                SoundFX.success();
+                const agent = agents[0];
+                showMessage(`✓ Device recognized! Welcome back, ${agent.agent_name}`, false);
                 statusLabel.innerHTML = "ACCESS_GRANTED";
-                showMessage(`Welcome back, ${agentName}. Device recognized.`);
                 
-                if (weaponSystem.length > 0) {
-                    displayWeapons(weaponSystem);
+                if (agent.weapons_array && agent.weapons_array.length > 0) {
+                    displayWeapons(agent.weapons_array);
                 }
                 
-                localStorage.setItem("supabase_agent", agentName);
-                localStorage.setItem("agent_name", agentName);
-                localStorage.setItem("weapon_system", JSON.stringify(weaponSystem));
-                localStorage.setItem("weapon_system_array", JSON.stringify(weaponSystem));
+                localStorage.setItem("agent_name", agent.agent_name);
+                localStorage.setItem("device_signature", currentSignature);
                 localStorage.setItem("agent_verified", "true");
-                localStorage.setItem("device_signature", signature);
-                localStorage.setItem("device_print", signature);
-                localStorage.setItem("last_auth", new Date().toISOString());
+                localStorage.setItem("weapon_systems", JSON.stringify(agent.weapons_array || []));
                 
-                console.log("🔄 Existing device detected. Stored agent_name:", agentName);
-                console.log("🖨️ Device print:", signature);
-                console.log("🔫 Weapon systems (ARRAY):", weaponSystem);
-                
-                setTimeout(() => {
-                    statusLabel.innerHTML = "SYSTEM_READY";
-                }, 1200);
-            } else {
-                SoundFX.error();
-                statusLabel.innerHTML = "DEVICE_NOT_REGISTERED";
-                showMessage("Device not recognized. Enter your SECRET KEY to register.", true);
-                keypadSection.classList.remove("hidden");
-                document.getElementById('scanLine').style.opacity = "0.2";
-                weaponsDisplay.classList.add('hidden');
+                return true;
             }
+            
+            return false;
+            
         } catch (err) {
-            console.error("Supabase auth error:", err);
-            SoundFX.error();
-            statusLabel.innerHTML = "SCAN_ERROR";
-            showMessage("Supabase connection error. Please check table 'agents' exists.", true);
+            console.error("Check error:", err);
+            return false;
         }
     }
-
+    
     function buildKeypad() {
         const keypadContainer = document.getElementById('numericKeypad');
         const layout = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
@@ -599,44 +463,51 @@
             keypadContainer.appendChild(btn);
         });
     }
-
+    
     document.getElementById('clearBtn').onclick = () => clearCode();
     document.getElementById('cancelBtn').onclick = () => {
-        SoundFX.click();
         keypadSection.classList.add("hidden");
-        document.getElementById('scanLine').style.opacity = "0.6";
         statusLabel.innerHTML = "SCAN_CANCELLED";
-        showMessage("Registration cancelled. Reloading...", true);
+        showMessage("Registration cancelled", true);
         setTimeout(() => location.reload(), 1500);
     };
-
+    
     async function init() {
         try {
             supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            console.log("✅ Supabase client initialized!");
+            console.log("Supabase client initialized");
             
-            const { error: testError } = await supabaseClient.from('agents').select('count', { count: 'exact', head: true });
-            if (testError) {
-                console.warn("⚠️ Table access issue:", testError.message);
-                showMessage("⚠️ Cannot access 'agents' table. Check RLS policies.", true);
-            } else {
-                console.log("✅ Connected to agents table!");
-                showMessage("Connected to Supabase. Scanning device...");
+            // Test connection
+            const { error } = await supabaseClient.from('agents').select('count', { count: 'exact', head: true });
+            if (error) {
+                console.error("Connection test failed:", error);
+                showMessage(`Cannot connect: ${error.message}`, true);
+                statusLabel.innerHTML = "CONNECTION_ERROR";
+                return;
             }
+            
+            console.log("Connected to Supabase");
+            showMessage("Connected to Supabase database", false);
+            
         } catch (err) {
-            console.error("Fatal: Cannot init Supabase client", err);
-            statusLabel.innerHTML = "SUPABASE_FAIL";
-            showMessage("Failed to initialize Supabase. Check URL/Key.", true);
+            console.error("Init error:", err);
+            showMessage(`Init error: ${err.message}`, true);
+            statusLabel.innerHTML = "ERROR";
             return;
         }
         
         buildKeypad();
         currentSignature = generateSignature();
         deviceSigSpan.innerText = currentSignature;
+        console.log("Device signature:", currentSignature);
         
-        setTimeout(() => {
-            authenticateDeviceWithSupabase(currentSignature);
-        }, 800);
+        const isRegistered = await checkExistingDevice();
+        
+        if (!isRegistered) {
+            showMessage("Device not registered. Please enter your 4-digit SECRET KEY.", false);
+            keypadSection.classList.remove("hidden");
+            statusLabel.innerHTML = "ENTER_SECRET_KEY";
+        }
     }
     
     init();

@@ -91,9 +91,7 @@ function setupTerminalListener() {
     });
 }
 
-// ====== LOAD WEAPON SYSTEMS ======
 async function loadAgentWeapons() {
-    console.log("Loading weapons for agent:", currentAgent);
     try {
         const agentQuery = query(collection(db, "agents"), where("agentName", "==", currentAgent));
         const agentSnap = await getDocs(agentQuery);
@@ -101,17 +99,11 @@ async function loadAgentWeapons() {
         if (!agentSnap.empty) {
             const agentData = agentSnap.docs[0].data();
             agentWeapons = agentData.weaponSystem || [];
-            console.log("Weapon systems loaded:", agentWeapons);
-        } else {
-            console.log("Agent not found:", currentAgent);
-            agentWeapons = ["REDMI NOTE 14 PRO", "REALME 8 PRO", "TECHNO CAMON 40 PRO 5G", "REDMI NOTE 12"];
         }
-        
         if (agentWeapons.length === 0) {
             agentWeapons = ["REDMI NOTE 14 PRO", "REALME 8 PRO", "TECHNO CAMON 40 PRO 5G", "REDMI NOTE 12"];
         }
     } catch (error) {
-        console.error("Error loading weapons:", error);
         agentWeapons = ["REDMI NOTE 14 PRO", "REALME 8 PRO", "TECHNO CAMON 40 PRO 5G", "REDMI NOTE 12"];
     }
 }
@@ -131,7 +123,6 @@ function renderWeapons(highlightWeapon = null) {
             document.querySelectorAll('.weapon-btn').forEach(x => x.classList.remove('selected'));
             btn.classList.add('selected');
             selectedWeaponID = weaponName;
-            console.log("Weapon selected:", selectedWeaponID);
         };
         weaponList.appendChild(btn);
     });
@@ -153,15 +144,12 @@ function transitionButton(button, newText, newClass) {
 function enableButtons() {
     actionBtn.disabled = false;
     actionBtn.style.opacity = "1";
-    actionBtn.style.pointerEvents = "auto";
     reserveBtn.disabled = false;
     reserveBtn.style.opacity = "1";
-    reserveBtn.style.pointerEvents = "auto";
     reserveBtn.style.borderColor = "#ffbd00";
     reserveBtn.style.color = "#ffbd00";
 }
 
-// ====== SEARCH MISSION ======
 async function searchMission() {
     const val = input.value.trim();
     if (searchTimeout) clearTimeout(searchTimeout);
@@ -171,8 +159,6 @@ async function searchMission() {
         actionBtn.className = "btn btn-save";
         reserveBtn.textContent = "RESERVE";
         reserveBtn.className = "btn btn-reserve";
-        reserveBtn.style.borderColor = "#ffbd00";
-        reserveBtn.style.color = "#ffbd00";
         statusLabel.innerHTML = "";
         return;
     }
@@ -204,24 +190,19 @@ async function searchMission() {
                     actionBtn.disabled = true;
                     transitionButton(reserveBtn, "VIEW", "btn-view");
                     reserveBtn.disabled = false;
-                    reserveBtn.onclick = () => openViewModal(missionID);
                 } else if (owner === currentAgent) {
                     statusLabel.innerHTML = '<span style="color:#00f3ff;">STATUS: YOUR MISSION</span>';
                     transitionButton(actionBtn, "RETRIEVE", "btn-retrieve");
                     actionBtn.disabled = false;
-                    actionBtn.onclick = openRetrieveModal;
+                    actionBtn.onclick = () => openRetrieveModal();
                     transitionButton(reserveBtn, "RESERVE", "btn-reserve");
                     reserveBtn.disabled = false;
-                    reserveBtn.style.borderColor = "#ffbd00";
-                    reserveBtn.style.color = "#ffbd00";
-                    reserveBtn.onclick = () => openViewModal(missionID);
                 } else {
                     statusLabel.innerHTML = `<span style="color:#ff003c;">OWNED BY ${owner}</span>`;
                     transitionButton(actionBtn, "LOCKED", "btn-locked");
                     actionBtn.disabled = true;
                     transitionButton(reserveBtn, "VIEW", "btn-view");
                     reserveBtn.disabled = false;
-                    reserveBtn.onclick = () => openViewModal(missionID);
                 }
             } else {
                 currentMissionData = null;
@@ -231,13 +212,8 @@ async function searchMission() {
                 actionBtn.onclick = openModal;
                 transitionButton(reserveBtn, "RESERVE", "btn-reserve");
                 reserveBtn.disabled = false;
-                reserveBtn.style.borderColor = "#ffbd00";
-                reserveBtn.style.color = "#ffbd00";
-                reserveBtn.onclick = () => openViewModal(missionID);
             }
-            
             enableButtons();
-            
         } catch(e) {
             console.error(e);
             statusLabel.innerHTML = '<span style="color:#ff003c;">DATABASE ERROR</span>';
@@ -247,57 +223,31 @@ async function searchMission() {
     }, 300);
 }
 
-// ====== OPEN MODAL FOR DEPLOY (SAVE) ======
 async function openModal() {
     const missionID = padMissionID(input.value.trim());
-    if (!missionID) {
-        alert("Invalid Mission ID");
-        return;
-    }
-    
-    console.log("Opening DEPLOY modal for mission:", missionID);
+    if (!missionID) return;
     
     modalOverlay.style.display = 'flex';
-    document.getElementById('pop-header').innerHTML = `<span style="color:#00f3ff;">#${missionID}</span> <span style="font-size:12px; color:#5c7882;">[NEW]</span>`;
+    document.getElementById('pop-header').innerHTML = `<span style="color:#00f3ff;">#${missionID}</span>`;
     
     vAgentInput.value = "";
     selectedWeaponID = "";
     secureField.value = "";
     secureField.classList.remove('show');
     secureBtn.style.display = 'block';
-    secureBtn.innerHTML = '+ Secure Line';
-    vAgentInput.disabled = false;
-    secureField.disabled = false;
     
     await loadAgentWeapons();
     renderWeapons();
     
-    // ✅ FORCE ENABLE DEPLOY BUTTON
-    modalSubmit.disabled = false;
-    modalSubmit.style.opacity = "1";
-    modalSubmit.style.cursor = "pointer";
-    modalSubmit.textContent = "DEPLOY";
-    modalSubmit.className = "btn btn-save";
-    
-    // Remove any existing listeners and attach new one
-    modalSubmit.onclick = null;
-    modalSubmit.onclick = () => {
-        console.log("🔥 DEPLOY button clicked!");
-        submitMission(missionID, false);
-    };
-    
-    console.log("✅ DEPLOY button is now clickable");
+    // DEPLOY button is now handled by HTML onclick
 }
 
-// ====== OPEN MODAL FOR UPDATE (RETRIEVE) ======
 async function openRetrieveModal() {
     if (!currentMissionData) return;
     
     const missionID = currentMissionData.missionID;
-    console.log("Opening UPDATE modal for mission:", missionID);
-    
     modalOverlay.style.display = 'flex';
-    document.getElementById('pop-header').innerHTML = `<span style="color:#00f3ff;">#${missionID}</span> <span style="font-size:12px; color:#5c7882;">[UPDATE]</span>`;
+    document.getElementById('pop-header').innerHTML = `<span style="color:#00f3ff;">#${missionID} [UPDATE]</span>`;
     
     vAgentInput.value = currentMissionData.vAgentID || "";
     selectedWeaponID = currentMissionData.weaponSystem || "";
@@ -309,147 +259,19 @@ async function openRetrieveModal() {
         secureField.classList.remove('show');
         secureBtn.style.display = 'block';
     }
-    secureBtn.innerHTML = '+ Secure Line';
-    vAgentInput.disabled = false;
-    secureField.disabled = false;
     
     await loadAgentWeapons();
     renderWeapons(selectedWeaponID);
-    
-    modalSubmit.disabled = false;
-    modalSubmit.style.opacity = "1";
-    modalSubmit.style.cursor = "pointer";
-    modalSubmit.textContent = "UPDATE";
-    modalSubmit.className = "btn btn-retrieve";
-    
-    modalSubmit.onclick = null;
-    modalSubmit.onclick = () => {
-        console.log("🔥 UPDATE button clicked!");
-        submitMission(missionID, true);
-    };
-    
-    console.log("✅ UPDATE button is now clickable");
-}
-
-// ====== OPEN MODAL FOR VIEW ONLY ======
-async function openViewModal(missionID) {
-    console.log("Opening VIEW modal for mission:", missionID);
-    
-    const qM = query(collection(db, "mission_orders"), where("missionID", "==", missionID));
-    const snapM = await getDocs(qM);
-    if (snapM.empty) {
-        alert("Mission not found");
-        return;
-    }
-    const data = snapM.docs[0].data();
-    
-    modalOverlay.style.display = 'flex';
-    document.getElementById('pop-header').innerHTML = `<span style="color:#ff003c;">#${missionID}</span> <span style="font-size:12px; color:#5c7882;">[VIEW ONLY]</span>`;
-    
-    vAgentInput.value = data.vAgentID || "";
-    selectedWeaponID = data.weaponSystem || "";
-    secureField.value = data.SecureLine || "";
-    if (secureField.value) {
-        secureField.classList.add('show');
-    } else {
-        secureField.classList.remove('show');
-    }
-    secureBtn.style.display = 'none';
-    
-    vAgentInput.disabled = true;
-    secureField.disabled = true;
-    
-    await loadAgentWeapons();
-    renderWeapons(selectedWeaponID);
-    document.querySelectorAll('.weapon-btn').forEach(btn => {
-        btn.style.pointerEvents = 'none';
-        btn.style.opacity = '0.7';
-    });
-    
-    modalSubmit.textContent = "CLOSE";
-    modalSubmit.className = "btn btn-view";
-    modalSubmit.disabled = false;
-    modalSubmit.onclick = closeModal;
-}
-
-// ====== SUBMIT MISSION ======
-async function submitMission(missionID, isUpdate) {
-    console.log("🚀 SUBMIT MISSION CALLED");
-    console.log("Mission ID:", missionID);
-    console.log("Is Update:", isUpdate);
-    
-    const vID = vAgentInput.value.trim();
-    const sLine = secureField.value.trim();
-    
-    console.log("vAgent ID:", vID);
-    console.log("Selected Weapon:", selectedWeaponID);
-    
-    if (!vID) {
-        alert("Enter vAgent ID");
-        return;
-    }
-    if (!selectedWeaponID) {
-        alert("Select a weapon system");
-        return;
-    }
-    
-    const now = new Date();
-    const deploymentDate = formatDate(now);
-    const relieveDate = formatDate(calculateRelieveDate(now));
-    
-    try {
-        console.log("Saving to Firebase mission_orders...");
-        await setDoc(doc(db, "mission_orders", missionID), {
-            missionID: missionID,
-            agent: currentAgent,
-            vAgentID: vID,
-            weaponSystem: selectedWeaponID,
-            SecureLine: sLine || "",
-            status: "DEPLOYED",
-            deploymentDate: deploymentDate,
-            relieveDate: relieveDate,
-            timestamp: serverTimestamp()
-        }, { merge: true });
-        
-        console.log("✅ Mission saved successfully!");
-        addLog(`Mission #${missionID} ${isUpdate ? 'UPDATED' : 'DEPLOYED'} by ${currentAgent}`, '#05ffa1');
-        closeModal();
-        input.value = "";
-        statusLabel.innerHTML = "";
-        actionBtn.textContent = "SAVE";
-        actionBtn.className = "btn btn-save";
-        currentMissionData = null;
-        alert(`✅ MISSION ${isUpdate ? 'UPDATED' : 'DEPLOYED'} SUCCESSFULLY!`);
-        
-        vAgentInput.disabled = false;
-        secureField.disabled = false;
-        document.querySelectorAll('.weapon-btn').forEach(btn => {
-            btn.style.pointerEvents = 'auto';
-            btn.style.opacity = '1';
-        });
-        
-    } catch(e) {
-        console.error("❌ Error saving mission:", e);
-        alert("ERROR: " + e.message);
-    }
 }
 
 function closeModal() {
-    console.log("Closing modal");
     modalOverlay.style.display = 'none';
-    vAgentInput.disabled = false;
-    secureField.disabled = false;
-    document.querySelectorAll('.weapon-btn').forEach(btn => {
-        btn.style.pointerEvents = 'auto';
-        btn.style.opacity = '1';
-    });
 }
 
 function toggleSecureLine() {
     if (secureField.classList.contains('show')) {
         secureField.classList.remove('show');
         secureBtn.style.display = 'block';
-        secureBtn.innerHTML = '+ Secure Line';
     } else {
         secureField.classList.add('show');
         secureBtn.style.display = 'none';
@@ -457,9 +279,62 @@ function toggleSecureLine() {
     }
 }
 
-// ====== INIT ======
+// ====== EMERGENCY DEPLOY FUNCTION ======
+window.emergencyDeploy = async function() {
+    console.log("🔥 EMERGENCY DEPLOY CALLED");
+    
+    const missionIDRaw = document.getElementById('mission-input').value.trim();
+    const missionID = missionIDRaw.padStart(5, '0');
+    const vID = document.getElementById('v-agent-input').value.trim();
+    const weaponBtn = document.querySelector('.weapon-btn.selected');
+    const weapon = weaponBtn ? weaponBtn.innerText.replace('> ', '') : '';
+    const sLine = document.getElementById('secure-input-field').value.trim();
+    
+    if (!missionID || missionID.length < 4) {
+        alert("Invalid Mission ID");
+        return;
+    }
+    if (!vID) {
+        alert("Enter vAgent ID");
+        return;
+    }
+    if (!weapon) {
+        alert("Select a weapon system");
+        return;
+    }
+    
+    const now = new Date();
+    const deploymentDate = `${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getDate().toString().padStart(2,'0')}/${now.getFullYear()}`;
+    const relieveDateObj = new Date(now);
+    relieveDateObj.setDate(relieveDateObj.getDate() + 30);
+    const relieveDate = `${(relieveDateObj.getMonth()+1).toString().padStart(2,'0')}/${relieveDateObj.getDate().toString().padStart(2,'0')}/${relieveDateObj.getFullYear()}`;
+    
+    try {
+        await setDoc(doc(db, "mission_orders", missionID), {
+            missionID: missionID,
+            agent: currentAgent,
+            vAgentID: vID,
+            weaponSystem: weapon,
+            SecureLine: sLine || "",
+            status: "DEPLOYED",
+            deploymentDate: deploymentDate,
+            relieveDate: relieveDate,
+            timestamp: serverTimestamp()
+        }, { merge: true });
+        
+        addLog(`Mission #${missionID} DEPLOYED by ${currentAgent}`, '#05ffa1');
+        alert("✅ MISSION DEPLOYED SUCCESSFULLY!");
+        document.getElementById('modal-overlay').style.display = 'none';
+        document.getElementById('mission-input').value = "";
+        document.getElementById('mission-status').innerHTML = "";
+        location.reload();
+    } catch(e) {
+        console.error(e);
+        alert("ERROR: " + e.message);
+    }
+};
+
 function init() {
-    console.log("Dashboard initializing...");
     profName.innerText = currentAgent;
     avatarInit.innerText = currentAgent.charAt(0).toUpperCase();
     updateClock();
@@ -471,7 +346,7 @@ function init() {
     modalClose.onclick = closeModal;
     secureBtn.onclick = toggleSecureLine;
     
-    console.log("Dashboard ready for agent:", currentAgent);
+    console.log("Dashboard ready");
 }
 
 function updateClock() {

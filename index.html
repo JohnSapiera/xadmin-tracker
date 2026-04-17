@@ -2,20 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>SECURE TERMINAL • CIA INTELLIGENCE</title>
-    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/index.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/main.js" defer></script>
+    <script src="js/index.js" defer></script>
 </head>
 <body>
 <div class="terminal">
-    <!-- Status Bar -->
+    <!-- Status Bar - Signal Bars Only (no printer icon) -->
     <div class="status-bar">
-        <div class="fingerprint-section">
-            <span class="fp-icon">🖨️</span>
-            <span class="fp-value" id="fingerprintText">--:--:--</span>
-        </div>
         <div class="signal-section">
             <div class="signal-bars" id="signalBars">
                 <div class="bar bar-1" id="bar1"></div>
@@ -35,13 +31,13 @@
     <!-- CRT Monitor / Terminal Screen -->
     <div class="crt-monitor">
         <div class="terminal-screen">
-            <div class="typed-line" id="typedLine">> Enter your 4 Digit Key..</div>
+            <div class="typed-line" id="typedLine">
+                <span class="prompt">&gt;</span>
+                <span class="cursor" id="cursor">_</span>
+            </div>
             <div class="display-message" id="displayMessage"></div>
         </div>
     </div>
-
-    <!-- Hidden Input Tracker -->
-    <div class="hidden-code" id="hiddenCode"></div>
 
     <!-- Keypad - Circles -->
     <div class="keypad">

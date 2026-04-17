@@ -2,51 +2,89 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CORE_INTEL</title>
-    
-    <link rel="manifest" href="manifest.json">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#02080a">
-    
-    <link rel="stylesheet" href="styles/dbintel.css">
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>SECURE TERMINAL • CIA INTELLIGENCE</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/main.js" defer></script>
 </head>
 <body>
+<div class="terminal">
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <div class="fingerprint-section">
+            <span class="fp-icon">🖨️</span>
+            <span class="fp-value" id="fingerprintText">--:--:--</span>
+        </div>
+        <div class="signal-section">
+            <div class="signal-bars" id="signalBars">
+                <div class="bar bar-1" id="bar1"></div>
+                <div class="bar bar-2" id="bar2"></div>
+                <div class="bar bar-3" id="bar3"></div>
+            </div>
+            <div class="battery">
+                <span>🔋</span>
+                <div class="battery-level">
+                    <div class="battery-fill" id="batteryFill"></div>
+                </div>
+                <span id="batteryPercent">90%</span>
+            </div>
+        </div>
+    </div>
 
-<header>
-    <span style="font-weight: 700; color: #fff; letter-spacing: 2px;">CORE_INTEL</span>
-</header>
+    <!-- CRT Monitor / Terminal Screen -->
+    <div class="crt-monitor">
+        <div class="terminal-screen">
+            <div class="typed-line" id="typedLine">> Enter your 4 Digit Key..</div>
+            <div class="display-message" id="displayMessage"></div>
+        </div>
+    </div>
 
-<div class="status-bar">
-    <div>SYS_TIME: <span id="clock">00:00:00</span></div>
-    <div id="auth-status" style="color: var(--green);">[ OFFLINE ]</div>
+    <!-- Hidden Input Tracker -->
+    <div class="hidden-code" id="hiddenCode"></div>
+
+    <!-- Keypad - Circles -->
+    <div class="keypad">
+        <div class="key-row">
+            <div class="key-circle" data-digit="1">1</div>
+            <div class="key-circle" data-digit="2">2</div>
+            <div class="key-circle" data-digit="3">3</div>
+        </div>
+        <div class="key-row">
+            <div class="key-circle" data-digit="4">4</div>
+            <div class="key-circle" data-digit="5">5</div>
+            <div class="key-circle" data-digit="6">6</div>
+        </div>
+        <div class="key-row">
+            <div class="key-circle" data-digit="7">7</div>
+            <div class="key-circle" data-digit="8">8</div>
+            <div class="key-circle" data-digit="9">9</div>
+        </div>
+        <div class="key-row">
+            <div class="key-circle key-zero" data-digit="0">0</div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <div class="action-btn" id="clearBtn">CLEAR</div>
+        <div class="action-btn reset" id="resetBtn">RESET</div>
+    </div>
+
+    <!-- Agent Info Panel -->
+    <div class="agent-panel" id="agentPanel">
+        <div class="agent-row">
+            <span class="agent-label">AGENT DESIGNATION</span>
+            <span class="agent-value" id="agentName">—</span>
+        </div>
+        <div class="agent-row">
+            <span class="agent-label">CLEARANCE LEVEL</span>
+            <span class="agent-value">ALPHA / OMEGA</span>
+        </div>
+        <hr>
+        <div class="agent-label">REGISTERED DEVICES</div>
+        <div class="devices-list" id="devicesList"></div>
+    </div>
 </div>
-
-<main>
-    <div class="intel-module">
-        <div class="module-title">IDENTITY VERIFICATION</div>
-        <input type="text" id="vagent-input" class="input-field" placeholder="ENTER vAGENT#" autocomplete="off" disabled>
-        <div id="scan-status">WAITING FOR DASHBOARD UPLINK...</div>
-        <div id="device-list" class="device-grid"></div>
-    </div>
-
-    <div class="intel-module" id="expense-module" style="opacity: 0.1; pointer-events: none; transition: 0.5s;">
-        <div class="module-title">EXPENSE INJECTION</div>
-        <input type="number" id="expense-input" class="input-field" placeholder="0.00" inputmode="decimal">
-        <button id="submit-btn" class="btn-save">EXECUTE OVERRIDE</button>
-    </div>
-</main>
-
-<nav class="bottom-nav">
-    <a href="dashboard.html" class="nav-item">DASHBOARD</a>
-    <a href="#" class="nav-item active">INTEL</a>
-    <a href="profile.html" class="nav-item">PROFILE</a>
-</nav>
-
-<script type="module" src="js/jsintel.js"></script>
-
 </body>
 </html>

@@ -336,3 +336,38 @@ hr {
         gap: 10px;
     }
 }
+
+/* Signal Bars - Fixed orientation (hindi baliktad) */
+.signal-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    /* REMOVED transform: rotate(90deg) */
+}
+
+.bar {
+    width: 4px;
+    background: #2a4a3a;
+    border-radius: 2px;
+    transition: all 0.2s ease;
+}
+
+.bar-1 { height: 8px; }
+.bar-2 { height: 14px; }
+.bar-3 { height: 20px; }
+
+.bar.active {
+    background: #ffffff;
+    box-shadow: 0 0 8px #ffffff;
+}
+
+/* White fade animation for signal bars */
+@keyframes signalPulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.4; }
+    100% { opacity: 1; }
+}
+
+.bar.active {
+    animation: signalPulse 0.8s ease-in-out;
+}

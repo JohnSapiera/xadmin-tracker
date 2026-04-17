@@ -1,4 +1,4 @@
-// js/jsdash.js - CORE DASHBOARD v30.5
+// js/jsdash.js - CORE DASHBOARD v30.5 (FINAL FIX)
 
 import SoundFX from './sound.js';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -173,15 +173,28 @@ function resetUI() {
     currentMissionData = null;
 }
 
-function updateConfirmButton() {
+// ====== FORCE ENABLE DEPLOY BUTTON ======
+function forceEnableDeployButton() {
+    if (modalSubmit) {
+        modalSubmit.disabled = false;
+        modalSubmit.style.opacity = "1";
+        modalSubmit.style.cursor = "pointer";
+        console.log("🔥 DEPLOY button force enabled");
+    }
+}
+
+// ====== UPDATE DEPLOY BUTTON STATE (SIMPLE & RELIABLE) ======
+function updateDeployButtonState() {
     const vID = vAgentInput.value.trim();
     const hasWeapon = selectedWeaponID !== "";
-    const isValid = vID !== "" && hasWeapon && !isMissionTerminated;
+    const shouldEnable = vID !== "" && hasWeapon && !isMissionTerminated;
     
-    if (modalSubmit) {
-        modalSubmit.disabled = !isValid;
-        modalSubmit.style.opacity = isValid ? "1" : "0.5";
-        modalSubmit.style.cursor = isValid ? "pointer" : "not-allowed";
+    if (shouldEnable) {
+        forceEnableDeployButton();
+    } else {
+        modalSubmit.disabled = true;
+        modalSubmit.style.opacity = "0.5";
+        modalSubmit.style.cursor = "not-allowed";
     }
 }
 
@@ -304,7 +317,7 @@ function renderWeapons() {
     
     if (!agentWeapons || agentWeapons.length === 0) {
         weaponList.innerHTML = '<div style="text-align:center; padding:10px; color:#ffbd00;">No weapons available.</div>';
-        updateConfirmButton();
+        updateDeployButtonState();
         return;
     }
     
@@ -319,7 +332,7 @@ function renderWeapons() {
             btn.classList.add('selected');
             selectedWeaponID = weaponName;
             console.log("Weapon selected:", selectedWeaponID);
-            updateConfirmButton();
+            updateDeployButtonState();
         };
         weaponList.appendChild(btn);
     });
@@ -379,7 +392,24 @@ async function openModal() {
         });
     }
     
-    updateConfirmButton();
+    updateDeployButtonState();
+    
+    // SAFETY: Force check every 500ms while modal is open (ensures button becomes clickable)
+    const interval = setInterval(() => {
+        const vID = vAgentInput.value.trim();
+        const hasWeapon = selectedWeaponID !== "";
+        if (vID !== "" && hasWeapon && !isMissionTerminated) {
+            forceEnableDeployButton();
+            clearInterval(interval);
+        }
+    }, 500);
+    
+    // Clear interval when modal closes
+    const originalClose = closeModal;
+    window.closeModal = function() {
+        clearInterval(interval);
+        originalClose();
+    };
 }
 
 function closeModal() {
@@ -457,7 +487,7 @@ function setupEventListeners() {
     input.addEventListener('input', searchMission);
     modalClose.onclick = closeModal;
     modalSubmit.onclick = submitMission;
-    vAgentInput.addEventListener('input', updateConfirmButton);
+    vAgentInput.addEventListener('input', updateDeployButtonState);
     secureBtn.onclick = () => {
         SoundFX.click();
         secureBtn.style.display = 'none';

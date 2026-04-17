@@ -153,13 +153,23 @@ async function loadAgentWeapons() {
     }
 }
 
-// ====== UPDATE CONFIRM BUTTON (ENABLE/DISABLE DEPLOY) ======
+function resetUI() {
+    actionBtn.textContent = "SAVE";
+    actionBtn.className = "btn btn-save";
+    actionBtn.disabled = false;
+    actionBtn.style.opacity = "1";
+    actionBtn.style.pointerEvents = "auto";
+    actionBtn.onclick = openModal;
+    reserveBtn.classList.remove('active');
+    isMissionTerminated = false;
+    currentMissionData = null;
+}
+
+// ====== UPDATE CONFIRM BUTTON ======
 function updateConfirmButton() {
     const vID = vAgentInput.value.trim();
     const hasWeapon = selectedWeaponID !== "";
     const isValid = vID !== "" && hasWeapon && !isMissionTerminated;
-    
-    console.log("updateConfirmButton - vID:", vID, "hasWeapon:", hasWeapon, "isValid:", isValid);
     
     if (modalSubmit) {
         modalSubmit.disabled = !isValid;
@@ -167,19 +177,7 @@ function updateConfirmButton() {
     }
 }
 
-function resetUI() {
-    actionBtn.textContent = "SAVE";
-    actionBtn.className = "btn btn-save";
-    actionBtn.disabled = false;      // ✅ Enable
-    actionBtn.style.opacity = "1";   // ✅ Remove fade
-    actionBtn.style.pointerEvents = "auto";
-    actionBtn.onclick = openModal;   // ✅ Attach onclick
-    reserveBtn.classList.remove('active');
-    isMissionTerminated = false;
-    currentMissionData = null;
-}
-
-// ====== SEARCH WITH POP-UP FOR 1-3 DIGITS ======
+// ====== SEARCH FUNCTIONS ======
 async function promptScanConfirmation(rawValue) {
     return new Promise((resolve) => {
         const confirmScan = confirm(`Mission ID "${rawValue}" will be scanned as "${padMissionID(rawValue)}".\n\nDo you want to continue?`);
@@ -192,7 +190,6 @@ async function performSearch(rawValue) {
     
     const paddedMissionID = padMissionID(rawValue);
     console.log("Searching for:", paddedMissionID);
-    
     addLog(`Scanning mission ID: ${paddedMissionID}`, '#5c7882');
     
     try {
@@ -210,7 +207,6 @@ async function performSearch(rawValue) {
                 actionBtn.textContent = "TERMINATED";
                 actionBtn.className = "btn btn-locked";
                 actionBtn.disabled = true;
-                actionBtn.onclick = null;
                 reserveBtn.classList.remove('active');
                 addLog(`Mission ${paddedMissionID} is TERMINATED. Access denied.`, '#8b0000');
                 return;
@@ -223,7 +219,7 @@ async function performSearch(rawValue) {
                 actionBtn.textContent = "RETRIEVE";
                 actionBtn.className = "btn btn-retrieve";
                 actionBtn.disabled = false;
-                actionBtn.onclick = openModal;  // ✅ FIX: Attach onclick
+                actionBtn.onclick = openModal;
                 reserveBtn.classList.remove('active');
                 addLog(`Mission ${paddedMissionID} found. Ready to RETRIEVE.`, '#00f3ff');
             } else {
@@ -231,21 +227,17 @@ async function performSearch(rawValue) {
                 actionBtn.textContent = "LOCKED";
                 actionBtn.className = "btn btn-locked";
                 actionBtn.disabled = true;
-                actionBtn.onclick = null;
                 reserveBtn.classList.remove('active');
                 addLog(`Mission ${paddedMissionID} is owned by ${owner}. Access denied.`, '#ff003c');
             }
         } else {
-            // ✅ FIX: Mission is AVAILABLE - Enable SAVE button
             currentMissionData = null;
             isMissionTerminated = false;
             setStatusColor('available', 'STATUS: AVAILABLE');
             actionBtn.textContent = "SAVE";
             actionBtn.className = "btn btn-save";
-            actionBtn.disabled = false;           // ✅ Enable the button
-            actionBtn.style.opacity = "1";        // ✅ Remove fade
-            actionBtn.style.pointerEvents = "auto";
-            actionBtn.onclick = openModal;        // ✅ Attach onclick
+            actionBtn.disabled = false;
+            actionBtn.onclick = openModal;
             reserveBtn.classList.add('active');
             addLog(`Mission ${paddedMissionID} is AVAILABLE. Ready to DEPLOY.`, '#05ffa1');
         }
@@ -258,23 +250,18 @@ async function performSearch(rawValue) {
     }
 }
 
-// ====== MAIN SEARCH LOGIC ======
 async function searchMission() {
     const rawValue = input.value.trim();
-    
     if (searchTimeout) clearTimeout(searchTimeout);
     if (rawValue.length === 0) { resetUI(); return; }
     
     const digitCount = rawValue.length;
     
-    // 1-3 digits: No autoscan, show pop-up confirmation
     if (digitCount >= 1 && digitCount <= 3) {
         setStatusColor('reserve', `SCAN REQUIRED: "${rawValue}" will be scanned as "${padMissionID(rawValue)}"`);
         actionBtn.textContent = "SCAN";
         actionBtn.className = "btn btn-reserve";
         actionBtn.disabled = false;
-        
-        // Store temp value for scanning
         actionBtn.onclick = async () => {
             const confirmed = await promptScanConfirmation(rawValue);
             if (confirmed) {
@@ -287,10 +274,8 @@ async function searchMission() {
         return;
     }
     
-    // 4-5 digits: Autoscan after delay
     if (digitCount >= 4) {
         setStatusColor('available', `SCANNING IN 0.3s...`);
-        
         searchTimeout = setTimeout(async () => {
             await performSearch(rawValue);
             searchTimeout = null;
@@ -375,7 +360,16 @@ async function openModal() {
         });
     }
     
-    updateConfirmButton();  // ✅ CRITICAL: Call this here
+    updateConfirmButton();
+    
+    // ===== EMERGENCY FORCE ENABLE DEPLOY BUTTON =====
+    setTimeout(() => {
+        if (modalSubmit) {
+            modalSubmit.disabled = false;
+            modalSubmit.style.opacity = "1";
+            console.log("🔥 DEPLOY button force enabled");
+        }
+    }, 500);
 }
 
 function closeModal() {

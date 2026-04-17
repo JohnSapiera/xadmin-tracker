@@ -1,21 +1,9 @@
-// js/jsdash.js - CORE DASHBOARD (NO SOUNDS)
+// js/jsintel.js - CORE INTEL with Mobile-Friendly Sounds
 
+import SoundFX from './sound.js';
+import { DEVICE_REGISTRY } from './config.js';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { 
-    getFirestore, 
-    collection, 
-    query, 
-    where, 
-    getDocs, 
-    doc, 
-    setDoc, 
-    addDoc, 
-    serverTimestamp, 
-    getDoc, 
-    onSnapshot, 
-    orderBy, 
-    limit 
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, query, where, getDocs, doc, updateDoc, arrayUnion, increment, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = { 
     apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
@@ -29,326 +17,205 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const currentAgent = localStorage.getItem("agent") || localStorage.getItem("cia_agent") || "UNKNOWN_AGENT";
-console.log("Agent:", currentAgent);
+const vAgentInput = document.getElementById('vagent-input');
+const scanStatus = document.getElementById('scan-status');
+const deviceList = document.getElementById('device-list');
+const authStatus = document.getElementById('auth-status');
+const expenseModule = document.getElementById('expense-module');
+const submitBtn = document.getElementById('submit-btn');
+const expenseInput = document.getElementById('expense-input');
 
-let selectedWeaponID = "";
-let agentWeapons = [];
-let currentMissionData = null;
-let searchTimeout = null;
+let selectedMissionDocId = null;
+const currentAgent = localStorage.getItem("agent") || localStorage.getItem("cia_agent") || "AGENT_LZ";
 
-// DOM Elements
-const input = document.getElementById('mission-input');
-const actionBtn = document.getElementById('action-btn');
-const reserveBtn = document.getElementById('reserve-btn');
-const statusLabel = document.getElementById('mission-status');
-const terminal = document.getElementById('terminal');
-const modalOverlay = document.getElementById('modal-overlay');
-const modalSubmit = document.getElementById('modal-submit');
-const modalClose = document.getElementById('modal-close');
-const vAgentInput = document.getElementById('v-agent-input');
-const secureField = document.getElementById('secure-input-field');
-const secureBtn = document.getElementById('add-secure-btn');
-const weaponList = document.getElementById('weapon-list');
-const clockSpan = document.getElementById('clock');
-const profName = document.getElementById('prof-name');
-const avatarInit = document.getElementById('avatar-init');
-
-function padMissionID(value) {
-    const digits = value.replace(/\D/g, '');
-    if (digits.length === 0) return '';
-    if (digits.length >= 5) return digits.slice(0, 5);
-    return digits.padStart(5, '0');
+function establishSession() {
+    if (currentAgent) {
+        SoundFX.success();
+        authStatus.innerText = `AGENT: ${currentAgent}`;
+        vAgentInput.disabled = false;
+        scanStatus.innerText = "INPUT TARGET vAGENT# FOR VERIFICATION";
+    } else {
+        SoundFX.error();
+        authStatus.innerHTML = `<span style="color:var(--red)">[ UNAUTHORIZED ]</span>`;
+        scanStatus.innerHTML = "ACCESS DENIED: REDIRECTING TO DASHBOARD...";
+        setTimeout(() => location.href = "dashboard.html", 3000);
+    }
 }
 
-function formatDate(date) {
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
-    const year = date.getFullYear();
-    return `${month}/${day}/${year}`;
-}
-
-function calculateRelieveDate(deploymentDate) {
-    const relieveDate = new Date(deploymentDate);
-    relieveDate.setDate(relieveDate.getDate() + 30);
-    return relieveDate;
-}
-
-function addLog(msg, color) {
-    addDoc(collection(db, "terminal_logs"), { 
-        agent: currentAgent, 
-        message: msg, 
-        color: color, 
-        timestamp: serverTimestamp() 
-    }).catch(e => console.error(e));
-}
-
-function setupTerminalListener() {
-    onSnapshot(query(collection(db, "terminal_logs"), orderBy("timestamp", "desc"), limit(15)), (snap) => {
-        terminal.innerHTML = "";
-        snap.forEach(doc => {
-            const d = doc.data();
-            const time = d.timestamp ? new Date(d.timestamp.seconds * 1000).toLocaleTimeString('en-GB') : "--";
-            terminal.innerHTML += `<div class="term-line"><span style="color:#5c7882">[${time}]</span> <span style="color:${d.color}">${d.message}</span></div>`;
+async function addLog(msg, color) {
+    try {
+        SoundFX.terminalUpdate();
+        await addDoc(collection(db, "terminal_logs"), {
+            agent: currentAgent, message: msg, color: color, timestamp: serverTimestamp()
         });
-    });
+    } catch(e) { console.error("Log error:", e); }
 }
 
-async function loadAgentWeapons() {
+function resetUI() {
+    deviceList.innerHTML = "";
+    expenseModule.style.opacity = "0.1";
+    expenseModule.style.pointerEvents = "none";
+    submitBtn.classList.remove('ready');
+    selectedMissionDocId = null;
+    expenseInput.value = "";
+}
+
+// ====== MOBILE-FRIENDLY KEYPAD SOUNDS FOR vAGENT INPUT ======
+let lastVAgentLength = 0;
+vAgentInput.addEventListener('input', (e) => {
+    const currentLength = e.target.value.length;
+    if (currentLength > lastVAgentLength) {
+        const lastChar = e.target.value.slice(-1);
+        if (lastChar >= '0' && lastChar <= '9') {
+            SoundFX.keypadTone(lastChar);
+        } else if (lastChar >= 'a' && lastChar <= 'z') {
+            SoundFX.beep(700, 0.05, 0.1);
+        } else if (lastChar >= 'A' && lastChar <= 'Z') {
+            SoundFX.beep(750, 0.05, 0.1);
+        } else {
+            SoundFX.beep(800, 0.03, 0.1);
+        }
+    } else if (currentLength < lastVAgentLength) {
+        SoundFX.beep(400, 0.03, 0.08);
+    }
+    lastVAgentLength = currentLength;
+});
+
+// ====== MOBILE-FRIENDLY KEYPAD SOUNDS FOR EXPENSE AMOUNT ======
+let lastExpenseLength = 0;
+expenseInput.addEventListener('input', (e) => {
+    const currentLength = e.target.value.length;
+    if (currentLength > lastExpenseLength) {
+        const lastChar = e.target.value.slice(-1);
+        if (lastChar >= '0' && lastChar <= '9') {
+            SoundFX.keypadTone(lastChar);
+        } else if (lastChar === '.') {
+            SoundFX.beep(900, 0.03, 0.15);
+        } else {
+            SoundFX.beep(600, 0.03, 0.1);
+        }
+    } else if (currentLength < lastExpenseLength) {
+        SoundFX.beep(400, 0.03, 0.08);
+    }
+    lastExpenseLength = currentLength;
+});
+
+let typingTimer;
+vAgentInput.addEventListener('input', () => {
+    clearTimeout(typingTimer);
+    const vInput = vAgentInput.value.trim();
+    
+    if (vInput.length === 0) {
+        resetUI();
+    }
+    
+    if (vInput.length > 0 && currentAgent) {
+        scanStatus.innerHTML = `<span class="blink">[VERIFYING IDENTITY] ${vInput}...</span>`;
+        typingTimer = setTimeout(() => performHierarchySearch(vInput), 800);
+    } else if (vInput.length === 0) {
+        scanStatus.innerText = "INPUT TARGET vAGENT# FOR VERIFICATION";
+    }
+});
+
+async function performHierarchySearch(vInput) {
+    SoundFX.terminalUpdate();
     try {
-        const agentQuery = query(collection(db, "agents"), where("agentName", "==", currentAgent));
-        const agentSnap = await getDocs(agentQuery);
-        
-        if (!agentSnap.empty) {
-            const agentData = agentSnap.docs[0].data();
-            agentWeapons = agentData.weaponSystem || [];
-        }
-        if (agentWeapons.length === 0) {
-            agentWeapons = ["REDMI NOTE 14 PRO", "REALME 8 PRO", "TECHNO CAMON 40 PRO 5G", "REDMI NOTE 12"];
-        }
-    } catch (error) {
-        agentWeapons = ["REDMI NOTE 14 PRO", "REALME 8 PRO", "TECHNO CAMON 40 PRO 5G", "REDMI NOTE 12"];
-    }
-}
+        const qMatch = query(collection(db, "mission_orders"), where("vAgentID", "==", vInput), where("agent", "==", currentAgent));
+        const snapMatch = await getDocs(qMatch);
 
-function renderWeapons(highlightWeapon = null) {
-    weaponList.innerHTML = "";
-    agentWeapons.forEach(weaponName => {
-        const btn = document.createElement('button');
-        btn.className = "weapon-btn";
-        btn.innerText = `> ${weaponName}`;
-        btn.setAttribute('data-weapon-id', weaponName);
-        if (highlightWeapon === weaponName) {
-            btn.classList.add('selected');
-            selectedWeaponID = weaponName;
-        }
-        btn.onclick = () => {
-            document.querySelectorAll('.weapon-btn').forEach(x => x.classList.remove('selected'));
-            btn.classList.add('selected');
-            selectedWeaponID = weaponName;
-        };
-        weaponList.appendChild(btn);
-    });
-}
-
-function transitionButton(button, newText, newClass) {
-    button.style.transition = 'all 0.3s ease';
-    button.style.transform = 'scale(0.95)';
-    setTimeout(() => {
-        button.textContent = newText;
-        button.className = `btn ${newClass}`;
-        button.style.transform = 'scale(1)';
-        setTimeout(() => {
-            button.style.transition = '';
-        }, 300);
-    }, 150);
-}
-
-function enableButtons() {
-    actionBtn.disabled = false;
-    actionBtn.style.opacity = "1";
-    reserveBtn.disabled = false;
-    reserveBtn.style.opacity = "1";
-    reserveBtn.style.borderColor = "#ffbd00";
-    reserveBtn.style.color = "#ffbd00";
-}
-
-async function searchMission() {
-    const val = input.value.trim();
-    if (searchTimeout) clearTimeout(searchTimeout);
-    
-    if (val.length === 0) {
-        actionBtn.textContent = "SAVE";
-        actionBtn.className = "btn btn-save";
-        reserveBtn.textContent = "RESERVE";
-        reserveBtn.className = "btn btn-reserve";
-        statusLabel.innerHTML = "";
-        return;
-    }
-    
-    if (val.length < 4) {
-        statusLabel.innerHTML = 'Enter 4-5 digits';
-        return;
-    }
-    
-    const missionID = padMissionID(val);
-    statusLabel.innerHTML = '<span class="blink">SCANNING...</span>';
-    
-    actionBtn.disabled = true;
-    reserveBtn.disabled = true;
-    
-    searchTimeout = setTimeout(async () => {
-        try {
-            const qM = query(collection(db, "mission_orders"), where("missionID", "==", missionID));
-            const snapM = await getDocs(qM);
-            
-            if (!snapM.empty) {
-                currentMissionData = snapM.docs[0].data();
-                const owner = currentMissionData.agent;
-                const status = currentMissionData.status;
-                
-                if (status === "TERMINATED") {
-                    statusLabel.innerHTML = '<span style="color:#8b0000;">STATUS: TERMINATED</span>';
-                    transitionButton(actionBtn, "LOCKED", "btn-locked");
-                    actionBtn.disabled = true;
-                    transitionButton(reserveBtn, "VIEW", "btn-view");
-                    reserveBtn.disabled = false;
-                } else if (owner === currentAgent) {
-                    statusLabel.innerHTML = '<span style="color:#00f3ff;">STATUS: YOUR MISSION</span>';
-                    transitionButton(actionBtn, "RETRIEVE", "btn-retrieve");
-                    actionBtn.disabled = false;
-                    actionBtn.onclick = openRetrieveModal;
-                    transitionButton(reserveBtn, "RESERVE", "btn-reserve");
-                    reserveBtn.disabled = false;
-                } else {
-                    statusLabel.innerHTML = `<span style="color:#ff003c;">OWNED BY ${owner}</span>`;
-                    transitionButton(actionBtn, "LOCKED", "btn-locked");
-                    actionBtn.disabled = true;
-                    transitionButton(reserveBtn, "VIEW", "btn-view");
-                    reserveBtn.disabled = false;
-                }
+        if (snapMatch.empty) {
+            const qGlobal = query(collection(db, "mission_orders"), where("vAgentID", "==", vInput));
+            const snapGlobal = await getDocs(qGlobal);
+            if (!snapGlobal.empty) {
+                SoundFX.error();
+                scanStatus.innerHTML = `<span style="color:var(--red)">[ACCESS DENIED] UNAUTHORIZED TARGET DETECTED</span>`;
+                addLog(`SECURITY ALERT: ${currentAgent} ACCESSED FOREIGN TARGET ${vInput}`, 'var(--red)');
             } else {
-                currentMissionData = null;
-                statusLabel.innerHTML = '<span style="color:#05ffa1;">STATUS: AVAILABLE</span>';
-                transitionButton(actionBtn, "DEPLOY", "btn-save");
-                actionBtn.disabled = false;
-                actionBtn.onclick = openModal;
-                transitionButton(reserveBtn, "RESERVE", "btn-reserve");
-                reserveBtn.disabled = false;
+                SoundFX.beep(400, 0.3, 0.2);
+                scanStatus.innerHTML = `<span style="color:var(--yellow)">[ERROR] vAGENT# ${vInput} NOT FOUND</span>`;
             }
-            enableButtons();
-        } catch(e) {
-            console.error(e);
-            statusLabel.innerHTML = '<span style="color:#ff003c;">DATABASE ERROR</span>';
-            actionBtn.disabled = false;
-            reserveBtn.disabled = false;
+            return;
         }
-    }, 300);
-}
 
-async function openModal() {
-    const missionID = padMissionID(input.value.trim());
-    if (!missionID) return;
-    
-    modalOverlay.style.display = 'flex';
-    document.getElementById('pop-header').innerHTML = `<span style="color:#00f3ff;">#${missionID}</span>`;
-    
-    vAgentInput.value = "";
-    selectedWeaponID = "";
-    secureField.value = "";
-    secureField.classList.remove('show');
-    secureBtn.style.display = 'block';
-    
-    await loadAgentWeapons();
-    renderWeapons();
-}
-
-async function openRetrieveModal() {
-    if (!currentMissionData) return;
-    
-    const missionID = currentMissionData.missionID;
-    modalOverlay.style.display = 'flex';
-    document.getElementById('pop-header').innerHTML = `<span style="color:#00f3ff;">#${missionID} [UPDATE]</span>`;
-    
-    vAgentInput.value = currentMissionData.vAgentID || "";
-    selectedWeaponID = currentMissionData.weaponSystem || "";
-    secureField.value = currentMissionData.SecureLine || "";
-    if (secureField.value) {
-        secureField.classList.add('show');
-        secureBtn.style.display = 'none';
-    } else {
-        secureField.classList.remove('show');
-        secureBtn.style.display = 'block';
+        SoundFX.success();
+        scanStatus.innerHTML = `<span style="color:var(--green)">[IDENTITY MATCH] RETRIEVING WEAPON SYSTEM...</span>`;
+        
+        deviceList.innerHTML = "";
+        
+        snapMatch.forEach(doc => {
+            const data = doc.data();
+            const btn = document.createElement('button');
+            btn.className = "dev-btn";
+            const deviceName = DEVICE_REGISTRY[data.weaponSystem] || `SIG: ${data.weaponSystem}`;
+            btn.innerHTML = `<span style="font-size:9px; color:var(--cyan)">AUTHORIZED SYSTEM: ${data.weaponSystem}</span>
+                <span style="font-weight:700">> ${deviceName}</span>
+                <span style="font-size:10px; color:#5c7882; align-self:flex-end">MISSION_REF: #${data.missionID}</span>`;
+            btn.onclick = () => {
+                SoundFX.click();
+                document.querySelectorAll('.dev-btn').forEach(x => x.classList.remove('active'));
+                btn.classList.add('active');
+                selectedMissionDocId = data.missionID;
+                expenseModule.style.opacity = "1";
+                expenseModule.style.pointerEvents = "auto";
+                submitBtn.classList.add('ready');
+                SoundFX.folderOpen();
+                expenseInput.focus();
+            };
+            deviceList.appendChild(btn);
+        });
+    } catch (e) {
+        SoundFX.error();
+        scanStatus.innerHTML = `<span style="color:var(--red)">[FAILURE] SYSTEM_ACCESS_TIMED_OUT</span>`;
+        console.error(e);
     }
-    
-    await loadAgentWeapons();
-    renderWeapons(selectedWeaponID);
 }
 
-async function submitMission(missionID, isUpdate) {
-    const vID = vAgentInput.value.trim();
-    const sLine = secureField.value.trim();
+submitBtn.onclick = async () => {
+    SoundFX.click();
     
-    if (!vID) {
-        alert("Enter vAgent ID");
-        return;
-    }
-    if (!selectedWeaponID) {
-        alert("Select a weapon system");
+    const amount = parseFloat(expenseInput.value);
+    if (!selectedMissionDocId || isNaN(amount) || amount <= 0) {
+        SoundFX.error();
+        alert("CRITICAL ERROR: DATA MISMATCH OR INVALID AMOUNT.");
         return;
     }
     
-    const now = new Date();
-    const deploymentDate = formatDate(now);
-    const relieveDate = formatDate(calculateRelieveDate(now));
+    submitBtn.innerText = "INJECTING...";
+    submitBtn.disabled = true;
     
     try {
-        await setDoc(doc(db, "mission_orders", missionID), {
-            missionID: missionID,
-            agent: currentAgent,
-            vAgentID: vID,
-            weaponSystem: selectedWeaponID,
-            SecureLine: sLine || "",
-            status: "DEPLOYED",
-            deploymentDate: deploymentDate,
-            relieveDate: relieveDate,
-            timestamp: serverTimestamp()
-        }, { merge: true });
+        SoundFX.terminalUpdate();
+        const ref = doc(db, "mission_orders", selectedMissionDocId);
+        await addLog(`OVERRIDE: ₱${amount.toFixed(2)} INJECTED TO #${selectedMissionDocId}`, 'var(--yellow)');
+        await updateDoc(ref, {
+            expensesBreakdown: arrayUnion({ amount: amount, timestamp: new Date().toISOString(), injectedBy: currentAgent }),
+            totalExpenses: increment(amount)
+        });
         
-        addLog(`Mission #${missionID} ${isUpdate ? 'UPDATED' : 'DEPLOYED'} by ${currentAgent}`, '#05ffa1');
-        closeModal();
-        input.value = "";
-        statusLabel.innerHTML = "";
-        actionBtn.textContent = "SAVE";
-        actionBtn.className = "btn btn-save";
-        currentMissionData = null;
-        alert(`✅ MISSION ${isUpdate ? 'UPDATED' : 'DEPLOYED'} SUCCESSFULLY!`);
-    } catch(e) {
+        SoundFX.success();
+        alert("DATABASE OVERRIDDEN SUCCESSFULLY.");
+        location.reload();
+    } catch (e) {
+        SoundFX.error();
+        alert("CRITICAL ERROR: INJECTION FAILED");
+        submitBtn.innerText = "EXECUTE OVERRIDE";
+        submitBtn.disabled = false;
         console.error(e);
-        alert("ERROR: " + e.message);
     }
-}
+};
 
-function closeModal() {
-    modalOverlay.style.display = 'none';
-}
+// Clock update
+setInterval(() => { 
+    document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB'); 
+}, 1000);
 
-function toggleSecureLine() {
-    if (secureField.classList.contains('show')) {
-        secureField.classList.remove('show');
-        secureBtn.style.display = 'block';
-    } else {
-        secureField.classList.add('show');
-        secureBtn.style.display = 'none';
-        secureField.focus();
-    }
-}
+// Force audio activation on first click (mobile fallback)
+document.body.addEventListener('click', function activateAudio() {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    audioCtx.resume().then(() => {
+        console.log("🔊 Audio activated for intel page");
+        audioCtx.close();
+    });
+}, { once: true });
 
-function init() {
-    profName.innerText = currentAgent;
-    avatarInit.innerText = currentAgent.charAt(0).toUpperCase();
-    updateClock();
-    setInterval(updateClock, 1000);
-    setupTerminalListener();
-    loadAgentWeapons();
-    
-    input.addEventListener('input', searchMission);
-    modalClose.onclick = closeModal;
-    secureBtn.onclick = toggleSecureLine;
-    
-    // Attach submit to modal submit button
-    modalSubmit.onclick = () => {
-        const missionID = padMissionID(input.value.trim());
-        if (missionID) {
-            submitMission(missionID, false);
-        }
-    };
-    
-    console.log("Dashboard ready");
-}
-
-function updateClock() {
-    clockSpan.textContent = new Date().toLocaleTimeString('en-GB');
-}
-
-init();
+establishSession();

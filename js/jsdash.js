@@ -30,18 +30,16 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// ====== AGENT FROM LOCALSTORAGE ======
 const currentAgent = localStorage.getItem("agent") || localStorage.getItem("cia_agent") || "UNKNOWN_AGENT";
-console.log("Current Agent:", currentAgent);
+console.log("Agent:", currentAgent);
 
-// ====== STATE ======
 let selectedWeaponID = "";
 let agentWeapons = [];
 let currentMissionData = null;
 let isMissionTerminated = false;
 let searchTimeout = null;
 
-// ====== DOM ELEMENTS ======
+// DOM Elements
 const input = document.getElementById('mission-input');
 const actionBtn = document.getElementById('action-btn');
 const reserveBtn = document.getElementById('reserve-btn');
@@ -58,11 +56,11 @@ const clockSpan = document.getElementById('clock');
 const profName = document.getElementById('prof-name');
 const avatarInit = document.getElementById('avatar-init');
 
-// ====== HELPER FUNCTIONS ======
 function padMissionID(value) {
     const digits = value.replace(/\D/g, '');
     if (digits.length === 0) return '';
     if (digits.length >= 5) return digits.slice(0, 5);
+    if (digits.length <= 3) return digits.padStart(5, '0');
     return digits.padStart(5, '0');
 }
 
@@ -79,17 +77,26 @@ function calculateRelieveDate(deploymentDate) {
     return relieveDate;
 }
 
-// ====== INITIALIZATION ======
+function setStatusColor(status, message) {
+    let color = '';
+    switch(status) {
+        case 'available': color = '#05ffa1'; break;
+        case 'reserve': color = '#ffbd00'; break;
+        case 'terminated': color = '#8b0000'; break;
+        case 'other_agent': color = '#ff003c'; break;
+        case 'your_mission': color = '#00f3ff'; break;
+        default: color = '#5c7882';
+    }
+    statusLabel.innerHTML = `<span style="color:${color};">${message}</span>`;
+}
+
 function init() {
-    console.log("Dashboard initializing for agent:", currentAgent);
-    
+    console.log("Dashboard initializing...");
     if (!currentAgent || currentAgent === "UNKNOWN_AGENT") {
-        console.log("No agent found. Redirecting to login...");
         alert("No active session. Please login first.");
         window.location.href = "index.html";
         return;
     }
-    
     profName.innerText = currentAgent;
     avatarInit.innerText = currentAgent.charAt(0).toUpperCase();
     updateClock();
@@ -97,8 +104,7 @@ function init() {
     setupTerminalListener();
     loadAgentWeapons();
     setupEventListeners();
-    
-    console.log("Dashboard ready for agent:", currentAgent);
+    console.log("Dashboard ready");
 }
 
 function updateClock() {
@@ -106,94 +112,79 @@ function updateClock() {
 }
 
 function setupTerminalListener() {
-    onSnapshot(query(collection(db, "terminal_logs"), orderBy("timestamp", "desc"), limit(10)), (snap) => {
+    onSnapshot(query(collection(db, "terminal_logs"), orderBy("timestamp", "desc"), limit(15)), (snap) => {
         terminal.innerHTML = "";
         snap.forEach(doc => {
             const d = doc.data();
             const time = d.timestamp ? new Date(d.timestamp.seconds * 1000).toLocaleTimeString('en-GB') : "--";
-            terminal.innerHTML += `<div class="term-line"><span style="color:#5c7882">[${time}]</span> <span style="color:${d.color}">${d.message}</span></div>`;
+            let color = d.color;
+            if (d.message.includes("DEPLOYED")) color = "#05ffa1";
+            if (d.message.includes("RETRIEVED")) color = "#00f3ff";
+            if (d.message.includes("OVERRIDE")) color = "#ffbd00";
+            if (d.message.includes("RESTRICTED")) color = "#ff003c";
+            if (d.message.includes("TERMINATED")) color = "#8b0000";
+            terminal.innerHTML += `<div class="term-line"><span style="color:#5c7882">[${time}]</span> <span style="color:${color}">${d.message}</span></div>`;
         });
     });
 }
 
 async function addLog(msg, color) {
     try {
-        await addDoc(collection(db, "terminal_logs"), { 
-            agent: currentAgent, 
-            message: msg, 
-            color: color, 
-            timestamp: serverTimestamp() 
-        });
+        await addDoc(collection(db, "terminal_logs"), { agent: currentAgent, message: msg, color: color, timestamp: serverTimestamp() });
     } catch(e) { console.error("Log error:", e); }
 }
 
-// ====== LOAD WEAPONS ======
 async function loadAgentWeapons() {
-    console.log("Loading weapons for agent:", currentAgent);
-    
     try {
-        const missionsSnap = await getDocs(query(
-            collection(db, "mission_orders"), 
-            where("agent", "==", currentAgent)
-        ));
-        
+        const missionsSnap = await getDocs(query(collection(db, "mission_orders"), where("agent", "==", currentAgent)));
         const weaponSet = new Set();
-        
         missionsSnap.forEach(doc => {
             const data = doc.data();
             if (data.weaponSystem && data.weaponSystem !== 'INIT' && data.status !== "TERMINATED") {
                 weaponSet.add(data.weaponSystem);
             }
         });
-        
         agentWeapons = Array.from(weaponSet).sort();
-        
         if (agentWeapons.length === 0) {
-            console.log("No weapons found for agent:", currentAgent);
             agentWeapons = ["REDMI NOTE 14 PRO", "REALME 8 PRO", "TECHNO CAMON 40 PRO 5G", "REDMI NOTE 12"];
         }
-        console.log("Weapons loaded:", agentWeapons);
     } catch (error) {
-        console.error("Error loading weapons:", error);
         agentWeapons = ["REDMI NOTE 14 PRO", "REALME 8 PRO", "TECHNO CAMON 40 PRO 5G", "REDMI NOTE 12"];
     }
 }
 
 function resetUI() {
-    statusLabel.innerHTML = "";
     actionBtn.textContent = "SAVE";
     actionBtn.className = "btn btn-save";
     actionBtn.disabled = false;
-    actionBtn.style.opacity = "1";
-    actionBtn.style.pointerEvents = "auto";
+    actionBtn.onclick = openModal;  // ✅ FIX: Re-attach onclick
     reserveBtn.classList.remove('active');
     isMissionTerminated = false;
     currentMissionData = null;
 }
 
-// ====== ENABLE/DISABLE CONFIRM BUTTON ======
 function updateConfirmButton() {
     const vID = vAgentInput.value.trim();
     const hasWeapon = selectedWeaponID !== "";
     const isValid = vID !== "" && hasWeapon && !isMissionTerminated;
-    
     modalSubmit.disabled = !isValid;
     modalSubmit.style.opacity = isValid ? "1" : "0.5";
 }
 
-// ====== PERFORM SEARCH ======
-async function performSearch() {
-    let rawValue = input.value.trim();
-    
-    if (rawValue.length === 0) {
-        resetUI();
-        return;
-    }
+// ====== SEARCH WITH POP-UP FOR 1-3 DIGITS ======
+async function promptScanConfirmation(rawValue) {
+    return new Promise((resolve) => {
+        const confirmScan = confirm(`Mission ID "${rawValue}" will be scanned as "${padMissionID(rawValue)}".\n\nDo you want to continue?`);
+        resolve(confirmScan);
+    });
+}
+
+async function performSearch(rawValue) {
+    if (rawValue.length === 0) { resetUI(); return; }
     
     const paddedMissionID = padMissionID(rawValue);
-    console.log("Searching for mission ID:", paddedMissionID);
+    console.log("Searching for:", paddedMissionID);
     
-    statusLabel.innerHTML = '<span class="blink">SCANNING DATABASE...</span>';
     addLog(`Scanning mission ID: ${paddedMissionID}`, '#5c7882');
     
     try {
@@ -207,26 +198,27 @@ async function performSearch() {
             
             if (status === "TERMINATED") {
                 isMissionTerminated = true;
-                statusLabel.innerHTML = '<span style="color:#ff003c;">MISSION TERMINATED - ACCESS DENIED</span>';
+                setStatusColor('terminated', 'MISSION TERMINATED - ACCESS DENIED');
                 actionBtn.textContent = "TERMINATED";
                 actionBtn.className = "btn btn-locked";
                 actionBtn.disabled = true;
                 reserveBtn.classList.remove('active');
-                addLog(`Mission ${paddedMissionID} is TERMINATED. Access denied.`, '#ff003c');
+                addLog(`Mission ${paddedMissionID} is TERMINATED. Access denied.`, '#8b0000');
                 return;
             }
             
             isMissionTerminated = false;
             
             if (owner === currentAgent) {
+                setStatusColor('your_mission', 'STATUS: YOUR MISSION');
                 actionBtn.textContent = "RETRIEVE";
                 actionBtn.className = "btn btn-retrieve";
                 actionBtn.disabled = false;
+                actionBtn.onclick = openModal;  // ✅ FIX: Ensure onclick is set
                 reserveBtn.classList.remove('active');
-                statusLabel.innerHTML = '<span class="status-deployed">STATUS: YOUR MISSION</span>';
-                addLog(`Mission ${paddedMissionID} found. Ready to RETRIEVE.`, '#05ffa1');
+                addLog(`Mission ${paddedMissionID} found. Ready to RETRIEVE.`, '#00f3ff');
             } else {
-                statusLabel.innerHTML = `<span style="color:#ff003c;">ALREADY DEPLOYED BY ${owner}</span>`;
+                setStatusColor('other_agent', `OWNED BY ${owner}`);
                 actionBtn.textContent = "LOCKED";
                 actionBtn.className = "btn btn-locked";
                 actionBtn.disabled = true;
@@ -236,54 +228,68 @@ async function performSearch() {
         } else {
             currentMissionData = null;
             isMissionTerminated = false;
+            setStatusColor('available', 'STATUS: AVAILABLE');
             actionBtn.textContent = "SAVE";
             actionBtn.className = "btn btn-save";
             actionBtn.disabled = false;
-            statusLabel.innerHTML = 'STATUS: AVAILABLE';
+            actionBtn.onclick = openModal;  // ✅ FIX: Re-attach onclick for SAVE
             reserveBtn.classList.add('active');
-            addLog(`Mission ${paddedMissionID} is AVAILABLE. Ready to DEPLOY.`, '#00f3ff');
+            addLog(`Mission ${paddedMissionID} is AVAILABLE. Ready to DEPLOY.`, '#05ffa1');
         }
     } catch (error) {
         console.error("Search error:", error);
-        statusLabel.innerHTML = '<span style="color:#ff003c;">DATABASE ERROR</span>';
+        setStatusColor('terminated', 'DATABASE ERROR');
         addLog(`Database error scanning mission ${paddedMissionID}`, '#ff003c');
-        actionBtn.disabled = false;
     }
 }
 
-// ====== SEARCH MISSION ======
+// ====== MAIN SEARCH LOGIC ======
 async function searchMission() {
-    const val = input.value.trim();
+    const rawValue = input.value.trim();
     
-    if (searchTimeout) {
-        clearTimeout(searchTimeout);
-        searchTimeout = null;
-    }
+    if (searchTimeout) clearTimeout(searchTimeout);
+    if (rawValue.length === 0) { resetUI(); return; }
     
-    if (val.length === 0) {
-        resetUI();
+    const digitCount = rawValue.length;
+    
+    // 1-3 digits: No autoscan, show pop-up confirmation
+    if (digitCount >= 1 && digitCount <= 3) {
+        setStatusColor('reserve', `SCAN REQUIRED: "${rawValue}" will be scanned as "${padMissionID(rawValue)}"`);
+        actionBtn.textContent = "SCAN";
+        actionBtn.className = "btn btn-reserve";
+        actionBtn.disabled = false;
+        
+        // Store temp value for scanning
+        actionBtn.onclick = async () => {
+            const confirmed = await promptScanConfirmation(rawValue);
+            if (confirmed) {
+                await performSearch(rawValue);
+            } else {
+                setStatusColor('reserve', 'SCAN CANCELLED');
+                resetUI();
+            }
+        };
         return;
     }
     
-    const delay = val.length <= 3 ? 5000 : 300;
-    statusLabel.innerHTML = `<span class="blink">SCANNING IN ${delay/1000}s...</span>`;
-    
-    searchTimeout = setTimeout(() => {
-        performSearch();
-        searchTimeout = null;
-    }, delay);
+    // 4-5 digits: Autoscan after delay
+    if (digitCount >= 4) {
+        setStatusColor('available', `SCANNING IN 0.3s...`);
+        
+        searchTimeout = setTimeout(async () => {
+            await performSearch(rawValue);
+            searchTimeout = null;
+        }, 300);
+    }
 }
 
-// ====== RENDER WEAPONS ======
 function renderWeapons() {
     weaponList.innerHTML = "";
-    
     if (!agentWeapons || agentWeapons.length === 0) {
-        weaponList.innerHTML = '<div style="text-align:center; padding:10px; color:#ffbd00;">No weapons available. Save a mission first.</div>';
+        weaponList.innerHTML = '<div style="text-align:center; padding:10px; color:#ffbd00;">No weapons available.</div>';
         updateConfirmButton();
         return;
     }
-    
     agentWeapons.forEach(weaponName => {
         const btn = document.createElement('button');
         btn.className = "weapon-btn";
@@ -294,15 +300,14 @@ function renderWeapons() {
             document.querySelectorAll('.weapon-btn').forEach(x => x.classList.remove('selected'));
             btn.classList.add('selected');
             selectedWeaponID = weaponName;
-            console.log("Weapon selected:", selectedWeaponID);
             updateConfirmButton();
         };
         weaponList.appendChild(btn);
     });
 }
 
-// ====== OPEN MODAL ======
 async function openModal() {
+    console.log("openModal called");
     if (isMissionTerminated) {
         SoundFX.error();
         alert("MISSION IS TERMINATED - CANNOT EDIT");
@@ -317,12 +322,10 @@ async function openModal() {
     }
     
     const missionID = padMissionID(rawMissionID);
-    
     SoundFX.click();
     modalOverlay.style.display = 'flex';
     document.getElementById('pop-header').innerText = `#${missionID}`;
     
-    // Reset form
     vAgentInput.value = "";
     selectedWeaponID = "";
     secureField.value = "";
@@ -333,7 +336,6 @@ async function openModal() {
     
     await loadAgentWeapons();
     
-    // If retrieving existing mission (UPDATE mode)
     if (currentMissionData && !isMissionTerminated) {
         vAgentInput.value = currentMissionData.vAgentID || "";
         selectedWeaponID = currentMissionData.weaponSystem || "";
@@ -342,12 +344,10 @@ async function openModal() {
             secureField.classList.add('show');
             secureBtn.style.display = 'none';
         }
-        modalSubmit.textContent = "UPDATE";  // UPDATE button for retrieve
-        modalSubmit.classList.add("btn-retrieve");
+        modalSubmit.textContent = "UPDATE";
         SoundFX.folderOpen();
     } else {
-        modalSubmit.textContent = "DEPLOY";  // DEPLOY button for new mission
-        modalSubmit.classList.remove("btn-retrieve");
+        modalSubmit.textContent = "DEPLOY";
     }
     
     renderWeapons();
@@ -359,7 +359,6 @@ async function openModal() {
             }
         });
     }
-    
     updateConfirmButton();
 }
 
@@ -368,10 +367,8 @@ function closeModal() {
     modalOverlay.style.display = 'none';
 }
 
-// ====== SUBMIT MISSION (DEPLOY or UPDATE) ======
 async function submitMission() {
-    console.log("SUBMIT MISSION CALLED - Mode:", currentMissionData ? 'UPDATE' : 'DEPLOY');
-    
+    console.log("SUBMIT MISSION CALLED");
     if (isMissionTerminated) {
         SoundFX.error();
         alert("MISSION IS TERMINATED - CANNOT MODIFY");
@@ -409,7 +406,6 @@ async function submitMission() {
     
     try {
         SoundFX.terminalUpdate();
-        
         await setDoc(doc(db, "mission_orders", missionID), {
             missionID: missionID,
             agent: currentAgent,
@@ -428,9 +424,7 @@ async function submitMission() {
         input.value = "";
         resetUI();
         currentMissionData = null;
-        
         await loadAgentWeapons();
-        
         alert(`✅ MISSION ${currentMissionData ? 'UPDATED' : 'DEPLOYED'} SUCCESSFULLY!`);
     } catch(e) {
         SoundFX.error();
@@ -439,10 +433,8 @@ async function submitMission() {
     }
 }
 
-// ====== EVENT LISTENERS ======
 function setupEventListeners() {
     input.addEventListener('input', searchMission);
-    actionBtn.onclick = openModal;
     modalClose.onclick = closeModal;
     modalSubmit.onclick = submitMission;
     vAgentInput.addEventListener('input', updateConfirmButton);
@@ -452,7 +444,10 @@ function setupEventListeners() {
         secureField.classList.add('show');
         secureField.focus();
     };
+    reserveBtn.onclick = () => {
+        SoundFX.click();
+        alert("RESERVE function - coming soon");
+    };
 }
 
-// Start
 init();

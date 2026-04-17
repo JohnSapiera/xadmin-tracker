@@ -1,4 +1,4 @@
-// js/jsdash.js - CORE DASHBOARD v30.5
+// js/jsdash.js - CORE DASHBOARD
 
 import SoundFX from './sound.js';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -36,9 +36,7 @@ console.log("Agent:", currentAgent);
 let selectedWeaponID = "";
 let agentWeapons = [];
 let currentMissionData = null;
-let isMissionTerminated = false;
 let searchTimeout = null;
-let isReserveMode = false;
 
 // DOM Elements
 const input = document.getElementById('mission-input');
@@ -61,7 +59,6 @@ function padMissionID(value) {
     const digits = value.replace(/\D/g, '');
     if (digits.length === 0) return '';
     if (digits.length >= 5) return digits.slice(0, 5);
-    if (digits.length <= 3) return digits.padStart(5, '0');
     return digits.padStart(5, '0');
 }
 
@@ -78,38 +75,10 @@ function calculateRelieveDate(deploymentDate) {
     return relieveDate;
 }
 
-function setStatusColor(status, message) {
-    let color = '';
-    switch(status) {
-        case 'available': color = '#05ffa1'; break;
-        case 'reserve': color = '#ffbd00'; break;
-        case 'terminated': color = '#8b0000'; break;
-        case 'other_agent': color = '#ff003c'; break;
-        case 'your_mission': color = '#00f3ff'; break;
-        default: color = '#5c7882';
-    }
-    statusLabel.innerHTML = `<span style="color:${color};">${message}</span>`;
-}
-
-function init() {
-    console.log("Dashboard initializing for agent:", currentAgent);
-    if (!currentAgent || currentAgent === "UNKNOWN_AGENT") {
-        alert("No active session. Please login first.");
-        window.location.href = "index.html";
-        return;
-    }
-    profName.innerText = currentAgent;
-    avatarInit.innerText = currentAgent.charAt(0).toUpperCase();
-    updateClock();
-    setInterval(updateClock, 1000);
-    setupTerminalListener();
-    loadAgentWeapons();
-    setupEventListeners();
-    console.log("Dashboard ready");
-}
-
-function updateClock() {
-    clockSpan.textContent = new Date().toLocaleTimeString('en-GB');
+function addLog(msg, color) {
+    addDoc(collection(db, "terminal_logs"), { 
+        agent: currentAgent, message: msg, color: color, timestamp: serverTimestamp() 
+    }).catch(e => console.error(e));
 }
 
 function setupTerminalListener() {
@@ -118,93 +87,69 @@ function setupTerminalListener() {
         snap.forEach(doc => {
             const d = doc.data();
             const time = d.timestamp ? new Date(d.timestamp.seconds * 1000).toLocaleTimeString('en-GB') : "--";
-            let color = d.color;
-            if (d.message.includes("DEPLOYED")) color = "#05ffa1";
-            if (d.message.includes("RETRIEVED")) color = "#00f3ff";
-            if (d.message.includes("OVERRIDE")) color = "#ffbd00";
-            if (d.message.includes("RESTRICTED")) color = "#ff003c";
-            if (d.message.includes("TERMINATED")) color = "#8b0000";
-            if (d.message.includes("VIEWED")) color = "#ffbd00";
-            terminal.innerHTML += `<div class="term-line"><span style="color:#5c7882">[${time}]</span> <span style="color:${color}">${d.message}</span></div>`;
+            terminal.innerHTML += `<div class="term-line"><span style="color:#5c7882">[${time}]</span> <span style="color:${d.color}">${d.message}</span></div>`;
         });
     });
 }
 
-async function addLog(msg, color) {
-    try {
-        await addDoc(collection(db, "terminal_logs"), { agent: currentAgent, message: msg, color: color, timestamp: serverTimestamp() });
-    } catch(e) { console.error("Log error:", e); }
-}
-
 async function loadAgentWeapons() {
-    console.log("Loading weapons for agent:", currentAgent);
     try {
-        const missionsSnap = await getDocs(query(
-            collection(db, "mission_orders"), 
-            where("agent", "==", currentAgent)
-        ));
-        
-        const weaponSet = new Set();
-        missionsSnap.forEach(doc => {
-            const data = doc.data();
-            if (data.weaponSystem && data.weaponSystem !== 'INIT' && data.status !== "TERMINATED") {
-                weaponSet.add(data.weaponSystem);
-            }
-        });
-        
-        agentWeapons = Array.from(weaponSet).sort();
+        const agentDoc = await getDoc(doc(db, "agents", currentAgent));
+        if (agentDoc.exists()) {
+            agentWeapons = agentDoc.data().linkedSignatures || [];
+        }
         if (agentWeapons.length === 0) {
             agentWeapons = ["REDMI NOTE 14 PRO", "REALME 8 PRO", "TECHNO CAMON 40 PRO 5G", "REDMI NOTE 12"];
         }
-        console.log("Weapons loaded:", agentWeapons);
     } catch (error) {
-        console.error("Error loading weapons:", error);
         agentWeapons = ["REDMI NOTE 14 PRO", "REALME 8 PRO", "TECHNO CAMON 40 PRO 5G", "REDMI NOTE 12"];
     }
 }
 
-function resetUI() {
-    actionBtn.textContent = "SAVE";
-    actionBtn.className = "btn btn-save";
-    actionBtn.disabled = false;
-    actionBtn.style.opacity = "1";
-    actionBtn.style.pointerEvents = "auto";
-    actionBtn.onclick = openModal;
-    reserveBtn.textContent = "RESERVE";
-    reserveBtn.className = "btn btn-reserve";
-    reserveBtn.disabled = false;
-    reserveBtn.style.opacity = "1";
-    reserveBtn.style.pointerEvents = "auto";
-    reserveBtn.onclick = openReserveModal;
-    isMissionTerminated = false;
-    currentMissionData = null;
-    isReserveMode = false;
-}
-
-function forceEnableDeployButton() {
-    if (modalSubmit) {
-        modalSubmit.disabled = false;
-        modalSubmit.style.opacity = "1";
-        modalSubmit.style.cursor = "pointer";
-    }
-}
-
-async function promptScanConfirmation(rawValue) {
-    return new Promise((resolve) => {
-        const confirmScan = confirm(`Mission ID "${rawValue}" will be scanned as "${padMissionID(rawValue)}".\n\nDo you want to continue?`);
-        resolve(confirmScan);
+function renderWeapons(highlightWeapon = null) {
+    weaponList.innerHTML = "";
+    agentWeapons.forEach(weaponName => {
+        const btn = document.createElement('button');
+        btn.className = "weapon-btn";
+        btn.innerText = `> ${weaponName}`;
+        btn.setAttribute('data-weapon-id', weaponName);
+        if (highlightWeapon === weaponName) {
+            btn.classList.add('selected');
+            selectedWeaponID = weaponName;
+        }
+        btn.onclick = () => {
+            document.querySelectorAll('.weapon-btn').forEach(x => x.classList.remove('selected'));
+            btn.classList.add('selected');
+            selectedWeaponID = weaponName;
+            SoundFX.click();
+        };
+        weaponList.appendChild(btn);
     });
 }
 
-async function performSearch(rawValue) {
-    if (rawValue.length === 0) { resetUI(); return; }
+// ====== SEARCH MISSION ======
+async function searchMission() {
+    const val = input.value.trim();
+    if (searchTimeout) clearTimeout(searchTimeout);
+    if (val.length === 0) {
+        actionBtn.textContent = "SAVE";
+        actionBtn.className = "btn btn-save";
+        reserveBtn.textContent = "RESERVE";
+        reserveBtn.className = "btn btn-reserve";
+        statusLabel.innerHTML = "";
+        return;
+    }
     
-    const paddedMissionID = padMissionID(rawValue);
-    console.log("Searching for:", paddedMissionID);
-    addLog(`Scanning mission ID: ${paddedMissionID}`, '#5c7882');
+    if (val.length < 4) {
+        statusLabel.innerHTML = 'Enter 4-5 digits';
+        return;
+    }
+    
+    const missionID = padMissionID(val);
+    statusLabel.innerHTML = 'SCANNING...';
     
     try {
-        const qM = query(collection(db, "mission_orders"), where("missionID", "==", paddedMissionID));
+        const qM = query(collection(db, "mission_orders"), where("missionID", "==", missionID));
         const snapM = await getDocs(qM);
         
         if (!snapM.empty) {
@@ -213,327 +158,188 @@ async function performSearch(rawValue) {
             const status = currentMissionData.status;
             
             if (status === "TERMINATED") {
-                isMissionTerminated = true;
-                setStatusColor('terminated', 'MISSION TERMINATED - ACCESS DENIED');
-                actionBtn.textContent = "TERMINATED";
-                actionBtn.className = "btn btn-locked";
-                actionBtn.disabled = true;
-                actionBtn.onclick = null;
-                reserveBtn.textContent = "TERMINATED";
-                reserveBtn.className = "btn btn-locked";
-                reserveBtn.disabled = true;
-                reserveBtn.onclick = null;
-                addLog(`Mission ${paddedMissionID} is TERMINATED. Access denied.`, '#8b0000');
-                return;
-            }
-            
-            isMissionTerminated = false;
-            
-            if (owner === currentAgent) {
-                setStatusColor('your_mission', 'STATUS: YOUR MISSION');
-                actionBtn.textContent = "RETRIEVE";
-                actionBtn.className = "btn btn-retrieve";
-                actionBtn.disabled = false;
-                actionBtn.onclick = openModal;
-                reserveBtn.textContent = "RESERVE";
-                reserveBtn.className = "btn btn-reserve";
-                reserveBtn.disabled = false;
-                reserveBtn.onclick = openReserveModal;
-                addLog(`Mission ${paddedMissionID} found. Ready to RETRIEVE.`, '#00f3ff');
-            } else {
-                setStatusColor('other_agent', `OWNED BY ${owner}`);
+                statusLabel.innerHTML = 'STATUS: TERMINATED';
                 actionBtn.textContent = "LOCKED";
                 actionBtn.className = "btn btn-locked";
                 actionBtn.disabled = true;
-                actionBtn.onclick = null;
                 reserveBtn.textContent = "VIEW";
                 reserveBtn.className = "btn btn-view";
                 reserveBtn.disabled = false;
-                reserveBtn.style.background = "#ff003c";
-                reserveBtn.style.color = "#fff";
-                reserveBtn.onclick = openReserveModal;
-                addLog(`Mission ${paddedMissionID} is owned by ${owner}. View only.`, '#ffbd00');
+                addLog(`Mission ${missionID} is TERMINATED.`, '#8b0000');
+                return;
+            }
+            
+            if (owner === currentAgent) {
+                statusLabel.innerHTML = 'STATUS: YOUR MISSION';
+                actionBtn.textContent = "RETRIEVE";
+                actionBtn.className = "btn btn-retrieve";
+                actionBtn.disabled = false;
+                reserveBtn.textContent = "RESERVE";
+                reserveBtn.className = "btn btn-reserve";
+                addLog(`Mission ${missionID} found. Ready to RETRIEVE.`, '#00f3ff');
+            } else {
+                statusLabel.innerHTML = `OWNED BY ${owner}`;
+                actionBtn.textContent = "LOCKED";
+                actionBtn.className = "btn btn-locked";
+                actionBtn.disabled = true;
+                reserveBtn.textContent = "VIEW";
+                reserveBtn.className = "btn btn-view";
+                reserveBtn.disabled = false;
+                addLog(`Mission ${missionID} is owned by ${owner}.`, '#ff003c');
+                return;
             }
         } else {
             currentMissionData = null;
-            isMissionTerminated = false;
-            setStatusColor('available', 'STATUS: AVAILABLE');
+            statusLabel.innerHTML = 'STATUS: AVAILABLE';
             actionBtn.textContent = "DEPLOY";
             actionBtn.className = "btn btn-save";
             actionBtn.disabled = false;
-            actionBtn.onclick = openModal;
             reserveBtn.textContent = "RESERVE";
             reserveBtn.className = "btn btn-reserve";
-            reserveBtn.disabled = false;
-            reserveBtn.onclick = openReserveModal;
-            addLog(`Mission ${paddedMissionID} is AVAILABLE. Ready to DEPLOY.`, '#05ffa1');
+            addLog(`Mission ${missionID} is AVAILABLE.`, '#05ffa1');
         }
-    } catch (error) {
-        console.error("Search error:", error);
-        setStatusColor('terminated', 'DATABASE ERROR');
-        addLog(`Database error scanning mission ${paddedMissionID}`, '#ff003c');
-        actionBtn.textContent = "DEPLOY";
-        actionBtn.className = "btn btn-save";
-        actionBtn.disabled = false;
-        actionBtn.onclick = openModal;
-        reserveBtn.textContent = "RESERVE";
-        reserveBtn.className = "btn btn-reserve";
-        reserveBtn.disabled = false;
-        reserveBtn.onclick = openReserveModal;
-    }
-}
-
-async function searchMission() {
-    const rawValue = input.value.trim();
-    if (searchTimeout) clearTimeout(searchTimeout);
-    if (rawValue.length === 0) { resetUI(); return; }
-    
-    const digitCount = rawValue.length;
-    
-    if (digitCount >= 1 && digitCount <= 3) {
-        setStatusColor('reserve', `SCAN REQUIRED: "${rawValue}" will be scanned as "${padMissionID(rawValue)}"`);
-        actionBtn.textContent = "SCAN";
-        actionBtn.className = "btn btn-reserve";
-        actionBtn.disabled = false;
-        actionBtn.onclick = async () => {
-            const confirmed = await promptScanConfirmation(rawValue);
-            if (confirmed) {
-                await performSearch(rawValue);
-            } else {
-                setStatusColor('reserve', 'SCAN CANCELLED');
-                resetUI();
-            }
-        };
-        return;
-    }
-    
-    if (digitCount >= 4) {
-        setStatusColor('available', `SCANNING IN 0.3s...`);
-        actionBtn.disabled = true;
-        actionBtn.style.opacity = "0.5";
         
-        searchTimeout = setTimeout(async () => {
-            await performSearch(rawValue);
-            searchTimeout = null;
-        }, 300);
+        actionBtn.onclick = openModal;
+        reserveBtn.onclick = () => openReserveModal(missionID);
+        
+    } catch(e) {
+        console.error(e);
+        statusLabel.innerHTML = 'ERROR';
     }
 }
 
-function renderWeapons() {
-    weaponList.innerHTML = "";
-    if (!agentWeapons || agentWeapons.length === 0) {
-        weaponList.innerHTML = '<div style="text-align:center; padding:10px; color:#ffbd00;">No weapons available.</div>';
-        return;
-    }
-    
-    agentWeapons.forEach(weaponName => {
-        const btn = document.createElement('button');
-        btn.className = "weapon-btn";
-        btn.innerText = `> ${weaponName}`;
-        btn.setAttribute('data-weapon-id', weaponName);
-        btn.onclick = () => {
-            SoundFX.click();
-            document.querySelectorAll('.weapon-btn').forEach(x => x.classList.remove('selected'));
-            btn.classList.add('selected');
-            selectedWeaponID = weaponName;
-        };
-        weaponList.appendChild(btn);
-    });
-}
-
-// ====== OPEN MODAL FOR DEPLOY/UPDATE ======
+// ====== OPEN MODAL FOR SAVE/DEPLOY ======
 async function openModal() {
-    console.log("openModal called");
-    if (isMissionTerminated) {
-        SoundFX.error();
-        alert("MISSION IS TERMINATED - CANNOT EDIT");
-        return;
-    }
+    const missionID = padMissionID(input.value.trim());
+    if (!missionID) return;
     
-    let rawMissionID = input.value.trim();
-    if (rawMissionID.length === 0) {
-        SoundFX.error();
-        alert("ENTER MISSION ID FIRST");
-        return;
-    }
-    
-    const missionID = padMissionID(rawMissionID);
-    SoundFX.click();
     modalOverlay.style.display = 'flex';
-    document.getElementById('pop-header').innerText = `#${missionID}`;
+    document.getElementById('pop-header').innerHTML = `<span style="color:#00f3ff;">#${missionID}</span> <span style="font-size:12px; color:#5c7882;">[NEW]</span>`;
     
+    // Reset form
     vAgentInput.value = "";
     selectedWeaponID = "";
     secureField.value = "";
     secureField.classList.remove('show');
     secureBtn.style.display = 'block';
-    
-    // Hide secure line for view mode? No, keep for edit
-    isReserveMode = false;
-    
-    forceEnableDeployButton();
+    secureBtn.innerHTML = '+ Secure Line';
     
     await loadAgentWeapons();
-    
-    if (currentMissionData && !isMissionTerminated) {
-        // RETRIEVE mode - UPDATE button (BLUE)
-        vAgentInput.value = currentMissionData.vAgentID || "";
-        selectedWeaponID = currentMissionData.weaponSystem || "";
-        if (currentMissionData.SecureLine) {
-            secureField.value = currentMissionData.SecureLine;
-            secureField.classList.add('show');
-            secureBtn.style.display = 'none';
-        }
-        modalSubmit.textContent = "UPDATE";
-        modalSubmit.className = "btn btn-retrieve";
-        modalSubmit.style.background = "#007bff";
-        modalSubmit.style.color = "#fff";
-        SoundFX.folderOpen();
-    } else {
-        // SAVE mode - DEPLOY button (GREEN)
-        modalSubmit.textContent = "DEPLOY";
-        modalSubmit.className = "btn btn-save";
-        modalSubmit.style.background = "#05ffa1";
-        modalSubmit.style.color = "#000";
-    }
-    
     renderWeapons();
     
-    if (selectedWeaponID) {
-        document.querySelectorAll('.weapon-btn').forEach(btn => {
-            if (btn.getAttribute('data-weapon-id') === selectedWeaponID) {
-                btn.classList.add('selected');
-            }
-        });
-    }
+    modalSubmit.textContent = "DEPLOY";
+    modalSubmit.className = "btn btn-save";
+    modalSubmit.disabled = false;
+    modalSubmit.style.opacity = "1";
     
-    setTimeout(forceEnableDeployButton, 200);
+    // Store current mission ID for submit
+    modalSubmit.onclick = () => submitMission(missionID, false);
+}
+
+// ====== OPEN MODAL FOR RETRIEVE/UPDATE ======
+async function openRetrieveModal() {
+    if (!currentMissionData) return;
+    
+    const missionID = currentMissionData.missionID;
+    modalOverlay.style.display = 'flex';
+    document.getElementById('pop-header').innerHTML = `<span style="color:#00f3ff;">#${missionID}</span> <span style="font-size:12px; color:#5c7882;">[UPDATE]</span>`;
+    
+    vAgentInput.value = currentMissionData.vAgentID || "";
+    selectedWeaponID = currentMissionData.weaponSystem || "";
+    secureField.value = currentMissionData.SecureLine || "";
+    if (secureField.value) {
+        secureField.classList.add('show');
+        secureBtn.style.display = 'none';
+    } else {
+        secureField.classList.remove('show');
+        secureBtn.style.display = 'block';
+    }
+    secureBtn.innerHTML = '+ Secure Line';
+    
+    await loadAgentWeapons();
+    renderWeapons(selectedWeaponID);
+    
+    modalSubmit.textContent = "UPDATE";
+    modalSubmit.className = "btn btn-retrieve";
+    modalSubmit.disabled = false;
+    modalSubmit.style.opacity = "1";
+    
+    modalSubmit.onclick = () => submitMission(missionID, true);
 }
 
 // ====== OPEN MODAL FOR VIEW ONLY (RESERVE/VIEW) ======
-async function openReserveModal() {
-    console.log("openReserveModal called");
-    
-    let rawMissionID = input.value.trim();
-    if (rawMissionID.length === 0) {
-        SoundFX.error();
-        alert("ENTER MISSION ID FIRST");
-        return;
+async function openReserveModal(missionID) {
+    if (!missionID) {
+        const val = input.value.trim();
+        if (val.length < 4) {
+            alert("Enter valid mission ID");
+            return;
+        }
+        missionID = padMissionID(val);
     }
     
-    const missionID = padMissionID(rawMissionID);
-    SoundFX.click();
-    modalOverlay.style.display = 'flex';
-    document.getElementById('pop-header').innerText = `#${missionID} (VIEW ONLY)`;
+    // Fetch mission data
+    const qM = query(collection(db, "mission_orders"), where("missionID", "==", missionID));
+    const snapM = await getDocs(qM);
+    if (snapM.empty) {
+        alert("Mission not found");
+        return;
+    }
+    const data = snapM.docs[0].data();
     
-    // Disable editing
-    isReserveMode = true;
+    modalOverlay.style.display = 'flex';
+    document.getElementById('pop-header').innerHTML = `<span style="color:#ff003c;">#${missionID}</span> <span style="font-size:12px; color:#5c7882;">[VIEW ONLY]</span>`;
+    
+    vAgentInput.value = data.vAgentID || "";
+    selectedWeaponID = data.weaponSystem || "";
+    secureField.value = data.SecureLine || "";
+    if (secureField.value) {
+        secureField.classList.add('show');
+        secureBtn.style.display = 'none';
+    } else {
+        secureField.classList.remove('show');
+        secureBtn.style.display = 'block';
+    }
+    secureBtn.innerHTML = '+ Secure Line';
+    
+    // Disable editing for view mode
     vAgentInput.disabled = true;
     secureField.disabled = true;
     secureBtn.style.display = 'none';
     
-    // Load mission data for viewing
-    try {
-        const qM = query(collection(db, "mission_orders"), where("missionID", "==", missionID));
-        const snapM = await getDocs(qM);
-        
-        if (!snapM.empty) {
-            const data = snapM.docs[0].data();
-            vAgentInput.value = data.vAgentID || "";
-            selectedWeaponID = data.weaponSystem || "";
-            if (data.SecureLine) {
-                secureField.value = data.SecureLine;
-            }
-            
-            // Show weapons for reference
-            agentWeapons = [data.weaponSystem];
-            renderWeapons();
-            
-            // Highlight the weapon
-            document.querySelectorAll('.weapon-btn').forEach(btn => {
-                if (btn.getAttribute('data-weapon-id') === selectedWeaponID) {
-                    btn.classList.add('selected');
-                }
-            });
-            
-            addLog(`Mission #${missionID} viewed by ${currentAgent}`, '#ffbd00');
-        } else {
-            alert("Mission not found");
-            closeModal();
-            return;
-        }
-    } catch(e) {
-        console.error(e);
-        alert("Error loading mission");
-        closeModal();
-        return;
-    }
+    await loadAgentWeapons();
+    renderWeapons(selectedWeaponID);
+    // Disable weapon selection in view mode
+    document.querySelectorAll('.weapon-btn').forEach(btn => {
+        btn.style.pointerEvents = 'none';
+        btn.style.opacity = '0.7';
+    });
     
-    // Set button to CLOSE (not save)
     modalSubmit.textContent = "CLOSE";
     modalSubmit.className = "btn btn-view";
-    modalSubmit.style.background = "#ff003c";
-    modalSubmit.style.color = "#fff";
+    modalSubmit.disabled = false;
     modalSubmit.onclick = closeModal;
-    
-    forceEnableDeployButton();
 }
 
-function closeModal() {
-    SoundFX.click();
-    modalOverlay.style.display = 'none';
-    // Re-enable inputs for next time
-    vAgentInput.disabled = false;
-    secureField.disabled = false;
-    isReserveMode = false;
-}
-
-async function submitMission() {
-    console.log("SUBMIT MISSION CALLED");
-    
-    // If in reserve mode, just close
-    if (isReserveMode) {
-        closeModal();
-        return;
-    }
-    
-    if (isMissionTerminated) {
-        SoundFX.error();
-        alert("MISSION IS TERMINATED - CANNOT MODIFY");
-        return;
-    }
-    
-    SoundFX.click();
-    
-    let rawMissionID = input.value.trim();
-    if (rawMissionID.length === 0) {
-        SoundFX.error();
-        alert("INVALID MISSION ID");
-        return;
-    }
-    
-    const missionID = padMissionID(rawMissionID);
+// ====== SUBMIT MISSION ======
+async function submitMission(missionID, isUpdate) {
     const vID = vAgentInput.value.trim();
     const sLine = secureField.value.trim();
     
     if (!vID) {
-        SoundFX.error();
-        alert("INCOMPLETE DATA: Missing vAgent ID");
+        alert("Enter vAgent ID");
         return;
     }
     if (!selectedWeaponID) {
-        SoundFX.error();
-        alert("INCOMPLETE DATA: No weapon selected");
+        alert("Select a weapon system");
         return;
     }
     
     const now = new Date();
     const deploymentDate = formatDate(now);
-    const relieveDateObj = calculateRelieveDate(now);
-    const relieveDate = formatDate(relieveDateObj);
+    const relieveDate = formatDate(calculateRelieveDate(now));
     
     try {
-        SoundFX.terminalUpdate();
         await setDoc(doc(db, "mission_orders", missionID), {
             missionID: missionID,
             agent: currentAgent,
@@ -546,31 +352,86 @@ async function submitMission() {
             timestamp: serverTimestamp()
         }, { merge: true });
         
-        SoundFX.success();
-        addLog(`Mission #${missionID} ${currentMissionData ? 'UPDATED' : 'DEPLOYED'} by ${currentAgent}`, '#05ffa1');
+        addLog(`Mission #${missionID} ${isUpdate ? 'UPDATED' : 'DEPLOYED'} by ${currentAgent}`, '#05ffa1');
         closeModal();
         input.value = "";
-        resetUI();
+        statusLabel.innerHTML = "";
+        actionBtn.textContent = "SAVE";
+        actionBtn.className = "btn btn-save";
         currentMissionData = null;
-        await loadAgentWeapons();
-        alert(`✅ MISSION ${currentMissionData ? 'UPDATED' : 'DEPLOYED'} SUCCESSFULLY!`);
+        alert(`✅ MISSION ${isUpdate ? 'UPDATED' : 'DEPLOYED'} SUCCESSFULLY!`);
+        
+        // Re-enable view mode elements
+        vAgentInput.disabled = false;
+        secureField.disabled = false;
+        document.querySelectorAll('.weapon-btn').forEach(btn => {
+            btn.style.pointerEvents = 'auto';
+            btn.style.opacity = '1';
+        });
+        
     } catch(e) {
-        SoundFX.error();
         console.error(e);
         alert("ERROR: " + e.message);
     }
 }
 
-function setupEventListeners() {
+function closeModal() {
+    modalOverlay.style.display = 'none';
+    // Re-enable view mode elements
+    vAgentInput.disabled = false;
+    secureField.disabled = false;
+    document.querySelectorAll('.weapon-btn').forEach(btn => {
+        btn.style.pointerEvents = 'auto';
+        btn.style.opacity = '1';
+    });
+}
+
+// ====== SECURE LINE TOGGLE ======
+function toggleSecureLine() {
+    const wrapper = document.querySelector('.secure-line-wrapper');
+    const field = secureField;
+    const btn = secureBtn;
+    
+    if (field.classList.contains('show')) {
+        field.classList.remove('show');
+        btn.style.display = 'block';
+        btn.innerHTML = '+ Secure Line';
+    } else {
+        field.classList.add('show');
+        btn.style.display = 'none';
+        field.focus();
+    }
+}
+
+// ====== INIT ======
+function init() {
+    profName.innerText = currentAgent;
+    avatarInit.innerText = currentAgent.charAt(0).toUpperCase();
+    updateClock();
+    setInterval(updateClock, 1000);
+    setupTerminalListener();
+    loadAgentWeapons();
+    
     input.addEventListener('input', searchMission);
     modalClose.onclick = closeModal;
-    modalSubmit.onclick = submitMission;
-    secureBtn.onclick = () => {
-        SoundFX.click();
-        secureBtn.style.display = 'none';
-        secureField.classList.add('show');
-        secureField.focus();
-    };
+    secureBtn.onclick = toggleSecureLine;
+    
+    console.log("Dashboard ready");
 }
+
+function updateClock() {
+    clockSpan.textContent = new Date().toLocaleTimeString('en-GB');
+}
+
+// Override action button onclick based on mode
+setInterval(() => {
+    if (actionBtn.textContent === "RETRIEVE" && actionBtn.onclick !== openRetrieveModal) {
+        actionBtn.onclick = openRetrieveModal;
+    } else if (actionBtn.textContent === "DEPLOY" && actionBtn.onclick !== openModal) {
+        actionBtn.onclick = openModal;
+    } else if (actionBtn.textContent === "SAVE" && actionBtn.onclick !== openModal) {
+        actionBtn.onclick = openModal;
+    }
+}, 100);
 
 init();

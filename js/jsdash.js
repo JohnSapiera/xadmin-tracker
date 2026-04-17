@@ -156,19 +156,13 @@ async function loadAgentWeapons() {
 function resetUI() {
     actionBtn.textContent = "SAVE";
     actionBtn.className = "btn btn-save";
-    actionBtn.disabled = false;
-    actionBtn.onclick = openModal;  // ✅ FIX: Re-attach onclick
+    actionBtn.disabled = false;      // ✅ Enable
+    actionBtn.style.opacity = "1";   // ✅ Remove fade
+    actionBtn.style.pointerEvents = "auto";
+    actionBtn.onclick = openModal;   // ✅ Attach onclick
     reserveBtn.classList.remove('active');
     isMissionTerminated = false;
     currentMissionData = null;
-}
-
-function updateConfirmButton() {
-    const vID = vAgentInput.value.trim();
-    const hasWeapon = selectedWeaponID !== "";
-    const isValid = vID !== "" && hasWeapon && !isMissionTerminated;
-    modalSubmit.disabled = !isValid;
-    modalSubmit.style.opacity = isValid ? "1" : "0.5";
 }
 
 // ====== SEARCH WITH POP-UP FOR 1-3 DIGITS ======
@@ -202,6 +196,7 @@ async function performSearch(rawValue) {
                 actionBtn.textContent = "TERMINATED";
                 actionBtn.className = "btn btn-locked";
                 actionBtn.disabled = true;
+                actionBtn.onclick = null;
                 reserveBtn.classList.remove('active');
                 addLog(`Mission ${paddedMissionID} is TERMINATED. Access denied.`, '#8b0000');
                 return;
@@ -214,7 +209,7 @@ async function performSearch(rawValue) {
                 actionBtn.textContent = "RETRIEVE";
                 actionBtn.className = "btn btn-retrieve";
                 actionBtn.disabled = false;
-                actionBtn.onclick = openModal;  // ✅ FIX: Ensure onclick is set
+                actionBtn.onclick = openModal;  // ✅ FIX: Attach onclick
                 reserveBtn.classList.remove('active');
                 addLog(`Mission ${paddedMissionID} found. Ready to RETRIEVE.`, '#00f3ff');
             } else {
@@ -222,17 +217,21 @@ async function performSearch(rawValue) {
                 actionBtn.textContent = "LOCKED";
                 actionBtn.className = "btn btn-locked";
                 actionBtn.disabled = true;
+                actionBtn.onclick = null;
                 reserveBtn.classList.remove('active');
                 addLog(`Mission ${paddedMissionID} is owned by ${owner}. Access denied.`, '#ff003c');
             }
         } else {
+            // ✅ FIX: Mission is AVAILABLE - Enable SAVE button
             currentMissionData = null;
             isMissionTerminated = false;
             setStatusColor('available', 'STATUS: AVAILABLE');
             actionBtn.textContent = "SAVE";
             actionBtn.className = "btn btn-save";
-            actionBtn.disabled = false;
-            actionBtn.onclick = openModal;  // ✅ FIX: Re-attach onclick for SAVE
+            actionBtn.disabled = false;           // ✅ Enable the button
+            actionBtn.style.opacity = "1";        // ✅ Remove fade
+            actionBtn.style.pointerEvents = "auto";
+            actionBtn.onclick = openModal;        // ✅ Attach onclick
             reserveBtn.classList.add('active');
             addLog(`Mission ${paddedMissionID} is AVAILABLE. Ready to DEPLOY.`, '#05ffa1');
         }
@@ -240,6 +239,8 @@ async function performSearch(rawValue) {
         console.error("Search error:", error);
         setStatusColor('terminated', 'DATABASE ERROR');
         addLog(`Database error scanning mission ${paddedMissionID}`, '#ff003c');
+        actionBtn.disabled = false;
+        actionBtn.onclick = openModal;
     }
 }
 

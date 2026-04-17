@@ -10,13 +10,19 @@
 </head>
 <body>
 <div class="terminal">
-    <!-- Status Bar - Signal Bars Only (no printer icon) -->
+    <!-- Status Bar -->
     <div class="status-bar">
         <div class="signal-section">
             <div class="signal-bars" id="signalBars">
-                <div class="bar bar-1" id="bar1"></div>
-                <div class="bar bar-2" id="bar2"></div>
-                <div class="bar bar-3" id="bar3"></div>
+                <div class="bar-container">
+                    <div class="bar bar-1" id="bar1"></div>
+                </div>
+                <div class="bar-container">
+                    <div class="bar bar-2" id="bar2"></div>
+                </div>
+                <div class="bar-container">
+                    <div class="bar bar-3" id="bar3"></div>
+                </div>
             </div>
             <div class="battery">
                 <span>🔋</span>
@@ -28,10 +34,10 @@
         </div>
     </div>
 
-    <!-- CRT Monitor / Terminal Screen -->
+    <!-- CRT Monitor -->
     <div class="crt-monitor">
         <div class="terminal-screen">
-            <div class="typed-line" id="typedLine">
+            <div class="typed-line">
                 <span class="prompt">&gt;</span>
                 <span class="typed-digits" id="typedDigits"></span>
                 <span class="cursor" id="cursor">_</span>
@@ -40,7 +46,7 @@
         </div>
     </div>
 
-    <!-- Keypad - Circles -->
+    <!-- Keypad -->
     <div class="keypad">
         <div class="key-row">
             <div class="key-circle" data-digit="1">1</div>

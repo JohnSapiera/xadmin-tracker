@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AGENT_ACCESS_TERMINAL</title>
+    <title>SUPABASE_AGENT_TERMINAL</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         * {
@@ -34,6 +34,7 @@
             position: relative;
             backdrop-filter: blur(4px);
             border-radius: 4px;
+            box-shadow: 0 0 20px rgba(0,242,255,0.1);
         }
 
         .scan-line {
@@ -72,6 +73,7 @@
             color: #00f2ff;
             text-transform: uppercase;
             letter-spacing: 2px;
+            text-shadow: 0 0 4px rgba(0,242,255,0.4);
         }
 
         .trace-container {
@@ -142,11 +144,12 @@
             border-radius: 4px;
         }
         .code-digits {
-            font-size: 26px;
-            letter-spacing: 6px;
+            font-size: 28px;
+            letter-spacing: 8px;
             color: #05ffa1;
             font-family: monospace;
             font-weight: bold;
+            text-shadow: 0 0 3px #00ff66;
         }
         .helper-text {
             font-size: 8px;
@@ -175,6 +178,12 @@
         .btn-danger {
             border-color: #ff003c;
             color: #ff003c;
+        }
+        .btn-danger:active {
+            background: #ff003c20;
+        }
+        .btn:active {
+            background: #1a2f3740;
         }
 
         .message-area {
@@ -206,6 +215,8 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
+    <!-- Supabase JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -213,7 +224,7 @@
     <div class="scan-line" id="scanLine"></div>
     
     <div class="header">
-        <div class="badge">AGENT_ACCESS_TERMINAL</div>
+        <div class="badge">SUPABASE_AGENT_NEXUS</div>
         <div class="status-text" id="statusLabel">INITIALIZING_SCAN</div>
     </div>
 
@@ -239,11 +250,21 @@
     <div class="message-area" id="messageArea"></div>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-
 <script>
-    // ========== SOUND MANAGER ==========
+    // ========================
+    // 🔐 SUPABASE CONFIGURATION (PALITAN ITO NG SA INYONG SUPABASE CREDENTIALS)
+    // ========================
+    const SUPABASE_URL = "https://iyong-project.supabase.co";        // <-- PALITAN: iyong Supabase URL
+    const SUPABASE_ANON_KEY = "iyong-supabase-anon-key";            // <-- PALITAN: iyong public anon key
+    
+    // ✅ Sample table structure expected:
+    // Table name: "agents"
+    // Columns: id (uuid), agentName (text), secretKey (text), linkedSignatures (text[]), weaponSystem (text), lastFingerprint (text), created_at (timestamp)
+    // Kung iba ang pangalan ng table o columns, i-update ang queries sa ibaba.
+    
+    // ========================
+    // SOUND FX (retained)
+    // ========================
     const SoundFX = {
         beep(frequency = 800, duration = 0.1, volume = 0.2) {
             try {
@@ -260,48 +281,15 @@
                 setTimeout(() => audioCtx.close(), duration * 1000);
             } catch(e) { console.log("Audio error:", e); }
         },
-        
-        scanBeep() {
-            this.beep(1200, 0.08, 0.15);
-        },
-        
-        keypadTone(digit) {
-            const freqs = { '1':697, '2':697, '3':697, '4':770, '5':770, '6':770, '7':852, '8':852, '9':852, '0':941 };
-            this.beep(freqs[digit] || 800, 0.06, 0.12);
-        },
-        
-        click() {
-            this.beep(600, 0.04, 0.1);
-        },
-        
-        success() {
-            this.beep(880, 0.12, 0.2);
-            setTimeout(() => this.beep(1100, 0.12, 0.2), 120);
-        },
-        
-        error() {
-            this.beep(400, 0.3, 0.25);
-        },
-        
-        register() {
-            this.beep(660, 0.1, 0.2);
-            setTimeout(() => this.beep(880, 0.1, 0.2), 100);
-            setTimeout(() => this.beep(1320, 0.2, 0.2), 200);
-        }
+        scanBeep() { this.beep(1200, 0.08, 0.15); },
+        keypadTone(digit) { const freqs = { '1':697, '2':697, '3':697, '4':770, '5':770, '6':770, '7':852, '8':852, '9':852, '0':941 }; this.beep(freqs[digit] || 800, 0.06, 0.12); },
+        click() { this.beep(600, 0.04, 0.1); },
+        success() { this.beep(880, 0.12, 0.2); setTimeout(() => this.beep(1100, 0.12, 0.2), 120); },
+        error() { this.beep(400, 0.3, 0.25); },
+        register() { this.beep(660, 0.1, 0.2); setTimeout(() => this.beep(880, 0.1, 0.2), 100); setTimeout(() => this.beep(1320, 0.2, 0.2), 200); }
     };
 
-    // Firebase Configuration
-    const firebaseConfig = { 
-        apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
-        authDomain: "my-admin-portal-12691.firebaseapp.com", 
-        projectId: "my-admin-portal-12691", 
-        storageBucket: "my-admin-portal-12691.firebasestorage.app", 
-        messagingSenderId: "317015091563", 
-        appId: "1:317015091563:web:baab5171d8e0a58acd442e" 
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-
+    // DOM Elements
     const statusLabel = document.getElementById('statusLabel');
     const deviceSigSpan = document.getElementById('deviceSig');
     const keypadSection = document.getElementById('keypadSection');
@@ -311,22 +299,26 @@
     let currentSignature = "";
     let enteredCode = "";
     let isProcessing = false;
+    let supabaseClient = null;
 
+    // Helper: show message
     function showMessage(text, isError = false) {
         messageArea.innerHTML = `<div class="${isError ? 'error-msg' : 'success-msg'}">${text}</div>`;
         setTimeout(() => {
             if (messageArea.innerHTML === `<div class="${isError ? 'error-msg' : 'success-msg'}">${text}</div>`) {
                 messageArea.innerHTML = "";
             }
-        }, 3000);
+        }, 3500);
     }
 
+    // Clear entered digits
     function clearCode() {
         SoundFX.click();
         enteredCode = "";
         codeDisplay.innerText = "----";
     }
 
+    // Add digit & auto-verify pag 4 digits
     function addDigit(digit) {
         if (enteredCode.length < 4) {
             SoundFX.keypadTone(digit);
@@ -349,11 +341,12 @@
             });
 
             if (enteredCode.length === 4) {
-                setTimeout(() => verifySecretKey(enteredCode), 50);
+                setTimeout(() => verifySecretKeyWithSupabase(enteredCode), 50);
             }
         }
     }
 
+    // Generate deterministic device fingerprint (based on WebGL, screen, userAgent)
     function generateSignature() {
         const canvas = document.createElement('canvas');
         const gl = canvas.getContext('webgl');
@@ -361,95 +354,132 @@
         const gpu = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "GENERIC_GPU";
         
         const specs = {
-            brand: navigator.userAgent.match(/Android\s+([^\s;]+);?\s+([^\s;]+)/)?.[2] || "NODE_STATION",
+            brand: navigator.userAgent.match(/Android\s+([^\s;]+);?\s+([^\s;]+)/)?.[2] || navigator.platform || "UNKNOWN_STATION",
             gpu: gpu.split('/').pop().trim(),
             res: `${window.screen.width}x${window.screen.height}`,
-            plt: navigator.platform
+            plt: navigator.platform,
+            tz: Intl.DateTimeFormat().resolvedOptions().timeZone
         };
 
-        const raw = specs.gpu + specs.res + specs.plt + specs.brand;
+        const raw = specs.gpu + specs.res + specs.plt + specs.brand + specs.tz;
         let hash = 0;
         for (let i = 0; i < raw.length; i++) {
             hash = ((hash << 5) - hash) + raw.charCodeAt(i);
             hash |= 0;
         }
-        return "SIG-" + Math.abs(hash).toString(16).toUpperCase();
+        return "SIG-" + Math.abs(hash).toString(16).toUpperCase().slice(0, 12);
     }
 
-    async function registerFingerprint(agentName, signature) {
+    // ✅ SUPABASE: I-register ang device fingerprint sa agent (array field)
+    async function registerFingerprintToSupabase(agentName, secretKey, signature) {
         try {
-            // Hanapin ang agent document gamit ang agentName field
-            const snapshot = await db.collection("agents")
-                .where("agentName", "==", agentName)
-                .get();
+            // Step 1: Hanapin ang agent sa pamamagitan ng secretKey (unique dapat)
+            const { data: agentData, error: fetchError } = await supabaseClient
+                .from('agents')
+                .select('id, agentName, linkedSignatures, weaponSystem')
+                .eq('secretKey', secretKey)
+                .maybeSingle();
             
-            if (!snapshot.empty) {
-                const docRef = snapshot.docs[0].ref;
-                await docRef.update({
-                    linkedSignatures: firebase.firestore.FieldValue.arrayUnion(signature),
-                    lastFingerprint: signature,
-                    lastSync: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                return true;
+            if (fetchError || !agentData) {
+                console.error("Fetch error or agent not found:", fetchError);
+                return { success: false, reason: "agent_not_found" };
             }
-            return false;
-        } catch (error) {
-            console.error("Registration error:", error);
-            return false;
+            
+            // Step 2: I-update gamit ang array_append para maiwasan duplicate signatures
+            const currentSignatures = agentData.linkedSignatures || [];
+            if (!currentSignatures.includes(signature)) {
+                const { error: updateError } = await supabaseClient
+                    .from('agents')
+                    .update({
+                        linkedSignatures: [...currentSignatures, signature],
+                        lastFingerprint: signature,
+                        lastSync: new Date().toISOString()
+                    })
+                    .eq('id', agentData.id);
+                
+                if (updateError) {
+                    console.error("Update failed:", updateError);
+                    return { success: false, reason: "update_failed" };
+                }
+            } else {
+                // Kung nandyan na, okay lang update lastFingerprint
+                await supabaseClient
+                    .from('agents')
+                    .update({ lastFingerprint: signature, lastSync: new Date().toISOString() })
+                    .eq('id', agentData.id);
+            }
+            
+            return { success: true, agentName: agentData.agentName, weaponSystem: agentData.weaponSystem || "STANDARD_ISSUE" };
+        } catch (err) {
+            console.error("registerFingerprintToSupabase error:", err);
+            return { success: false, reason: "exception" };
         }
     }
 
-    // ITO ANG PINAKAIMPORTANTE - VERIFY SECRET KEY
-    async function verifySecretKey(secretKey) {
+    // ✅ SUPABASE: I-verify ang secret key at kunin ang agent_name
+    async function verifySecretKeyWithSupabase(secretKey) {
         if (isProcessing) return;
         isProcessing = true;
         
         statusLabel.innerHTML = "VERIFYING_KEY";
-        showMessage("Authenticating secret key...");
+        showMessage("Authenticating secret key via Supabase...");
         SoundFX.scanBeep();
         
         try {
-            // Hanapin ang agent gamit ang secretKey field
-            const snapshot = await db.collection("agents")
-                .where("secretKey", "==", secretKey)
-                .get();
+            // Query agents table kung saan ang secretKey ay tugma
+            const { data: agent, error } = await supabaseClient
+                .from('agents')
+                .select('agentName, secretKey, weaponSystem, linkedSignatures')
+                .eq('secretKey', secretKey)
+                .maybeSingle();
             
-            if (!snapshot.empty) {
-                const agentDoc = snapshot.docs[0];
-                const agentData = agentDoc.data();
-                const agentName = agentData.agentName;
-                const weaponSystem = agentData.weaponSystem || "STANDARD_ISSUE";
+            if (error) throw new Error(error.message);
+            
+            if (agent) {
+                const agentName = agent.agentName;
+                const weaponSystem = agent.weaponSystem || "STANDARD_ISSUE";
                 
-                showMessage(`Secret key verified. Agent: ${agentName}`);
+                showMessage(`✓ Secret key verified. Agent: ${agentName}`);
                 statusLabel.innerHTML = "REGISTERING_DEVICE";
                 SoundFX.register();
                 
-                const success = await registerFingerprint(agentName, currentSignature);
+                // I-register ang device fingerprint sa Supabase (i-add sa linkedSignatures array)
+                const regResult = await registerFingerprintToSupabase(agentName, secretKey, currentSignature);
                 
-                if (success) {
+                if (regResult.success) {
                     SoundFX.success();
-                    showMessage(`Device registered successfully. Access granted.`);
+                    showMessage(`Device registered successfully. Welcome, ${agentName}.`);
                     statusLabel.innerHTML = "ACCESS_GRANTED";
                     
-                    // STORE SA LOCAL STORAGE - Agent Name at Weapon System
-                    localStorage.setItem("cia_agent", agentName);
-                    localStorage.setItem("agent", agentName);
+                    // ========== STORE SA LOCAL DATABASE (localStorage) ==========
+                    // Ito ang hinihingi: i-store ang agent_name, secret key at device print sa local database
+                    localStorage.setItem("supabase_agent", agentName);
+                    localStorage.setItem("agent_name", agentName);
                     localStorage.setItem("weapon_system", weaponSystem);
                     localStorage.setItem("secret_key", secretKey);
                     localStorage.setItem("agent_verified", "true");
                     localStorage.setItem("device_signature", currentSignature);
+                    localStorage.setItem("last_auth", new Date().toISOString());
                     
-                    console.log("Stored in localStorage:");
-                    console.log("- Agent Name:", agentName);
-                    console.log("- Weapon System:", weaponSystem);
-                    console.log("- Secret Key:", secretKey);
+                    // I-print sa console para sa debugging (optional)
+                    console.log("✅ LOCAL DATABASE STORED (localStorage):");
+                    console.log("   - agent_name:", agentName);
+                    console.log("   - secret_key:", secretKey);
+                    console.log("   - device_print:", currentSignature);
+                    console.log("   - weapon_system:", weaponSystem);
                     
+                    // Redirect to dashboard or success page
                     setTimeout(() => {
+                        // Pwedeng mag redirect sa dashboard.html o magpakita ng success screen
+                        // Dito magre-redirect sa demo success page (kung wala, pwedeng mag stay)
                         window.location.href = "dashboard.html";
                     }, 1500);
                 } else {
                     SoundFX.error();
-                    showMessage("Registration failed. Please try again.", true);
+                    let errorMsg = "Registration failed. ";
+                    if (regResult.reason === "agent_not_found") errorMsg += "Agent record inconsistency.";
+                    else errorMsg += "Could not update device signature.";
+                    showMessage(errorMsg, true);
                     statusLabel.innerHTML = "REGISTRATION_FAILED";
                     clearCode();
                     isProcessing = false;
@@ -461,58 +491,69 @@
                 clearCode();
                 isProcessing = false;
             }
-        } catch (error) {
-            console.error("Verification error:", error);
+        } catch (err) {
+            console.error("Supabase verification error:", err);
             SoundFX.error();
-            showMessage("Connection error. Please try again.", true);
+            showMessage("Connection error. Check Supabase URL/Key or network.", true);
             statusLabel.innerHTML = "ERROR";
             isProcessing = false;
         }
     }
 
-    async function authenticateDevice(signature) {
-        statusLabel.innerHTML = "SCANNING_DATABASE";
+    // ✅ SUPABASE: Suriin kung ang device fingerprint ay nakarehistro na (para auto-login)
+    async function authenticateDeviceWithSupabase(signature) {
+        statusLabel.innerHTML = "SCANNING_SUPABASE";
         deviceSigSpan.innerText = signature;
         SoundFX.scanBeep();
         
         try {
-            const snapshot = await db.collection("agents")
-                .where("linkedSignatures", "array-contains", signature)
-                .get();
+            // Hanapin ang agent kung saan ang linkedSignatures array ay naglalaman ng signature na ito
+            const { data: agents, error } = await supabaseClient
+                .from('agents')
+                .select('agentName, weaponSystem, linkedSignatures')
+                .contains('linkedSignatures', [signature]);
             
-            if (!snapshot.empty) {
-                const agentData = snapshot.docs[0].data();
+            if (error) throw error;
+            
+            if (agents && agents.length > 0) {
+                const agentData = agents[0];
                 const agentName = agentData.agentName;
                 const weaponSystem = agentData.weaponSystem || "STANDARD_ISSUE";
                 
                 SoundFX.success();
                 statusLabel.innerHTML = "ACCESS_GRANTED";
-                showMessage(`Welcome back, ${agentName}. Redirecting...`);
+                showMessage(`Welcome back, ${agentName}. Device recognized.`);
                 
-                localStorage.setItem("cia_agent", agentName);
-                localStorage.setItem("agent", agentName);
+                // Store local data
+                localStorage.setItem("supabase_agent", agentName);
+                localStorage.setItem("agent_name", agentName);
                 localStorage.setItem("weapon_system", weaponSystem);
                 localStorage.setItem("agent_verified", "true");
                 localStorage.setItem("device_signature", signature);
+                localStorage.setItem("last_auth", new Date().toISOString());
+                
+                console.log("🔄 Existing device detected. Stored agent_name:", agentName);
                 
                 setTimeout(() => {
                     window.location.href = "dashboard.html";
                 }, 1200);
             } else {
+                // Hindi pa registered ang device na ito -> need mag enter ng secret key
                 SoundFX.error();
                 statusLabel.innerHTML = "DEVICE_NOT_REGISTERED";
-                showMessage("Device not recognized. Please enter your 4-digit secret key to register.", true);
+                showMessage("Device fingerprint not recognized. Please enter your 4-digit SECRET KEY to register.", true);
                 keypadSection.classList.remove("hidden");
                 document.getElementById('scanLine').style.opacity = "0.2";
             }
-        } catch (error) {
-            console.error(error);
+        } catch (err) {
+            console.error("Supabase auth error:", err);
             SoundFX.error();
             statusLabel.innerHTML = "SCAN_ERROR";
-            showMessage("Database connection error. Please try again.", true);
+            showMessage("Supabase connection error. Please check console.", true);
         }
     }
 
+    // Build numeric keypad UI
     function buildKeypad() {
         const keypadContainer = document.getElementById('numericKeypad');
         const layout = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
@@ -528,6 +569,7 @@
         });
     }
 
+    // Clear & Cancel handlers
     document.getElementById('clearBtn').onclick = () => clearCode();
     document.getElementById('cancelBtn').onclick = () => {
         SoundFX.click();
@@ -538,15 +580,45 @@
         setTimeout(() => location.reload(), 1500);
     };
 
-    function init() {
+    // Initialization: setup Supabase client + generate fingerprint + authenticate
+    async function init() {
+        // ✅ I-check kung ang Supabase credentials ay napalitan na
+        if (SUPABASE_URL === "https://iyong-project.supabase.co" || SUPABASE_ANON_KEY === "iyong-supabase-anon-key") {
+            statusLabel.innerHTML = "CONFIG_ERROR";
+            showMessage("⚠️ Please configure your Supabase URL and ANON KEY inside the script.", true);
+            deviceSigSpan.innerText = "MISSING_CONFIG";
+            console.error("Supabase credentials not set. Update SUPABASE_URL and SUPABASE_ANON_KEY.");
+            return;
+        }
+        
+        try {
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            // Optional: test connection by fetching something light
+            const { error: testError } = await supabaseClient.from('agents').select('count', { count: 'exact', head: true });
+            if (testError) {
+                console.warn("Supabase connection test warning:", testError);
+                showMessage("⚠️ Supabase connected but table 'agents' may not exist or RLS issue.", true);
+            } else {
+                console.log("✅ Supabase client ready.");
+            }
+        } catch (err) {
+            console.error("Fatal: Cannot init Supabase client", err);
+            statusLabel.innerHTML = "SUPABASE_FAIL";
+            showMessage("Failed to initialize Supabase. Check URL/Key.", true);
+            return;
+        }
+        
         buildKeypad();
         currentSignature = generateSignature();
         deviceSigSpan.innerText = currentSignature;
+        
+        // Simulan ang authentication process (check kung registered na device)
         setTimeout(() => {
-            authenticateDevice(currentSignature);
-        }, 1000);
+            authenticateDeviceWithSupabase(currentSignature);
+        }, 800);
     }
     
+    // Start everything
     init();
 </script>
 </body>

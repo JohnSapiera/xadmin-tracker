@@ -202,6 +202,26 @@
             color: #00ff66;
         }
 
+        .weapons-list {
+            margin-top: 10px;
+            padding: 8px;
+            background: #000;
+            border: 1px solid #1a2f37;
+            border-radius: 4px;
+            font-size: 9px;
+        }
+        .weapons-list span {
+            color: #00f2ff;
+        }
+        .weapon-item {
+            display: inline-block;
+            background: #0a1f29;
+            padding: 2px 6px;
+            margin: 2px;
+            border-radius: 3px;
+            color: #05ffa1;
+        }
+
         .loader {
             display: inline-block;
             width: 10px;
@@ -247,11 +267,12 @@
     </div>
 
     <div class="message-area" id="messageArea"></div>
+    <div id="weaponsDisplay" class="weapons-list hidden"></div>
 </div>
 
 <script>
     // ========================
-    // 🔐 SUPABASE CONFIGURATION (NAKASET NA SA IYONG PROJECT)
+    // 🔐 SUPABASE CONFIGURATION
     // ========================
     const SUPABASE_URL = "https://pgclrzqfpoznvrjrzced.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_GhIOC2mXVo0UrhMHZX6Qww_T12tQl4s";
@@ -288,6 +309,7 @@
     const keypadSection = document.getElementById('keypadSection');
     const codeDisplay = document.getElementById('codeDisplay');
     const messageArea = document.getElementById('messageArea');
+    const weaponsDisplay = document.getElementById('weaponsDisplay');
 
     let currentSignature = "";
     let enteredCode = "";
@@ -301,6 +323,20 @@
                 messageArea.innerHTML = "";
             }
         }, 3500);
+    }
+
+    function displayWeapons(weaponsArray) {
+        if (!weaponsArray || weaponsArray.length === 0) {
+            weaponsDisplay.classList.add('hidden');
+            return;
+        }
+        
+        let weaponsHtml = '<span>🔫 WEAPON SYSTEMS:</span><br>';
+        weaponsArray.forEach(weapon => {
+            weaponsHtml += `<div class="weapon-item">⚔️ ${weapon}</div>`;
+        });
+        weaponsDisplay.innerHTML = weaponsHtml;
+        weaponsDisplay.classList.remove('hidden');
     }
 
     function clearCode() {
@@ -362,7 +398,6 @@
     // Register device fingerprint sa existing agents table
     async function registerFingerprintToSupabase(agentName, secretKey, signature) {
         try {
-            // Hanapin ang agent gamit ang secret_key (since unix yan sa table mo)
             const { data: agentData, error: fetchError } = await supabaseClient
                 .from('agents')
                 .select('*')
@@ -374,7 +409,6 @@
                 return { success: false, reason: "agent_not_found" };
             }
             
-            // Kunin ang existing linked_signatures or gawa ng bago
             const currentSignatures = agentData.linked_signatures || [];
             let updateData = {
                 last_fingerprint: signature,
@@ -395,7 +429,11 @@
                 return { success: false, reason: "update_failed" };
             }
             
-            return { success: true, agentName: agentData.agent_name, weaponSystem: agentData.weapon_system || "STANDARD_ISSUE" };
+            return { 
+                success: true, 
+                agentName: agentData.agent_name, 
+                weaponSystem: agentData.weapons_array || [] // Gamit ang weapons_array column
+            };
         } catch (err) {
             console.error("registerFingerprint error:", err);
             return { success: false, reason: "exception" };
@@ -412,10 +450,9 @@
         SoundFX.scanBeep();
         
         try {
-            // Query gamit ang secret_key column ng existing table
             const { data: agent, error } = await supabaseClient
                 .from('agents')
-                .select('agent_name, secret_key, weapon_system, linked_signatures')
+                .select('agent_name, secret_key, weapons_array, linked_signatures')
                 .eq('secret_key', secretKey)
                 .maybeSingle();
             
@@ -423,9 +460,15 @@
             
             if (agent) {
                 const agentName = agent.agent_name;
-                const weaponSystem = agent.weapon_system || "STANDARD_ISSUE";
+                const weaponSystem = agent.weapons_array || [];
                 
                 showMessage(`✓ Secret key verified. Agent: ${agentName}`);
+                
+                if (weaponSystem.length > 0) {
+                    displayWeapons(weaponSystem);
+                    showMessage(`✓ Agent has ${weaponSystem.length} weapon system(s) assigned`);
+                }
+                
                 statusLabel.innerHTML = "REGISTERING_DEVICE";
                 SoundFX.register();
                 
@@ -436,10 +479,11 @@
                     showMessage(`Device registered successfully. Welcome, ${agentName}.`);
                     statusLabel.innerHTML = "ACCESS_GRANTED";
                     
-                    // STORE SA LOCAL DATABASE (localStorage) - ITO ANG HINIHINGI MO
+                    // STORE SA LOCAL DATABASE (localStorage)
                     localStorage.setItem("supabase_agent", agentName);
                     localStorage.setItem("agent_name", agentName);
-                    localStorage.setItem("weapon_system", weaponSystem);
+                    localStorage.setItem("weapon_system", JSON.stringify(weaponSystem));
+                    localStorage.setItem("weapon_system_array", JSON.stringify(weaponSystem));
                     localStorage.setItem("secret_key", secretKey);
                     localStorage.setItem("agent_verified", "true");
                     localStorage.setItem("device_signature", currentSignature);
@@ -450,16 +494,14 @@
                     console.log("   📱 agent_name:", agentName);
                     console.log("   🔑 secret_key:", secretKey);
                     console.log("   🖨️ device_print:", currentSignature);
-                    console.log("   🔫 weapon_system:", weaponSystem);
+                    console.log("   🔫 weapon_system (ARRAY):", weaponSystem);
+                    console.log("   🔫 weapon_system (count):", weaponSystem.length);
                     
-                    // Ipakita sa screen na na-save na
-                    showMessage(`✅ Stored: ${agentName} | Device: ${currentSignature.substring(0,10)}...`);
+                    displayWeapons(weaponSystem);
                     
                     setTimeout(() => {
-                        // Mag-redirect sa dashboard (kung meron)
-                        // window.location.href = "dashboard.html";
-                        showMessage("Access granted! Redirecting...");
-                        statusLabel.innerHTML = "REDIRECTING";
+                        showMessage("Access granted! System ready.");
+                        statusLabel.innerHTML = "SYSTEM_READY";
                     }, 1500);
                 } else {
                     SoundFX.error();
@@ -491,10 +533,9 @@
         SoundFX.scanBeep();
         
         try {
-            // Hanapin ang agent kung saan ang linked_signatures array ay naglalaman ng signature
             const { data: agents, error } = await supabaseClient
                 .from('agents')
-                .select('agent_name, weapon_system, linked_signatures')
+                .select('agent_name, weapons_array, linked_signatures')
                 .contains('linked_signatures', [signature]);
             
             if (error) throw error;
@@ -502,16 +543,20 @@
             if (agents && agents.length > 0) {
                 const agentData = agents[0];
                 const agentName = agentData.agent_name;
-                const weaponSystem = agentData.weapon_system || "STANDARD_ISSUE";
+                const weaponSystem = agentData.weapons_array || [];
                 
                 SoundFX.success();
                 statusLabel.innerHTML = "ACCESS_GRANTED";
                 showMessage(`Welcome back, ${agentName}. Device recognized.`);
                 
-                // Store sa localStorage
+                if (weaponSystem.length > 0) {
+                    displayWeapons(weaponSystem);
+                }
+                
                 localStorage.setItem("supabase_agent", agentName);
                 localStorage.setItem("agent_name", agentName);
-                localStorage.setItem("weapon_system", weaponSystem);
+                localStorage.setItem("weapon_system", JSON.stringify(weaponSystem));
+                localStorage.setItem("weapon_system_array", JSON.stringify(weaponSystem));
                 localStorage.setItem("agent_verified", "true");
                 localStorage.setItem("device_signature", signature);
                 localStorage.setItem("device_print", signature);
@@ -519,9 +564,10 @@
                 
                 console.log("🔄 Existing device detected. Stored agent_name:", agentName);
                 console.log("🖨️ Device print:", signature);
+                console.log("🔫 Weapon systems (ARRAY):", weaponSystem);
                 
                 setTimeout(() => {
-                    showMessage("Access granted! Loading...");
+                    statusLabel.innerHTML = "SYSTEM_READY";
                 }, 1200);
             } else {
                 SoundFX.error();
@@ -529,6 +575,7 @@
                 showMessage("Device not recognized. Enter your SECRET KEY to register.", true);
                 keypadSection.classList.remove("hidden");
                 document.getElementById('scanLine').style.opacity = "0.2";
+                weaponsDisplay.classList.add('hidden');
             }
         } catch (err) {
             console.error("Supabase auth error:", err);
@@ -568,8 +615,7 @@
             supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             console.log("✅ Supabase client initialized!");
             
-            // Test connection
-            const { data, error: testError } = await supabaseClient.from('agents').select('count', { count: 'exact', head: true });
+            const { error: testError } = await supabaseClient.from('agents').select('count', { count: 'exact', head: true });
             if (testError) {
                 console.warn("⚠️ Table access issue:", testError.message);
                 showMessage("⚠️ Cannot access 'agents' table. Check RLS policies.", true);

@@ -153,6 +153,20 @@ async function loadAgentWeapons() {
     }
 }
 
+// ====== UPDATE CONFIRM BUTTON (ENABLE/DISABLE DEPLOY) ======
+function updateConfirmButton() {
+    const vID = vAgentInput.value.trim();
+    const hasWeapon = selectedWeaponID !== "";
+    const isValid = vID !== "" && hasWeapon && !isMissionTerminated;
+    
+    console.log("updateConfirmButton - vID:", vID, "hasWeapon:", hasWeapon, "isValid:", isValid);
+    
+    if (modalSubmit) {
+        modalSubmit.disabled = !isValid;
+        modalSubmit.style.opacity = isValid ? "1" : "0.5";
+    }
+}
+
 function resetUI() {
     actionBtn.textContent = "SAVE";
     actionBtn.className = "btn btn-save";

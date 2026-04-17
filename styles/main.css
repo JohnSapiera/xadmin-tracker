@@ -15,7 +15,6 @@ body {
     padding: 16px;
 }
 
-/* Main Container */
 .terminal {
     width: 100%;
     max-width: 450px;
@@ -26,7 +25,7 @@ body {
     border: 1px solid #1f232c;
 }
 
-/* Status Bar - Signal Bars Only */
+/* Status Bar */
 .status-bar {
     display: flex;
     justify-content: flex-end;
@@ -42,12 +41,18 @@ body {
     gap: 12px;
 }
 
-/* Signal Bars - Rotated 90 degrees */
+/* Signal Bars - Correct orientation (lowest to highest from left to right) */
 .signal-bars {
     display: flex;
-    align-items: center;
-    gap: 4px;
-    transform: rotate(90deg);
+    align-items: flex-end;
+    gap: 5px;
+    height: 24px;
+}
+
+.bar-container {
+    display: flex;
+    align-items: flex-end;
+    height: 100%;
 }
 
 .bar {
@@ -57,13 +62,26 @@ body {
     transition: all 0.2s ease;
 }
 
+/* Bar heights - 1 bar (pinakamaliit), 2 bars, 3 bars (pinakamataas) */
 .bar-1 { height: 8px; }
 .bar-2 { height: 14px; }
 .bar-3 { height: 20px; }
 
+/* Active state - white with glow */
 .bar.active {
     background: #ffffff;
     box-shadow: 0 0 6px #ffffff;
+}
+
+/* Animation for signal bars */
+@keyframes signalPulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.4; }
+    100% { opacity: 1; }
+}
+
+.bar.active {
+    animation: signalPulse 0.8s ease-in-out;
 }
 
 /* Battery */
@@ -112,7 +130,7 @@ body {
     align-items: center;
     gap: 8px;
     flex-wrap: wrap;
-    word-break: break-word;
+    min-height: 40px;
 }
 
 .prompt {
@@ -123,6 +141,8 @@ body {
     color: #00ff66;
     letter-spacing: 4px;
     font-weight: bold;
+    font-size: 20px;
+    min-width: 60px;
 }
 
 .cursor {
@@ -141,6 +161,7 @@ body {
     margin-top: 12px;
     padding-top: 8px;
     border-top: 1px solid #1a2a2a;
+    min-height: 40px;
 }
 
 .display-message.error {
@@ -151,7 +172,7 @@ body {
     color: #00ff66;
 }
 
-/* Keypad - Circles */
+/* Keypad */
 .keypad {
     display: flex;
     flex-direction: column;
@@ -292,82 +313,8 @@ hr {
 
 /* Mobile Responsive */
 @media (max-width: 480px) {
-    .terminal {
-        padding: 16px;
-    }
-    
-    .key-circle {
-        width: 60px;
-        height: 60px;
-        font-size: 24px;
-    }
-    
-    .key-zero {
-        width: 60px;
-        height: 60px;
-    }
-    
-    .key-row {
-        gap: 14px;
-    }
-    
-    .typed-line {
-        font-size: 16px;
-    }
-    
-    .crt-monitor {
-        padding: 16px 12px;
-    }
-}
-
-@media (max-width: 380px) {
-    .key-circle {
-        width: 55px;
-        height: 55px;
-        font-size: 22px;
-    }
-    
-    .key-zero {
-        width: 55px;
-        height: 55px;
-    }
-    
-    .key-row {
-        gap: 10px;
-    }
-}
-
-/* Signal Bars - Fixed orientation (hindi baliktad) */
-.signal-bars {
-    display: flex;
-    align-items: flex-end;
-    gap: 4px;
-    /* REMOVED transform: rotate(90deg) */
-}
-
-.bar {
-    width: 4px;
-    background: #2a4a3a;
-    border-radius: 2px;
-    transition: all 0.2s ease;
-}
-
-.bar-1 { height: 8px; }
-.bar-2 { height: 14px; }
-.bar-3 { height: 20px; }
-
-.bar.active {
-    background: #ffffff;
-    box-shadow: 0 0 8px #ffffff;
-}
-
-/* White fade animation for signal bars */
-@keyframes signalPulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.4; }
-    100% { opacity: 1; }
-}
-
-.bar.active {
-    animation: signalPulse 0.8s ease-in-out;
+    .terminal { padding: 16px; }
+    .key-circle { width: 60px; height: 60px; font-size: 24px; }
+    .key-zero { width: 60px; height: 60px; }
+    .key-row { gap: 14px; }
 }

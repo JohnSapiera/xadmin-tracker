@@ -208,60 +208,40 @@ function setModalSubmitHandler(handler) {
     
     searchTimeout = setTimeout(async () => {
         try {
-            console.log("Searching for mission ID:", missionID);
-            console.log("Database instance:", db);
-            
-            // I-test muna kung gumagana ang Firestore
-            const testRef = collection(db, "mission_orders");
-            const testSnapshot = await getDocs(testRef);
-            console.log("Collection access successful. Total missions:", testSnapshot.size);
-            
-            // Gumawa ng query
             const missionsRef = collection(db, "mission_orders");
             const q = query(missionsRef, where("missionID", "==", missionID));
             const snapshot = await getDocs(q);
-            
-            console.log("Query result empty?", snapshot.empty);
             
             if (!snapshot.empty) {
                 const docData = snapshot.docs[0].data();
                 currentMissionData = docData;
                 const owner = docData.agent;
-                const status = docData.status;
                 
-                console.log("Mission found. Owner:", owner, "Status:", status);
-                
-                if (status === "TERMINATED") {
-                    statusLabel.innerHTML = '<span style="color:#8b0000;">STATUS: TERMINATED</span>';
-                    setButtonStyle(actionBtn, "LOCKED", "btn-locked", true);
-                    setButtonStyle(reserveBtn, "VIEW", "btn-view", false);
-                    reserveBtn.onclick = () => openViewModal(missionID);
-                } else if (owner === currentAgent) {
-                    statusLabel.innerHTML = '<span style="color:#00f3ff;">STATUS: YOUR MISSION</span>';
-                    setButtonStyle(actionBtn, "RETRIEVE", "btn-retrieve", false);
-                    actionBtn.onclick = () => openRetrieveModal();
-                    setButtonStyle(reserveBtn, "RESERVE", "btn-reserve", false);
-                    reserveBtn.onclick = () => openViewModal(missionID);
+                if (owner === currentAgent) {
+                    statusLabel.innerHTML = '<span style="color:#00f3ff;">YOUR MISSION</span>';
                 } else {
-                    statusLabel.innerHTML = `<span style="color:#ff003c;">OWNED BY ${owner}</span>`;
-                    setButtonStyle(actionBtn, "LOCKED", "btn-locked", true);
-                    setButtonStyle(reserveBtn, "VIEW", "btn-view", false);
-                    reserveBtn.onclick = () => openViewModal(missionID);
+                    statusLabel.innerHTML = `<span style="color:#ff003c;">OWNED BY: ${owner}</span>`;
                 }
+                
+                setButtonStyle(actionBtn, "LOCKED", "btn-locked", true);
+                setButtonStyle(reserveBtn, "VIEW", "btn-view", false);
+                reserveBtn.onclick = () => openViewModal(missionID);
+                
             } else {
                 currentMissionData = null;
-                statusLabel.innerHTML = '<span style="color:#05ffa1;">STATUS: AVAILABLE</span>';
+                statusLabel.innerHTML = '<span style="color:#05ffa1;">AVAILABLE</span>';
                 setButtonStyle(actionBtn, "SAVE", "btn-save", false);
                 actionBtn.onclick = () => openModal();
                 setButtonStyle(reserveBtn, "RESERVE", "btn-reserve", false);
-                reserveBtn.onclick = () => openViewModal(missionID);
+                reserveBtn.onclick = () => {
+                    alert("Mission " + missionID + " is available. Click SAVE to deploy.");
+                };
             }
             enableButtons();
+            
         } catch(e) {
-            console.error("DATABASE ERROR DETAILS:", e);
-            console.error("Error code:", e.code);
-            console.error("Error message:", e.message);
-            statusLabel.innerHTML = '<span style="color:#ff003c;">DATABASE ERROR: ' + e.message + '</span>';
+            console.error("Database error:", e);
+            statusLabel.innerHTML = '<span style="color:#ff003c;">DATABASE ERROR</span>';
             enableButtons();
         }
     }, 400);

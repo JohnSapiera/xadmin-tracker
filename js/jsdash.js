@@ -183,75 +183,99 @@ function setModalSubmitHandler(handler) {
     reserveBtn.style.opacity = "1";
 }
         
-        // ========== SEARCH MISSION ==========
-      async function searchMission() {
+        // Function para i-reset ang UI kapag walang laman ang input
+function resetUI() {
+    statusLabel.innerHTML = "";
+    setButtonStyle(actionBtn, "SAVE", "btn-save", false);
+    setButtonStyle(reserveBtn, "RESERVE", "btn-reserve", false);
+    currentMissionData = null;
+    
+    // I-reset ang onclick handlers
+    actionBtn.onclick = null;
+    reserveBtn.onclick = null;
+}
+
+// Function para mag-search ng mission
+async function searchMission(missionID) {
+    statusLabel.innerHTML = 'SCANNING DATABASE...';
+    actionBtn.disabled = true;
+    reserveBtn.disabled = true;
+    
+    try {
+        console.log("Searching for mission ID:", missionID);
+        
+        const missionRef = doc(db, "mission_orders", missionID);
+        const missionSnap = await getDoc(missionRef);
+        
+        console.log("Document exists?", missionSnap.exists());
+        
+        if (missionSnap.exists()) {
+            const docData = missionSnap.data();
+            const owner = docData.agent;
+            currentMissionData = docData;
+            
+            if (owner === currentAgent) {
+                statusLabel.innerHTML = '<span style="color:#00f3ff;">YOUR MISSION</span>';
+                setButtonStyle(actionBtn, "RETRIEVE", "btn-retrieve", false);
+                actionBtn.onclick = () => openRetrieveModal();
+                setButtonStyle(reserveBtn, "VIEW", "btn-view", false);
+                reserveBtn.onclick = () => openViewModal(missionID);
+            } else {
+                statusLabel.innerHTML = `<span style="color:#ff003c;">OWNED BY: ${owner}</span>`;
+                setButtonStyle(actionBtn, "LOCKED", "btn-locked", true);
+                setButtonStyle(reserveBtn, "VIEW", "btn-view", false);
+                reserveBtn.onclick = () => openViewModal(missionID);
+            }
+        } else {
+            currentMissionData = null;
+            statusLabel.innerHTML = '<span style="color:#05ffa1;">AVAILABLE</span>';
+            setButtonStyle(actionBtn, "SAVE", "btn-save", false);
+            actionBtn.onclick = () => openModal();
+            setButtonStyle(reserveBtn, "RESERVE", "btn-reserve", false);
+            reserveBtn.onclick = () => {
+                const missionID = padMissionID(input.value.trim());
+                if (missionID) {
+                    alert("Mission " + missionID + " is available. Click SAVE to deploy.");
+                }
+            };
+        }
+        enableButtons();
+        
+    } catch(e) {
+        console.error("Database error:", e);
+        statusLabel.innerHTML = '<span style="color:#ff003c;">DATABASE ERROR</span>';
+        enableButtons();
+    }
+}
+
+// Main function para sa input changes
+function onMissionInput() {
     const val = input.value.trim();
+    
     if (searchTimeout) clearTimeout(searchTimeout);
     
-    // Kung walang laman ang input, i-reset lang at wag mag-query
+    // Kapag walang laman ang input
     if (val.length === 0) {
-        setButtonStyle(actionBtn, "SAVE", "btn-save", false);
-        setButtonStyle(reserveBtn, "RESERVE", "btn-reserve", false);
-        statusLabel.innerHTML = "";
-        currentMissionData = null;
+        resetUI();
         return;
     }
     
-    // Kung kulang sa 4 digits, mag-message lang at wag mag-query
+    // Kapag kulang sa 4 digits
     if (val.length < 4) {
         statusLabel.innerHTML = 'ENTER 4-5 DIGITS';
         setButtonStyle(actionBtn, "SAVE", "btn-save", false);
         setButtonStyle(reserveBtn, "RESERVE", "btn-reserve", false);
+        actionBtn.onclick = null;
+        reserveBtn.onclick = null;
         return;
     }
     
+    // Kapag tama ang digits (4-5)
     const missionID = padMissionID(val);
-    statusLabel.innerHTML = 'SCANNING DATABASE...';
     
-    actionBtn.disabled = true;
-    reserveBtn.disabled = true;
-    
-    searchTimeout = setTimeout(async () => {
-        try {
-            console.log("Searching for mission ID:", missionID);
-            
-            const missionRef = doc(db, "mission_orders", missionID);
-            const missionSnap = await getDoc(missionRef);
-            
-            console.log("Document exists?", missionSnap.exists());
-            
-            if (missionSnap.exists()) {
-                const docData = missionSnap.data();
-                const owner = docData.agent;
-                
-                if (owner === currentAgent) {
-                    statusLabel.innerHTML = '<span style="color:#00f3ff;">YOUR MISSION</span>';
-                    setButtonStyle(actionBtn, "RETRIEVE", "btn-retrieve", false);
-                    actionBtn.onclick = () => openRetrieveModal();
-                    setButtonStyle(reserveBtn, "VIEW", "btn-view", false);
-                    reserveBtn.onclick = () => openViewModal(missionID);
-                } else {
-                    statusLabel.innerHTML = `<span style="color:#ff003c;">OWNED BY: ${owner}</span>`;
-                    setButtonStyle(actionBtn, "LOCKED", "btn-locked", true);
-                    setButtonStyle(reserveBtn, "VIEW", "btn-view", false);
-                    reserveBtn.onclick = () => openViewModal(missionID);
-                }
-            } else {
-                statusLabel.innerHTML = '<span style="color:#05ffa1;">AVAILABLE</span>';
-                setButtonStyle(actionBtn, "SAVE", "btn-save", false);
-                actionBtn.onclick = () => openModal();
-                setButtonStyle(reserveBtn, "RESERVE", "btn-reserve", false);
-                reserveBtn.onclick = () => {
-                    alert("Mission " + missionID + " is available. Click SAVE to deploy.");
-                };
-            }
-            enableButtons();
-            
-        } catch(e) {
-            console.error("Database error:", e);
-            statusLabel.innerHTML = '<span style="color:#ff003c;">DATABASE ERROR</span>';
-            enableButtons();
-        }
+    // Mag-antay bago mag-search para hindi sa bawat letra
+    searchTimeout = setTimeout(() => {
+        searchMission(missionID);
     }, 400);
 }
 

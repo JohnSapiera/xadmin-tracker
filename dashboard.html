@@ -80,6 +80,19 @@
 
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+    <!-- SESSION CHECK -->
+    <script>
+        // Check kung naka-login
+        const agentName = localStorage.getItem('cia_agent');
+        const isVerified = localStorage.getItem('agent_verified');
+        
+        if (!isVerified || !agentName) {
+            window.location.replace("index.html");
+        }
+        
+        console.log('✅ Logged in as:', agentName);
+    </script>
         
 <script type="module" src="js/jsdash.js"></script>
 </body>

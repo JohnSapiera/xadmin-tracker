@@ -82,17 +82,26 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
     <!-- SESSION CHECK -->
-    <script>
-        // Check kung naka-login
-        const agentName = localStorage.getItem('cia_agent');
-        const isVerified = localStorage.getItem('agent_verified');
-        
-        if (!isVerified || !agentName) {
-            window.location.replace("index.html");
+<script>
+    // Check kung naka-login
+    const agentName = localStorage.getItem('cia_agent');
+    const isVerified = localStorage.getItem('agent_verified');
+    
+    console.log('Auth Check - Agent:', agentName, 'Verified:', isVerified);
+    console.log('Full localStorage:', localStorage);
+    
+    if (!isVerified || !agentName) {
+        console.warn('No auth found, redirecting to login...');
+        window.location.replace("index.html");
+    } else {
+        console.log('Authorized successfully as:', agentName);
+        // Ipakita ang agent name sa UI
+        const profNameElement = document.getElementById('prof-name');
+        if (profNameElement) {
+            profNameElement.textContent = agentName.toUpperCase();
         }
-        
-        console.log('✅ Logged in as:', agentName);
-    </script>
+    }
+</script>
         
 <script type="module" src="js/jsdash.js"></script>
 </body>

@@ -11,8 +11,67 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#02080a">
     
-    <link rel="stylesheet" href="styles/dbintel.css">
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { 
+            --bg: #02080a; --panel: rgba(5, 15, 20, 0.9); --cyan: #00f3ff; 
+            --cyan-dim: rgba(0, 243, 255, 0.1); --red: #ff003c; --blue: #007bff; 
+            --green: #05ffa1; --yellow: #ffbd00; --border: rgba(0, 243, 255, 0.2);
+            --font-mono: 'Share Tech Mono', monospace; --font-main: 'Rajdhani', sans-serif;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: #e1f5f9; font-family: var(--font-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        
+        header { padding: 15px 20px; background: #000; border-bottom: 2px solid var(--cyan); display: flex; justify-content: space-between; align-items: center; z-index: 10; }
+        .status-bar { font-size: 11px; padding: 8px 20px; background: rgba(0,243,255,0.05); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; color: var(--cyan); font-family: var(--font-mono); }
+        
+        main { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 80px; }
+        
+        .command-module { background: var(--panel); border: 1px solid var(--border); padding: 20px; border-radius: 4px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        #mission-input { width: 100%; background: transparent; border: none; border-bottom: 2px solid var(--cyan); color: #fff; font-family: var(--font-mono); font-size: 45px; text-align: center; outline: none; margin-bottom: 5px; letter-spacing: 5px; }
+        #mission-status { font-family: var(--font-mono); font-size: 12px; text-align: center; height: 18px; margin-bottom: 15px; font-weight: bold; text-transform: uppercase; }
+        
+        .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .btn { height: 50px; font-weight: 700; text-transform: uppercase; border: none; cursor: pointer; font-family: var(--font-main); font-size: 14px; transition: 0.3s; border-radius: 6px; }
+        .btn:active { transform: scale(0.95); }
+        
+        /* Button Colors */
+        .btn-save { background: var(--green); color: #000; }      /* NEON GREEN */
+        .btn-retrieve { background: var(--blue); color: #fff; }   /* NEON BLUE */
+        .btn-reserve { background: transparent; border: 2px solid var(--yellow); color: var(--yellow); }  /* NEON YELLOW */
+        .btn-view { background: var(--red); color: #fff; }        /* NEON RED */
+        .btn-locked { background: #1a0000; color: var(--red); border: 1px solid var(--red); cursor: not-allowed; }
+        
+        .btn-reserve.active { opacity: 1; pointer-events: auto; }
+        .btn-save:disabled, .btn-retrieve:disabled, .btn-reserve:disabled, .btn-view:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        #terminal { background: rgba(0,0,0,0.9); border-left: 3px solid var(--cyan); padding: 12px; font-family: var(--font-mono); font-size: 10px; height: 160px; overflow-y: auto; color: #9ab4bc; margin-bottom: 15px; }
+        .term-line { margin-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        
+        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.96); z-index: 9999; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); }
+        .popup { width: 100%; max-width: 360px; background: #051014; border: 1px solid var(--cyan); padding: 25px; border-radius: 12px; }
+        .pop-input { width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 12px; text-align: center; font-size: 18px; margin-bottom: 15px; font-family: var(--font-mono); border-radius: 6px; }
+        #pop-header { color: var(--cyan); text-align: center; margin-bottom: 18px; font-size: 26px; font-weight: 700; font-family: var(--font-mono); }
+        
+        .secure-line-wrapper { text-align: right; margin-bottom: 15px; }
+        #add-secure-btn { font-size: 11px; color: var(--cyan); cursor: pointer; text-decoration: underline; font-family: var(--font-mono); }
+        #secure-input-field { width: 0; opacity: 0; overflow: hidden; transition: 0.5s; background: #000; border: 1px solid var(--border); color: var(--yellow); padding: 0; text-align: center; font-family: var(--font-mono); border-radius: 6px; }
+        #secure-input-field.show { width: 100%; opacity: 1; padding: 10px; }
+        
+        .profile-mini { background: #051014; border: 1px solid var(--border); padding: 12px; display: flex; align-items: center; gap: 15px; border-radius: 8px; }
+        .avatar { width: 40px; height: 40px; background: var(--cyan-dim); border: 1px solid var(--cyan); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--cyan); font-weight: bold; }
+        .profile-info div:first-child { color: var(--cyan); font-weight: 700; }
+        .profile-info div:last-child { color: #5c7882; font-size: 10px; }
+        
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; height: 65px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr 1fr; z-index: 100; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #5c7882; text-decoration: none; font-size: 10px; font-weight: 700; }
+        .nav-item.active { color: var(--cyan); background: var(--cyan-dim); border-top: 2px solid var(--cyan); }
+        
+        .blink { animation: blinker 1s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0.3; } }
+        .status-deployed { color: var(--green); }
+    </style>
 </head>
 <body>
 
@@ -56,11 +115,8 @@
                 <input type="tel" id="secure-input-field" maxlength="11" placeholder="09XXXXXXXXX">
             </div>
 
-            <span>SYSTEM_LINK:</span>
-            <div class="weapon-selector" id="weapon-list"></div>
-
             <div class="btn-row">
-                <button id="modal-submit" class="btn btn-save" disabled>DEPLOY</button>
+                <button id="modal-submit" class="btn btn-save">DEPLOY</button>
                 <button id="modal-close" class="btn">ABORT</button>
             </div>
         </div>
@@ -72,34 +128,343 @@
         <a href="profile.html" class="nav-item">PROFILE</a>
     </nav>
 
-    <!-- SESSION CHECK -->
-    <script>
-        // Check kung naka-login
-        const agentName = localStorage.getItem('cia_agent');
-        const isVerified = localStorage.getItem('agent_verified');
-        
-        if (!isVerified || !agentName) {
-            // Walang login, balik sa login page
-            window.location.replace("index.html");
-        }
-        
-        console.log('✅ Logged in as:', agentName);
-        
-        // Ipakita ang agent name
-        const profNameElem = document.getElementById('prof-name');
-        if (profNameElem) {
-            profNameElem.textContent = agentName;
-        }
-        
-        // I-set ang avatar initial
-        const avatarElem = document.getElementById('avatar-init');
-        if (avatarElem && agentName) {
-            avatarElem.textContent = agentName.charAt(0).toUpperCase();
-        }
-    </script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
-    <!-- DASHBOARD SCRIPT -->
-    <script type="module" src="js/jsdash.js"></script>
+    <script>
+        // ========== FIREBASE CONFIGURATION ==========
+        const firebaseConfig = { 
+            apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
+            authDomain: "my-admin-portal-12691.firebaseapp.com", 
+            projectId: "my-admin-portal-12691", 
+            storageBucket: "my-admin-portal-12691.firebasestorage.app", 
+            messagingSenderId: "317015091563", 
+            appId: "1:317015091563:web:baab5171d8e0a58acd442e" 
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
+        // ========== DOM ELEMENTS ==========
+        const input = document.getElementById('mission-input');
+        const actionBtn = document.getElementById('action-btn');
+        const reserveBtn = document.getElementById('reserve-btn');
+        const statusLabel = document.getElementById('mission-status');
+        const terminal = document.getElementById('terminal');
+        const modalOverlay = document.getElementById('modal-overlay');
+        const modalSubmit = document.getElementById('modal-submit');
+        const modalClose = document.getElementById('modal-close');
+        const vAgentInput = document.getElementById('v-agent-input');
+        const secureField = document.getElementById('secure-input-field');
+        const secureBtn = document.getElementById('add-secure-btn');
+        const clockSpan = document.getElementById('clock');
+        const profName = document.getElementById('prof-name');
+        const avatarInit = document.getElementById('avatar-init');
+        
+        // ========== GLOBAL STATE ==========
+        const currentAgent = localStorage.getItem("cia_agent") || localStorage.getItem("agent") || "UNKNOWN_AGENT";
+        let currentMissionData = null;
+        let searchTimeout = null;
+        
+        console.log("Agent:", currentAgent);
+        
+        // ========== HELPER FUNCTIONS ==========
+        function padMissionID(value) {
+            const digits = value.replace(/\D/g, '');
+            if (digits.length === 0) return '';
+            if (digits.length >= 5) return digits.slice(0, 5);
+            return digits.padStart(5, '0');
+        }
+        
+        function formatDate(date) {
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            const year = date.getFullYear();
+            return `${month}/${day}/${year}`;
+        }
+        
+        function calculateRelieveDate(deploymentDate) {
+            const relieveDate = new Date(deploymentDate);
+            relieveDate.setDate(relieveDate.getDate() + 30);
+            return relieveDate;
+        }
+        
+        function addLog(msg, color) {
+            db.collection("terminal_logs").add({ 
+                agent: currentAgent, message: msg, color: color, timestamp: firebase.firestore.FieldValue.serverTimestamp() 
+            }).catch(e => console.error(e));
+        }
+        
+        function setupTerminalListener() {
+            db.collection("terminal_logs").orderBy("timestamp", "desc").limit(15).onSnapshot((snap) => {
+                terminal.innerHTML = "";
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    const time = d.timestamp ? d.timestamp.toDate().toLocaleTimeString('en-GB') : "--";
+                    terminal.innerHTML += `<div class="term-line"><span style="color:#5c7882">[${time}]</span> <span style="color:${d.color}">${d.message}</span></div>`;
+                });
+            });
+        }
+        
+        function enableButtons() {
+            actionBtn.disabled = false;
+            actionBtn.style.opacity = "1";
+            reserveBtn.disabled = false;
+            reserveBtn.style.opacity = "1";
+            reserveBtn.style.borderColor = "#ffbd00";
+            reserveBtn.style.color = "#ffbd00";
+        }
+        
+        function setButtonStyle(button, text, className, disabled = false) {
+            button.textContent = text;
+            button.className = `btn ${className}`;
+            button.disabled = disabled;
+            button.style.opacity = disabled ? "0.5" : "1";
+        }
+        
+        // ========== SEARCH MISSION ==========
+        async function searchMission() {
+            const val = input.value.trim();
+            if (searchTimeout) clearTimeout(searchTimeout);
+            
+            if (val.length === 0) {
+                setButtonStyle(actionBtn, "SAVE", "btn-save", false);
+                setButtonStyle(reserveBtn, "RESERVE", "btn-reserve", false);
+                statusLabel.innerHTML = "";
+                return;
+            }
+            
+            if (val.length < 4) {
+                statusLabel.innerHTML = 'Enter 4-5 digits';
+                return;
+            }
+            
+            const missionID = padMissionID(val);
+            statusLabel.innerHTML = '<span class="blink">SCANNING...</span>';
+            
+            actionBtn.disabled = true;
+            reserveBtn.disabled = true;
+            
+            searchTimeout = setTimeout(async () => {
+                try {
+                    const snapshot = await db.collection("mission_orders").where("missionID", "==", missionID).get();
+                    
+                    if (!snapshot.empty) {
+                        currentMissionData = snapshot.docs[0].data();
+                        const owner = currentMissionData.agent;
+                        const status = currentMissionData.status;
+                        
+                        if (status === "TERMINATED") {
+                            statusLabel.innerHTML = '<span style="color:#8b0000;">STATUS: TERMINATED</span>';
+                            setButtonStyle(actionBtn, "LOCKED", "btn-locked", true);
+                            setButtonStyle(reserveBtn, "VIEW", "btn-view", false);
+                            reserveBtn.onclick = () => openViewModal(missionID);
+                        } else if (owner === currentAgent) {
+                            statusLabel.innerHTML = '<span style="color:#00f3ff;">STATUS: YOUR MISSION</span>';
+                            setButtonStyle(actionBtn, "RETRIEVE", "btn-retrieve", false);
+                            actionBtn.onclick = openRetrieveModal;
+                            setButtonStyle(reserveBtn, "RESERVE", "btn-reserve", false);
+                            reserveBtn.onclick = () => openViewModal(missionID);
+                        } else {
+                            statusLabel.innerHTML = `<span style="color:#ff003c;">OWNED BY ${owner}</span>`;
+                            setButtonStyle(actionBtn, "LOCKED", "btn-locked", true);
+                            setButtonStyle(reserveBtn, "VIEW", "btn-view", false);
+                            reserveBtn.onclick = () => openViewModal(missionID);
+                        }
+                    } else {
+                        currentMissionData = null;
+                        statusLabel.innerHTML = '<span style="color:#05ffa1;">STATUS: AVAILABLE</span>';
+                        setButtonStyle(actionBtn, "SAVE", "btn-save", false);
+                        actionBtn.onclick = openModal;
+                        setButtonStyle(reserveBtn, "RESERVE", "btn-reserve", false);
+                        reserveBtn.onclick = () => openViewModal(missionID);
+                    }
+                    enableButtons();
+                } catch(e) {
+                    console.error(e);
+                    statusLabel.innerHTML = '<span style="color:#ff003c;">DATABASE ERROR</span>';
+                    enableButtons();
+                }
+            }, 300);
+        }
+        
+        // ========== OPEN MODAL FOR SAVE (DEPLOY) ==========
+        async function openModal() {
+            const missionID = padMissionID(input.value.trim());
+            if (!missionID) return;
+            
+            console.log("Opening DEPLOY modal for:", missionID);
+            
+            document.getElementById('pop-header').innerHTML = `<span style="color:#00f3ff;">#${missionID}</span>`;
+            vAgentInput.value = "";
+            secureField.value = "";
+            secureField.classList.remove('show');
+            secureBtn.style.display = 'block';
+            
+            modalOverlay.style.display = 'flex';
+            
+            // Set button to DEPLOY (GREEN) and make it clickable
+            modalSubmit.textContent = "DEPLOY";
+            modalSubmit.className = "btn btn-save";
+            modalSubmit.disabled = false;
+            modalSubmit.style.opacity = "1";
+            
+            // Direct onclick
+            modalSubmit.onclick = () => {
+                console.log("DEPLOY clicked");
+                submitMission(missionID, false);
+            };
+        }
+        
+        // ========== OPEN MODAL FOR RETRIEVE (UPDATE) ==========
+        async function openRetrieveModal() {
+            if (!currentMissionData) return;
+            
+            const missionID = currentMissionData.missionID;
+            console.log("Opening UPDATE modal for:", missionID);
+            
+            document.getElementById('pop-header').innerHTML = `<span style="color:#00f3ff;">#${missionID} [UPDATE]</span>`;
+            vAgentInput.value = currentMissionData.vAgentID || "";
+            secureField.value = currentMissionData.SecureLine || "";
+            if (secureField.value) {
+                secureField.classList.add('show');
+                secureBtn.style.display = 'none';
+            } else {
+                secureField.classList.remove('show');
+                secureBtn.style.display = 'block';
+            }
+            
+            modalOverlay.style.display = 'flex';
+            
+            modalSubmit.textContent = "UPDATE";
+            modalSubmit.className = "btn btn-retrieve";
+            modalSubmit.disabled = false;
+            modalSubmit.style.opacity = "1";
+            
+            modalSubmit.onclick = () => {
+                console.log("UPDATE clicked");
+                submitMission(missionID, true);
+            };
+        }
+        
+        // ========== OPEN MODAL FOR VIEW ONLY ==========
+        async function openViewModal(missionID) {
+            const snapshot = await db.collection("mission_orders").where("missionID", "==", missionID).get();
+            if (snapshot.empty) {
+                alert("Mission not found");
+                return;
+            }
+            const data = snapshot.docs[0].data();
+            
+            document.getElementById('pop-header').innerHTML = `<span style="color:#ff003c;">#${missionID} [VIEW ONLY]</span>`;
+            vAgentInput.value = data.vAgentID || "";
+            secureField.value = data.SecureLine || "";
+            if (secureField.value) {
+                secureField.classList.add('show');
+            } else {
+                secureField.classList.remove('show');
+            }
+            secureBtn.style.display = 'none';
+            
+            vAgentInput.disabled = true;
+            secureField.disabled = true;
+            
+            modalOverlay.style.display = 'flex';
+            
+            modalSubmit.textContent = "CLOSE";
+            modalSubmit.className = "btn btn-view";
+            modalSubmit.disabled = false;
+            modalSubmit.onclick = closeModal;
+        }
+        
+        // ========== SUBMIT MISSION ==========
+        async function submitMission(missionID, isUpdate) {
+            const vID = vAgentInput.value.trim();
+            const sLine = secureField.value.trim();
+            
+            console.log("Submitting - vAgent:", vID);
+            
+            if (!vID) {
+                alert("Enter vAgent ID");
+                return;
+            }
+            
+            const now = new Date();
+            const deploymentDate = formatDate(now);
+            const relieveDate = formatDate(calculateRelieveDate(now));
+            
+            try {
+                await db.collection("mission_orders").doc(missionID).set({
+                    missionID: missionID,
+                    agent: currentAgent,
+                    vAgentID: vID,
+                    SecureLine: sLine || "",
+                    status: "DEPLOYED",
+                    deploymentDate: deploymentDate,
+                    relieveDate: relieveDate,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+                
+                addLog(`Mission #${missionID} ${isUpdate ? 'UPDATED' : 'DEPLOYED'} by ${currentAgent}`, '#05ffa1');
+                closeModal();
+                input.value = "";
+                statusLabel.innerHTML = "";
+                setButtonStyle(actionBtn, "SAVE", "btn-save", false);
+                currentMissionData = null;
+                alert(`✅ MISSION ${isUpdate ? 'UPDATED' : 'DEPLOYED'} SUCCESSFULLY!`);
+                
+                // Re-enable inputs
+                vAgentInput.disabled = false;
+                secureField.disabled = false;
+            } catch(e) {
+                console.error(e);
+                alert("ERROR: " + e.message);
+            }
+        }
+        
+        function closeModal() {
+            modalOverlay.style.display = 'none';
+            vAgentInput.disabled = false;
+            secureField.disabled = false;
+        }
+        
+        function toggleSecureLine() {
+            if (secureField.classList.contains('show')) {
+                secureField.classList.remove('show');
+                secureBtn.style.display = 'block';
+            } else {
+                secureField.classList.add('show');
+                secureBtn.style.display = 'none';
+                secureField.focus();
+            }
+        }
+        
+        // ========== INITIALIZATION ==========
+        function init() {
+            // Display agent info
+            profName.innerText = currentAgent;
+            avatarInit.innerText = currentAgent.charAt(0).toUpperCase();
+            
+            // Clock
+            function updateClock() {
+                clockSpan.textContent = new Date().toLocaleTimeString('en-GB');
+            }
+            updateClock();
+            setInterval(updateClock, 1000);
+            
+            // Terminal listener
+            setupTerminalListener();
+            
+            // Event listeners
+            input.addEventListener('input', searchMission);
+            modalClose.onclick = closeModal;
+            secureBtn.onclick = toggleSecureLine;
+            
+            console.log("Dashboard ready for agent:", currentAgent);
+        }
+        
+        // Start
+        init();
+    </script>
 
 </body>
 </html>

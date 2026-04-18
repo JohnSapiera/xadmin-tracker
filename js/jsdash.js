@@ -1,4 +1,4 @@
-// js/jsdash.js - CORE DASHBOARD (CLEAN VERSION)
+// js/jsdash.js - CORE DASHBOARD (FULL WORKING VERSION)
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { 
@@ -118,6 +118,8 @@ function setButtonStyle(button, text, className, disabled = false) {
     button.className = `btn ${className}`;
     button.disabled = disabled;
     button.style.opacity = disabled ? "0.5" : "1";
+    button.style.pointerEvents = disabled ? "none" : "auto";
+    button.style.cursor = disabled ? "default" : "pointer";
 }
 
 function closeModal() {
@@ -133,8 +135,10 @@ function closeModal() {
 function enableButtons() {
     actionBtn.disabled = false;
     actionBtn.style.opacity = "1";
+    actionBtn.style.pointerEvents = "auto";
     reserveBtn.disabled = false;
     reserveBtn.style.opacity = "1";
+    reserveBtn.style.pointerEvents = "auto";
 }
 
 function resetUI() {
@@ -218,7 +222,10 @@ async function searchMission(missionID) {
             currentMissionData = null;
             statusLabel.innerHTML = '<span style="color:#05ffa1;">AVAILABLE</span>';
             setButtonStyle(actionBtn, "SAVE", "btn-save", false);
-            actionBtn.onclick = () => openModal();
+            actionBtn.onclick = () => {
+                console.log("SAVE button clicked, opening modal");
+                openModal();
+            };
             setButtonStyle(reserveBtn, "RESERVE", "btn-reserve", false);
             reserveBtn.onclick = () => {
                 const mid = padMissionID(input.value.trim());
@@ -227,7 +234,7 @@ async function searchMission(missionID) {
         }
         enableButtons();
     } catch(e) {
-        console.log(e);
+        console.log("Search error:", e);
         statusLabel.innerHTML = '';
         enableButtons();
     }
@@ -261,8 +268,12 @@ function onMissionInput() {
 // ========== MODAL FUNCTIONS ==========
 async function openModal() {
     const missionID = padMissionID(input.value.trim());
-    if (!missionID) return;
+    if (!missionID) {
+        alert("Please enter a mission ID");
+        return;
+    }
     
+    console.log("Opening modal for mission:", missionID);
     addButtonClickEffect(actionBtn);
     
     document.getElementById('pop-header').innerHTML = `MISSION ${missionID}`;
@@ -290,8 +301,12 @@ async function openModal() {
 }
 
 async function openRetrieveModal() {
-    if (!currentMissionData) return;
+    if (!currentMissionData) {
+        alert("No mission data found");
+        return;
+    }
     
+    console.log("Opening retrieve modal");
     addButtonClickEffect(actionBtn);
     
     const missionID = currentMissionData.missionID;
@@ -326,6 +341,7 @@ async function openRetrieveModal() {
 }
 
 async function openViewModal(missionID) {
+    console.log("Opening view modal for mission:", missionID);
     addButtonClickEffect(reserveBtn);
     
     const missionRef = doc(db, "mission_orders", missionID);
@@ -408,7 +424,9 @@ async function submitMission(missionID, isUpdate) {
         currentMissionData = null;
         alert(`MISSION ${isUpdate ? 'UPDATED' : 'DEPLOYED'} SUCCESSFULLY!`);
         
-        input.dispatchEvent(new Event('input'));
+        // I-reset ang UI
+        resetUI();
+        
     } catch(e) {
         console.error(e);
         alert("ERROR: " + e.message);
@@ -447,7 +465,13 @@ async function init() {
     modalClose.onclick = closeModal;
     secureBtn.onclick = toggleSecureLine;
     
+    // I-enable ang buttons sa simula
+    enableButtons();
+    resetUI();
+    
     console.log("Dashboard ready for agent:", currentAgent);
+    console.log("Action button:", actionBtn);
+    console.log("Reserve button:", reserveBtn);
 }
 
 init();

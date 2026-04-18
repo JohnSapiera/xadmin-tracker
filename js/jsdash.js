@@ -191,8 +191,14 @@ console.log("Dashboard ready for agent:", currentAgent);
             reserveBtn.disabled = true;
             
             searchTimeout = setTimeout(async () => {
-                try {
-                    const snapshot = await db.collection("mission_orders").where("missionID", "==", missionID).get();
+    try {
+        console.log("Searching for mission ID:", missionID);
+        
+        const missionsRef = collection(db, "mission_orders");
+        const q = query(missionsRef, where("missionID", "==", missionID));
+        const snapshot = await getDocs(q);
+        
+        console.log("Query result:", snapshot.empty ? "No results" : "Found");
                     
                     if (!snapshot.empty) {
                         currentMissionData = snapshot.docs[0].data();

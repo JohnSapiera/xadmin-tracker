@@ -29,8 +29,15 @@ const firebaseConfig = {
     appId: "1:317015091563:web:baab5171d8e0a58acd442e" 
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+// Siguraduhing hindi double-initialize
+if (!window.firebaseInitialized) {
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    window.firebaseInitialized = true;
+    window.db = db;
+}
+
+const db = window.db;
 
 // ========== DOM ELEMENTS ==========
 const input = document.getElementById('mission-input');
@@ -177,76 +184,88 @@ function setModalSubmitHandler(handler) {
 }
         
         // ========== SEARCH MISSION ==========
-        async function searchMission() {
-            const val = input.value.trim();
-            if (searchTimeout) clearTimeout(searchTimeout);
+       async function searchMission() {
+    const val = input.value.trim();
+    if (searchTimeout) clearTimeout(searchTimeout);
+    
+    if (val.length === 0) {
+        setButtonStyle(actionBtn, "SAVE", "btn-save", false);
+        setButtonStyle(reserveBtn, "RESERVE", "btn-reserve", false);
+        statusLabel.innerHTML = "";
+        return;
+    }
+    
+    if (val.length < 4) {
+        statusLabel.innerHTML = 'ENTER 4-5 DIGITS';
+        return;
+    }
+    
+    const missionID = padMissionID(val);
+    statusLabel.innerHTML = 'SCANNING DATABASE...';
+    
+    actionBtn.disabled = true;
+    reserveBtn.disabled = true;
+    
+    searchTimeout = setTimeout(async () => {
+        try {
+            console.log("Searching for mission ID:", missionID);
+            console.log("Database instance:", db);
             
-            if (val.length === 0) {
-                setButtonStyle(actionBtn, "SAVE", "btn-save", false);
-                setButtonStyle(reserveBtn, "RESERVE", "btn-reserve", false);
-                statusLabel.innerHTML = "";
-                return;
-            }
+            // I-test muna kung gumagana ang Firestore
+            const testRef = collection(db, "mission_orders");
+            const testSnapshot = await getDocs(testRef);
+            console.log("Collection access successful. Total missions:", testSnapshot.size);
             
-            if (val.length < 4) {
-                statusLabel.innerHTML = 'ENTER 4-5 DIGITS';
-                return;
-            }
+            // Gumawa ng query
+            const missionsRef = collection(db, "mission_orders");
+            const q = query(missionsRef, where("missionID", "==", missionID));
+            const snapshot = await getDocs(q);
             
-            const missionID = padMissionID(val);
-            statusLabel.innerHTML = '<span class="blink">SCANNING DATABASE...</span>';
+            console.log("Query result empty?", snapshot.empty);
             
-            actionBtn.disabled = true;
-            reserveBtn.disabled = true;
-            
-            searchTimeout = setTimeout(async () => {
-    try {
-        console.log("Searching for mission ID:", missionID);
-        
-        const missionsRef = collection(db, "mission_orders");
-        const q = query(missionsRef, where("missionID", "==", missionID));
-        const snapshot = await getDocs(q);
-        
-        console.log("Query result:", snapshot.empty ? "No results" : "Found");
-                    
-                    if (!snapshot.empty) {
-                        currentMissionData = snapshot.docs[0].data();
-                        const owner = currentMissionData.agent;
-                        const status = currentMissionData.status;
-                        
-                        if (status === "TERMINATED") {
-                            statusLabel.innerHTML = '<span style="color:#8b0000;">STATUS: TERMINATED</span>';
-                            setButtonStyle(actionBtn, "LOCKED", "btn-locked", true);
-                            setButtonStyle(reserveBtn, "VIEW", "btn-view", false);
-                            reserveBtn.onclick = () => openViewModal(missionID);
-                        } else if (owner === currentAgent) {
-                            statusLabel.innerHTML = '<span style="color:#00f3ff;">STATUS: YOUR MISSION</span>';
-                            setButtonStyle(actionBtn, "RETRIEVE", "btn-retrieve", false);
-                            actionBtn.onclick = openRetrieveModal;
-                            setButtonStyle(reserveBtn, "RESERVE", "btn-reserve", false);
-                            reserveBtn.onclick = () => openViewModal(missionID);
-                        } else {
-                            statusLabel.innerHTML = `<span style="color:#ff003c;">OWNED BY ${owner}</span>`;
-                            setButtonStyle(actionBtn, "LOCKED", "btn-locked", true);
-                            setButtonStyle(reserveBtn, "VIEW", "btn-view", false);
-                            reserveBtn.onclick = () => openViewModal(missionID);
-                        }
-                    } else {
-                        currentMissionData = null;
-                        statusLabel.innerHTML = '<span style="color:#05ffa1;">STATUS: AVAILABLE</span>';
-                        setButtonStyle(actionBtn, "SAVE", "btn-save", false);
-                        actionBtn.onclick = openModal;
-                        setButtonStyle(reserveBtn, "RESERVE", "btn-reserve", false);
-                        reserveBtn.onclick = () => openViewModal(missionID);
-                    }
-                    enableButtons();
-                } catch(e) {
-                    console.error(e);
-                    statusLabel.innerHTML = '<span style="color:#ff003c;">DATABASE ERROR</span>';
-                    enableButtons();
+            if (!snapshot.empty) {
+                const docData = snapshot.docs[0].data();
+                currentMissionData = docData;
+                const owner = docData.agent;
+                const status = docData.status;
+                
+                console.log("Mission found. Owner:", owner, "Status:", status);
+                
+                if (status === "TERMINATED") {
+                    statusLabel.innerHTML = '<span style="color:#8b0000;">STATUS: TERMINATED</span>';
+                    setButtonStyle(actionBtn, "LOCKED", "btn-locked", true);
+                    setButtonStyle(reserveBtn, "VIEW", "btn-view", false);
+                    reserveBtn.onclick = () => openViewModal(missionID);
+                } else if (owner === currentAgent) {
+                    statusLabel.innerHTML = '<span style="color:#00f3ff;">STATUS: YOUR MISSION</span>';
+                    setButtonStyle(actionBtn, "RETRIEVE", "btn-retrieve", false);
+                    actionBtn.onclick = () => openRetrieveModal();
+                    setButtonStyle(reserveBtn, "RESERVE", "btn-reserve", false);
+                    reserveBtn.onclick = () => openViewModal(missionID);
+                } else {
+                    statusLabel.innerHTML = `<span style="color:#ff003c;">OWNED BY ${owner}</span>`;
+                    setButtonStyle(actionBtn, "LOCKED", "btn-locked", true);
+                    setButtonStyle(reserveBtn, "VIEW", "btn-view", false);
+                    reserveBtn.onclick = () => openViewModal(missionID);
                 }
-            }, 400);
+            } else {
+                currentMissionData = null;
+                statusLabel.innerHTML = '<span style="color:#05ffa1;">STATUS: AVAILABLE</span>';
+                setButtonStyle(actionBtn, "SAVE", "btn-save", false);
+                actionBtn.onclick = () => openModal();
+                setButtonStyle(reserveBtn, "RESERVE", "btn-reserve", false);
+                reserveBtn.onclick = () => openViewModal(missionID);
+            }
+            enableButtons();
+        } catch(e) {
+            console.error("DATABASE ERROR DETAILS:", e);
+            console.error("Error code:", e.code);
+            console.error("Error message:", e.message);
+            statusLabel.innerHTML = '<span style="color:#ff003c;">DATABASE ERROR: ' + e.message + '</span>';
+            enableButtons();
         }
+    }, 400);
+}
         
         // ========== OPEN MODAL FOR SAVE (DEPLOY) ==========
        async function openModal() {

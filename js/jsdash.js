@@ -184,69 +184,56 @@ function setModalSubmitHandler(handler) {
 }
         
         // ========== SEARCH MISSION ==========
-       async function searchMission() {
-    const val = input.value.trim();
-    if (searchTimeout) clearTimeout(searchTimeout);
-    
-    if (val.length === 0) {
-        setButtonStyle(actionBtn, "SAVE", "btn-save", false);
-        setButtonStyle(reserveBtn, "RESERVE", "btn-reserve", false);
-        statusLabel.innerHTML = "";
-        return;
-    }
-    
-    if (val.length < 4) {
-        statusLabel.innerHTML = 'ENTER 4-5 DIGITS';
-        return;
-    }
-    
-    const missionID = padMissionID(val);
-    statusLabel.innerHTML = 'SCANNING DATABASE...';
-    
-    actionBtn.disabled = true;
-    reserveBtn.disabled = true;
-    
-    searchTimeout = setTimeout(async () => {
-        try {
-            const missionsRef = collection(db, "mission_orders");
-            const q = query(missionsRef, where("missionID", "==", missionID));
-            const snapshot = await getDocs(q);
+      searchTimeout = setTimeout(async () => {
+    try {
+        const missionID = padMissionID(val);
+        
+        // Direktang i-check kung may document na may pangalang missionID
+        const missionRef = doc(db, "mission_orders", missionID);
+        const missionSnap = await getDoc(missionRef);
+        
+        console.log("Checking mission ID:", missionID);
+        console.log("Document exists?", missionSnap.exists());
+        
+        if (missionSnap.exists()) {
+            // MAY RECORD ang missionID na ito (may document)
+            const docData = missionSnap.data();
+            const owner = docData.agent;
             
-            if (!snapshot.empty) {
-                const docData = snapshot.docs[0].data();
-                currentMissionData = docData;
-                const owner = docData.agent;
-                
-                if (owner === currentAgent) {
-                    statusLabel.innerHTML = '<span style="color:#00f3ff;">YOUR MISSION</span>';
-                } else {
-                    statusLabel.innerHTML = `<span style="color:#ff003c;">OWNED BY: ${owner}</span>`;
-                }
-                
+            console.log("Mission found. Owner:", owner);
+            
+            if (owner === currentAgent) {
+                statusLabel.innerHTML = '<span style="color:#00f3ff;">YOUR MISSION</span>';
+                setButtonStyle(actionBtn, "RETRIEVE", "btn-retrieve", false);
+                actionBtn.onclick = () => openRetrieveModal();
+                setButtonStyle(reserveBtn, "VIEW", "btn-view", false);
+                reserveBtn.onclick = () => openViewModal(missionID);
+            } else {
+                statusLabel.innerHTML = `<span style="color:#ff003c;">OWNED BY: ${owner}</span>`;
                 setButtonStyle(actionBtn, "LOCKED", "btn-locked", true);
                 setButtonStyle(reserveBtn, "VIEW", "btn-view", false);
                 reserveBtn.onclick = () => openViewModal(missionID);
-                
-            } else {
-                currentMissionData = null;
-                statusLabel.innerHTML = '<span style="color:#05ffa1;">AVAILABLE</span>';
-                setButtonStyle(actionBtn, "SAVE", "btn-save", false);
-                actionBtn.onclick = () => openModal();
-                setButtonStyle(reserveBtn, "RESERVE", "btn-reserve", false);
-                reserveBtn.onclick = () => {
-                    alert("Mission " + missionID + " is available. Click SAVE to deploy.");
-                };
             }
-            enableButtons();
             
-        } catch(e) {
-            console.error("Database error:", e);
-            statusLabel.innerHTML = '<span style="color:#ff003c;">DATABASE ERROR</span>';
-            enableButtons();
+        } else {
+            // WALANG DOCUMENT ang missionID na ito
+            statusLabel.innerHTML = '<span style="color:#05ffa1;">AVAILABLE</span>';
+            setButtonStyle(actionBtn, "SAVE", "btn-save", false);
+            actionBtn.onclick = () => openModal();
+            setButtonStyle(reserveBtn, "RESERVE", "btn-reserve", false);
+            reserveBtn.onclick = () => {
+                alert("Mission " + missionID + " is available. Click SAVE to deploy.");
+            };
         }
-    }, 400);
-}
+        enableButtons();
         
+    } catch(e) {
+        console.error("Database error:", e);
+        statusLabel.innerHTML = '<span style="color:#ff003c;">DATABASE ERROR</span>';
+        enableButtons();
+    }
+}, 400);
+
         // ========== OPEN MODAL FOR SAVE (DEPLOY) ==========
        async function openModal() {
     const missionID = padMissionID(input.value.trim());
@@ -334,63 +321,52 @@ modalSubmit.addEventListener('click', modalSubmit.clickHandler);
         }
         
         // ========== SUBMIT MISSION ==========
-        async function submitMission(missionID, isUpdate) {
-            const vID = vAgentInput.value.trim();
-            const sLine = secureField.value.trim();
-            const weaponSystem = selectedWeaponID;
-            
-            if (!vID) {
-                alert("ENTER vAGENT ID");
-                return;
-            }
-            if (!weaponSystem) {
-                alert("SELECT WEAPON SYSTEM");
-                return;
-            }
-            
-            // Hidden dates
-            const now = new Date();
-            const deploymentDate = formatDate(now);
-            const relieveDate = formatDate(calculateRelieveDate(now));
-            
-            try {
-                await db.collection("mission_orders").doc(missionID).set({
-                    missionID: missionID,
-                    agent: currentAgent,
-                    vAgentID: vID,
-                    weaponSystem: weaponSystem,
-                    SecureLine: sLine || "",
-                    status: "DEPLOYED",
-                    deploymentDate: deploymentDate,
-                    relieveDate: relieveDate,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true });
-                
-                addLog(`Mission #${missionID} ${isUpdate ? 'UPDATED' : 'DEPLOYED'} by ${currentAgent}`, '#05ffa1');
-                closeModal();
-                input.value = "";
-                statusLabel.innerHTML = "";
-                setButtonStyle(actionBtn, "SAVE", "btn-save", false);
-                currentMissionData = null;
-                alert(`✅ MISSION ${isUpdate ? 'UPDATED' : 'DEPLOYED'} SUCCESSFULLY!`);
-                
-                vAgentInput.disabled = false;
-                secureField.disabled = false;
-            } catch(e) {
-                console.error(e);
-                alert("ERROR: " + e.message);
-            }
-        }
+       async function submitMission(missionID, isUpdate) {
+    const vID = vAgentInput.value.trim();
+    const sLine = secureField.value.trim();
+    const weaponSystem = selectedWeaponID;
+    
+    if (!vID) {
+        alert("ENTER vAGENT ID");
+        return;
+    }
+    if (!weaponSystem) {
+        alert("SELECT WEAPON SYSTEM");
+        return;
+    }
+    
+    const now = new Date();
+    const deploymentDate = formatDate(now);
+    const relieveDate = formatDate(calculateRelieveDate(now));
+    
+    try {
+        // Gamitin ang missionID bilang document name
+        const missionRef = doc(db, "mission_orders", missionID);
         
-        function closeModal() {
-            modalOverlay.style.display = 'none';
-            vAgentInput.disabled = false;
-            secureField.disabled = false;
-            document.querySelectorAll('.weapon-btn').forEach(btn => {
-                btn.style.pointerEvents = 'auto';
-                btn.style.opacity = '1';
-            });
-        }
+        await setDoc(missionRef, {
+            agent: currentAgent,
+            missionID: missionID,
+            vAgentID: vID,
+            weaponSystem: weaponSystem,
+            SecureLine: sLine || "",
+            deploymentDate: deploymentDate,
+            relieveDate: relieveDate,
+            timestamp: serverTimestamp()
+        }, { merge: true });
+        
+        addLog(`Mission ${missionID} ${isUpdate ? 'UPDATED' : 'DEPLOYED'} by ${currentAgent}`, '#05ffa1');
+        closeModal();
+        input.value = "";
+        statusLabel.innerHTML = "";
+        setButtonStyle(actionBtn, "SAVE", "btn-save", false);
+        currentMissionData = null;
+        alert(`MISSION ${isUpdate ? 'UPDATED' : 'DEPLOYED'} SUCCESSFULLY!`);
+        
+    } catch(e) {
+        console.error(e);
+        alert("ERROR: " + e.message);
+    }
+}
         
         function toggleSecureLine() {
             addButtonClickEffect(secureBtn);

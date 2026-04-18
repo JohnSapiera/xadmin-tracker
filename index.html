@@ -32,7 +32,6 @@
             border: 1px solid #1f232c;
         }
 
-        /* Status Bar */
         .status-bar {
             display: flex;
             justify-content: flex-end;
@@ -59,7 +58,6 @@
             width: 4px;
             background: #2a4a3a;
             border-radius: 2px;
-            transition: all 0.2s ease;
         }
 
         .bar-1 { height: 8px; }
@@ -69,13 +67,6 @@
         .bar.active {
             background: #ffffff;
             box-shadow: 0 0 6px #ffffff;
-            animation: signalPulse 0.8s ease-in-out;
-        }
-
-        @keyframes signalPulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.4; }
-            100% { opacity: 1; }
         }
 
         .battery {
@@ -98,81 +89,49 @@
             width: 90%;
             height: 100%;
             background: #00ff66;
-            border-radius: 2px;
         }
 
-        /* CRT Monitor */
         .crt-monitor {
             background: #03050a;
             border-radius: 16px;
-            padding: 20px 16px;
+            padding: 20px;
             margin-bottom: 20px;
             border: 1px solid #1f2a2a;
-            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
             min-height: 120px;
         }
 
-        .terminal-screen {
+        .pin-display {
+            background: #000;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 15px;
             font-family: 'Courier New', monospace;
         }
 
-        .typed-line {
-            font-size: 20px;
+        .pin-digits {
+            font-size: 32px;
+            letter-spacing: 12px;
             color: #00ff66;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
+            font-weight: bold;
             min-height: 50px;
-            background: #000;
-            padding: 10px;
-            border-radius: 8px;
         }
 
-        .prompt {
-            color: #00ff66;
-            font-weight: bold;
-        }
-
-        .typed-digits {
-            color: #00ff66;
-            letter-spacing: 6px;
-            font-weight: bold;
-            font-size: 24px;
-            min-width: 100px;
-            font-family: monospace;
-        }
-
-        .cursor {
-            color: #00ff66;
-            animation: blink 1s step-end infinite;
-            font-weight: bold;
-            font-size: 20px;
-        }
-
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0; }
-        }
-
-        .display-message {
+        .message-area {
             font-size: 12px;
-            margin-top: 12px;
-            padding-top: 8px;
-            border-top: 1px solid #1a2a2a;
-            min-height: 40px;
+            color: #ffaa33;
             text-align: center;
+            min-height: 40px;
         }
 
-        .display-message.error {
+        .message-area.error {
             color: #ff4444;
         }
 
-        .display-message.success {
+        .message-area.success {
             color: #00ff66;
         }
 
-        /* Keypad */
         .keypad {
             display: flex;
             flex-direction: column;
@@ -196,7 +155,6 @@
             justify-content: center;
             font-size: 28px;
             font-weight: bold;
-            font-family: monospace;
             color: #e0e0e0;
             cursor: pointer;
             border: 1px solid #2a3240;
@@ -208,7 +166,6 @@
             transform: scale(0.92);
             background: #00ff66;
             color: #000;
-            border-color: #00ff66;
         }
 
         .key-zero {
@@ -230,7 +187,6 @@
             padding: 12px;
             font-size: 12px;
             font-weight: bold;
-            letter-spacing: 2px;
             color: #7a8a9a;
             text-align: center;
             cursor: pointer;
@@ -239,16 +195,6 @@
 
         .action-btn:active {
             transform: scale(0.96);
-        }
-
-        .action-btn.reset:active {
-            background: #ffaa33;
-            color: #000;
-        }
-
-        #clearBtn:active {
-            background: #ff4444;
-            color: #fff;
         }
 
         .agent-panel {
@@ -303,14 +249,13 @@
         @media (max-width: 480px) {
             .key-circle { width: 60px; height: 60px; font-size: 24px; }
             .key-zero { width: 60px; height: 60px; }
-            .key-row { gap: 14px; }
+            .pin-digits { font-size: 24px; letter-spacing: 8px; }
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <div class="terminal">
-    <!-- Status Bar -->
     <div class="status-bar">
         <div class="signal-section">
             <div class="signal-bars" id="signalBars">
@@ -319,28 +264,21 @@
                 <div class="bar bar-3" id="bar3"></div>
             </div>
             <div class="battery">
-                <span>🔋</span>
                 <div class="battery-level">
-                    <div class="battery-fill" id="batteryFill"></div>
+                    <div class="battery-fill"></div>
                 </div>
-                <span id="batteryPercent">90%</span>
+                <span>90%</span>
             </div>
         </div>
     </div>
 
-    <!-- CRT Monitor -->
     <div class="crt-monitor">
-        <div class="terminal-screen">
-            <div class="typed-line">
-                <span class="prompt">&gt;</span>
-                <span class="typed-digits" id="typedDigits"> </span>
-                <span class="cursor">_</span>
-            </div>
-            <div class="display-message" id="displayMessage"></div>
+        <div class="pin-display">
+            <div class="pin-digits" id="pinDisplay">────</div>
         </div>
+        <div class="message-area" id="messageArea"></div>
     </div>
 
-    <!-- Keypad -->
     <div class="keypad">
         <div class="key-row">
             <div class="key-circle" data-digit="1">1</div>
@@ -364,7 +302,7 @@
 
     <div class="action-buttons">
         <div class="action-btn" id="clearBtn">CLEAR</div>
-        <div class="action-btn reset" id="resetBtn">RESET</div>
+        <div class="action-btn" id="resetBtn">RESET</div>
     </div>
 
     <div class="agent-panel" id="agentPanel">
@@ -383,7 +321,6 @@
 </div>
 
 <script>
-    // Supabase Configuration
     const SUPABASE_URL = "https://pgclrzqfpoznvrjrzced.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_GhIOC2mXVo0UrhMHZX6Qww_T12tQl4s";
     
@@ -391,21 +328,18 @@
     let enteredPin = "";
     let isProcessing = false;
     
-    // DOM Elements
-    const typedDigits = document.getElementById('typedDigits');
-    const displayMessage = document.getElementById('displayMessage');
+    const pinDisplay = document.getElementById('pinDisplay');
+    const messageArea = document.getElementById('messageArea');
     const agentPanel = document.getElementById('agentPanel');
     const agentNameSpan = document.getElementById('agentName');
     const devicesList = document.getElementById('devicesList');
     
-    // Signal Animation
+    // Signal animation
     let signalLevel = 0;
     function animateSignal() {
         const bar1 = document.getElementById('bar1');
         const bar2 = document.getElementById('bar2');
         const bar3 = document.getElementById('bar3');
-        
-        if (!bar1 || !bar2 || !bar3) return;
         
         setInterval(() => {
             signalLevel = (signalLevel % 3) + 1;
@@ -427,30 +361,38 @@
     }
     
     function showMessage(msg, isError = false) {
-        displayMessage.innerHTML = msg;
-        displayMessage.className = isError ? 'display-message error' : 'display-message success';
+        messageArea.innerHTML = msg;
+        messageArea.className = isError ? 'message-area error' : 'message-area success';
         setTimeout(() => {
-            if (displayMessage.innerHTML === msg && msg !== "Synchronization") {
-                displayMessage.innerHTML = '';
+            if (messageArea.innerHTML === msg && msg !== "Synchronization") {
+                messageArea.innerHTML = '';
             }
         }, 3000);
     }
     
-    function updateTypedDisplay() {
-        if (typedDigits) {
-            let displayText = '';
-            for (let i = 0; i < enteredPin.length; i++) {
-                displayText += '● ';
+    function updatePinDisplay() {
+        if (pinDisplay) {
+            if (enteredPin.length === 0) {
+                pinDisplay.innerText = "────";
+            } else {
+                let display = '';
+                for (let i = 0; i < enteredPin.length; i++) {
+                    display += '●';
+                }
+                // Add dashes for remaining
+                for (let i = enteredPin.length; i < 4; i++) {
+                    display += '─';
+                }
+                pinDisplay.innerText = display;
             }
-            typedDigits.innerText = displayText;
-            console.log("PIN Display:", displayText);
         }
+        console.log("PIN entered:", enteredPin);
     }
     
     function clearPin() {
         enteredPin = "";
-        updateTypedDisplay();
-        displayMessage.innerHTML = '';
+        updatePinDisplay();
+        messageArea.innerHTML = '';
     }
     
     function resetTerminal() {
@@ -464,7 +406,7 @@
         isProcessing = true;
         
         console.log("Verifying PIN:", pin);
-        showMessage(`Verifying key: ${pin}...`, false);
+        showMessage(`Verifying...`, false);
         
         try {
             const { data: agent, error } = await supabase
@@ -474,15 +416,15 @@
                 .maybeSingle();
             
             if (error) {
-                console.error("Supabase error:", error);
-                showMessage(`Database error: ${error.message}`, true);
+                console.error("DB Error:", error);
+                showMessage(`DB Error`, true);
                 isProcessing = false;
                 clearPin();
                 return;
             }
             
             if (!agent) {
-                console.log("No agent for PIN:", pin);
+                console.log("Invalid PIN:", pin);
                 showMessage("Incorrect Key", true);
                 isProcessing = false;
                 clearPin();
@@ -503,9 +445,8 @@
             localStorage.setItem("cia_agent", agentName);
             localStorage.setItem("secret_key", pin);
             localStorage.setItem("agent_devices", JSON.stringify(devices));
-            localStorage.setItem("last_auth", new Date().toISOString());
             
-            console.log("STORED:", {agent: agentName, pin: pin, devices: devices});
+            console.log("Saved to localStorage:", {agentName, pin, devices});
             
             setTimeout(() => {
                 window.location.href = "dashboard.html";
@@ -522,12 +463,12 @@
     }
     
     function addDigit(digit) {
-        console.log("Digit pressed:", digit, "Current length:", enteredPin.length);
+        console.log("Button pressed:", digit);
         
         if (isProcessing) return;
         if (enteredPin.length < 4) {
             enteredPin += digit;
-            updateTypedDisplay();
+            updatePinDisplay();
             
             // Animation
             const btns = document.querySelectorAll('.key-circle');
@@ -557,12 +498,6 @@
             const digit = btn.getAttribute('data-digit');
             if (digit) addDigit(digit);
         });
-        
-        btn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            const digit = btn.getAttribute('data-digit');
-            if (digit) addDigit(digit);
-        });
     });
     
     document.getElementById('clearBtn').addEventListener('click', () => {
@@ -574,22 +509,21 @@
         resetTerminal();
     });
     
-    // Initialize
     async function init() {
-        console.log("Initializing...");
+        console.log("Terminal starting...");
         
         try {
             supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             const { error } = await supabase.from('agents').select('count', { count: 'exact', head: true });
             if (error) console.warn("Supabase:", error.message);
-            else console.log("✅ Supabase connected!");
+            else console.log("✅ Supabase ready");
         } catch(e) {
             console.error("Init error:", e);
         }
         
         animateSignal();
-        updateTypedDisplay();
-        console.log("Ready. Test with: 4646 (AGENT_LZ) or 1010 (AGENT_JFSN)");
+        updatePinDisplay();
+        console.log("Ready. Type 4646 or 1010");
     }
     
     init();

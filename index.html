@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Supabase Test</title>
+    <title>Supabase Test - Working Version</title>
     <style>
         body {
             background: #0a0c12;
@@ -27,7 +27,6 @@
             cursor: pointer;
             font-family: monospace;
             font-weight: bold;
-            font-size: 14px;
         }
         input {
             background: #000;
@@ -39,7 +38,7 @@
             text-align: center;
             letter-spacing: 5px;
             border-radius: 8px;
-            width: 120px;
+            width: 150px;
         }
         .log {
             background: #03050a;
@@ -48,7 +47,6 @@
             font-size: 12px;
             margin-top: 15px;
             word-break: break-all;
-            font-family: monospace;
         }
         .green { color: #00ff66; }
         .red { color: #ff4444; }
@@ -58,17 +56,18 @@
 </head>
 <body>
 <div class="box">
-    <h3>STEP 1: TEST CONNECTION</h3>
-    <button id="testBtn">TEST SUPABASE CONNECTION</button>
-    <div id="connectionLog" class="log">Click the button to test...</div>
+    <h3>SUPABASE CONNECTION TEST</h3>
+    <p>Project ID: pgclrzqfpoznvrjrzced</p>
+    <button id="testBtn">TEST CONNECTION</button>
+    <div id="result" class="log">Click the button to test...</div>
 </div>
 
 <div class="box">
-    <h3>STEP 2: REGISTER DEVICE</h3>
+    <h3>REGISTER DEVICE</h3>
     <input type="text" id="masterKey" maxlength="4" placeholder="____">
     <br><br>
-    <button id="registerBtn">REGISTER DEVICE</button>
-    <div id="registerLog" class="log">Waiting...</div>
+    <button id="registerBtn">REGISTER</button>
+    <div id="registerResult" class="log">Waiting...</div>
 </div>
 
 <script>
@@ -83,72 +82,73 @@
         console.log(message);
     }
     
-    // TEST CONNECTION BUTTON
+    // TEST CONNECTION
     document.getElementById('testBtn').onclick = async () => {
-        const logDiv = document.getElementById('connectionLog');
-        log(logDiv, 'Creating Supabase client...', 'yellow');
+        const resultDiv = document.getElementById('result');
+        log(resultDiv, 'Connecting to Supabase...', 'yellow');
         
         try {
             // Create client
             supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            log(logDiv, 'Client created. Testing query...', 'yellow');
+            log(resultDiv, 'Client created. Checking agents table...', 'yellow');
             
-            // Try to fetch agents
-            const { data, error, status } = await supabase
-                .from('agents')
-                .select('count', { count: 'exact', head: true });
-            
-            if (error) {
-                log(logDiv, 'ERROR: ' + error.message + ' (Status: ' + status + ')', 'red');
-                return;
-            }
-            
-            log(logDiv, 'SUCCESS! Connected to Supabase.', 'green');
-            
-            // Now get actual data
-            const { data: agents, error: agentsError } = await supabase
+            // Try to get agents
+            const { data, error } = await supabase
                 .from('agents')
                 .select('agent_name, secret_key');
             
-            if (agentsError) {
-                log(logDiv, 'Connected but cannot read agents: ' + agentsError.message, 'yellow');
+            if (error) {
+                log(resultDiv, 'ERROR: ' + error.message, 'red');
+                
+                if (error.message.includes('relation') && error.message.includes('does not exist')) {
+                    log(resultDiv, 'Table "agents" does not exist. Creating it...', 'yellow');
+                    
+                    // Note: You need to create table in Supabase SQL editor
+                    log(resultDiv, 'Please run this SQL in Supabase SQL Editor:<br><br>' +
+                        'CREATE TABLE agents (<br>' +
+                        '    id SERIAL PRIMARY KEY,<br>' +
+                        '    agent_name TEXT,<br>' +
+                        '    secret_key TEXT UNIQUE,<br>' +
+                        '    weapon_system TEXT[]<br>' +
+                        ');<br><br>' +
+                        'INSERT INTO agents (agent_name, secret_key) VALUES <br>' +
+                        '("AGENT_LZ", "4646"),<br>' +
+                        '("AGENT_JFSN", "1010");', 'red');
+                }
                 return;
             }
             
-            if (!agents || agents.length === 0) {
-                log(logDiv, 'Connected! But NO AGENTS found in database.', 'yellow');
-                log(logDiv, 'Run this SQL in Supabase:<br>INSERT INTO agents (agent_name, secret_key) VALUES ("AGENT_LZ", "4646"), ("AGENT_JFSN", "1010");', 'yellow');
-                return;
+            if (data && data.length > 0) {
+                let msg = 'CONNECTED! Found ' + data.length + ' agent(s):<br><br>';
+                data.forEach(agent => {
+                    msg += '• ' + agent.agent_name + ' (key: ' + agent.secret_key + ')<br>';
+                });
+                log(resultDiv, msg, 'green');
+            } else {
+                log(resultDiv, 'CONNECTED! But no agents found. Please add agents to database.', 'yellow');
             }
-            
-            let msg = 'Connected! Found ' + agents.length + ' agent(s):<br>';
-            agents.forEach(a => {
-                msg += '• ' + a.agent_name + ' (key: ' + a.secret_key + ')<br>';
-            });
-            log(logDiv, msg, 'green');
             
         } catch(err) {
-            log(logDiv, 'EXCEPTION: ' + err.message, 'red');
-            console.error(err);
+            log(resultDiv, 'EXCEPTION: ' + err.message, 'red');
         }
     };
     
-    // REGISTER BUTTON
+    // REGISTER DEVICE
     document.getElementById('registerBtn').onclick = async () => {
         const masterKey = document.getElementById('masterKey').value.trim();
-        const logDiv = document.getElementById('registerLog');
+        const resultDiv = document.getElementById('registerResult');
         
         if (!masterKey || masterKey.length !== 4) {
-            log(logDiv, 'Please enter a 4-digit master key', 'red');
+            log(resultDiv, 'Please enter 4-digit key', 'red');
             return;
         }
         
         if (!supabase) {
-            log(logDiv, 'Please test connection first (Step 1)', 'red');
+            log(resultDiv, 'Please test connection first', 'red');
             return;
         }
         
-        log(logDiv, 'Verifying key: ' + masterKey + '...', 'yellow');
+        log(resultDiv, 'Verifying key: ' + masterKey + '...', 'yellow');
         
         try {
             const { data, error } = await supabase
@@ -158,16 +158,16 @@
                 .maybeSingle();
             
             if (error) {
-                log(logDiv, 'Database error: ' + error.message, 'red');
+                log(resultDiv, 'Error: ' + error.message, 'red');
                 return;
             }
             
             if (!data) {
-                log(logDiv, 'INVALID KEY: ' + masterKey + ' not found in database', 'red');
+                log(resultDiv, 'INVALID KEY: ' + masterKey + ' not found', 'red');
                 return;
             }
             
-            // Generate device fingerprint
+            // Generate fingerprint
             let hash = 0;
             const raw = navigator.userAgent + screen.width + screen.height;
             for (let i = 0; i < raw.length; i++) {
@@ -186,20 +186,20 @@
             };
             localStorage.setItem('cia_device_registration', JSON.stringify(registration));
             
-            log(logDiv, 'SUCCESS! Registered as: ' + data.agent_name, 'green');
+            log(resultDiv, 'SUCCESS! Registered as: ' + data.agent_name, 'green');
             
         } catch(err) {
-            log(logDiv, 'Error: ' + err.message, 'red');
+            log(resultDiv, 'Error: ' + err.message, 'red');
         }
     };
     
-    // Check existing registration on load
+    // Check existing registration
     const saved = localStorage.getItem('cia_device_registration');
     if (saved) {
         try {
             const data = JSON.parse(saved);
-            document.getElementById('registerLog').innerHTML = 'Already registered as: ' + data.agent_name;
-            document.getElementById('registerLog').className = 'log green';
+            document.getElementById('registerResult').innerHTML = 'Already registered as: ' + data.agent_name;
+            document.getElementById('registerResult').className = 'log green';
         } catch(e) {}
     }
 </script>

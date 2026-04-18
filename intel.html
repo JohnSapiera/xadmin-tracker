@@ -13,54 +13,23 @@
     
     <link rel="stylesheet" href="styles/dbintel.css">
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<div class="terminal">
-    <!-- Status Bar -->
-    <div class="status-bar">
-        <div class="fingerprint-section">
-            <span class="fp-icon">🖨️</span>
-            <span class="fp-value" id="fingerprintText">--:--:--</span>
-        </div>
-        <div class="signal-section">
-            <div class="signal-bars" id="signalBars">
-                <div class="bar bar-1" id="bar1"></div>
-                <div class="bar bar-2" id="bar2"></div>
-                <div class="bar bar-3" id="bar3"></div>
-            </div>
-            <div class="battery">
-                <span>🔋</span>
-                <div class="battery-level">
-                    <div class="battery-fill" id="batteryFill"></div>
-                </div>
-                <span id="batteryPercent">90%</span>
-            </div>
-        </div>
-    </div>
 
     <header>
         <span style="font-weight: 700; color: #fff; letter-spacing: 2px;">CORE_INTEL</span>
     </header>
 
-    <!-- CRT Monitor / Terminal Screen -->
-    <div class="crt-monitor">
-        <div class="terminal-screen">
-            <div class="typed-line" id="typedLine">> Intel Core Active</div>
-            <div class="display-message" id="displayMessage"></div>
-        </div>
-    </div>
-
     <div class="status-bar">
         <div>SYS_TIME: <span id="clock">00:00:00</span></div>
-        <div id="auth-status" style="color: var(--green);">[ ACTIVE ]</div>
+        <div id="auth-status" style="color: var(--green);">[ OFFLINE ]</div>
     </div>
 
     <main>
         <div class="intel-module">
             <div class="module-title">IDENTITY VERIFICATION</div>
-            <input type="text" id="vagent-input" class="input-field" placeholder="ENTER vAGENT#" autocomplete="off">
-            <div id="scan-status">READY</div>
+            <input type="text" id="vagent-input" class="input-field" placeholder="ENTER vAGENT#" autocomplete="off" disabled>
+            <div id="scan-status">WAITING FOR DASHBOARD UPLINK...</div>
             <div id="device-list" class="device-grid"></div>
         </div>
 
@@ -77,22 +46,20 @@
         <a href="profile.html" class="nav-item">PROFILE</a>
     </nav>
 
-    <!-- Agent Info Panel -->
-    <div class="agent-panel" id="agentPanel">
-        <div class="agent-row">
-            <span class="agent-label">AGENT DESIGNATION</span>
-            <span class="agent-value" id="agentName">—</span>
-        </div>
-        <div class="agent-row">
-            <span class="agent-label">CLEARANCE LEVEL</span>
-            <span class="agent-value">ALPHA / OMEGA</span>
-        </div>
-        <hr>
-        <div class="agent-label">REGISTERED DEVICES</div>
-        <div class="devices-list" id="devicesList"></div>
-    </div>
-</div>
+    <!-- SESSION CHECK -->
+    <script>
+        // Check kung naka-login
+        const agentName = localStorage.getItem('cia_agent');
+        const isVerified = localStorage.getItem('agent_verified');
+        
+        if (!isVerified || !agentName) {
+            window.location.replace("index.html");
+        }
+        
+        console.log('✅ Logged in as:', agentName);
+    </script>
 
-<script type="module" src="js/jsintel.js"></script>
+    <script type="module" src="js/jsintel.js"></script>
+
 </body>
 </html>

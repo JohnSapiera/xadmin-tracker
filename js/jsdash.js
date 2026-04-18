@@ -17,9 +17,6 @@ import {
     limit 
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-const currentAgent = localStorage.getItem("cia_agent") || "UNKNOWN_AGENT";
-console.log("Agent:", currentAgent);
-
 // ========== FIREBASE CONFIGURATION ==========
         const firebaseConfig = { 
             apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
@@ -29,8 +26,9 @@ console.log("Agent:", currentAgent);
             messagingSenderId: "317015091563", 
             appId: "1:317015091563:web:baab5171d8e0a58acd442e" 
         };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
         
         // ========== DOM ELEMENTS ==========
         const input = document.getElementById('mission-input');
@@ -50,7 +48,7 @@ console.log("Agent:", currentAgent);
         const avatarInit = document.getElementById('avatar-init');
         
         // ========== GLOBAL STATE ==========
-        const currentAgent = localStorage.getItem("cia_agent") || localStorage.getItem("agent") || "UNKNOWN_AGENT";
+
         let selectedWeaponID = "";
         let agentWeapons = [];
         let currentMissionData = null;

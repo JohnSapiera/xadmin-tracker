@@ -242,10 +242,10 @@ async function searchMission(missionID) {
         enableButtons();
         
     } catch(e) {
-        console.error("Database error:", e);
-        statusLabel.innerHTML = '<span style="color:#ff003c;">DATABASE ERROR</span>';
-        enableButtons();
-    }
+    console.log(e);
+    statusLabel.innerHTML = '';
+    enableButtons();
+}
 }
 
 // Main function para sa input changes

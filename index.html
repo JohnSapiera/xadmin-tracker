@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Supabase Test - Working Version</title>
+    <title>Supabase Working Test</title>
     <style>
         body {
             background: #0a0c12;
@@ -51,15 +51,17 @@
         .green { color: #00ff66; }
         .red { color: #ff4444; }
         .yellow { color: #ffaa33; }
+        .white { color: #ffffff; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <div class="box">
-    <h3>SUPABASE CONNECTION TEST</h3>
-    <p>Project ID: pgclrzqfpoznvrjrzced</p>
+    <h3>SUPABASE WORKING TEST</h3>
+    <p>URL: https://pgclrzqfpoznvrjrzced.supabase.co</p>
+    <p>Key: Using your anon key</p>
     <button id="testBtn">TEST CONNECTION</button>
-    <div id="result" class="log">Click the button to test...</div>
+    <div id="result" class="log">Click button to test...</div>
 </div>
 
 <div class="box">
@@ -72,7 +74,7 @@
 
 <script>
     const SUPABASE_URL = "https://pgclrzqfpoznvrjrzced.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_GhIOC2mXVo0UrhMHZX6Qww_T12tQl4s";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBnY2xyenFmcG96bnZyanJ6Y2VkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyODM4ODcsImV4cCI6MjA5MTg1OTg4N30.G3QUEEkRP2sfgfP5TfoxTqkwhHVbXRGL7eFY6luTYYo";
     
     let supabase = null;
     
@@ -88,23 +90,19 @@
         log(resultDiv, 'Connecting to Supabase...', 'yellow');
         
         try {
-            // Create client
             supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            log(resultDiv, 'Client created. Checking agents table...', 'yellow');
+            log(resultDiv, 'Client created. Checking database...', 'yellow');
             
             // Try to get agents
             const { data, error } = await supabase
                 .from('agents')
-                .select('agent_name, secret_key');
+                .select('*');
             
             if (error) {
                 log(resultDiv, 'ERROR: ' + error.message, 'red');
                 
                 if (error.message.includes('relation') && error.message.includes('does not exist')) {
-                    log(resultDiv, 'Table "agents" does not exist. Creating it...', 'yellow');
-                    
-                    // Note: You need to create table in Supabase SQL editor
-                    log(resultDiv, 'Please run this SQL in Supabase SQL Editor:<br><br>' +
+                    log(resultDiv, 'Table "agents" does not exist. Please create it in Supabase SQL Editor using this SQL:<br><br>' +
                         'CREATE TABLE agents (<br>' +
                         '    id SERIAL PRIMARY KEY,<br>' +
                         '    agent_name TEXT,<br>' +
@@ -112,20 +110,23 @@
                         '    weapon_system TEXT[]<br>' +
                         ');<br><br>' +
                         'INSERT INTO agents (agent_name, secret_key) VALUES <br>' +
-                        '("AGENT_LZ", "4646"),<br>' +
-                        '("AGENT_JFSN", "1010");', 'red');
+                        '(\'AGENT_LZ\', \'4646\'),<br>' +
+                        '(\'AGENT_JFSN\', \'1010\');', 'red');
+                } else if (error.message.includes('permission')) {
+                    log(resultDiv, 'Permission denied. Run this SQL to disable RLS:<br><br>ALTER TABLE agents DISABLE ROW LEVEL SECURITY;', 'red');
                 }
                 return;
             }
             
             if (data && data.length > 0) {
-                let msg = 'CONNECTED! Found ' + data.length + ' agent(s):<br><br>';
+                let msg = '✅ CONNECTED SUCCESSFULLY!<br><br>';
+                msg += 'Found ' + data.length + ' agent(s):<br>';
                 data.forEach(agent => {
-                    msg += '• ' + agent.agent_name + ' (key: ' + agent.secret_key + ')<br>';
+                    msg += '• ' + agent.agent_name + ' (secret key: ' + agent.secret_key + ')<br>';
                 });
                 log(resultDiv, msg, 'green');
             } else {
-                log(resultDiv, 'CONNECTED! But no agents found. Please add agents to database.', 'yellow');
+                log(resultDiv, '✅ CONNECTED! But no agents found. Please add agents to database.', 'yellow');
             }
             
         } catch(err) {
@@ -144,7 +145,7 @@
         }
         
         if (!supabase) {
-            log(resultDiv, 'Please test connection first', 'red');
+            log(resultDiv, 'Please test connection first (click TEST CONNECTION)', 'red');
             return;
         }
         
@@ -163,11 +164,11 @@
             }
             
             if (!data) {
-                log(resultDiv, 'INVALID KEY: ' + masterKey + ' not found', 'red');
+                log(resultDiv, 'INVALID KEY: ' + masterKey + ' not found in database', 'red');
                 return;
             }
             
-            // Generate fingerprint
+            // Generate device fingerprint
             let hash = 0;
             const raw = navigator.userAgent + screen.width + screen.height;
             for (let i = 0; i < raw.length; i++) {
@@ -186,7 +187,7 @@
             };
             localStorage.setItem('cia_device_registration', JSON.stringify(registration));
             
-            log(resultDiv, 'SUCCESS! Registered as: ' + data.agent_name, 'green');
+            log(resultDiv, '✅ SUCCESS! Registered as: ' + data.agent_name, 'green');
             
         } catch(err) {
             log(resultDiv, 'Error: ' + err.message, 'red');

@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AGENT_ACCESS_TERMINAL</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --bg: #01080b; --cyan: #00f2ff; --red: #ff003c; --green: #00ff66; --yellow: #ffbd00; }
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
@@ -31,7 +30,6 @@
             border-radius: 8px;
         }
 
-        /* Scan Line Effect */
         .scan-line {
             position: absolute;
             top: 0;
@@ -215,7 +213,6 @@
         <div class="trace-value" id="deviceSig">-- SCANNING --</div>
     </div>
 
-    <!-- Keypad Section (Hidden initially) -->
     <div id="keypadSection" class="hidden">
         <div class="code-area">
             <div class="code-digits" id="codeDisplay">----</div>
@@ -233,12 +230,22 @@
     <div class="message-area" id="messageArea"></div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
 <script>
-    // ========== SUPABASE CONFIGURATION ==========
-    const SUPABASE_URL = 'https://pgclrzqfpoznvrjrzced.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_GhIOC2mXVo0UrhMHZX6Qww_T12tQl4s';
+    // ========== FIREBASE CONFIGURATION ==========
+    const firebaseConfig = { 
+        apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
+        authDomain: "my-admin-portal-12691.firebaseapp.com", 
+        projectId: "my-admin-portal-12691", 
+        storageBucket: "my-admin-portal-12691.firebasestorage.app", 
+        messagingSenderId: "317015091563", 
+        appId: "1:317015091563:web:baab5171d8e0a58acd442e" 
+    };
     
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
     
     // ========== DOM ELEMENTS ==========
     const statusLabel = document.getElementById('statusLabel');
@@ -278,7 +285,6 @@
             let displayStr = enteredCode + "----".substring(enteredCode.length);
             codeDisplay.innerText = displayStr;
             
-            // Visual feedback on button press
             const buttons = document.querySelectorAll('.key-btn');
             buttons.forEach(btn => {
                 if (btn.innerText === digit) {
@@ -325,31 +331,27 @@
     // ========== REGISTER FINGERPRINT TO AGENT ==========
     async function registerFingerprint(agentName, signature) {
         try {
-            // First, get current agent data
-            const { data: agent, error: fetchError } = await supabase
-                .from('agents')
-                .select('linked_signatures')
-                .eq('agent_name', agentName)
-                .single();
+            const agentRef = db.collection("agents").doc(agentName);
+            const agentDoc = await agentRef.get();
             
-            if (fetchError) throw fetchError;
-            
-            let updatedSignatures = agent.linked_signatures || [];
-            if (!updatedSignatures.includes(signature)) {
-                updatedSignatures.push(signature);
+            if (agentDoc.exists) {
+                const currentSignatures = agentDoc.data().linkedSignatures || [];
+                if (!currentSignatures.includes(signature)) {
+                    currentSignatures.push(signature);
+                }
+                await agentRef.update({
+                    linkedSignatures: currentSignatures,
+                    lastFingerprint: signature,
+                    lastSync: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            } else {
+                await agentRef.set({
+                    agentName: agentName,
+                    linkedSignatures: [signature],
+                    lastFingerprint: signature,
+                    lastSync: firebase.firestore.FieldValue.serverTimestamp()
+                });
             }
-            
-            const { error: updateError } = await supabase
-                .from('agents')
-                .update({ 
-                    linked_signatures: updatedSignatures,
-                    last_fingerprint: signature,
-                    last_sync: new Date().toISOString()
-                })
-                .eq('agent_name', agentName);
-            
-            if (updateError) throw updateError;
-            
             return true;
         } catch (error) {
             console.error("Registration error:", error);
@@ -366,16 +368,14 @@
         showMessage("Authenticating secret key...", 'info');
         
         try {
-            const { data, error } = await supabase
-                .from('agents')
-                .select('agent_name, secret_key')
-                .eq('secret_key', secretKey)
-                .maybeSingle();
+            const snapshot = await db.collection("agents")
+                .where("secretKey", "==", secretKey)
+                .get();
             
-            if (error) throw error;
-            
-            if (data) {
-                const agentName = data.agent_name;
+            if (!snapshot.empty) {
+                const agentData = snapshot.docs[0].data();
+                const agentName = agentData.agentName;
+                
                 showMessage(`Key verified. Registering device...`, 'info');
                 statusLabel.innerHTML = "REGISTERING_DEVICE";
                 
@@ -385,7 +385,6 @@
                     showMessage(`Device registered successfully. Access granted.`, 'success');
                     statusLabel.innerHTML = "ACCESS_GRANTED";
                     
-                    // Save to localStorage
                     localStorage.setItem("cia_agent", agentName);
                     localStorage.setItem("agent", agentName);
                     localStorage.setItem("agent_verified", "true");
@@ -421,16 +420,13 @@
         deviceSigSpan.innerText = signature;
         
         try {
-            const { data, error } = await supabase
-                .from('agents')
-                .select('agent_name, linked_signatures')
-                .contains('linked_signatures', [signature]);
+            const snapshot = await db.collection("agents")
+                .where("linkedSignatures", "array-contains", signature)
+                .get();
             
-            if (error) throw error;
-            
-            if (data && data.length > 0) {
-                const agent = data[0];
-                const agentName = agent.agent_name;
+            if (!snapshot.empty) {
+                const agentData = snapshot.docs[0].data();
+                const agentName = agentData.agentName;
                 
                 statusLabel.innerHTML = "ACCESS_GRANTED";
                 showMessage(`Welcome back, ${agentName}. Redirecting...`, 'success');

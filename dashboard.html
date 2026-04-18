@@ -2,169 +2,104 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>SECURE TERMINAL • CIA INTELLIGENCE</title>
-    <link rel="stylesheet" href="styles/main.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/main.js" defer></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CORE_DASH</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#02080a">
+    
+    <link rel="stylesheet" href="styles/dbintel.css">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-<div class="terminal">
-    <!-- Status Bar -->
+
+    <header>
+        <span style="font-weight: 700; color: #fff; letter-spacing: 2px;">CORE_DASH</span>
+    </header>
+
     <div class="status-bar">
-        <div class="fingerprint-section">
-            <span class="fp-icon">🖨️</span>
-            <span class="fp-value" id="fingerprintText">--:--:--</span>
-        </div>
-        <div class="signal-section">
-            <div class="signal-bars" id="signalBars">
-                <div class="bar bar-1" id="bar1"></div>
-                <div class="bar bar-2" id="bar2"></div>
-                <div class="bar bar-3" id="bar3"></div>
-            </div>
-            <div class="battery">
-                <span>🔋</span>
-                <div class="battery-level">
-                    <div class="battery-fill" id="batteryFill"></div>
-                </div>
-                <span id="batteryPercent">90%</span>
+        <div>SYS_TIME: <span id="clock">00:00:00</span></div>
+        <div style="color: var(--green);">UPLINK_STABLE</div>
+    </div>
+
+    <main>
+        <div class="command-module">
+            <input type="tel" id="mission-input" placeholder="0000" maxlength="5" autocomplete="off">
+            <div id="mission-status"></div>
+            <div class="btn-row">
+                <button id="action-btn" class="btn btn-save">SAVE</button>
+                <button id="reserve-btn" class="btn btn-reserve">RESERVE</button>
             </div>
         </div>
-    </div>
+        <div id="terminal"></div>
+        
+        <div class="profile-mini">
+            <div class="avatar" id="avatar-init">?</div>
+            <div class="profile-info">
+                <div id="prof-name">AGENT_PENDING</div>
+                <div>AUTH_LEVEL: OMEGA</div>
+            </div>
+        </div>
+    </main>
 
-    <!-- CRT Monitor / Terminal Screen -->
-    <div class="crt-monitor">
-        <div class="terminal-screen">
-            <div class="typed-line" id="typedLine">> Enter your 4 Digit Key..</div>
-            <div class="display-message" id="displayMessage"></div>
-        </div>
-    </div>
+    <div class="overlay" id="modal-overlay">
+        <div class="popup">
+            <div id="pop-header">#0000</div>
+            <span>vAGENT_IDENTIFIER:</span>
+            <input type="text" id="v-agent-input" class="pop-input" placeholder="V_ID_REQUIRED">
+            
+            <div class="secure-line-wrapper">
+                <span id="add-secure-btn">+add Secure Line</span>
+                <input type="tel" id="secure-input-field" maxlength="11" placeholder="09XXXXXXXXX">
+            </div>
 
-    <!-- Hidden Input Tracker -->
-    <div class="hidden-code" id="hiddenCode"></div>
+            <span>SYSTEM_LINK:</span>
+            <div class="weapon-selector" id="weapon-list"></div>
 
-    <!-- Keypad - Circles -->
-    <div class="keypad">
-        <div class="key-row">
-            <div class="key-circle" data-digit="1">1</div>
-            <div class="key-circle" data-digit="2">2</div>
-            <div class="key-circle" data-digit="3">3</div>
-        </div>
-        <div class="key-row">
-            <div class="key-circle" data-digit="4">4</div>
-            <div class="key-circle" data-digit="5">5</div>
-            <div class="key-circle" data-digit="6">6</div>
-        </div>
-        <div class="key-row">
-            <div class="key-circle" data-digit="7">7</div>
-            <div class="key-circle" data-digit="8">8</div>
-            <div class="key-circle" data-digit="9">9</div>
-        </div>
-        <div class="key-row">
-            <div class="key-circle key-zero" data-digit="0">0</div>
+            <div class="btn-row">
+                <button id="modal-submit" class="btn btn-save" disabled>DEPLOY</button>
+                <button id="modal-close" class="btn">ABORT</button>
+            </div>
         </div>
     </div>
 
-    <!-- Action Buttons -->
-    <div class="action-buttons">
-        <div class="action-btn" id="clearBtn">CLEAR</div>
-        <div class="action-btn reset" id="resetBtn">RESET</div>
-    </div>
+    <nav class="bottom-nav">
+        <a href="#" class="nav-item active">DASHBOARD</a>
+        <a href="intel.html" class="nav-item">INTEL</a>
+        <a href="profile.html" class="nav-item">PROFILE</a>
+    </nav>
 
-    <!-- Agent Info Panel -->
-    <div class="agent-panel" id="agentPanel">
-        <div class="agent-row">
-            <span class="agent-label">AGENT DESIGNATION</span>
-            <span class="agent-value" id="agentName">—</span>
-        </div>
-        <div class="agent-row">
-            <span class="agent-label">CLEARANCE LEVEL</span>
-            <span class="agent-value">ALPHA / OMEGA</span>
-        </div>
-        <hr>
-        <div class="agent-label">REGISTERED DEVICES</div>
-        <div class="devices-list" id="devicesList"></div>
-    </div>
-</div>
-
-<script>
-    // DASHBOARD SCRIPT - Retrieve data from localStorage (from Supabase agents)
-    
-    // Check if user is logged in
-    const agentName = localStorage.getItem("cia_agent");
-    const deviceFingerprint = localStorage.getItem("device_fingerprint");
-    const devicesRaw = localStorage.getItem("agent_devices");
-    const secretKey = localStorage.getItem("secret_key");
-    const lastAuth = localStorage.getItem("last_auth");
-    
-    // If no session, redirect to index.html (login page)
-    if (!agentName) {
-        window.location.href = "index.html";
-    }
-    
-    // Display Agent Name
-    const agentNameElement = document.getElementById('agentName');
-    if (agentNameElement) {
-        agentNameElement.innerText = agentName;
-    }
-    
-    // Display Devices (weaponSystem)
-    let devices = [];
-    if (devicesRaw) {
-        try {
-            devices = JSON.parse(devicesRaw);
-        } catch(e) {
-            devices = [];
+    <!-- SESSION CHECK -->
+    <script>
+        // Check kung naka-login
+        const agentName = localStorage.getItem('cia_agent');
+        const isVerified = localStorage.getItem('agent_verified');
+        
+        if (!isVerified || !agentName) {
+            // Walang login, balik sa login page
+            window.location.replace("index.html");
         }
-    }
-    
-    const devicesListElement = document.getElementById('devicesList');
-    if (devicesListElement) {
-        if (devices.length > 0) {
-            devicesListElement.innerHTML = devices.map(d => `<span class="device-tag">📱 ${d}</span>`).join('');
-        } else {
-            devicesListElement.innerHTML = '<span class="device-tag">⚠️ No devices registered</span>';
+        
+        console.log('✅ Logged in as:', agentName);
+        
+        // Ipakita ang agent name
+        const profNameElem = document.getElementById('prof-name');
+        if (profNameElem) {
+            profNameElem.textContent = agentName;
         }
-    }
-    
-    // Display Fingerprint in status bar
-    const fingerprintTextElement = document.getElementById('fingerprintText');
-    if (fingerprintTextElement && deviceFingerprint) {
-        fingerprintTextElement.innerText = deviceFingerprint;
-    }
-    
-    // Update typed line to show dashboard mode
-    const typedLineElement = document.getElementById('typedLine');
-    if (typedLineElement) {
-        typedLineElement.innerHTML = '> Welcome, ' + agentName + ' | Secure Dashboard';
-        typedLineElement.style.borderRight = 'none';
-    }
-    
-    // Update status message
-    const displayMessageElement = document.getElementById('displayMessage');
-    if (displayMessageElement) {
-        displayMessageElement.innerHTML = '✓ Session Active | ' + new Date().toLocaleString();
-        displayMessageElement.classList.add('success');
-    }
-    
-    // Hide keypad on dashboard (optional - remove if you want to keep it)
-    const keypadElement = document.querySelector('.keypad');
-    if (keypadElement) {
-        // keypadElement.style.display = 'none'; // Uncomment if you want to hide keypad on dashboard
-    }
-    
-    // Hide action buttons (optional)
-    const actionButtons = document.querySelector('.action-buttons');
-    if (actionButtons) {
-        // actionButtons.style.display = 'none'; // Uncomment if you want to hide buttons
-    }
-    
-    console.log("✅ DASHBOARD DATA FROM LOCALSTORAGE (Supabase):");
-    console.log("   AGENT:", agentName);
-    console.log("   SECRET KEY:", secretKey);
-    console.log("   DEVICE FINGERPRINT:", deviceFingerprint);
-    console.log("   DEVICES (weaponSystem):", devices);
-    console.log("   LAST AUTH:", lastAuth);
-</script>
+        
+        // I-set ang avatar initial
+        const avatarElem = document.getElementById('avatar-init');
+        if (avatarElem && agentName) {
+            avatarElem.textContent = agentName.charAt(0).toUpperCase();
+        }
+    </script>
+
+    <!-- DASHBOARD SCRIPT -->
+    <script type="module" src="js/jsdash.js"></script>
+
 </body>
 </html>

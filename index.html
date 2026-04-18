@@ -2,220 +2,77 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>DEVICE REGISTRATION • CIA INTELLIGENCE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Test</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
-            background: linear-gradient(145deg, #0a0c12 0%, #06080e 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Courier New', monospace;
+            background: #0a0c12;
+            color: #00ff66;
+            font-family: monospace;
             padding: 20px;
         }
-
-        .container {
-            width: 100%;
-            max-width: 450px;
+        .box {
             background: #0d0f14;
-            border-radius: 24px;
-            padding: 30px;
             border: 1px solid #1f232c;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 25px;
-        }
-
-        .header h1 {
-            color: #00ff66;
-            font-size: 18px;
-            letter-spacing: 2px;
-        }
-
-        .form-group {
+            border-radius: 12px;
+            padding: 20px;
             margin-bottom: 20px;
         }
-
-        .form-group label {
-            display: block;
+        .error {
+            color: #ff4444;
+        }
+        .success {
             color: #00ff66;
-            font-size: 11px;
-            margin-bottom: 8px;
         }
-
-        .form-group input {
-            width: 100%;
-            background: #000;
-            border: 1px solid #2a3240;
-            border-radius: 12px;
-            padding: 14px;
-            color: #00ff66;
-            font-family: monospace;
-            font-size: 20px;
-            text-align: center;
-            letter-spacing: 5px;
-            outline: none;
-        }
-
-        .form-group input:focus {
-            border-color: #00ff66;
-        }
-
-        .btn {
-            width: 100%;
+        button {
             background: #00ff66;
-            border: none;
-            border-radius: 12px;
-            padding: 14px;
-            font-size: 14px;
-            font-weight: bold;
             color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
             cursor: pointer;
             font-family: monospace;
-        }
-
-        .btn:active {
-            transform: scale(0.96);
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-        }
-
-        .message {
-            margin-top: 15px;
-            padding: 12px;
-            border-radius: 12px;
-            font-size: 11px;
-            text-align: center;
-            display: none;
-        }
-
-        .message.error {
-            background: rgba(255, 68, 68, 0.1);
-            border: 1px solid #ff4444;
-            color: #ff4444;
-            display: block;
-        }
-
-        .message.success {
-            background: rgba(0, 255, 102, 0.1);
-            border: 1px solid #00ff66;
-            color: #00ff66;
-            display: block;
-        }
-
-        .message.info {
-            background: rgba(0, 255, 102, 0.05);
-            border: 1px solid #2a3240;
-            color: #5a7a6a;
-            display: block;
-        }
-
-        .debug-panel {
-            margin-top: 20px;
-            padding: 15px;
-            background: #03050a;
-            border-radius: 12px;
-            border: 1px solid #1f232c;
-            font-size: 10px;
-        }
-
-        .debug-title {
-            color: #ffaa33;
-            margin-bottom: 8px;
-        }
-
-        .debug-content {
-            color: #5a7a6a;
-            word-break: break-all;
-            font-family: monospace;
-        }
-
-        .device-info {
-            margin-top: 20px;
-            padding: 16px;
-            background: #03050a;
-            border-radius: 16px;
-            border: 1px solid #1f232c;
-            display: none;
-        }
-
-        .device-info.show {
-            display: block;
-        }
-
-        .device-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            font-size: 11px;
-        }
-
-        .device-label {
-            color: #5a7a6a;
-        }
-
-        .device-value {
-            color: #00ff66;
             font-weight: bold;
         }
-
-        .status-badge {
-            text-align: center;
-            margin-top: 15px;
-            padding: 8px;
-            background: #1a2a22;
-            border-radius: 8px;
-            font-size: 10px;
+        input {
+            background: #000;
+            border: 1px solid #2a3240;
+            padding: 10px;
             color: #00ff66;
+            font-family: monospace;
+            font-size: 18px;
+            text-align: center;
+            letter-spacing: 5px;
+            border-radius: 8px;
+        }
+        .log {
+            background: #03050a;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            margin-top: 10px;
+            word-break: break-all;
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<div class="container">
-    <div class="header">
-        <h1>DEVICE REGISTRATION</h1>
-    </div>
+<div class="box">
+    <h3>DATABASE CONNECTION TEST</h3>
+    <div id="status" class="log">Testing connection...</div>
+</div>
 
-    <div class="form-group">
-        <label>MASTER KEY (4-DIGIT)</label>
-        <input type="password" id="masterKey" maxlength="4" placeholder="____" autocomplete="off">
-    </div>
+<div class="box">
+    <h3>REGISTER DEVICE</h3>
+    <input type="text" id="masterKey" maxlength="4" placeholder="____">
+    <br><br>
+    <button id="registerBtn">REGISTER</button>
+    <div id="result" class="log"></div>
+</div>
 
-    <button class="btn" id="registerBtn">REGISTER DEVICE</button>
-
-    <div id="message" class="message"></div>
-
-    <div class="debug-panel">
-        <div class="debug-title">DATABASE STATUS</div>
-        <div class="debug-content" id="debugStatus">Checking connection...</div>
-        <div class="debug-content" id="debugAgents" style="margin-top: 8px;"></div>
-    </div>
-
-    <div id="deviceInfo" class="device-info">
-        <div class="device-row">
-            <span class="device-label">AGENT NAME</span>
-            <span class="device-value" id="agentName">—</span>
-        </div>
-        <div class="device-row">
-            <span class="device-label">DEVICE FINGERPRINT</span>
-            <span class="device-value" id="deviceFp">—</span>
-        </div>
-        <div class="device-label">REGISTERED DEVICES</div>
-        <div id="devicesList" style="margin-top: 8px;"></div>
-        <div class="status-badge">PERMANENT SESSION ACTIVE</div>
-    </div>
+<div class="box">
+    <h3>STORAGE STATUS</h3>
+    <div id="storageStatus" class="log">Checking...</div>
 </div>
 
 <script>
@@ -224,185 +81,151 @@
     
     let supabase = null;
     
-    const masterKeyInput = document.getElementById('masterKey');
-    const registerBtn = document.getElementById('registerBtn');
-    const messageDiv = document.getElementById('message');
-    const debugStatus = document.getElementById('debugStatus');
-    const debugAgents = document.getElementById('debugAgents');
-    const deviceInfoDiv = document.getElementById('deviceInfo');
-    const agentNameSpan = document.getElementById('agentName');
-    const deviceFpSpan = document.getElementById('deviceFp');
-    const devicesListDiv = document.getElementById('devicesList');
-    
-    function showMessage(msg, type) {
-        messageDiv.className = 'message ' + type;
-        messageDiv.innerHTML = msg;
-        setTimeout(() => {
-            if (messageDiv.innerHTML === msg) {
-                messageDiv.style.display = 'none';
-                messageDiv.className = 'message';
+    async function testConnection() {
+        const statusDiv = document.getElementById('status');
+        statusDiv.innerHTML = 'Creating Supabase client...';
+        
+        try {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            statusDiv.innerHTML = 'Supabase client created. Testing query...';
+            
+            const { data, error, count } = await supabase
+                .from('agents')
+                .select('*', { count: 'exact' })
+                .limit(5);
+            
+            if (error) {
+                statusDiv.innerHTML = 'ERROR: ' + error.message;
+                statusDiv.style.color = '#ff4444';
+                console.error('Supabase error:', error);
+                return;
             }
-        }, 4000);
-    }
-    
-    function generateDeviceFingerprint() {
-        let hash = 0;
-        const raw = navigator.userAgent + window.screen.width + window.screen.height + navigator.language;
-        for (let i = 0; i < raw.length; i++) {
-            hash = ((hash << 5) - hash) + raw.charCodeAt(i);
-            hash |= 0;
+            
+            if (data && data.length > 0) {
+                statusDiv.innerHTML = 'SUCCESS: Connected! Found ' + data.length + ' agent(s)';
+                statusDiv.style.color = '#00ff66';
+                
+                // Show agents
+                let agentsList = 'Agents:<br>';
+                data.forEach(agent => {
+                    agentsList += '• ' + (agent.agent_name || 'unknown') + ' (key: ' + (agent.secret_key || 'none') + ')<br>';
+                });
+                statusDiv.innerHTML += '<br>' + agentsList;
+            } else {
+                statusDiv.innerHTML = 'SUCCESS: Connected! But no agents found in database.';
+                statusDiv.style.color = '#ffaa33';
+                statusDiv.innerHTML += '<br><br>Run this SQL in Supabase:<br>';
+                statusDiv.innerHTML += 'INSERT INTO agents (agent_name, secret_key) VALUES ("AGENT_LZ", "4646"), ("AGENT_JFSN", "1010");';
+            }
+            
+        } catch(err) {
+            statusDiv.innerHTML = 'EXCEPTION: ' + err.message;
+            statusDiv.style.color = '#ff4444';
+            console.error('Exception:', err);
         }
-        return "DEV-" + Math.abs(hash).toString(16).toUpperCase().slice(0, 12);
     }
     
-    async function checkDatabase() {
-        debugStatus.innerHTML = 'Checking Supabase connection...';
+    async function registerDevice() {
+        const masterKey = document.getElementById('masterKey').value.trim();
+        const resultDiv = document.getElementById('result');
+        
+        if (!masterKey || masterKey.length !== 4) {
+            resultDiv.innerHTML = 'Please enter 4-digit key';
+            resultDiv.style.color = '#ff4444';
+            return;
+        }
+        
+        if (!supabase) {
+            resultDiv.innerHTML = 'Supabase not initialized. Wait for connection test.';
+            resultDiv.style.color = '#ff4444';
+            return;
+        }
+        
+        resultDiv.innerHTML = 'Verifying key: ' + masterKey + '...';
+        resultDiv.style.color = '#ffaa33';
         
         try {
             const { data, error } = await supabase
-                .from('agents')
-                .select('agent_name, secret_key');
-            
-            if (error) {
-                debugStatus.innerHTML = 'ERROR: ' + error.message;
-                debugAgents.innerHTML = 'Make sure table "agents" exists';
-                return;
-            }
-            
-            if (!data || data.length === 0) {
-                debugStatus.innerHTML = 'Connected but NO DATA found in agents table';
-                debugAgents.innerHTML = 'No agents registered. Please add agents to database.';
-                return;
-            }
-            
-            debugStatus.innerHTML = 'Connected. Found ' + data.length + ' agent(s)';
-            
-            let agentsList = 'Agents in database:<br>';
-            data.forEach(agent => {
-                agentsList += '• ' + agent.agent_name + ' (key: ' + agent.secret_key + ')<br>';
-            });
-            debugAgents.innerHTML = agentsList;
-            
-        } catch(e) {
-            debugStatus.innerHTML = 'ERROR: ' + e.message;
-        }
-    }
-    
-    async function registerDevice(masterKey, deviceFp) {
-        registerBtn.disabled = true;
-        registerBtn.innerText = 'REGISTERING...';
-        showMessage('Verifying master key: ' + masterKey, 'info');
-        
-        try {
-            const { data: agent, error } = await supabase
                 .from('agents')
                 .select('agent_name, secret_key, weapon_system')
                 .eq('secret_key', masterKey)
                 .maybeSingle();
             
             if (error) {
-                showMessage('Database error: ' + error.message, 'error');
-                registerBtn.disabled = false;
-                registerBtn.innerText = 'REGISTER DEVICE';
+                resultDiv.innerHTML = 'Database error: ' + error.message;
+                resultDiv.style.color = '#ff4444';
                 return;
             }
             
-            if (!agent) {
-                showMessage('Invalid master key: ' + masterKey + '. Access denied.', 'error');
-                registerBtn.disabled = false;
-                registerBtn.innerText = 'REGISTER DEVICE';
+            if (!data) {
+                resultDiv.innerHTML = 'INVALID KEY: ' + masterKey + ' not found in database';
+                resultDiv.style.color = '#ff4444';
                 return;
             }
             
-            const agentName = agent.agent_name;
-            const devices = agent.weapon_system || [];
+            // Success
+            const agentName = data.agent_name;
+            const devices = data.weapon_system || [];
+            
+            // Generate fingerprint
+            let hash = 0;
+            const raw = navigator.userAgent + screen.width + screen.height;
+            for (let i = 0; i < raw.length; i++) {
+                hash = ((hash << 5) - hash) + raw.charCodeAt(i);
+            }
+            const fingerprint = 'DEV-' + Math.abs(hash).toString(16).toUpperCase().slice(0, 10);
             
             // Save to localStorage
-            const registrationData = {
+            const registration = {
                 agent_name: agentName,
                 secret_key: masterKey,
-                device_fingerprint: deviceFp,
+                device_fingerprint: fingerprint,
                 devices: devices,
                 registered_at: new Date().toISOString(),
                 is_registered: true
             };
+            localStorage.setItem('cia_device_registration', JSON.stringify(registration));
             
-            localStorage.setItem('cia_device_registration', JSON.stringify(registrationData));
+            resultDiv.innerHTML = 'SUCCESS! Registered as: ' + agentName;
+            resultDiv.style.color = '#00ff66';
             
-            showMessage('Device registered successfully! Agent: ' + agentName, 'success');
+            // Update storage status
+            checkStorage();
             
-            agentNameSpan.innerText = agentName;
-            deviceFpSpan.innerText = deviceFp;
-            devicesListDiv.innerHTML = devices.map(d => `<div class="device-value" style="font-size:10px; margin-bottom:4px;">• ${d}</div>`).join('');
-            deviceInfoDiv.classList.add('show');
-            
-            registerBtn.disabled = false;
-            registerBtn.innerText = 'REGISTER DEVICE';
-            masterKeyInput.value = '';
-            
-        } catch (err) {
-            showMessage('Error: ' + err.message, 'error');
-            registerBtn.disabled = false;
-            registerBtn.innerText = 'REGISTER DEVICE';
+        } catch(err) {
+            resultDiv.innerHTML = 'Error: ' + err.message;
+            resultDiv.style.color = '#ff4444';
         }
     }
     
-    function checkExistingRegistration() {
+    function checkStorage() {
+        const storageDiv = document.getElementById('storageStatus');
         const saved = localStorage.getItem('cia_device_registration');
+        
         if (saved) {
             try {
                 const data = JSON.parse(saved);
-                if (data.is_registered === true) {
-                    agentNameSpan.innerText = data.agent_name;
-                    deviceFpSpan.innerText = data.device_fingerprint;
-                    devicesListDiv.innerHTML = (data.devices || []).map(d => `<div class="device-value" style="font-size:10px; margin-bottom:4px;">• ${d}</div>`).join('');
-                    deviceInfoDiv.classList.add('show');
-                    showMessage('Device already registered. Permanent session active.', 'info');
-                    return true;
-                }
+                storageDiv.innerHTML = 'Device registered to: ' + data.agent_name;
+                storageDiv.innerHTML += '<br>Fingerprint: ' + data.device_fingerprint;
+                storageDiv.innerHTML += '<br>Registered: ' + new Date(data.registered_at).toLocaleString();
+                storageDiv.style.color = '#00ff66';
             } catch(e) {
-                console.error('Parse error:', e);
+                storageDiv.innerHTML = 'Storage error: ' + e.message;
+                storageDiv.style.color = '#ff4444';
             }
+        } else {
+            storageDiv.innerHTML = 'No device registered yet.';
+            storageDiv.style.color = '#ffaa33';
         }
-        return false;
     }
     
-    registerBtn.addEventListener('click', () => {
-        const masterKey = masterKeyInput.value.trim();
-        if (masterKey.length !== 4) {
-            showMessage('Please enter a 4-digit master key', 'error');
-            return;
-        }
-        const deviceFp = generateDeviceFingerprint();
-        registerDevice(masterKey, deviceFp);
-    });
+    document.getElementById('registerBtn').onclick = registerDevice;
+    document.getElementById('masterKey').onkeypress = (e) => {
+        if (e.key === 'Enter') registerDevice();
+    };
     
-    masterKeyInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            const masterKey = masterKeyInput.value.trim();
-            if (masterKey.length === 4) {
-                const deviceFp = generateDeviceFingerprint();
-                registerDevice(masterKey, deviceFp);
-            } else {
-                showMessage('Please enter a 4-digit master key', 'error');
-            }
-        }
-    });
-    
-    async function init() {
-        try {
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            console.log('Supabase initialized');
-            await checkDatabase();
-        } catch(e) {
-            console.error('Init error:', e);
-            debugStatus.innerHTML = 'Init error: ' + e.message;
-        }
-        
-        checkExistingRegistration();
-    }
-    
-    init();
+    testConnection();
+    checkStorage();
 </script>
 </body>
 </html>

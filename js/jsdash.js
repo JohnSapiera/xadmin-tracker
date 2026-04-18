@@ -184,55 +184,76 @@ function setModalSubmitHandler(handler) {
 }
         
         // ========== SEARCH MISSION ==========
-      searchTimeout = setTimeout(async () => {
-    try {
-        const missionID = padMissionID(val);
-        
-        // Direktang i-check kung may document na may pangalang missionID
-        const missionRef = doc(db, "mission_orders", missionID);
-        const missionSnap = await getDoc(missionRef);
-        
-        console.log("Checking mission ID:", missionID);
-        console.log("Document exists?", missionSnap.exists());
-        
-        if (missionSnap.exists()) {
-            // MAY RECORD ang missionID na ito (may document)
-            const docData = missionSnap.data();
-            const owner = docData.agent;
-            
-            console.log("Mission found. Owner:", owner);
-            
-            if (owner === currentAgent) {
-                statusLabel.innerHTML = '<span style="color:#00f3ff;">YOUR MISSION</span>';
-                setButtonStyle(actionBtn, "RETRIEVE", "btn-retrieve", false);
-                actionBtn.onclick = () => openRetrieveModal();
-                setButtonStyle(reserveBtn, "VIEW", "btn-view", false);
-                reserveBtn.onclick = () => openViewModal(missionID);
-            } else {
-                statusLabel.innerHTML = `<span style="color:#ff003c;">OWNED BY: ${owner}</span>`;
-                setButtonStyle(actionBtn, "LOCKED", "btn-locked", true);
-                setButtonStyle(reserveBtn, "VIEW", "btn-view", false);
-                reserveBtn.onclick = () => openViewModal(missionID);
-            }
-            
-        } else {
-            // WALANG DOCUMENT ang missionID na ito
-            statusLabel.innerHTML = '<span style="color:#05ffa1;">AVAILABLE</span>';
-            setButtonStyle(actionBtn, "SAVE", "btn-save", false);
-            actionBtn.onclick = () => openModal();
-            setButtonStyle(reserveBtn, "RESERVE", "btn-reserve", false);
-            reserveBtn.onclick = () => {
-                alert("Mission " + missionID + " is available. Click SAVE to deploy.");
-            };
-        }
-        enableButtons();
-        
-    } catch(e) {
-        console.error("Database error:", e);
-        statusLabel.innerHTML = '<span style="color:#ff003c;">DATABASE ERROR</span>';
-        enableButtons();
+      async function searchMission() {
+    const val = input.value.trim();
+    if (searchTimeout) clearTimeout(searchTimeout);
+    
+    // Kung walang laman ang input, i-reset lang at wag mag-query
+    if (val.length === 0) {
+        setButtonStyle(actionBtn, "SAVE", "btn-save", false);
+        setButtonStyle(reserveBtn, "RESERVE", "btn-reserve", false);
+        statusLabel.innerHTML = "";
+        currentMissionData = null;
+        return;
     }
-}, 400);
+    
+    // Kung kulang sa 4 digits, mag-message lang at wag mag-query
+    if (val.length < 4) {
+        statusLabel.innerHTML = 'ENTER 4-5 DIGITS';
+        setButtonStyle(actionBtn, "SAVE", "btn-save", false);
+        setButtonStyle(reserveBtn, "RESERVE", "btn-reserve", false);
+        return;
+    }
+    
+    const missionID = padMissionID(val);
+    statusLabel.innerHTML = 'SCANNING DATABASE...';
+    
+    actionBtn.disabled = true;
+    reserveBtn.disabled = true;
+    
+    searchTimeout = setTimeout(async () => {
+        try {
+            console.log("Searching for mission ID:", missionID);
+            
+            const missionRef = doc(db, "mission_orders", missionID);
+            const missionSnap = await getDoc(missionRef);
+            
+            console.log("Document exists?", missionSnap.exists());
+            
+            if (missionSnap.exists()) {
+                const docData = missionSnap.data();
+                const owner = docData.agent;
+                
+                if (owner === currentAgent) {
+                    statusLabel.innerHTML = '<span style="color:#00f3ff;">YOUR MISSION</span>';
+                    setButtonStyle(actionBtn, "RETRIEVE", "btn-retrieve", false);
+                    actionBtn.onclick = () => openRetrieveModal();
+                    setButtonStyle(reserveBtn, "VIEW", "btn-view", false);
+                    reserveBtn.onclick = () => openViewModal(missionID);
+                } else {
+                    statusLabel.innerHTML = `<span style="color:#ff003c;">OWNED BY: ${owner}</span>`;
+                    setButtonStyle(actionBtn, "LOCKED", "btn-locked", true);
+                    setButtonStyle(reserveBtn, "VIEW", "btn-view", false);
+                    reserveBtn.onclick = () => openViewModal(missionID);
+                }
+            } else {
+                statusLabel.innerHTML = '<span style="color:#05ffa1;">AVAILABLE</span>';
+                setButtonStyle(actionBtn, "SAVE", "btn-save", false);
+                actionBtn.onclick = () => openModal();
+                setButtonStyle(reserveBtn, "RESERVE", "btn-reserve", false);
+                reserveBtn.onclick = () => {
+                    alert("Mission " + missionID + " is available. Click SAVE to deploy.");
+                };
+            }
+            enableButtons();
+            
+        } catch(e) {
+            console.error("Database error:", e);
+            statusLabel.innerHTML = '<span style="color:#ff003c;">DATABASE ERROR</span>';
+            enableButtons();
+        }
+    }, 400);
+}
 
         // ========== OPEN MODAL FOR SAVE (DEPLOY) ==========
        async function openModal() {

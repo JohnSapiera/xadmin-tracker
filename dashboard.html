@@ -15,10 +15,14 @@
     
     <style>
         :root { 
-            --bg: #02080a; --panel: rgba(5, 15, 20, 0.9); --cyan: #00f3ff; 
-            --cyan-dim: rgba(0, 243, 255, 0.1); --red: #ff003c; --blue: #007bff; 
-            --green: #05ffa1; --yellow: #ffbd00; --border: rgba(0, 243, 255, 0.2);
+            --bg: #02080a; --panel: rgba(5, 15, 20, 0.95); --cyan: #00f3ff; 
+            --cyan-dim: rgba(0, 243, 255, 0.15); --red: #ff003c; --blue: #007bff; 
+            --green: #05ffa1; --yellow: #ffbd00; --border: rgba(0, 243, 255, 0.3);
             --font-mono: 'Share Tech Mono', monospace; --font-main: 'Rajdhani', sans-serif;
+            --glow-green: 0 0 20px rgba(5, 255, 161, 0.5);
+            --glow-blue: 0 0 20px rgba(0, 123, 255, 0.5);
+            --glow-yellow: 0 0 20px rgba(255, 189, 0, 0.5);
+            --glow-red: 0 0 20px rgba(255, 0, 60, 0.5);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: #e1f5f9; font-family: var(--font-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
@@ -28,49 +32,79 @@
         
         main { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 80px; }
         
-        .command-module { background: var(--panel); border: 1px solid var(--border); padding: 20px; border-radius: 4px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
-        #mission-input { width: 100%; background: transparent; border: none; border-bottom: 2px solid var(--cyan); color: #fff; font-family: var(--font-mono); font-size: 45px; text-align: center; outline: none; margin-bottom: 5px; letter-spacing: 5px; }
-        #mission-status { font-family: var(--font-mono); font-size: 12px; text-align: center; height: 18px; margin-bottom: 15px; font-weight: bold; text-transform: uppercase; }
+        .command-module { background: var(--panel); border: 1px solid var(--border); padding: 20px; border-radius: 12px; box-shadow: 0 0 30px rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
+        #mission-input { width: 100%; background: transparent; border: none; border-bottom: 2px solid var(--cyan); color: #fff; font-family: var(--font-mono); font-size: 45px; text-align: center; outline: none; margin-bottom: 5px; letter-spacing: 5px; transition: 0.3s; }
+        #mission-input:focus { border-bottom-color: var(--green); text-shadow: 0 0 10px var(--cyan); }
+        #mission-status { font-family: var(--font-mono); font-size: 12px; text-align: center; height: 18px; margin-bottom: 15px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
         
-        .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .btn { height: 50px; font-weight: 700; text-transform: uppercase; border: none; cursor: pointer; font-family: var(--font-main); font-size: 14px; transition: 0.3s; border-radius: 6px; }
-        .btn:active { transform: scale(0.95); }
+        .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .btn { height: 52px; font-weight: 700; text-transform: uppercase; border: none; cursor: pointer; font-family: var(--font-main); font-size: 14px; transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1); border-radius: 8px; letter-spacing: 1.5px; }
+        .btn:active { transform: scale(0.96); }
         
-        /* Button Colors */
-        .btn-save { background: var(--green); color: #000; }      /* NEON GREEN */
-        .btn-retrieve { background: var(--blue); color: #fff; }   /* NEON BLUE */
-        .btn-reserve { background: transparent; border: 2px solid var(--yellow); color: var(--yellow); }  /* NEON YELLOW */
-        .btn-view { background: var(--red); color: #fff; }        /* NEON RED */
-        .btn-locked { background: #1a0000; color: var(--red); border: 1px solid var(--red); cursor: not-allowed; }
+        .btn-save { background: var(--green); color: #000; box-shadow: 0 0 10px rgba(5,255,161,0.3); }
+        .btn-save:active { box-shadow: var(--glow-green); }
+        .btn-retrieve { background: var(--blue); color: #fff; box-shadow: 0 0 10px rgba(0,123,255,0.3); }
+        .btn-retrieve:active { box-shadow: var(--glow-blue); }
+        .btn-reserve { background: transparent; border: 2px solid var(--yellow); color: var(--yellow); box-shadow: 0 0 10px rgba(255,189,0,0.2); }
+        .btn-reserve:active { box-shadow: var(--glow-yellow); background: rgba(255,189,0,0.1); }
+        .btn-view { background: var(--red); color: #fff; box-shadow: 0 0 10px rgba(255,0,60,0.3); }
+        .btn-view:active { box-shadow: var(--glow-red); }
+        .btn-locked { background: #1a0000; color: var(--red); border: 1px solid var(--red); cursor: not-allowed; opacity: 0.7; }
         
-        .btn-reserve.active { opacity: 1; pointer-events: auto; }
-        .btn-save:disabled, .btn-retrieve:disabled, .btn-reserve:disabled, .btn-view:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-save:disabled, .btn-retrieve:disabled, .btn-reserve:disabled, .btn-view:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
         
-        #terminal { background: rgba(0,0,0,0.9); border-left: 3px solid var(--cyan); padding: 12px; font-family: var(--font-mono); font-size: 10px; height: 160px; overflow-y: auto; color: #9ab4bc; margin-bottom: 15px; }
-        .term-line { margin-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        #terminal { background: rgba(0,0,0,0.85); border-left: 3px solid var(--cyan); padding: 12px; font-family: var(--font-mono); font-size: 10px; height: 150px; overflow-y: auto; color: #9ab4bc; margin-bottom: 15px; border-radius: 0 8px 8px 0; }
+        .term-line { margin-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.03); padding-bottom: 3px; }
         
-        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.96); z-index: 9999; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); }
-        .popup { width: 100%; max-width: 360px; background: #051014; border: 1px solid var(--cyan); padding: 25px; border-radius: 12px; }
-        .pop-input { width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 12px; text-align: center; font-size: 18px; margin-bottom: 15px; font-family: var(--font-mono); border-radius: 6px; }
-        #pop-header { color: var(--cyan); text-align: center; margin-bottom: 18px; font-size: 26px; font-weight: 700; font-family: var(--font-mono); }
+        /* MODAL POPUP DESIGN - REMASTERED */
+        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 9999; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(8px); }
+        .popup { width: 100%; max-width: 400px; background: linear-gradient(145deg, #0d1a22, #060e12); border: 1px solid var(--cyan); padding: 30px 24px; border-radius: 24px; box-shadow: 0 0 50px rgba(0,243,255,0.15), inset 0 1px 0 rgba(255,255,255,0.05); position: relative; overflow: hidden; }
+        .popup::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, var(--cyan), transparent); animation: scanLine 4s ease-in-out infinite; }
+        @keyframes scanLine { 0% { left: -100%; } 50% { left: 100%; } 100% { left: 100%; } }
         
-        .secure-line-wrapper { text-align: right; margin-bottom: 15px; }
-        #add-secure-btn { font-size: 11px; color: var(--cyan); cursor: pointer; text-decoration: underline; font-family: var(--font-mono); }
-        #secure-input-field { width: 0; opacity: 0; overflow: hidden; transition: 0.5s; background: #000; border: 1px solid var(--border); color: var(--yellow); padding: 0; text-align: center; font-family: var(--font-mono); border-radius: 6px; }
-        #secure-input-field.show { width: 100%; opacity: 1; padding: 10px; }
+        .popup-header-icon { text-align: center; margin-bottom: 20px; }
+        .popup-header-icon span { font-size: 40px; }
         
-        .profile-mini { background: #051014; border: 1px solid var(--border); padding: 12px; display: flex; align-items: center; gap: 15px; border-radius: 8px; }
-        .avatar { width: 40px; height: 40px; background: var(--cyan-dim); border: 1px solid var(--cyan); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--cyan); font-weight: bold; }
-        .profile-info div:first-child { color: var(--cyan); font-weight: 700; }
+        #pop-header { text-align: center; margin-bottom: 25px; font-size: 22px; font-weight: 700; font-family: var(--font-mono); letter-spacing: 3px; background: linear-gradient(135deg, var(--cyan), #fff); -webkit-background-clip: text; background-clip: text; color: transparent; position: relative; }
+        #pop-header::after { content: ''; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); width: 50px; height: 2px; background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
+        
+        .popup-field { margin-bottom: 18px; }
+        .popup-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 2px; font-weight: 600; color: var(--cyan); display: block; margin-bottom: 8px; text-transform: uppercase; opacity: 0.8; }
+        .pop-input { width: 100%; background: #000; border: 1px solid var(--border); color: var(--green); padding: 14px; text-align: center; font-size: 16px; font-family: var(--font-mono); border-radius: 12px; transition: all 0.3s; outline: none; }
+        .pop-input:focus { border-color: var(--cyan); box-shadow: 0 0 15px rgba(0,243,255,0.3); transform: scale(1.01); }
+        
+        .secure-line-wrapper { text-align: right; margin-bottom: 18px; }
+        #add-secure-btn { font-size: 10px; color: var(--cyan); cursor: pointer; text-decoration: none; border-bottom: 1px dashed var(--cyan); font-family: var(--font-mono); opacity: 0.7; transition: 0.3s; display: inline-block; padding: 4px 0; }
+        #add-secure-btn:hover { opacity: 1; text-shadow: 0 0 5px var(--cyan); }
+        #secure-input-field { width: 0; opacity: 0; overflow: hidden; transition: 0.4s ease; background: #000; border: 1px solid var(--border); color: var(--yellow); padding: 0; text-align: center; font-family: var(--font-mono); border-radius: 12px; margin-top: 8px; }
+        #secure-input-field.show { width: 100%; opacity: 1; padding: 12px; margin-top: 8px; }
+        
+        /* Weapon System Selector */
+        .weapon-selector { display: grid; gap: 10px; margin-bottom: 22px; max-height: 180px; overflow-y: auto; padding: 4px; }
+        .weapon-selector::-webkit-scrollbar { width: 4px; }
+        .weapon-selector::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 4px; }
+        .weapon-selector::-webkit-scrollbar-thumb { background: var(--cyan); border-radius: 4px; }
+        .weapon-btn { background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: #ccc; padding: 12px 16px; font-size: 12px; font-weight: 500; letter-spacing: 1px; cursor: pointer; font-family: var(--font-mono); text-align: left; border-radius: 12px; transition: all 0.2s; position: relative; overflow: hidden; }
+        .weapon-btn::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(0,243,255,0.1), transparent); transition: 0.4s; }
+        .weapon-btn:hover::before { left: 100%; }
+        .weapon-btn.selected { background: var(--cyan-dim); border-color: var(--cyan); color: var(--cyan); font-weight: 700; text-shadow: 0 0 3px var(--cyan); box-shadow: 0 0 15px rgba(0,243,255,0.2); transform: scale(1.01); }
+        .weapon-btn:active { transform: scale(0.98); }
+        
+        .profile-mini { background: #051014; border: 1px solid var(--border); padding: 12px 15px; display: flex; align-items: center; gap: 15px; border-radius: 12px; margin-top: 5px; }
+        .avatar { width: 42px; height: 42px; background: var(--cyan-dim); border: 1px solid var(--cyan); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--cyan); font-weight: bold; font-size: 18px; }
+        .profile-info div:first-child { color: var(--cyan); font-weight: 700; font-size: 14px; letter-spacing: 1px; }
         .profile-info div:last-child { color: #5c7882; font-size: 10px; }
         
         .bottom-nav { position: fixed; bottom: 0; width: 100%; height: 65px; background: #000; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr 1fr; z-index: 100; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #5c7882; text-decoration: none; font-size: 10px; font-weight: 700; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #5c7882; text-decoration: none; font-size: 10px; font-weight: 700; transition: 0.3s; }
         .nav-item.active { color: var(--cyan); background: var(--cyan-dim); border-top: 2px solid var(--cyan); }
         
         .blink { animation: blinker 1s linear infinite; }
         @keyframes blinker { 50% { opacity: 0.3; } }
-        .status-deployed { color: var(--green); }
+        .status-deployed { color: var(--green); text-shadow: 0 0 5px rgba(5,255,161,0.3); }
+        
+        .btn-click-blink { animation: btnBlink 0.2s ease-out; }
+        @keyframes btnBlink { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(0.94); opacity: 0.7; box-shadow: 0 0 25px currentColor; } 100% { transform: scale(1); opacity: 1; } }
     </style>
 </head>
 <body>
@@ -106,13 +140,22 @@
 
     <div class="overlay" id="modal-overlay">
         <div class="popup">
-            <div id="pop-header">#0000</div>
-            <span>vAGENT_IDENTIFIER:</span>
-            <input type="text" id="v-agent-input" class="pop-input" placeholder="V_ID_REQUIRED">
+            <div class="popup-header-icon"><span>⚙️</span></div>
+            <div id="pop-header">MISSION ORDER</div>
+            
+            <div class="popup-field">
+                <div class="popup-label">🔹 vAGENT IDENTIFIER</div>
+                <input type="text" id="v-agent-input" class="pop-input" placeholder="ENTER vAGENT ID">
+            </div>
             
             <div class="secure-line-wrapper">
-                <span id="add-secure-btn">+add Secure Line</span>
+                <span id="add-secure-btn">+ ADD SECURE LINE</span>
                 <input type="tel" id="secure-input-field" maxlength="11" placeholder="09XXXXXXXXX">
+            </div>
+
+            <div class="popup-field">
+                <div class="popup-label">🔫 WEAPON SYSTEM</div>
+                <div class="weapon-selector" id="weapon-list"></div>
             </div>
 
             <div class="btn-row">
@@ -156,12 +199,15 @@
         const vAgentInput = document.getElementById('v-agent-input');
         const secureField = document.getElementById('secure-input-field');
         const secureBtn = document.getElementById('add-secure-btn');
+        const weaponList = document.getElementById('weapon-list');
         const clockSpan = document.getElementById('clock');
         const profName = document.getElementById('prof-name');
         const avatarInit = document.getElementById('avatar-init');
         
         // ========== GLOBAL STATE ==========
         const currentAgent = localStorage.getItem("cia_agent") || localStorage.getItem("agent") || "UNKNOWN_AGENT";
+        let selectedWeaponID = "";
+        let agentWeapons = [];
         let currentMissionData = null;
         let searchTimeout = null;
         
@@ -200,18 +246,19 @@
                 snap.forEach(doc => {
                     const d = doc.data();
                     const time = d.timestamp ? d.timestamp.toDate().toLocaleTimeString('en-GB') : "--";
-                    terminal.innerHTML += `<div class="term-line"><span style="color:#5c7882">[${time}]</span> <span style="color:${d.color}">${d.message}</span></div>`;
+                    let color = d.color;
+                    if (d.message.includes("DEPLOYED")) color = "#05ffa1";
+                    if (d.message.includes("UPDATED")) color = "#007bff";
+                    if (d.message.includes("OVERRIDE")) color = "#ffbd00";
+                    if (d.message.includes("RESTRICTED")) color = "#ff003c";
+                    terminal.innerHTML += `<div class="term-line"><span style="color:#5c7882">[${time}]</span> <span style="color:${color}">${d.message}</span></div>`;
                 });
             });
         }
         
-        function enableButtons() {
-            actionBtn.disabled = false;
-            actionBtn.style.opacity = "1";
-            reserveBtn.disabled = false;
-            reserveBtn.style.opacity = "1";
-            reserveBtn.style.borderColor = "#ffbd00";
-            reserveBtn.style.color = "#ffbd00";
+        function addButtonClickEffect(btn) {
+            btn.classList.add('btn-click-blink');
+            setTimeout(() => btn.classList.remove('btn-click-blink'), 200);
         }
         
         function setButtonStyle(button, text, className, disabled = false) {
@@ -221,250 +268,53 @@
             button.style.opacity = disabled ? "0.5" : "1";
         }
         
-        // ========== SEARCH MISSION ==========
-        async function searchMission() {
-            const val = input.value.trim();
-            if (searchTimeout) clearTimeout(searchTimeout);
-            
-            if (val.length === 0) {
-                setButtonStyle(actionBtn, "SAVE", "btn-save", false);
-                setButtonStyle(reserveBtn, "RESERVE", "btn-reserve", false);
-                statusLabel.innerHTML = "";
-                return;
-            }
-            
-            if (val.length < 4) {
-                statusLabel.innerHTML = 'Enter 4-5 digits';
-                return;
-            }
-            
-            const missionID = padMissionID(val);
-            statusLabel.innerHTML = '<span class="blink">SCANNING...</span>';
-            
-            actionBtn.disabled = true;
-            reserveBtn.disabled = true;
-            
-            searchTimeout = setTimeout(async () => {
-                try {
-                    const snapshot = await db.collection("mission_orders").where("missionID", "==", missionID).get();
-                    
-                    if (!snapshot.empty) {
-                        currentMissionData = snapshot.docs[0].data();
-                        const owner = currentMissionData.agent;
-                        const status = currentMissionData.status;
-                        
-                        if (status === "TERMINATED") {
-                            statusLabel.innerHTML = '<span style="color:#8b0000;">STATUS: TERMINATED</span>';
-                            setButtonStyle(actionBtn, "LOCKED", "btn-locked", true);
-                            setButtonStyle(reserveBtn, "VIEW", "btn-view", false);
-                            reserveBtn.onclick = () => openViewModal(missionID);
-                        } else if (owner === currentAgent) {
-                            statusLabel.innerHTML = '<span style="color:#00f3ff;">STATUS: YOUR MISSION</span>';
-                            setButtonStyle(actionBtn, "RETRIEVE", "btn-retrieve", false);
-                            actionBtn.onclick = openRetrieveModal;
-                            setButtonStyle(reserveBtn, "RESERVE", "btn-reserve", false);
-                            reserveBtn.onclick = () => openViewModal(missionID);
-                        } else {
-                            statusLabel.innerHTML = `<span style="color:#ff003c;">OWNED BY ${owner}</span>`;
-                            setButtonStyle(actionBtn, "LOCKED", "btn-locked", true);
-                            setButtonStyle(reserveBtn, "VIEW", "btn-view", false);
-                            reserveBtn.onclick = () => openViewModal(missionID);
-                        }
-                    } else {
-                        currentMissionData = null;
-                        statusLabel.innerHTML = '<span style="color:#05ffa1;">STATUS: AVAILABLE</span>';
-                        setButtonStyle(actionBtn, "SAVE", "btn-save", false);
-                        actionBtn.onclick = openModal;
-                        setButtonStyle(reserveBtn, "RESERVE", "btn-reserve", false);
-                        reserveBtn.onclick = () => openViewModal(missionID);
-                    }
-                    enableButtons();
-                } catch(e) {
-                    console.error(e);
-                    statusLabel.innerHTML = '<span style="color:#ff003c;">DATABASE ERROR</span>';
-                    enableButtons();
-                }
-            }, 300);
-        }
-        
-        // ========== OPEN MODAL FOR SAVE (DEPLOY) ==========
-        async function openModal() {
-            const missionID = padMissionID(input.value.trim());
-            if (!missionID) return;
-            
-            console.log("Opening DEPLOY modal for:", missionID);
-            
-            document.getElementById('pop-header').innerHTML = `<span style="color:#00f3ff;">#${missionID}</span>`;
-            vAgentInput.value = "";
-            secureField.value = "";
-            secureField.classList.remove('show');
-            secureBtn.style.display = 'block';
-            
-            modalOverlay.style.display = 'flex';
-            
-            // Set button to DEPLOY (GREEN) and make it clickable
-            modalSubmit.textContent = "DEPLOY";
-            modalSubmit.className = "btn btn-save";
-            modalSubmit.disabled = false;
-            modalSubmit.style.opacity = "1";
-            
-            // Direct onclick
-            modalSubmit.onclick = () => {
-                console.log("DEPLOY clicked");
-                submitMission(missionID, false);
-            };
-        }
-        
-        // ========== OPEN MODAL FOR RETRIEVE (UPDATE) ==========
-        async function openRetrieveModal() {
-            if (!currentMissionData) return;
-            
-            const missionID = currentMissionData.missionID;
-            console.log("Opening UPDATE modal for:", missionID);
-            
-            document.getElementById('pop-header').innerHTML = `<span style="color:#00f3ff;">#${missionID} [UPDATE]</span>`;
-            vAgentInput.value = currentMissionData.vAgentID || "";
-            secureField.value = currentMissionData.SecureLine || "";
-            if (secureField.value) {
-                secureField.classList.add('show');
-                secureBtn.style.display = 'none';
-            } else {
-                secureField.classList.remove('show');
-                secureBtn.style.display = 'block';
-            }
-            
-            modalOverlay.style.display = 'flex';
-            
-            modalSubmit.textContent = "UPDATE";
-            modalSubmit.className = "btn btn-retrieve";
-            modalSubmit.disabled = false;
-            modalSubmit.style.opacity = "1";
-            
-            modalSubmit.onclick = () => {
-                console.log("UPDATE clicked");
-                submitMission(missionID, true);
-            };
-        }
-        
-        // ========== OPEN MODAL FOR VIEW ONLY ==========
-        async function openViewModal(missionID) {
-            const snapshot = await db.collection("mission_orders").where("missionID", "==", missionID).get();
-            if (snapshot.empty) {
-                alert("Mission not found");
-                return;
-            }
-            const data = snapshot.docs[0].data();
-            
-            document.getElementById('pop-header').innerHTML = `<span style="color:#ff003c;">#${missionID} [VIEW ONLY]</span>`;
-            vAgentInput.value = data.vAgentID || "";
-            secureField.value = data.SecureLine || "";
-            if (secureField.value) {
-                secureField.classList.add('show');
-            } else {
-                secureField.classList.remove('show');
-            }
-            secureBtn.style.display = 'none';
-            
-            vAgentInput.disabled = true;
-            secureField.disabled = true;
-            
-            modalOverlay.style.display = 'flex';
-            
-            modalSubmit.textContent = "CLOSE";
-            modalSubmit.className = "btn btn-view";
-            modalSubmit.disabled = false;
-            modalSubmit.onclick = closeModal;
-        }
-        
-        // ========== SUBMIT MISSION ==========
-        async function submitMission(missionID, isUpdate) {
-            const vID = vAgentInput.value.trim();
-            const sLine = secureField.value.trim();
-            
-            console.log("Submitting - vAgent:", vID);
-            
-            if (!vID) {
-                alert("Enter vAgent ID");
-                return;
-            }
-            
-            const now = new Date();
-            const deploymentDate = formatDate(now);
-            const relieveDate = formatDate(calculateRelieveDate(now));
-            
+        // ========== LOAD WEAPON SYSTEMS FROM AGENTS COLLECTION ==========
+        async function loadAgentWeapons() {
+            console.log("Loading weapons for agent:", currentAgent);
             try {
-                await db.collection("mission_orders").doc(missionID).set({
-                    missionID: missionID,
-                    agent: currentAgent,
-                    vAgentID: vID,
-                    SecureLine: sLine || "",
-                    status: "DEPLOYED",
-                    deploymentDate: deploymentDate,
-                    relieveDate: relieveDate,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true });
-                
-                addLog(`Mission #${missionID} ${isUpdate ? 'UPDATED' : 'DEPLOYED'} by ${currentAgent}`, '#05ffa1');
-                closeModal();
-                input.value = "";
-                statusLabel.innerHTML = "";
-                setButtonStyle(actionBtn, "SAVE", "btn-save", false);
-                currentMissionData = null;
-                alert(`✅ MISSION ${isUpdate ? 'UPDATED' : 'DEPLOYED'} SUCCESSFULLY!`);
-                
-                // Re-enable inputs
-                vAgentInput.disabled = false;
-                secureField.disabled = false;
+                const snapshot = await db.collection("agents").where("agentName", "==", currentAgent).get();
+                if (!snapshot.empty) {
+                    const agentData = snapshot.docs[0].data();
+                    agentWeapons = agentData.weaponSystem || [];
+                    console.log("Weapons loaded:", agentWeapons);
+                } else {
+                    console.log("Agent not found, using defaults");
+                    agentWeapons = ["REDMI NOTE 14 PRO", "REALME 8 PRO", "TECHNO CAMON 40 PRO 5G", "REDMI NOTE 12"];
+                }
+                if (agentWeapons.length === 0) {
+                    agentWeapons = ["REDMI NOTE 14 PRO", "REALME 8 PRO", "TECHNO CAMON 40 PRO 5G", "REDMI NOTE 12"];
+                }
             } catch(e) {
                 console.error(e);
-                alert("ERROR: " + e.message);
+                agentWeapons = ["REDMI NOTE 14 PRO", "REALME 8 PRO", "TECHNO CAMON 40 PRO 5G", "REDMI NOTE 12"];
             }
         }
         
-        function closeModal() {
-            modalOverlay.style.display = 'none';
-            vAgentInput.disabled = false;
-            secureField.disabled = false;
+        function renderWeapons(highlightWeapon = null) {
+            weaponList.innerHTML = "";
+            agentWeapons.forEach(weaponName => {
+                const btn = document.createElement('button');
+                btn.className = "weapon-btn";
+                btn.innerText = `> ${weaponName}`;
+                if (highlightWeapon === weaponName) {
+                    btn.classList.add('selected');
+                    selectedWeaponID = weaponName;
+                }
+                btn.onclick = () => {
+                    document.querySelectorAll('.weapon-btn').forEach(x => x.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    selectedWeaponID = weaponName;
+                    addButtonClickEffect(btn);
+                    console.log("Weapon selected:", selectedWeaponID);
+                };
+                weaponList.appendChild(btn);
+            });
         }
         
-        function toggleSecureLine() {
-            if (secureField.classList.contains('show')) {
-                secureField.classList.remove('show');
-                secureBtn.style.display = 'block';
-            } else {
-                secureField.classList.add('show');
-                secureBtn.style.display = 'none';
-                secureField.focus();
-            }
-        }
-        
-        // ========== INITIALIZATION ==========
-        function init() {
-            // Display agent info
-            profName.innerText = currentAgent;
-            avatarInit.innerText = currentAgent.charAt(0).toUpperCase();
-            
-            // Clock
-            function updateClock() {
-                clockSpan.textContent = new Date().toLocaleTimeString('en-GB');
-            }
-            updateClock();
-            setInterval(updateClock, 1000);
-            
-            // Terminal listener
-            setupTerminalListener();
-            
-            // Event listeners
-            input.addEventListener('input', searchMission);
-            modalClose.onclick = closeModal;
-            secureBtn.onclick = toggleSecureLine;
-            
-            console.log("Dashboard ready for agent:", currentAgent);
-        }
-        
-        // Start
-        init();
-    </script>
-
-</body>
-</html>
+        function enableButtons() {
+            actionBtn.disabled = false;
+            actionBtn.style.opacity = "1";
+            reserveBtn.disabled = false;
+            reserveBtn.style.opacity = "1";
+            reserveBtn.style.borderColor = "#ffbd00";
+            reserveBtn.style.color = "#ffb

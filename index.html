@@ -23,29 +23,22 @@
 
         .container {
             width: 100%;
-            max-width: 400px;
+            max-width: 450px;
             background: #0d0f14;
             border-radius: 24px;
             padding: 30px;
             border: 1px solid #1f232c;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
         }
 
         .header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
         }
 
         .header h1 {
             color: #00ff66;
-            font-size: 20px;
-            letter-spacing: 3px;
-            margin-bottom: 8px;
-        }
-
-        .header p {
-            color: #5a7a6a;
-            font-size: 11px;
+            font-size: 18px;
+            letter-spacing: 2px;
         }
 
         .form-group {
@@ -57,7 +50,6 @@
             color: #00ff66;
             font-size: 11px;
             margin-bottom: 8px;
-            letter-spacing: 1px;
         }
 
         .form-group input {
@@ -68,15 +60,14 @@
             padding: 14px;
             color: #00ff66;
             font-family: monospace;
-            font-size: 18px;
+            font-size: 20px;
             text-align: center;
-            letter-spacing: 4px;
+            letter-spacing: 5px;
             outline: none;
         }
 
         .form-group input:focus {
             border-color: #00ff66;
-            box-shadow: 0 0 10px rgba(0, 255, 102, 0.2);
         }
 
         .btn {
@@ -90,7 +81,6 @@
             color: #000;
             cursor: pointer;
             font-family: monospace;
-            transition: all 0.2s ease;
         }
 
         .btn:active {
@@ -99,11 +89,10 @@
 
         .btn:disabled {
             opacity: 0.5;
-            cursor: not-allowed;
         }
 
         .message {
-            margin-top: 20px;
+            margin-top: 15px;
             padding: 12px;
             border-radius: 12px;
             font-size: 11px;
@@ -130,6 +119,26 @@
             border: 1px solid #2a3240;
             color: #5a7a6a;
             display: block;
+        }
+
+        .debug-panel {
+            margin-top: 20px;
+            padding: 15px;
+            background: #03050a;
+            border-radius: 12px;
+            border: 1px solid #1f232c;
+            font-size: 10px;
+        }
+
+        .debug-title {
+            color: #ffaa33;
+            margin-bottom: 8px;
+        }
+
+        .debug-content {
+            color: #5a7a6a;
+            word-break: break-all;
+            font-family: monospace;
         }
 
         .device-info {
@@ -170,11 +179,6 @@
             font-size: 10px;
             color: #00ff66;
         }
-
-        hr {
-            border-color: #1f232c;
-            margin: 15px 0;
-        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -182,7 +186,6 @@
 <div class="container">
     <div class="header">
         <h1>DEVICE REGISTRATION</h1>
-        <p>CIA INTELLIGENCE SYSTEM</p>
     </div>
 
     <div class="form-group">
@@ -194,11 +197,13 @@
 
     <div id="message" class="message"></div>
 
+    <div class="debug-panel">
+        <div class="debug-title">DATABASE STATUS</div>
+        <div class="debug-content" id="debugStatus">Checking connection...</div>
+        <div class="debug-content" id="debugAgents" style="margin-top: 8px;"></div>
+    </div>
+
     <div id="deviceInfo" class="device-info">
-        <div class="device-row">
-            <span class="device-label">DEVICE STATUS</span>
-            <span class="device-value">REGISTERED</span>
-        </div>
         <div class="device-row">
             <span class="device-label">AGENT NAME</span>
             <span class="device-value" id="agentName">—</span>
@@ -207,10 +212,9 @@
             <span class="device-label">DEVICE FINGERPRINT</span>
             <span class="device-value" id="deviceFp">—</span>
         </div>
-        <hr>
         <div class="device-label">REGISTERED DEVICES</div>
         <div id="devicesList" style="margin-top: 8px;"></div>
-        <div class="status-badge" id="statusBadge">● PERMANENT SESSION ACTIVE</div>
+        <div class="status-badge">PERMANENT SESSION ACTIVE</div>
     </div>
 </div>
 
@@ -223,6 +227,8 @@
     const masterKeyInput = document.getElementById('masterKey');
     const registerBtn = document.getElementById('registerBtn');
     const messageDiv = document.getElementById('message');
+    const debugStatus = document.getElementById('debugStatus');
+    const debugAgents = document.getElementById('debugAgents');
     const deviceInfoDiv = document.getElementById('deviceInfo');
     const agentNameSpan = document.getElementById('agentName');
     const deviceFpSpan = document.getElementById('deviceFp');
@@ -249,10 +255,43 @@
         return "DEV-" + Math.abs(hash).toString(16).toUpperCase().slice(0, 12);
     }
     
+    async function checkDatabase() {
+        debugStatus.innerHTML = 'Checking Supabase connection...';
+        
+        try {
+            const { data, error } = await supabase
+                .from('agents')
+                .select('agent_name, secret_key');
+            
+            if (error) {
+                debugStatus.innerHTML = 'ERROR: ' + error.message;
+                debugAgents.innerHTML = 'Make sure table "agents" exists';
+                return;
+            }
+            
+            if (!data || data.length === 0) {
+                debugStatus.innerHTML = 'Connected but NO DATA found in agents table';
+                debugAgents.innerHTML = 'No agents registered. Please add agents to database.';
+                return;
+            }
+            
+            debugStatus.innerHTML = 'Connected. Found ' + data.length + ' agent(s)';
+            
+            let agentsList = 'Agents in database:<br>';
+            data.forEach(agent => {
+                agentsList += '• ' + agent.agent_name + ' (key: ' + agent.secret_key + ')<br>';
+            });
+            debugAgents.innerHTML = agentsList;
+            
+        } catch(e) {
+            debugStatus.innerHTML = 'ERROR: ' + e.message;
+        }
+    }
+    
     async function registerDevice(masterKey, deviceFp) {
         registerBtn.disabled = true;
         registerBtn.innerText = 'REGISTERING...';
-        showMessage('Verifying master key...', 'info');
+        showMessage('Verifying master key: ' + masterKey, 'info');
         
         try {
             const { data: agent, error } = await supabase
@@ -269,7 +308,7 @@
             }
             
             if (!agent) {
-                showMessage('Invalid master key. Access denied.', 'error');
+                showMessage('Invalid master key: ' + masterKey + '. Access denied.', 'error');
                 registerBtn.disabled = false;
                 registerBtn.innerText = 'REGISTER DEVICE';
                 return;
@@ -278,29 +317,7 @@
             const agentName = agent.agent_name;
             const devices = agent.weapon_system || [];
             
-            // Check if device already registered
-            const { data: existingCheck } = await supabase
-                .from('agents')
-                .select('linked_signatures')
-                .eq('secret_key', masterKey)
-                .maybeSingle();
-            
-            let linkedSigs = existingCheck?.linked_signatures || [];
-            
-            if (!linkedSigs.includes(deviceFp)) {
-                linkedSigs.push(deviceFp);
-                
-                await supabase
-                    .from('agents')
-                    .update({ 
-                        linked_signatures: linkedSigs,
-                        last_fingerprint: deviceFp,
-                        updated_at: new Date().toISOString()
-                    })
-                    .eq('secret_key', masterKey);
-            }
-            
-            // Save to localStorage (permanent)
+            // Save to localStorage
             const registrationData = {
                 agent_name: agentName,
                 secret_key: masterKey,
@@ -312,9 +329,8 @@
             
             localStorage.setItem('cia_device_registration', JSON.stringify(registrationData));
             
-            showMessage('Device registered successfully!', 'success');
+            showMessage('Device registered successfully! Agent: ' + agentName, 'success');
             
-            // Display device info
             agentNameSpan.innerText = agentName;
             deviceFpSpan.innerText = deviceFp;
             devicesListDiv.innerHTML = devices.map(d => `<div class="device-value" style="font-size:10px; margin-bottom:4px;">• ${d}</div>`).join('');
@@ -377,13 +393,10 @@
         try {
             supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             console.log('Supabase initialized');
-            
-            const { error } = await supabase.from('agents').select('count', { count: 'exact', head: true });
-            if (error) console.warn('Supabase warning:', error.message);
-            else console.log('Supabase connected');
+            await checkDatabase();
         } catch(e) {
             console.error('Init error:', e);
-            showMessage('Database connection failed', 'error');
+            debugStatus.innerHTML = 'Init error: ' + e.message;
         }
         
         checkExistingRegistration();

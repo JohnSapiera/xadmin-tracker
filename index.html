@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Database Test</title>
+    <title>Supabase Test</title>
     <style>
         body {
             background: #0a0c12;
@@ -18,61 +18,57 @@
             padding: 20px;
             margin-bottom: 20px;
         }
-        .error {
-            color: #ff4444;
-        }
-        .success {
-            color: #00ff66;
-        }
         button {
             background: #00ff66;
             color: #000;
             border: none;
-            padding: 10px 20px;
+            padding: 12px 24px;
             border-radius: 8px;
             cursor: pointer;
             font-family: monospace;
             font-weight: bold;
+            font-size: 14px;
         }
         input {
             background: #000;
             border: 1px solid #2a3240;
-            padding: 10px;
+            padding: 12px;
             color: #00ff66;
             font-family: monospace;
-            font-size: 18px;
+            font-size: 20px;
             text-align: center;
             letter-spacing: 5px;
             border-radius: 8px;
+            width: 120px;
         }
         .log {
             background: #03050a;
-            padding: 10px;
+            padding: 15px;
             border-radius: 8px;
-            font-size: 11px;
-            margin-top: 10px;
+            font-size: 12px;
+            margin-top: 15px;
             word-break: break-all;
+            font-family: monospace;
         }
+        .green { color: #00ff66; }
+        .red { color: #ff4444; }
+        .yellow { color: #ffaa33; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <div class="box">
-    <h3>DATABASE CONNECTION TEST</h3>
-    <div id="status" class="log">Testing connection...</div>
+    <h3>STEP 1: TEST CONNECTION</h3>
+    <button id="testBtn">TEST SUPABASE CONNECTION</button>
+    <div id="connectionLog" class="log">Click the button to test...</div>
 </div>
 
 <div class="box">
-    <h3>REGISTER DEVICE</h3>
+    <h3>STEP 2: REGISTER DEVICE</h3>
     <input type="text" id="masterKey" maxlength="4" placeholder="____">
     <br><br>
-    <button id="registerBtn">REGISTER</button>
-    <div id="result" class="log"></div>
-</div>
-
-<div class="box">
-    <h3>STORAGE STATUS</h3>
-    <div id="storageStatus" class="log">Checking...</div>
+    <button id="registerBtn">REGISTER DEVICE</button>
+    <div id="registerLog" class="log">Waiting...</div>
 </div>
 
 <script>
@@ -81,68 +77,78 @@
     
     let supabase = null;
     
-    async function testConnection() {
-        const statusDiv = document.getElementById('status');
-        statusDiv.innerHTML = 'Creating Supabase client...';
+    function log(element, message, color) {
+        element.innerHTML = message;
+        element.className = 'log ' + color;
+        console.log(message);
+    }
+    
+    // TEST CONNECTION BUTTON
+    document.getElementById('testBtn').onclick = async () => {
+        const logDiv = document.getElementById('connectionLog');
+        log(logDiv, 'Creating Supabase client...', 'yellow');
         
         try {
+            // Create client
             supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            statusDiv.innerHTML = 'Supabase client created. Testing query...';
+            log(logDiv, 'Client created. Testing query...', 'yellow');
             
-            const { data, error, count } = await supabase
+            // Try to fetch agents
+            const { data, error, status } = await supabase
                 .from('agents')
-                .select('*', { count: 'exact' })
-                .limit(5);
+                .select('count', { count: 'exact', head: true });
             
             if (error) {
-                statusDiv.innerHTML = 'ERROR: ' + error.message;
-                statusDiv.style.color = '#ff4444';
-                console.error('Supabase error:', error);
+                log(logDiv, 'ERROR: ' + error.message + ' (Status: ' + status + ')', 'red');
                 return;
             }
             
-            if (data && data.length > 0) {
-                statusDiv.innerHTML = 'SUCCESS: Connected! Found ' + data.length + ' agent(s)';
-                statusDiv.style.color = '#00ff66';
-                
-                // Show agents
-                let agentsList = 'Agents:<br>';
-                data.forEach(agent => {
-                    agentsList += '• ' + (agent.agent_name || 'unknown') + ' (key: ' + (agent.secret_key || 'none') + ')<br>';
-                });
-                statusDiv.innerHTML += '<br>' + agentsList;
-            } else {
-                statusDiv.innerHTML = 'SUCCESS: Connected! But no agents found in database.';
-                statusDiv.style.color = '#ffaa33';
-                statusDiv.innerHTML += '<br><br>Run this SQL in Supabase:<br>';
-                statusDiv.innerHTML += 'INSERT INTO agents (agent_name, secret_key) VALUES ("AGENT_LZ", "4646"), ("AGENT_JFSN", "1010");';
+            log(logDiv, 'SUCCESS! Connected to Supabase.', 'green');
+            
+            // Now get actual data
+            const { data: agents, error: agentsError } = await supabase
+                .from('agents')
+                .select('agent_name, secret_key');
+            
+            if (agentsError) {
+                log(logDiv, 'Connected but cannot read agents: ' + agentsError.message, 'yellow');
+                return;
             }
             
+            if (!agents || agents.length === 0) {
+                log(logDiv, 'Connected! But NO AGENTS found in database.', 'yellow');
+                log(logDiv, 'Run this SQL in Supabase:<br>INSERT INTO agents (agent_name, secret_key) VALUES ("AGENT_LZ", "4646"), ("AGENT_JFSN", "1010");', 'yellow');
+                return;
+            }
+            
+            let msg = 'Connected! Found ' + agents.length + ' agent(s):<br>';
+            agents.forEach(a => {
+                msg += '• ' + a.agent_name + ' (key: ' + a.secret_key + ')<br>';
+            });
+            log(logDiv, msg, 'green');
+            
         } catch(err) {
-            statusDiv.innerHTML = 'EXCEPTION: ' + err.message;
-            statusDiv.style.color = '#ff4444';
-            console.error('Exception:', err);
+            log(logDiv, 'EXCEPTION: ' + err.message, 'red');
+            console.error(err);
         }
-    }
+    };
     
-    async function registerDevice() {
+    // REGISTER BUTTON
+    document.getElementById('registerBtn').onclick = async () => {
         const masterKey = document.getElementById('masterKey').value.trim();
-        const resultDiv = document.getElementById('result');
+        const logDiv = document.getElementById('registerLog');
         
         if (!masterKey || masterKey.length !== 4) {
-            resultDiv.innerHTML = 'Please enter 4-digit key';
-            resultDiv.style.color = '#ff4444';
+            log(logDiv, 'Please enter a 4-digit master key', 'red');
             return;
         }
         
         if (!supabase) {
-            resultDiv.innerHTML = 'Supabase not initialized. Wait for connection test.';
-            resultDiv.style.color = '#ff4444';
+            log(logDiv, 'Please test connection first (Step 1)', 'red');
             return;
         }
         
-        resultDiv.innerHTML = 'Verifying key: ' + masterKey + '...';
-        resultDiv.style.color = '#ffaa33';
+        log(logDiv, 'Verifying key: ' + masterKey + '...', 'yellow');
         
         try {
             const { data, error } = await supabase
@@ -152,22 +158,16 @@
                 .maybeSingle();
             
             if (error) {
-                resultDiv.innerHTML = 'Database error: ' + error.message;
-                resultDiv.style.color = '#ff4444';
+                log(logDiv, 'Database error: ' + error.message, 'red');
                 return;
             }
             
             if (!data) {
-                resultDiv.innerHTML = 'INVALID KEY: ' + masterKey + ' not found in database';
-                resultDiv.style.color = '#ff4444';
+                log(logDiv, 'INVALID KEY: ' + masterKey + ' not found in database', 'red');
                 return;
             }
             
-            // Success
-            const agentName = data.agent_name;
-            const devices = data.weapon_system || [];
-            
-            // Generate fingerprint
+            // Generate device fingerprint
             let hash = 0;
             const raw = navigator.userAgent + screen.width + screen.height;
             for (let i = 0; i < raw.length; i++) {
@@ -177,55 +177,31 @@
             
             // Save to localStorage
             const registration = {
-                agent_name: agentName,
+                agent_name: data.agent_name,
                 secret_key: masterKey,
                 device_fingerprint: fingerprint,
-                devices: devices,
+                devices: data.weapon_system || [],
                 registered_at: new Date().toISOString(),
                 is_registered: true
             };
             localStorage.setItem('cia_device_registration', JSON.stringify(registration));
             
-            resultDiv.innerHTML = 'SUCCESS! Registered as: ' + agentName;
-            resultDiv.style.color = '#00ff66';
-            
-            // Update storage status
-            checkStorage();
+            log(logDiv, 'SUCCESS! Registered as: ' + data.agent_name, 'green');
             
         } catch(err) {
-            resultDiv.innerHTML = 'Error: ' + err.message;
-            resultDiv.style.color = '#ff4444';
+            log(logDiv, 'Error: ' + err.message, 'red');
         }
-    }
-    
-    function checkStorage() {
-        const storageDiv = document.getElementById('storageStatus');
-        const saved = localStorage.getItem('cia_device_registration');
-        
-        if (saved) {
-            try {
-                const data = JSON.parse(saved);
-                storageDiv.innerHTML = 'Device registered to: ' + data.agent_name;
-                storageDiv.innerHTML += '<br>Fingerprint: ' + data.device_fingerprint;
-                storageDiv.innerHTML += '<br>Registered: ' + new Date(data.registered_at).toLocaleString();
-                storageDiv.style.color = '#00ff66';
-            } catch(e) {
-                storageDiv.innerHTML = 'Storage error: ' + e.message;
-                storageDiv.style.color = '#ff4444';
-            }
-        } else {
-            storageDiv.innerHTML = 'No device registered yet.';
-            storageDiv.style.color = '#ffaa33';
-        }
-    }
-    
-    document.getElementById('registerBtn').onclick = registerDevice;
-    document.getElementById('masterKey').onkeypress = (e) => {
-        if (e.key === 'Enter') registerDevice();
     };
     
-    testConnection();
-    checkStorage();
+    // Check existing registration on load
+    const saved = localStorage.getItem('cia_device_registration');
+    if (saved) {
+        try {
+            const data = JSON.parse(saved);
+            document.getElementById('registerLog').innerHTML = 'Already registered as: ' + data.agent_name;
+            document.getElementById('registerLog').className = 'log green';
+        } catch(e) {}
+    }
 </script>
 </body>
 </html>

@@ -56,7 +56,8 @@ let agentWeapons = [];
 let currentMissionData = null;
 let searchTimeout = null;
 
-console.log("Dashboard ready for agent:", currentAgent);        
+console.log("Dashboard ready for agent:", currentAgent);
+
         // ========== HELPER FUNCTIONS ==========
         function padMissionID(value) {
             const digits = value.replace(/\D/g, '');
@@ -116,6 +117,14 @@ console.log("Dashboard ready for agent:", currentAgent);
             button.disabled = disabled;
             button.style.opacity = disabled ? "0.5" : "1";
         }
+
+function setModalSubmitHandler(handler) {
+    if (modalSubmit.clickHandler) {
+        modalSubmit.removeEventListener('click', modalSubmit.clickHandler);
+    }
+    modalSubmit.clickHandler = handler;
+    modalSubmit.addEventListener('click', modalSubmit.clickHandler);
+}
         
         // ========== LOAD WEAPON SYSTEMS FROM AGENTS COLLECTION ==========
         async function loadAgentWeapons() {
@@ -240,67 +249,51 @@ console.log("Dashboard ready for agent:", currentAgent);
         }
         
         // ========== OPEN MODAL FOR SAVE (DEPLOY) ==========
-        async function openModal() {
-            const missionID = padMissionID(input.value.trim());
-            if (!missionID) return;
-            
-            addButtonClickEffect(actionBtn);
-            
-            document.getElementById('pop-header').innerHTML = `MISSION ${missionID}`;
-            vAgentInput.value = "";
-            selectedWeaponID = "";
-            secureField.value = "";
-            secureField.classList.remove('show');
-            secureBtn.style.display = 'block';
-            
-            await loadAgentWeapons();
-            renderWeapons();
-            
-            modalOverlay.style.display = 'flex';
-            modalSubmit.textContent = "DEPLOY";
-            modalSubmit.className = "btn btn-save";
-            modalSubmit.disabled = false;
-            modalSubmit.style.opacity = "1";
-            
-            modalSubmit.onclick = () => {
-                addButtonClickEffect(modalSubmit);
-                submitMission(missionID, false);
-            };
-        }
+       async function openModal() {
+    const missionID = padMissionID(input.value.trim());
+    if (!missionID) return;
+    
+    addButtonClickEffect(actionBtn);
+    
+    document.getElementById('pop-header').innerHTML = `MISSION ${missionID}`;
+    vAgentInput.value = "";
+    selectedWeaponID = "";
+    secureField.value = "";
+    secureField.classList.remove('show');
+    secureBtn.style.display = 'block';
+    
+    await loadAgentWeapons();
+    renderWeapons();
+    
+    modalOverlay.style.display = 'flex';
+    modalSubmit.textContent = "DEPLOY";
+    modalSubmit.className = "btn btn-save";
+    modalSubmit.disabled = false;
+    modalSubmit.style.opacity = "1";
+    
+    // I-remove ang lumang event listener at magdagdag ng bago
+    modalSubmit.removeEventListener('click', modalSubmit.clickHandler);
+    modalSubmit.clickHandler = () => {
+        addButtonClickEffect(modalSubmit);
+        submitMission(missionID, false);
+    };
+    modalSubmit.addEventListener('click', modalSubmit.clickHandler);
+}
         
         // ========== OPEN MODAL FOR RETRIEVE (UPDATE) ==========
-        async function openRetrieveModal() {
-            if (!currentMissionData) return;
-            
-            addButtonClickEffect(actionBtn);
-            
-            const missionID = currentMissionData.missionID;
-            document.getElementById('pop-header').innerHTML = `MISSION ${missionID}`;
-            vAgentInput.value = currentMissionData.vAgentID || "";
-            selectedWeaponID = currentMissionData.weaponSystem || "";
-            secureField.value = currentMissionData.SecureLine || "";
-            if (secureField.value) {
-                secureField.classList.add('show');
-                secureBtn.style.display = 'none';
-            } else {
-                secureField.classList.remove('show');
-                secureBtn.style.display = 'block';
-            }
-            
-            await loadAgentWeapons();
-            renderWeapons(selectedWeaponID);
-            
-            modalOverlay.style.display = 'flex';
-            modalSubmit.textContent = "UPDATE";
-            modalSubmit.className = "btn btn-retrieve";
-            modalSubmit.disabled = false;
-            modalSubmit.style.opacity = "1";
-            
-            modalSubmit.onclick = () => {
-                addButtonClickEffect(modalSubmit);
-                submitMission(missionID, true);
-            };
-        }
+        // Hanapin ito sa openRetrieveModal function
+modalSubmit.onclick = () => {
+    addButtonClickEffect(modalSubmit);
+    submitMission(missionID, true);
+};
+
+// Palitan ng:
+modalSubmit.removeEventListener('click', modalSubmit.clickHandler);
+modalSubmit.clickHandler = () => {
+    addButtonClickEffect(modalSubmit);
+    submitMission(missionID, true);
+};
+modalSubmit.addEventListener('click', modalSubmit.clickHandler);
         
         // ========== OPEN MODAL FOR VIEW ONLY ==========
         async function openViewModal(missionID) {

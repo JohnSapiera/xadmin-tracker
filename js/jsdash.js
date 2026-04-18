@@ -1,5 +1,7 @@
 // js/jsdash.js - CORE DASHBOARD (SIMPLIFIED WORKING)
 
+// js/jsdash.js - CORE DASHBOARD (FIXED)
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { 
     getFirestore, 
@@ -18,44 +20,43 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // ========== FIREBASE CONFIGURATION ==========
-        const firebaseConfig = { 
-            apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
-            authDomain: "my-admin-portal-12691.firebaseapp.com", 
-            projectId: "my-admin-portal-12691", 
-            storageBucket: "my-admin-portal-12691.firebasestorage.app", 
-            messagingSenderId: "317015091563", 
-            appId: "1:317015091563:web:baab5171d8e0a58acd442e" 
-        };
-        
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        
-        // ========== DOM ELEMENTS ==========
-        const input = document.getElementById('mission-input');
-        const actionBtn = document.getElementById('action-btn');
-        const reserveBtn = document.getElementById('reserve-btn');
-        const statusLabel = document.getElementById('mission-status');
-        const terminal = document.getElementById('terminal');
-        const modalOverlay = document.getElementById('modal-overlay');
-        const modalSubmit = document.getElementById('modal-submit');
-        const modalClose = document.getElementById('modal-close');
-        const vAgentInput = document.getElementById('v-agent-input');
-        const secureField = document.getElementById('secure-input-field');
-        const secureBtn = document.getElementById('add-secure-btn');
-        const weaponList = document.getElementById('weapon-list');
-        const clockSpan = document.getElementById('clock');
-        const profName = document.getElementById('prof-name');
-        const avatarInit = document.getElementById('avatar-init');
-        
-        // ========== GLOBAL STATE ==========
+const firebaseConfig = { 
+    apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
+    authDomain: "my-admin-portal-12691.firebaseapp.com", 
+    projectId: "my-admin-portal-12691", 
+    storageBucket: "my-admin-portal-12691.firebasestorage.app", 
+    messagingSenderId: "317015091563", 
+    appId: "1:317015091563:web:baab5171d8e0a58acd442e" 
+};
 
-        let selectedWeaponID = "";
-        let agentWeapons = [];
-        let currentMissionData = null;
-        let searchTimeout = null;
-        
-        console.log("Agent:", currentAgent);
-        
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// ========== DOM ELEMENTS ==========
+const input = document.getElementById('mission-input');
+const actionBtn = document.getElementById('action-btn');
+const reserveBtn = document.getElementById('reserve-btn');
+const statusLabel = document.getElementById('mission-status');
+const terminal = document.getElementById('terminal');
+const modalOverlay = document.getElementById('modal-overlay');
+const modalSubmit = document.getElementById('modal-submit');
+const modalClose = document.getElementById('modal-close');
+const vAgentInput = document.getElementById('v-agent-input');
+const secureField = document.getElementById('secure-input-field');
+const secureBtn = document.getElementById('add-secure-btn');
+const weaponList = document.getElementById('weapon-list');
+const clockSpan = document.getElementById('clock');
+const profName = document.getElementById('prof-name');
+const avatarInit = document.getElementById('avatar-init');
+
+// ========== GLOBAL STATE ==========
+const currentAgent = localStorage.getItem("cia_agent") || localStorage.getItem("agent") || "UNKNOWN_AGENT";
+let selectedWeaponID = "";
+let agentWeapons = [];
+let currentMissionData = null;
+let searchTimeout = null;
+
+console.log("Dashboard ready for agent:", currentAgent);        
         // ========== HELPER FUNCTIONS ==========
         function padMissionID(value) {
             const digits = value.replace(/\D/g, '');
@@ -84,20 +85,25 @@ import {
         }
         
         function setupTerminalListener() {
-            db.collection("terminal_logs").orderBy("timestamp", "desc").limit(15).onSnapshot((snap) => {
-                terminal.innerHTML = "";
-                snap.forEach(doc => {
-                    const d = doc.data();
-                    const time = d.timestamp ? d.timestamp.toDate().toLocaleTimeString('en-GB') : "--";
-                    let color = d.color;
-                    if (d.message.includes("DEPLOYED")) color = "#05ffa1";
-                    if (d.message.includes("UPDATED")) color = "#007bff";
-                    if (d.message.includes("OVERRIDE")) color = "#ffbd00";
-                    if (d.message.includes("RESTRICTED")) color = "#ff003c";
-                    terminal.innerHTML += `<div class="term-line"><span style="color:#5c7882">[${time}]</span> <span style="color:${color}">${d.message}</span></div>`;
-                });
-            });
-        }
+    const logsRef = collection(db, "terminal_logs");
+    const q = query(logsRef, orderBy("timestamp", "desc"), limit(15));
+    
+    onSnapshot(q, (snap) => {
+        terminal.innerHTML = "";
+        snap.forEach(doc => {
+            const d = doc.data();
+            const time = d.timestamp ? d.timestamp.toDate().toLocaleTimeString('en-GB') : "--";
+            let color = d.color;
+            if (d.message.includes("DEPLOYED")) color = "#05ffa1";
+            if (d.message.includes("UPDATED")) color = "#007bff";
+            if (d.message.includes("OVERRIDE")) color = "#ffbd00";
+            if (d.message.includes("RESTRICTED")) color = "#ff003c";
+            terminal.innerHTML += `<div class="term-line"><span style="color:#5c7882">[${time}]</span> <span style="color:${color}">${d.message}</span></div>`;
+        });
+    }, (error) => {
+        console.error("Terminal listener error:", error);
+    });
+}
         
         function addButtonClickEffect(btn) {
             btn.classList.add('btn-click-blink');
@@ -155,13 +161,11 @@ import {
         }
         
         function enableButtons() {
-            actionBtn.disabled = false;
-            actionBtn.style.opacity = "1";
-            reserveBtn.disabled = false;
-            reserveBtn.style.opacity = "1";
-            reserveBtn.style.borderColor = "#ffbd00";
-            reserveBtn.style.color = "#ffbd00";
-        }
+    actionBtn.disabled = false;
+    actionBtn.style.opacity = "1";
+    reserveBtn.disabled = false;
+    reserveBtn.style.opacity = "1";
+}
         
         // ========== SEARCH MISSION ==========
         async function searchMission() {
@@ -409,10 +413,12 @@ import {
             avatarInit.innerText = currentAgent.charAt(0).toUpperCase();
             
             function updateClock() {
-                clockSpan.textContent = new Date().toLocaleTimeString('en-GB');
-            }
-            updateClock();
-            setInterval(updateClock, 1000);
+    const now = new Date();
+    const timeString = now.toLocaleTimeString('en-GB');
+    clockSpan.textContent = timeString;
+}
+updateClock();
+setInterval(updateClock, 1000);
             
             setupTerminalListener();
             await loadAgentWeapons();

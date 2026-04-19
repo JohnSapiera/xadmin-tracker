@@ -1,4 +1,4 @@
-// js/jsdash.js - CORE DASHBOARD (WITH RESERVE LOGIC)
+// js/jsdash.js - CORE DASHBOARD
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { 
@@ -324,33 +324,84 @@ async function openModal() {
     };
 }
 
-// ========== RESERVE MODAL ==========
+// ========== RESERVE MODAL (YES/NO CONFIRMATION) ==========
 async function openReserveModal() {
     const missionID = padMissionID(input.value.trim());
-    if (!missionID) return;
+    if (!missionID) {
+        alert("Please enter a mission ID");
+        return;
+    }
     
     addButtonClickEffect(reserveBtn);
-    popHeader.innerHTML = `${missionID}`;
-    vAgentInput.value = "";
-    selectedWeaponID = "";
-    secureField.value = "";
-    secureField.classList.remove('show');
-    secureBtn.style.display = 'block';
-    vAgentInput.disabled = false;
-    secureField.disabled = false;
     
-    await loadAgentWeapons();
-    renderWeapons();
+    // Gumawa ng custom confirm dialog
+    const confirmReserve = confirm(`Do you want to put mission order #${missionID} to your reserve list?`);
     
-    modalOverlay.style.display = 'flex';
-    modalSubmit.textContent = "RESERVE";
-    modalSubmit.className = "btn btn-reserve";
-    modalSubmit.disabled = false;
-    
-    modalSubmit.onclick = () => {
-        addButtonClickEffect(modalSubmit);
-        submitMission(missionID, false, "RESERVED");
-    };
+    if (confirmReserve) {
+        await reserveMission(missionID);
+    }
+}
+
+// ========== RESERVE MISSION ==========
+async function reserveMission(missionID) {
+    try {
+        const missionRef = doc(db, "mission_orders", missionID);
+        
+        // Check kung existing na ang mission
+        const missionSnap = await getDoc(missionRef);
+        
+        if (missionSnap.exists()) {
+            const existingData = missionSnap.data();
+            const existingStatus = existingData.status;
+            const owner = existingData.agent;
+            
+            // Kung DEPLOYED na, hindi pwedeng i-reserve
+            if (existingStatus === "DEPLOYED") {
+                alert(`Mission ${missionID} is already DEPLOYED by ${owner}. Cannot reserve.`);
+                return;
+            }
+            
+            // Kung RESERVED na ng iba, hindi pwedeng i-reserve
+            if (existingStatus === "RESERVED" && owner !== currentAgent) {
+                alert(`Mission ${missionID} is already RESERVED by ${owner}. Cannot reserve.`);
+                return;
+            }
+            
+            // Kung RESERVED na ng current agent
+            if (existingStatus === "RESERVED" && owner === currentAgent) {
+                alert(`Mission ${missionID} is already in your reserve list.`);
+                return;
+            }
+        }
+        
+        // I-save ang mission na may status na RESERVED
+        await setDoc(missionRef, {
+            missionID: missionID,
+            agent: currentAgent,
+            status: "RESERVED",
+            timestamp: serverTimestamp()
+        }, { merge: true });
+        
+        addLog(`Mission ${missionID} RESERVED by ${currentAgent}`, '#ffbd00');
+        
+        // I-reset ang UI
+        input.value = "";
+        statusLabel.innerHTML = "";
+        setButtonStyle(actionBtn, "SAVE", "btn-save", false);
+        setButtonStyle(reserveBtn, "RESERVE", "btn-reserve", false);
+        currentMissionData = null;
+        
+        alert(`Mission ${missionID} has been added to your reserve list!`);
+        
+        // I-refresh ang search para ma-update ang UI
+        if (input.value.trim() === "") {
+            resetUI();
+        }
+        
+    } catch(e) {
+        console.error("Reserve error:", e);
+        alert("ERROR: " + e.message);
+    }
 }
 
 // ========== RESERVE TO DEPLOY MODAL ==========

@@ -478,3 +478,24 @@
 @keyframes blinker { 
     50% { opacity: 0.3; } 
 }
+
+.popup {
+    position: relative;
+    background: rgba(2, 10, 13, 0.98);
+    border: 1px solid #00f2ff;
+    border-radius: 0px;
+    width: 90%;
+    max-width: 400px;
+    padding: 20px;
+    box-shadow: 0 0 20px rgba(0, 242, 255, 0.2);
+}
+
+.popup-header-icon {
+    position: absolute;
+    top: -12px;
+    left: 10px;
+    background: #01080b;
+    padding: 0 8px;
+    color: #00f2ff;
+    font-size: 14px;
+}

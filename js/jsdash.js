@@ -1,4 +1,4 @@
-// js/jsdash.js - CORE DASHBOARD (FULLY FIXED)
+// js/jsdash.js - CORE DASHBOARD (WITH RESERVE LOGIC)
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { 
@@ -100,8 +100,8 @@ function setupTerminalListener() {
             let color = d.color;
             if (d.message.includes("DEPLOYED")) color = "#05ffa1";
             if (d.message.includes("UPDATED")) color = "#007bff";
-            if (d.message.includes("OVERRIDE")) color = "#ffbd00";
-            if (d.message.includes("RESTRICTED")) color = "#ff003c";
+            if (d.message.includes("RESERVED")) color = "#ffbd00";
+            if (d.message.includes("TERMINATED")) color = "#ff003c";
             terminal.innerHTML += `<div class="term-line"><span style="color:#5c7882">[${time}]</span> <span style="color:${color}">${d.message}</span></div>`;
         });
     }, (error) => {
@@ -151,7 +151,7 @@ function resetUI() {
     reserveBtn.onclick = null;
 }
 
-// ========== LOAD WEAPON SYSTEMS FROM AGENT ==========
+// ========== LOAD WEAPON SYSTEMS ==========
 async function loadAgentWeapons() {
     console.log("Loading weapons for agent:", currentAgent);
     try {
@@ -160,9 +160,7 @@ async function loadAgentWeapons() {
         if (!snapshot.empty) {
             const agentData = snapshot.docs[0].data();
             agentWeapons = agentData.weaponSystem || [];
-            console.log("Weapons loaded from agent:", agentWeapons);
         } else {
-            console.log("Agent not found, using defaults");
             agentWeapons = ["REDMI NOTE 14 PRO", "REALME 8 PRO", "TECHNO CAMON 40 PRO 5G", "REDMI NOTE 12"];
         }
         if (agentWeapons.length === 0) {
@@ -174,22 +172,29 @@ async function loadAgentWeapons() {
     }
 }
 
-function renderWeapons(highlightWeapon = null) {
+function renderWeapons(highlightWeapon = null, disabled = false) {
     weaponList.innerHTML = "";
     agentWeapons.forEach(weaponName => {
         const btn = document.createElement('button');
         btn.className = "weapon-btn";
         btn.innerText = `> ${weaponName}`;
+        
         if (highlightWeapon === weaponName) {
             btn.classList.add('selected');
             selectedWeaponID = weaponName;
         }
+        
+        if (disabled) {
+            btn.style.pointerEvents = 'none';
+            btn.style.opacity = '0.5';
+        }
+        
         btn.onclick = () => {
+            if (disabled) return;
             document.querySelectorAll('.weapon-btn').forEach(x => x.classList.remove('selected'));
             btn.classList.add('selected');
             selectedWeaponID = weaponName;
             addButtonClickEffect(btn);
-            console.log("Weapon selected:", selectedWeaponID);
         };
         weaponList.appendChild(btn);
     });
@@ -208,33 +213,54 @@ async function searchMission(missionID) {
         if (missionSnap.exists()) {
             const docData = missionSnap.data();
             const owner = docData.agent;
+            const status = docData.status || "DEPLOYED";
             currentMissionData = docData;
             
-            if (owner === currentAgent) {
+            // Check if mission is TERMINATED
+            if (status === "TERMINATED") {
+                statusLabel.innerHTML = '<span style="color:#8b0000;">STATUS: TERMINATED</span>';
+                setButtonStyle(actionBtn, "LOCKED", "btn-locked", true);
+                setButtonStyle(reserveBtn, "VIEW", "btn-view", false);
+                reserveBtn.onclick = () => openViewModal(missionID);
+            }
+            // Check if mission is RESERVED by other agent
+            else if (status === "RESERVED" && owner !== currentAgent) {
+                statusLabel.innerHTML = `<span style="color:#ffbd00;">RESERVED BY: ${owner}</span>`;
+                setButtonStyle(actionBtn, "LOCKED", "btn-locked", true);
+                setButtonStyle(reserveBtn, "VIEW", "btn-view", false);
+                reserveBtn.onclick = () => openViewModal(missionID);
+            }
+            // Check if mission is RESERVED by current agent
+            else if (status === "RESERVED" && owner === currentAgent) {
+                statusLabel.innerHTML = '<span style="color:#ffbd00;">YOUR RESERVATION</span>';
+                setButtonStyle(actionBtn, "DEPLOY", "btn-save", false);
+                actionBtn.onclick = () => openReserveToDeployModal(missionID);
+                setButtonStyle(reserveBtn, "VIEW", "btn-view", false);
+                reserveBtn.onclick = () => openViewModal(missionID);
+            }
+            // Check if mission is OWNED by current agent
+            else if (owner === currentAgent) {
                 statusLabel.innerHTML = '<span style="color:#00f3ff;">YOUR MISSION</span>';
                 setButtonStyle(actionBtn, "RETRIEVE", "btn-retrieve", false);
                 actionBtn.onclick = () => openRetrieveModal();
                 setButtonStyle(reserveBtn, "VIEW", "btn-view", false);
                 reserveBtn.onclick = () => openViewModal(missionID);
-            } else {
+            }
+            // Mission owned by other agent
+            else {
                 statusLabel.innerHTML = `<span style="color:#ff003c;">OWNED BY: ${owner}</span>`;
                 setButtonStyle(actionBtn, "LOCKED", "btn-locked", true);
                 setButtonStyle(reserveBtn, "VIEW", "btn-view", false);
                 reserveBtn.onclick = () => openViewModal(missionID);
             }
         } else {
+            // Mission AVAILABLE - no document
             currentMissionData = null;
             statusLabel.innerHTML = '<span style="color:#05ffa1;">AVAILABLE</span>';
             setButtonStyle(actionBtn, "SAVE", "btn-save", false);
-            actionBtn.onclick = () => {
-                console.log("SAVE button clicked");
-                openModal();
-            };
+            actionBtn.onclick = () => openModal();
             setButtonStyle(reserveBtn, "RESERVE", "btn-reserve", false);
-            reserveBtn.onclick = () => {
-                const mid = padMissionID(input.value.trim());
-                if (mid) alert("Mission " + mid + " is available. Click SAVE to deploy.");
-            };
+            reserveBtn.onclick = () => openReserveModal();
         }
         enableButtons();
     } catch(e) {
@@ -269,20 +295,13 @@ function onMissionInput() {
     }, 400);
 }
 
-// ========== MODAL FUNCTIONS ==========
+// ========== DEPLOY MODAL (SAVE) ==========
 async function openModal() {
     const missionID = padMissionID(input.value.trim());
-    if (!missionID) {
-        alert("Please enter a mission ID");
-        return;
-    }
+    if (!missionID) return;
     
-    console.log("Opening modal for mission:", missionID);
     addButtonClickEffect(actionBtn);
-    
-    // Remove "MISSION" text, show only number
     popHeader.innerHTML = `${missionID}`;
-    
     vAgentInput.value = "";
     selectedWeaponID = "";
     secureField.value = "";
@@ -298,32 +317,88 @@ async function openModal() {
     modalSubmit.textContent = "DEPLOY";
     modalSubmit.className = "btn btn-save";
     modalSubmit.disabled = false;
-    modalSubmit.style.opacity = "1";
-    modalSubmit.style.pointerEvents = "auto";
     
-    // Remove existing listeners and add new one
-    modalSubmit.replaceWith(modalSubmit.cloneNode(true));
-    const newModalSubmit = document.getElementById('modal-submit');
-    
-    newModalSubmit.onclick = () => {
-        console.log("DEPLOY button clicked");
-        addButtonClickEffect(newModalSubmit);
-        submitMission(missionID, false);
+    modalSubmit.onclick = () => {
+        addButtonClickEffect(modalSubmit);
+        submitMission(missionID, false, "DEPLOYED");
     };
 }
 
+// ========== RESERVE MODAL ==========
+async function openReserveModal() {
+    const missionID = padMissionID(input.value.trim());
+    if (!missionID) return;
+    
+    addButtonClickEffect(reserveBtn);
+    popHeader.innerHTML = `${missionID}`;
+    vAgentInput.value = "";
+    selectedWeaponID = "";
+    secureField.value = "";
+    secureField.classList.remove('show');
+    secureBtn.style.display = 'block';
+    vAgentInput.disabled = false;
+    secureField.disabled = false;
+    
+    await loadAgentWeapons();
+    renderWeapons();
+    
+    modalOverlay.style.display = 'flex';
+    modalSubmit.textContent = "RESERVE";
+    modalSubmit.className = "btn btn-reserve";
+    modalSubmit.disabled = false;
+    
+    modalSubmit.onclick = () => {
+        addButtonClickEffect(modalSubmit);
+        submitMission(missionID, false, "RESERVED");
+    };
+}
+
+// ========== RESERVE TO DEPLOY MODAL ==========
+async function openReserveToDeployModal(missionID) {
+    addButtonClickEffect(actionBtn);
+    popHeader.innerHTML = `${missionID}`;
+    vAgentInput.value = currentMissionData.vAgentID || "";
+    selectedWeaponID = currentMissionData.weaponSystem || "";
+    secureField.value = currentMissionData.SecureLine || "";
+    vAgentInput.disabled = false;
+    secureField.disabled = false;
+    
+    if (secureField.value) {
+        secureField.classList.add('show');
+        secureBtn.style.display = 'none';
+    } else {
+        secureField.classList.remove('show');
+        secureBtn.style.display = 'block';
+    }
+    
+    await loadAgentWeapons();
+    renderWeapons(selectedWeaponID);
+    
+    modalOverlay.style.display = 'flex';
+    modalSubmit.textContent = "DEPLOY";
+    modalSubmit.className = "btn btn-save";
+    modalSubmit.disabled = false;
+    
+    modalSubmit.onclick = () => {
+        addButtonClickEffect(modalSubmit);
+        submitMission(missionID, true, "DEPLOYED");
+    };
+}
+
+// ========== RETRIEVE MODAL (UPDATE) ==========
 async function openRetrieveModal() {
-    if (!currentMissionData) {
-        alert("No mission data found");
+    if (!currentMissionData) return;
+    
+    // Check if mission is TERMINATED - cannot retrieve
+    if (currentMissionData.status === "TERMINATED") {
+        alert("This mission is TERMINATED and cannot be retrieved.");
         return;
     }
     
-    console.log("Opening retrieve modal");
     addButtonClickEffect(actionBtn);
     
     const missionID = currentMissionData.missionID;
     popHeader.innerHTML = `${missionID}`;
-    
     vAgentInput.value = currentMissionData.vAgentID || "";
     selectedWeaponID = currentMissionData.weaponSystem || "";
     secureField.value = currentMissionData.SecureLine || "";
@@ -345,21 +420,15 @@ async function openRetrieveModal() {
     modalSubmit.textContent = "UPDATE";
     modalSubmit.className = "btn btn-retrieve";
     modalSubmit.disabled = false;
-    modalSubmit.style.opacity = "1";
-    modalSubmit.style.pointerEvents = "auto";
     
-    modalSubmit.replaceWith(modalSubmit.cloneNode(true));
-    const newModalSubmit = document.getElementById('modal-submit');
-    
-    newModalSubmit.onclick = () => {
-        console.log("UPDATE button clicked");
-        addButtonClickEffect(newModalSubmit);
-        submitMission(missionID, true);
+    modalSubmit.onclick = () => {
+        addButtonClickEffect(modalSubmit);
+        submitMission(missionID, true, "DEPLOYED");
     };
 }
 
+// ========== VIEW MODAL (READ ONLY) ==========
 async function openViewModal(missionID) {
-    console.log("Opening view modal for mission:", missionID);
     addButtonClickEffect(reserveBtn);
     
     const missionRef = doc(db, "mission_orders", missionID);
@@ -388,11 +457,7 @@ async function openViewModal(missionID) {
     secureField.disabled = true;
     
     await loadAgentWeapons();
-    renderWeapons(selectedWeaponID);
-    document.querySelectorAll('.weapon-btn').forEach(btn => {
-        btn.style.pointerEvents = 'none';
-        btn.style.opacity = '0.6';
-    });
+    renderWeapons(selectedWeaponID, true);
     
     modalOverlay.style.display = 'flex';
     modalSubmit.textContent = "CLOSE";
@@ -402,14 +467,10 @@ async function openViewModal(missionID) {
 }
 
 // ========== SUBMIT MISSION ==========
-async function submitMission(missionID, isUpdate) {
+async function submitMission(missionID, isUpdate, status) {
     const vID = vAgentInput.value.trim();
     const sLine = secureField.value.trim();
     const weaponSystem = selectedWeaponID;
-    
-    console.log("Submitting mission:", missionID);
-    console.log("vAgent ID:", vID);
-    console.log("Weapon System:", weaponSystem);
     
     if (!vID) {
         alert("ENTER vAGENT ID");
@@ -421,31 +482,39 @@ async function submitMission(missionID, isUpdate) {
     }
     
     const now = new Date();
-    const deploymentDate = formatDate(now);
-    const relieveDate = formatDate(calculateRelieveDate(now));
+    const deploymentDate = status === "DEPLOYED" ? formatDate(now) : "";
+    const relieveDate = status === "DEPLOYED" ? formatDate(calculateRelieveDate(now)) : "";
     
     try {
         const missionRef = doc(db, "mission_orders", missionID);
         
-        await setDoc(missionRef, {
+        const missionData = {
             agent: currentAgent,
             missionID: missionID,
             vAgentID: vID,
             weaponSystem: weaponSystem,
             SecureLine: sLine || "",
-            deploymentDate: deploymentDate,
-            relieveDate: relieveDate,
+            status: status,
             timestamp: serverTimestamp()
-        }, { merge: true });
+        };
         
-        addLog(`Mission ${missionID} ${isUpdate ? 'UPDATED' : 'DEPLOYED'} by ${currentAgent}`, '#05ffa1');
+        if (status === "DEPLOYED") {
+            missionData.deploymentDate = deploymentDate;
+            missionData.relieveDate = relieveDate;
+        }
+        
+        await setDoc(missionRef, missionData, { merge: true });
+        
+        addLog(`Mission ${missionID} ${isUpdate ? 'UPDATED' : status === 'RESERVED' ? 'RESERVED' : 'DEPLOYED'} by ${currentAgent}`, 
+               status === 'RESERVED' ? '#ffbd00' : '#05ffa1');
+        
         closeModal();
         input.value = "";
         statusLabel.innerHTML = "";
         setButtonStyle(actionBtn, "SAVE", "btn-save", false);
         currentMissionData = null;
-        alert(`MISSION ${isUpdate ? 'UPDATED' : 'DEPLOYED'} SUCCESSFULLY!`);
         
+        alert(`MISSION ${status === 'RESERVED' ? 'RESERVED' : isUpdate ? 'UPDATED' : 'DEPLOYED'} SUCCESSFULLY!`);
         resetUI();
         
     } catch(e) {

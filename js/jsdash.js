@@ -54,6 +54,7 @@ let selectedWeaponID = "";
 let agentWeapons = [];
 let currentMissionData = null;
 let searchTimeout = null;
+let currentRetrieveStatus = "";
 
 console.log("Dashboard ready for agent:", currentAgent);
 
@@ -229,11 +230,11 @@ async function searchMission(missionID) {
                 setButtonStyle(actionBtn, "LOCKED", "btn-locked", true);
                 setButtonStyle(reserveBtn, "LOCKED", "btn-locked", true);
             }
-            // RESERVED by current agent - can retrieve (deploy/update)
+            // RESERVED by current agent
             else if (status === "RESERVED" && owner === currentAgent) {
                 statusLabel.innerHTML = '<span style="color:#ffbd00;">YOUR RESERVATION</span>';
                 setButtonStyle(actionBtn, "RETRIEVE", "btn-retrieve", false);
-                actionBtn.onclick = () => openRetrieveModal();
+                actionBtn.onclick = () => openRetrieveModal("RESERVED");
                 setButtonStyle(reserveBtn, "RESERVED", "btn-reserved", true);
                 reserveBtn.disabled = true;
             }
@@ -241,7 +242,7 @@ async function searchMission(missionID) {
             else if (owner === currentAgent) {
                 statusLabel.innerHTML = '<span style="color:#00f3ff;">YOUR MISSION</span>';
                 setButtonStyle(actionBtn, "RETRIEVE", "btn-retrieve", false);
-                actionBtn.onclick = () => openRetrieveModal();
+                actionBtn.onclick = () => openRetrieveModal("DEPLOYED");
                 setButtonStyle(reserveBtn, "VIEW", "btn-view", false);
                 reserveBtn.onclick = () => openViewModal(missionID);
             }
@@ -319,7 +320,7 @@ async function openModal() {
     
     modalSubmit.onclick = () => {
         addButtonClickEffect(modalSubmit);
-        submitMission(missionID, false, "DEPLOYED");
+        submitDeployMission(missionID);
     };
 }
 
@@ -362,7 +363,6 @@ async function reserveMission(missionID) {
             }
         }
         
-        // Save mission with RESERVED status
         await setDoc(missionRef, {
             missionID: missionID,
             agent: currentAgent,
@@ -379,7 +379,6 @@ async function reserveMission(missionID) {
         currentMissionData = null;
         
         alert(`Mission ${missionID} has been reserved successfully!`);
-        
         resetUI();
         
     } catch(e) {
@@ -388,19 +387,27 @@ async function reserveMission(missionID) {
     }
 }
 
-// ========== RETRIEVE MODAL (UPDATE/DEPLOY FROM RESERVED) ==========
-async function openRetrieveModal() {
+// ========== RETRIEVE MODAL (FOR BOTH RESERVED AND DEPLOYED) ==========
+async function openRetrieveModal(statusType) {
     if (!currentMissionData) return;
+    
+    if (currentMissionData.agent !== currentAgent) {
+        alert("This mission is not assigned to you.");
+        return;
+    }
     
     if (currentMissionData.status === "TERMINATED") {
         alert("This mission is TERMINATED and cannot be retrieved.");
         return;
     }
     
+    currentRetrieveStatus = statusType;
     addButtonClickEffect(actionBtn);
     
     const missionID = currentMissionData.missionID;
     popHeader.innerHTML = `${missionID}`;
+    
+    // Load existing data
     vAgentInput.value = currentMissionData.vAgentID || "";
     selectedWeaponID = currentMissionData.weaponSystem || "";
     secureField.value = currentMissionData.SecureLine || "";
@@ -419,14 +426,122 @@ async function openRetrieveModal() {
     renderWeapons(selectedWeaponID);
     
     modalOverlay.style.display = 'flex';
-    modalSubmit.textContent = "DEPLOY";
-    modalSubmit.className = "btn btn-save";
+    modalSubmit.textContent = "UPDATE";
+    modalSubmit.className = "btn btn-retrieve";
     modalSubmit.disabled = false;
     
     modalSubmit.onclick = () => {
         addButtonClickEffect(modalSubmit);
-        submitMission(missionID, true, "DEPLOYED");
+        submitRetrieveMission(missionID);
     };
+}
+
+// ========== SUBMIT RETRIEVE MISSION ==========
+async function submitRetrieveMission(missionID) {
+    const vID = vAgentInput.value.trim();
+    const sLine = secureField.value.trim();
+    const weaponSystem = selectedWeaponID;
+    
+    if (!vID) {
+        alert("ENTER vAGENT ID");
+        return;
+    }
+    if (!weaponSystem) {
+        alert("SELECT WEAPON SYSTEM");
+        return;
+    }
+    
+    try {
+        const missionRef = doc(db, "mission_orders", missionID);
+        
+        const missionData = {
+            missionID: missionID,
+            agent: currentAgent,
+            vAgentID: vID,
+            weaponSystem: weaponSystem,
+            SecureLine: sLine || "",
+            lastRetrieved: serverTimestamp(),
+            timestamp: serverTimestamp()
+        };
+        
+        // Keep the existing status (RESERVED or DEPLOYED)
+        if (currentRetrieveStatus === "RESERVED") {
+            missionData.status = "RESERVED";
+        } else {
+            missionData.status = "DEPLOYED";
+        }
+        
+        await setDoc(missionRef, missionData, { merge: true });
+        
+        addLog(`Mission ${missionID} UPDATED by ${currentAgent}`, '#007bff');
+        
+        closeModal();
+        input.value = "";
+        statusLabel.innerHTML = "";
+        setButtonStyle(actionBtn, "SAVE", "btn-save", false);
+        setButtonStyle(reserveBtn, "RESERVE", "btn-reserve", false);
+        currentMissionData = null;
+        
+        alert(`MISSION ${missionID} UPDATED SUCCESSFULLY!`);
+        resetUI();
+        
+    } catch(e) {
+        console.error(e);
+        alert("ERROR: " + e.message);
+    }
+}
+
+// ========== SUBMIT DEPLOY MISSION ==========
+async function submitDeployMission(missionID) {
+    const vID = vAgentInput.value.trim();
+    const sLine = secureField.value.trim();
+    const weaponSystem = selectedWeaponID;
+    
+    if (!vID) {
+        alert("ENTER vAGENT ID");
+        return;
+    }
+    if (!weaponSystem) {
+        alert("SELECT WEAPON SYSTEM");
+        return;
+    }
+    
+    const now = new Date();
+    const deploymentDate = formatDate(now);
+    const relieveDate = formatDate(calculateRelieveDate(now));
+    
+    try {
+        const missionRef = doc(db, "mission_orders", missionID);
+        
+        const missionData = {
+            agent: currentAgent,
+            missionID: missionID,
+            vAgentID: vID,
+            weaponSystem: weaponSystem,
+            SecureLine: sLine || "",
+            status: "DEPLOYED",
+            deploymentDate: deploymentDate,
+            relieveDate: relieveDate,
+            timestamp: serverTimestamp()
+        };
+        
+        await setDoc(missionRef, missionData, { merge: true });
+        
+        addLog(`Mission ${missionID} DEPLOYED by ${currentAgent}`, '#05ffa1');
+        
+        closeModal();
+        input.value = "";
+        statusLabel.innerHTML = "";
+        setButtonStyle(actionBtn, "SAVE", "btn-save", false);
+        currentMissionData = null;
+        
+        alert(`MISSION ${missionID} DEPLOYED SUCCESSFULLY!`);
+        resetUI();
+        
+    } catch(e) {
+        console.error(e);
+        alert("ERROR: " + e.message);
+    }
 }
 
 // ========== VIEW MODAL (READ ONLY) ==========
@@ -466,59 +581,6 @@ async function openViewModal(missionID) {
     modalSubmit.className = "btn btn-view";
     modalSubmit.disabled = false;
     modalSubmit.onclick = closeModal;
-}
-
-// ========== SUBMIT MISSION (DEPLOY/UPDATE) ==========
-async function submitMission(missionID, isUpdate, status) {
-    const vID = vAgentInput.value.trim();
-    const sLine = secureField.value.trim();
-    const weaponSystem = selectedWeaponID;
-    
-    if (!vID) {
-        alert("ENTER vAGENT ID");
-        return;
-    }
-    if (!weaponSystem) {
-        alert("SELECT WEAPON SYSTEM");
-        return;
-    }
-    
-    const now = new Date();
-    const deploymentDate = formatDate(now);
-    const relieveDate = formatDate(calculateRelieveDate(now));
-    
-    try {
-        const missionRef = doc(db, "mission_orders", missionID);
-        
-        const missionData = {
-            agent: currentAgent,
-            missionID: missionID,
-            vAgentID: vID,
-            weaponSystem: weaponSystem,
-            SecureLine: sLine || "",
-            status: status,
-            deploymentDate: deploymentDate,
-            relieveDate: relieveDate,
-            timestamp: serverTimestamp()
-        };
-        
-        await setDoc(missionRef, missionData, { merge: true });
-        
-        addLog(`Mission ${missionID} ${isUpdate ? 'UPDATED' : 'DEPLOYED'} by ${currentAgent}`, '#05ffa1');
-        
-        closeModal();
-        input.value = "";
-        statusLabel.innerHTML = "";
-        setButtonStyle(actionBtn, "SAVE", "btn-save", false);
-        currentMissionData = null;
-        
-        alert(`MISSION ${isUpdate ? 'UPDATED' : 'DEPLOYED'} SUCCESSFULLY!`);
-        resetUI();
-        
-    } catch(e) {
-        console.error(e);
-        alert("ERROR: " + e.message);
-    }
 }
 
 function toggleSecureLine() {

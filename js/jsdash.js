@@ -1,4 +1,4 @@
-// js/jsdash.js - CORE DASHBOARD (FULL WORKING VERSION)
+// js/jsdash.js - CORE DASHBOARD (FULLY FIXED)
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { 
@@ -46,6 +46,7 @@ const weaponList = document.getElementById('weapon-list');
 const clockSpan = document.getElementById('clock');
 const profName = document.getElementById('prof-name');
 const avatarInit = document.getElementById('avatar-init');
+const popHeader = document.getElementById('pop-header');
 
 // ========== GLOBAL STATE ==========
 const currentAgent = localStorage.getItem("cia_agent") || localStorage.getItem("agent") || "UNKNOWN_AGENT";
@@ -150,7 +151,7 @@ function resetUI() {
     reserveBtn.onclick = null;
 }
 
-// ========== LOAD WEAPON SYSTEMS ==========
+// ========== LOAD WEAPON SYSTEMS FROM AGENT ==========
 async function loadAgentWeapons() {
     console.log("Loading weapons for agent:", currentAgent);
     try {
@@ -159,7 +160,9 @@ async function loadAgentWeapons() {
         if (!snapshot.empty) {
             const agentData = snapshot.docs[0].data();
             agentWeapons = agentData.weaponSystem || [];
+            console.log("Weapons loaded from agent:", agentWeapons);
         } else {
+            console.log("Agent not found, using defaults");
             agentWeapons = ["REDMI NOTE 14 PRO", "REALME 8 PRO", "TECHNO CAMON 40 PRO 5G", "REDMI NOTE 12"];
         }
         if (agentWeapons.length === 0) {
@@ -186,6 +189,7 @@ function renderWeapons(highlightWeapon = null) {
             btn.classList.add('selected');
             selectedWeaponID = weaponName;
             addButtonClickEffect(btn);
+            console.log("Weapon selected:", selectedWeaponID);
         };
         weaponList.appendChild(btn);
     });
@@ -223,7 +227,7 @@ async function searchMission(missionID) {
             statusLabel.innerHTML = '<span style="color:#05ffa1;">AVAILABLE</span>';
             setButtonStyle(actionBtn, "SAVE", "btn-save", false);
             actionBtn.onclick = () => {
-                console.log("SAVE button clicked, opening modal");
+                console.log("SAVE button clicked");
                 openModal();
             };
             setButtonStyle(reserveBtn, "RESERVE", "btn-reserve", false);
@@ -276,7 +280,9 @@ async function openModal() {
     console.log("Opening modal for mission:", missionID);
     addButtonClickEffect(actionBtn);
     
-    document.getElementById('pop-header').innerHTML = `MISSION ${missionID}`;
+    // Remove "MISSION" text, show only number
+    popHeader.innerHTML = `${missionID}`;
+    
     vAgentInput.value = "";
     selectedWeaponID = "";
     secureField.value = "";
@@ -293,9 +299,15 @@ async function openModal() {
     modalSubmit.className = "btn btn-save";
     modalSubmit.disabled = false;
     modalSubmit.style.opacity = "1";
+    modalSubmit.style.pointerEvents = "auto";
     
-    modalSubmit.onclick = () => {
-        addButtonClickEffect(modalSubmit);
+    // Remove existing listeners and add new one
+    modalSubmit.replaceWith(modalSubmit.cloneNode(true));
+    const newModalSubmit = document.getElementById('modal-submit');
+    
+    newModalSubmit.onclick = () => {
+        console.log("DEPLOY button clicked");
+        addButtonClickEffect(newModalSubmit);
         submitMission(missionID, false);
     };
 }
@@ -310,7 +322,8 @@ async function openRetrieveModal() {
     addButtonClickEffect(actionBtn);
     
     const missionID = currentMissionData.missionID;
-    document.getElementById('pop-header').innerHTML = `MISSION ${missionID}`;
+    popHeader.innerHTML = `${missionID}`;
+    
     vAgentInput.value = currentMissionData.vAgentID || "";
     selectedWeaponID = currentMissionData.weaponSystem || "";
     secureField.value = currentMissionData.SecureLine || "";
@@ -333,9 +346,14 @@ async function openRetrieveModal() {
     modalSubmit.className = "btn btn-retrieve";
     modalSubmit.disabled = false;
     modalSubmit.style.opacity = "1";
+    modalSubmit.style.pointerEvents = "auto";
     
-    modalSubmit.onclick = () => {
-        addButtonClickEffect(modalSubmit);
+    modalSubmit.replaceWith(modalSubmit.cloneNode(true));
+    const newModalSubmit = document.getElementById('modal-submit');
+    
+    newModalSubmit.onclick = () => {
+        console.log("UPDATE button clicked");
+        addButtonClickEffect(newModalSubmit);
         submitMission(missionID, true);
     };
 }
@@ -354,7 +372,7 @@ async function openViewModal(missionID) {
     
     const data = missionSnap.data();
     
-    document.getElementById('pop-header').innerHTML = `MISSION ${missionID}`;
+    popHeader.innerHTML = `${missionID}`;
     vAgentInput.value = data.vAgentID || "";
     selectedWeaponID = data.weaponSystem || "";
     secureField.value = data.SecureLine || "";
@@ -388,6 +406,10 @@ async function submitMission(missionID, isUpdate) {
     const vID = vAgentInput.value.trim();
     const sLine = secureField.value.trim();
     const weaponSystem = selectedWeaponID;
+    
+    console.log("Submitting mission:", missionID);
+    console.log("vAgent ID:", vID);
+    console.log("Weapon System:", weaponSystem);
     
     if (!vID) {
         alert("ENTER vAGENT ID");
@@ -424,7 +446,6 @@ async function submitMission(missionID, isUpdate) {
         currentMissionData = null;
         alert(`MISSION ${isUpdate ? 'UPDATED' : 'DEPLOYED'} SUCCESSFULLY!`);
         
-        // I-reset ang UI
         resetUI();
         
     } catch(e) {
@@ -465,13 +486,10 @@ async function init() {
     modalClose.onclick = closeModal;
     secureBtn.onclick = toggleSecureLine;
     
-    // I-enable ang buttons sa simula
     enableButtons();
     resetUI();
     
     console.log("Dashboard ready for agent:", currentAgent);
-    console.log("Action button:", actionBtn);
-    console.log("Reserve button:", reserveBtn);
 }
 
 init();

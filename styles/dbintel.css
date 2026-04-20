@@ -499,3 +499,7 @@
     color: #00f2ff;
     font-size: 14px;
 }
+
+.hidden {
+    display: none !important;
+}

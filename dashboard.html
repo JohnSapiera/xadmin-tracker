@@ -25,8 +25,6 @@ header{padding:12px;border-bottom:1px solid rgba(0,242,255,0.3);margin-bottom:16
 .btn-reserve{border-color:#ffbd00;color:#ffbd00;}
 .btn-retrieve{border-color:#007bff;color:#007bff;}
 .btn-view{border-color:#00f2ff;color:#00f2ff;}
-.btn-locked{border-color:#ff003c;color:#ff003c;opacity:0.5;}
-.btn-click-blink{transform:scale(0.95);opacity:0.7;}
 .hidden{display:none !important;}
 #terminal{background:#000;border:1px solid #1a2f37;padding:12px;height:200px;overflow-y:auto;font-size:10px;margin-bottom:16px;}
 .term-line{margin-bottom:4px;font-family:monospace;}
@@ -69,8 +67,8 @@ header{padding:12px;border-bottom:1px solid rgba(0,242,255,0.3);margin-bottom:16
 <input type="tel" id="mission-input" placeholder="0000" maxlength="5" autocomplete="off">
 <div id="mission-status"></div>
 <div class="btn-row">
-<button id="action-btn" class="btn btn-save hidden">SAVE</button>
-<button id="reserve-btn" class="btn btn-reserve hidden">RESERVE</button>
+<button id="action-btn" class="btn btn-save">SAVE</button>
+<button id="reserve-btn" class="btn btn-reserve">RESERVE</button>
 </div>
 </div>
 <div id="terminal"></div>
@@ -172,20 +170,35 @@ addDoc(collection(db, "terminal_logs"), { agent: currentAgent, message: msg, col
 }
 
 function hideAllButtons() {
-actionBtn.classList.add('hidden');
-reserveBtn.classList.add('hidden');
+actionBtn.style.display = 'none';
+reserveBtn.style.display = 'none';
 }
 
-function showActionButton(text, className, onClickHandler) {
-actionBtn.textContent = text;
-actionBtn.className = `btn ${className}`;
-actionBtn.classList.remove('hidden');
-actionBtn.onclick = onClickHandler;
+function showSaveButton() {
+actionBtn.style.display = 'block';
+actionBtn.textContent = "SAVE";
+actionBtn.className = "btn btn-save";
+actionBtn.onclick = () => openDeployModal(padID(input.value.trim()));
 }
 
-function showReserveButton(onClickHandler) {
-reserveBtn.classList.remove('hidden');
-reserveBtn.onclick = onClickHandler;
+function showReserveButton() {
+reserveBtn.style.display = 'block';
+reserveBtn.className = "btn btn-reserve";
+reserveBtn.onclick = () => openReserveConfirm(padID(input.value.trim()));
+}
+
+function showRetrieveButton() {
+actionBtn.style.display = 'block';
+actionBtn.textContent = "RETRIEVE";
+actionBtn.className = "btn btn-retrieve";
+actionBtn.onclick = () => openRetrieveModal(currentMissionData.missionID, currentMissionData);
+}
+
+function showViewButton() {
+actionBtn.style.display = 'block';
+actionBtn.textContent = "VIEW";
+actionBtn.className = "btn btn-view";
+actionBtn.onclick = () => openViewModal(currentMissionData.missionID, currentMissionData);
 }
 
 async function searchMission(missionID) {
@@ -199,21 +212,20 @@ currentMissionData = snap.data();
 const { status, agent } = currentMissionData;
 if (status === "TERMINATED") {
 statusLabel.innerHTML = '<span style="color:#ff003c;text-shadow:0 0 8px #ff003c;">STATUS: TERMINATED</span>';
-showActionButton("VIEW", "btn-view", () => openViewModal(missionID, currentMissionData));
+showViewButton();
 } else if (agent === currentAgent) {
 const isReserved = status === "RESERVED";
 statusLabel.innerHTML = `<span style="color:${isReserved ? '#ffbd00' : '#007bff'};text-shadow:0 0 8px ${isReserved ? '#ffbd00' : '#007bff'};">STATUS: ${status} (YOURS)</span>`;
-showActionButton("RETRIEVE", "btn-retrieve", () => openRetrieveModal(missionID, currentMissionData));
+showRetrieveButton();
 } else {
 statusLabel.innerHTML = `<span style="color:#ff003c;">OWNED BY: ${agent}</span>`;
 addLog(`ACCESS DENIED: Mission ${missionID} owned by ${agent}`, "#ff003c");
-hideAllButtons();
 }
 } else {
 currentMissionData = null;
 statusLabel.innerHTML = '<span style="color:#05ffa1;text-shadow:0 0 8px #05ffa1;">STATUS: AVAILABLE</span>';
-showActionButton("SAVE", "btn-save", () => openDeployModal(missionID));
-showReserveButton(() => openReserveConfirm(missionID));
+showSaveButton();
+showReserveButton();
 }
 } catch(e) {
 console.error(e);

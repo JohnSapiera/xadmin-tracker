@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CORE_DASH | OS V2.0</title>
+    <title>CORE_DASH</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="mobile-web-app-capable" content="yes">
@@ -13,100 +13,93 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles/dbintel.css">
-
-    <script>
-        if (!localStorage.getItem('agent_verified') || !localStorage.getItem('cia_agent')) {
-            window.location.replace("index.html");
-        }
-    </script>
 </head>
 <body>
 
-    <header>
-        <div class="header-inner">
-            <span class="logo">CORE_DASH</span>
-            <div class="uplink-status">
-                <span class="dot pulse"></span> UPLINK_STABLE
-            </div>
-        </div>
-    </header>
+<header>
+    <span style="font-weight: 700; color: #fff; letter-spacing: 2px;">CORE_DASH</span>
+</header>
 
-    <div class="status-bar">
-        <div>SYS_TIME: <span id="clock">00:00:00</span></div>
-        <div id="mission-status">STANDBY</div> </div>
+<div class="status-bar">
+    <div>SYS_TIME: <span id="clock">00:00:00</span></div>
+    <div style="color: var(--green);">UPLINK_STABLE</div>
+</div>
 
-    <main>
-        <div class="command-module">
-            <div class="input-wrapper">
-                <span class="input-prefix">ID_</span>
-                <input type="tel" id="mission-input" placeholder="00000" maxlength="5" autocomplete="off">
-            </div>
-            
-            <div class="btn-row main-actions">
-                <button id="action-btn" class="btn btn-save hidden">SAVE</button>
-                <button id="reserve-btn" class="btn btn-reserve hidden">RESERVE</button>
-            </div>
-        </div>
-
-        <div id="terminal" class="terminal-container"></div>
-        
-        <div class="profile-mini">
-            <div class="avatar" id="avatar-init">?</div>
-            <div class="profile-info">
-                <div id="prof-name">AUTHENTICATING...</div>
-                <div class="auth-level">AUTH_LEVEL: <span style="color: var(--cyan);">OMEGA</span></div>
-            </div>
-        </div>
-    </main>
-
-    <div class="overlay" id="modal-overlay">
-        <div class="popup">
-            <div class="popup-header">
-                <div class="popup-header-icon"><span>⚙️</span></div>
-                <div id="pop-header">MISSION_ORDER</div>
-            </div>
-            
-            <div class="popup-body">
-                <div class="popup-field">
-                    <label class="popup-label">🔹 vAGENT IDENTIFIER</label>
-                    <input type="text" id="v-agent-input" class="pop-input" placeholder="ENTER vAGENT ID">
-                </div>
-                
-                <div class="secure-line-wrapper">
-                    <button type="button" id="add-secure-line" class="btn-text">+ ADD SECURE LINE</button>
-                    <input type="tel" id="secure-input-field" class="pop-input hidden" maxlength="11" placeholder="09XXXXXXXXX">
-                </div>
-
-                <div class="popup-field">
-                    <label class="popup-label">🔫 WEAPON SYSTEM</label>
-                    <div class="weapon-selector" id="weapon-list">
-                        </div>
-                </div>
-            </div>
-
-            <div class="btn-row popup-actions">
-                <button id="modal-submit" class="btn btn-save">DEPLOY</button>
-                <button id="modal-close" class="btn btn-abort">ABORT</button>
-            </div>
+<main>
+    <div class="command-module">
+        <input type="tel" id="mission-input" placeholder="0000" maxlength="5" autocomplete="off">
+        <div id="mission-status"></div>
+        <div class="btn-row">
+            <button id="action-btn" class="btn btn-save">SAVE</button>
+            <button id="reserve-btn" class="btn btn-reserve">RESERVE</button>
         </div>
     </div>
+    <div id="terminal"></div>
+    
+    <div class="profile-mini">
+        <div class="avatar" id="avatar-init">?</div>
+        <div class="profile-info">
+            <div id="prof-name">AGENT_PENDING</div>
+            <div>AUTH_LEVEL: OMEGA</div>
+        </div>
+    </div>
+</main>
 
-    <nav class="bottom-nav">
-        <a href="dashboard.html" class="nav-item active">
-            <span class="nav-icon">📊</span>
-            <span class="nav-text">DASHBOARD</span>
-        </a>
-        <a href="intel.html" class="nav-item">
-            <span class="nav-icon">🛰️</span>
-            <span class="nav-text">INTEL</span>
-        </a>
-        <a href="profile.html" class="nav-item">
-            <span class="nav-icon">👤</span>
-            <span class="nav-text">PROFILE</span>
-        </a>
-    </nav>
+<div class="overlay" id="modal-overlay">
+    <div class="popup">
+        <div class="popup-header-icon"><span>⚙️</span></div>
+        <div id="pop-header">MISSION ORDER</div>
+        
+        <div class="popup-field">
+            <div class="popup-label">🔹 vAGENT IDENTIFIER</div>
+            <input type="text" id="v-agent-input" class="pop-input" placeholder="ENTER vAGENT ID">
+        </div>
+        
+        <div class="secure-line-wrapper">
+            <span id="add-secure-line">+ ADD SECURE LINE</span>
+            <input type="tel" id="secure-input-field" maxlength="11" placeholder="09XXXXXXXXX">
+        </div>
 
-    <script type="module" src="js/jsdash.js"></script>
+        <div class="popup-field">
+            <div class="popup-label">🔫 WEAPON SYSTEM</div>
+            <div class="weapon-selector" id="weapon-list"></div>
+        </div>
 
+        <div class="btn-row">
+            <button id="modal-submit" class="btn btn-save">DEPLOY</button>
+            <button id="modal-close" class="btn">ABORT</button>
+        </div>
+    </div>
+</div>
+
+<nav class="bottom-nav">
+    <a href="#" class="nav-item active">DASHBOARD</a>
+    <a href="intel.html" class="nav-item">INTEL</a>
+    <a href="profile.html" class="nav-item">PROFILE</a>
+</nav>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+<!-- SESSION CHECK -->
+<script>
+    const agentName = localStorage.getItem('cia_agent');
+    const isVerified = localStorage.getItem('agent_verified');
+    
+    console.log('Auth Check - Agent:', agentName, 'Verified:', isVerified);
+    
+    if (!isVerified || !agentName) {
+        console.warn('No auth found, redirecting to login...');
+        window.location.replace("index.html");
+    } else {
+        console.log('Authorized successfully as:', agentName);
+        const profNameElement = document.getElementById('prof-name');
+        if (profNameElement) {
+            profNameElement.textContent = agentName.toUpperCase();
+        }
+    }
+</script>
+
+<script type="module" src="js/jsdash.js"></script>
 </body>
 </html>

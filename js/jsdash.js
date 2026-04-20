@@ -1,4 +1,4 @@
-// js/jsdash.js - CORE DASHBOARD (SEPARATE BUTTONS WITH SHOW/HIDE)
+// js/jsdash.js - CORE DASHBOARD (FINAL)
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { 
@@ -125,6 +125,7 @@ function closeModal() {
     });
 }
 
+// ========== BUTTON VISIBILITY CONTROL ==========
 function hideAllButtons() {
     saveBtn.style.display = 'none';
     reserveBtn.style.display = 'none';
@@ -136,35 +137,24 @@ function showButtonsByStatus(status, owner) {
     hideAllButtons();
     
     if (status === "AVAILABLE") {
-        // Available mission - show SAVE and RESERVE
-        saveBtn.style.display = 'block';
-        reserveBtn.style.display = 'block';
+        saveBtn.style.display = 'flex';
+        reserveBtn.style.display = 'flex';
     } 
     else if (status === "RESERVED" && owner === currentAgent) {
-        // Reserved by current agent - show RETRIEVE
-        retrieveBtn.style.display = 'block';
+        retrieveBtn.style.display = 'flex';
     }
     else if (status === "RESERVED" && owner !== currentAgent) {
-        // Reserved by other agent - show VIEW only
-        viewBtn.style.display = 'block';
+        viewBtn.style.display = 'flex';
     }
     else if (status === "DEPLOYED" && owner === currentAgent) {
-        // Deployed by current agent - show RETRIEVE and VIEW
-        retrieveBtn.style.display = 'block';
-        viewBtn.style.display = 'block';
+        retrieveBtn.style.display = 'flex';
+        viewBtn.style.display = 'flex';
     }
     else if (status === "DEPLOYED" && owner !== currentAgent) {
-        // Deployed by other agent - show VIEW only
-        viewBtn.style.display = 'block';
+        viewBtn.style.display = 'flex';
     }
     else if (status === "TERMINATED") {
-        // Terminated - show VIEW only
-        viewBtn.style.display = 'block';
-    }
-    else {
-        // Default - show all? or none?
-        saveBtn.style.display = 'block';
-        reserveBtn.style.display = 'block';
+        viewBtn.style.display = 'flex';
     }
 }
 
@@ -308,7 +298,6 @@ async function onSaveClick() {
         return;
     }
     
-    // Open deploy modal
     popHeader.innerHTML = `${missionID}`;
     vAgentInput.value = "";
     selectedWeaponID = "";
@@ -386,7 +375,7 @@ async function onReserveClick() {
     }
 }
 
-// ========== RETRIEVE BUTTON (UPDATE EXISTING MISSION) ==========
+// ========== RETRIEVE BUTTON ==========
 async function onRetrieveClick() {
     const inputValue = input.value.trim();
     if (!inputValue) {
@@ -422,7 +411,6 @@ async function onRetrieveClick() {
         return;
     }
     
-    // Open retrieve modal
     popHeader.innerHTML = `${missionID}`;
     vAgentInput.value = result.data.vAgentID || "";
     selectedWeaponID = result.data.weaponSystem || "";
@@ -453,7 +441,7 @@ async function onRetrieveClick() {
     };
 }
 
-// ========== VIEW BUTTON (READ ONLY) ==========
+// ========== VIEW BUTTON ==========
 async function onViewClick() {
     const inputValue = input.value.trim();
     if (!inputValue) {
@@ -476,7 +464,6 @@ async function onViewClick() {
         return;
     }
     
-    // Open view modal (read only)
     popHeader.innerHTML = `${missionID}`;
     vAgentInput.value = result.data.vAgentID || "";
     selectedWeaponID = result.data.weaponSystem || "";
@@ -614,7 +601,7 @@ function toggleSecureLine() {
     }
 }
 
-// ========== AUTO SEARCH (DISPLAY ONLY) ==========
+// ========== AUTO SEARCH ==========
 let autoSearchTimeout = null;
 
 function onMissionInput() {
@@ -655,10 +642,8 @@ async function init() {
     setupTerminalListener();
     await loadAgentWeapons();
     
-    // Auto search - display only
     input.addEventListener('input', onMissionInput);
     
-    // Button events - lahat clickable
     saveBtn.addEventListener('click', onSaveClick);
     reserveBtn.addEventListener('click', onReserveClick);
     retrieveBtn.addEventListener('click', onRetrieveClick);
@@ -667,14 +652,9 @@ async function init() {
     modalClose.onclick = closeModal;
     secureBtn.onclick = toggleSecureLine;
     
-    // Hide all buttons initially
     hideAllButtons();
     
     console.log("Dashboard ready for agent:", currentAgent);
-    console.log("SAVE button:", saveBtn);
-    console.log("RESERVE button:", reserveBtn);
-    console.log("RETRIEVE button:", retrieveBtn);
-    console.log("VIEW button:", viewBtn);
 }
 
 init();

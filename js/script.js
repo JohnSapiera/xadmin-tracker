@@ -273,36 +273,38 @@ window.closeNoir = () => {
   document.getElementById("noirOverlay").style.display = "none";
 };
 
-// ====== TERMINATE AGENT ======
+// ====== TERMINATE AGENT (vAgentID only becomes null, weaponSystem remains) ======
 window.terminateAgent = async (docID) => {
-  const confirmTerminate = confirm("WARNING: This will TERMINATE the mission. vAgent# and Weapon System will be removed. Are you sure?");
+  const confirmTerminate = confirm("WARNING: This will TERMINATE the mission. vAgent# will be removed. Weapon System will remain. Are you sure?");
   if (!confirmTerminate) return;
   
   const doubleConfirm = prompt("Type 'TERMINATE' to confirm:");
-  if (doubleConfirm !== "TERMINATE") { alert("Aborted."); return; }
+  if (doubleConfirm !== "TERMINATE") { 
+    alert("Termination aborted."); 
+    return; 
+  }
   
   SoundFX.error();
+  
   try {
     const docRef = doc(db, "mission_orders", docID);
-    const docSnap = await getDoc(docRef);
-    const originalWeapon = docSnap.data().weaponSystem;
-    const originalVAgent = docSnap.data().vAgentID;
     
+    // Update: status to TERMINATED, vAgentID to null, keep weaponSystem
     await updateDoc(docRef, {
       status: "TERMINATED",
       vAgentID: null,
-      weaponSystem: null,
-      originalWeaponSystem: originalWeapon,
-      originalVAgentID: originalVAgent,
+      // weaponSystem is NOT changed - it remains as is
       terminatedAt: serverTimestamp(),
       terminatedBy: currentAgent
     });
     
     SoundFX.success();
-    alert("MISSION TERMINATED");
+    alert("MISSION TERMINATED - vAgent# removed. Weapon System retained.");
     closeNoir();
     location.reload();
+    
   } catch (error) {
+    console.error("Termination error:", error);
     SoundFX.error();
     alert("TERMINATION FAILED: " + error.message);
   }
@@ -368,11 +370,11 @@ function renderMasterMemoirs() {
   
   for (const mission of allMissions) {
     const isTerminated = mission.status === "TERMINATED";
-    const weaponName = isTerminated ? (mission.originalWeaponSystem || "TERMINATED_DEVICE") : mission.weaponSystem;
-    const vAgentID = isTerminated ? (mission.originalVAgentID || mission.vAgentID) : mission.vAgentID;
+    const weaponName = mission.weaponSystem;
+    const vAgentID = mission.vAgentID;
     const isValidWeapon = weaponName && weaponName !== "" && weaponName !== "undefined" && weaponName !== "null";
     
-    // Collect terminated entries for special section
+    // Collect terminated entries for special section (they still have weaponSystem)
     if (isTerminated && mission.expensesBreakdown && Array.isArray(mission.expensesBreakdown)) {
       mission.expensesBreakdown.forEach(exp => {
         const expDate = new Date(exp.timestamp);
@@ -380,7 +382,7 @@ function renderMasterMemoirs() {
           terminatedEntries.push({
             missionID: mission.missionID || "???",
             vAgent: vAgentID,
-            weaponName: weaponName,
+            weaponName: weaponName || "UNKNOWN_DEVICE",
             date: expDate,
             amount: exp.amount,
             description: exp.description || getRandomIntelTerm(),
@@ -500,8 +502,6 @@ function renderMasterMemoirs() {
   const activeList = document.getElementById("active-list");
   const totalVal = document.getElementById("total-val");
   const flipNextBtn = document.getElementById("flipNextBtn");
-  const p2Area = document.getElementById("weapon-system-breakdown");
-  const totalValP2 = document.getElementById("total-val-p2");
   const p1 = document.getElementById("p1");
   const p2 = document.getElementById("p2");
   
@@ -640,11 +640,8 @@ function renderMasterMemoirs() {
 function renderDevicePage(deviceName, monthIndex, pageNum) {
   const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
   
-  // Get all missions for this device including terminated
-  const deviceMissions = allMissions.filter(m => {
-    const missionDevice = m.status === "TERMINATED" ? (m.originalWeaponSystem || m.weaponSystem) : m.weaponSystem;
-    return missionDevice === deviceName;
-  });
+  // Get all missions for this device including terminated (weaponSystem is still there)
+  const deviceMissions = allMissions.filter(m => m.weaponSystem === deviceName);
   
   let allExpenses = [];
   deviceMissions.forEach(mission => {
@@ -654,7 +651,7 @@ function renderDevicePage(deviceName, monthIndex, pageNum) {
         const expMonth = expDate.getMonth();
         if (expMonth === monthIndex) {
           allExpenses.push({
-            vAgent: mission.status === "TERMINATED" ? (mission.originalVAgentID || mission.vAgentID) : mission.vAgentID,
+            vAgent: mission.vAgentID,
             missionID: mission.missionID || "???",
             date: expDate,
             amount: exp.amount,

@@ -2,59 +2,105 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>CIA_PROFILES // TOP_SECRET</title>
-  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&family=Special+Elite&display=swap" rel="stylesheet" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#07111c" />
+  <title>CIA PROFILES // PERSONNEL ARCHIVE</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Rajdhani:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles/styles.css" />
+  <style>
+    :root{--bg:#07111c;--panel:#0c1a28;--panel2:#102235;--line:rgba(130,174,198,.18);--cyan:#62d8e8;--cyan2:#a4f1f5;--muted:#8195a7;--text:#e7f0f5;--gold:#c5a66b;--red:#e36d78;--mono:"IBM Plex Mono",monospace;--display:"Rajdhani",sans-serif;--body:"DM Sans",sans-serif}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% -20%,#18344a 0%,transparent 52%),linear-gradient(145deg,#050b12,#091725 60%,#07111c);color:var(--text);font-family:var(--body);padding:28px 18px 100px}
+    body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.13;background-image:linear-gradient(rgba(130,174,198,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(130,174,198,.08) 1px,transparent 1px);background-size:36px 36px;mask-image:linear-gradient(to bottom,black,transparent 85%)}
+    .container{position:relative;z-index:1;width:min(1120px,100%);margin:auto}
+    header{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:18px 22px;margin-bottom:28px;border:1px solid var(--line);border-left:3px solid var(--cyan);background:linear-gradient(110deg,rgba(17,39,56,.96),rgba(8,21,33,.88));box-shadow:0 18px 55px #0003}
+    header h2{font:700 clamp(20px,3vw,29px)/1 var(--display);letter-spacing:2px;color:var(--cyan)!important;margin:0}header p{font:10px var(--mono);letter-spacing:1.4px;color:var(--muted);margin:7px 0 0}
+    .header-seal{display:flex;align-items:center;gap:10px;color:var(--muted);font:10px var(--mono);letter-spacing:1px}.header-seal svg{width:28px;height:28px;stroke:var(--cyan);fill:none;stroke-width:1.5}
+    .section-heading{display:flex;justify-content:space-between;align-items:end;gap:15px;margin:0 0 16px}.eyebrow{font:10px var(--mono);letter-spacing:2px;color:var(--cyan)}.section-heading h2{font:700 30px/1.05 var(--display);margin:5px 0;color:var(--text)}.section-heading p{font-size:13px;color:var(--muted);margin:0}.record-count{font:11px var(--mono);padding:8px 11px;border:1px solid var(--line);color:var(--cyan2);white-space:nowrap}
+    .folder-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:15px}
+    .dossier-folder{position:relative;text-align:left;min-height:210px;padding:22px 18px 16px;background:linear-gradient(145deg,#132a3c,#0b1927 75%);border:1px solid rgba(120,177,199,.25);border-radius:4px;color:var(--text);cursor:pointer;overflow:hidden;transition:.22s ease;box-shadow:0 12px 28px #0002}
+    .dossier-folder:before{content:"";position:absolute;inset:0;background:linear-gradient(120deg,transparent 20%,rgba(98,216,232,.06),transparent 70%);transform:translateX(-100%);transition:.5s}.dossier-folder:hover{transform:translateY(-4px);border-color:var(--cyan);box-shadow:0 16px 35px #0005,0 0 22px #62d8e81c}.dossier-folder:hover:before{transform:translateX(100%)}
+    .folder-tab{position:absolute;top:0;left:18px;width:75px;height:5px;background:var(--cyan);box-shadow:0 0 12px #62d8e855}.folder-top{display:flex;justify-content:space-between;align-items:center}.folder-index{font:11px var(--mono);color:#68869a}.folder-status{font:9px var(--mono);letter-spacing:1px;color:#8cd8b3}.folder-status i{display:inline-block;width:6px;height:6px;background:#73d5a0;border-radius:50%;margin-right:5px;box-shadow:0 0 8px #73d5a0}.folder-art{display:block;margin:18px 0 10px}.folder-art svg{width:38px;height:38px;stroke:var(--cyan);fill:none;stroke-width:1.2}.folder-title{display:block;font:700 21px var(--display);letter-spacing:1px}.folder-meta{display:block;margin-top:4px;font:9px var(--mono);letter-spacing:.6px;color:var(--muted)}.folder-meta span{padding:0 5px;color:var(--cyan)}.folder-open{display:flex;align-items:center;gap:6px;margin-top:18px;padding-top:11px;border-top:1px solid var(--line);font:10px var(--mono);letter-spacing:1px;color:var(--cyan)}.folder-open svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.7}
+    .empty-state{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;padding:55px 20px;border:1px dashed var(--line);background:#0b1925;color:var(--muted);font-size:13px}.empty-state b{font:700 18px var(--display);letter-spacing:1px;color:var(--text)}.empty-icon svg{width:34px;height:34px;stroke:var(--cyan);fill:none;stroke-width:1.3}
+    .primary-actions{display:flex;flex-wrap:wrap;gap:10px;margin:24px 0}.action-btn{display:inline-flex;align-items:center;gap:9px;padding:12px 16px;background:#123047;border:1px solid #2c6478;color:var(--cyan2);font:600 11px var(--mono);letter-spacing:1px;cursor:pointer;transition:.2s}.action-btn:hover{background:#19435a;border-color:var(--cyan)}.action-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.6}
+    #btnBack{display:none}
+    .bottom-nav{position:fixed;z-index:20;bottom:0;left:0;right:0;display:flex;justify-content:center;gap:5px;padding:12px 15px calc(12px + env(safe-area-inset-bottom));background:rgba(5,13,21,.94);border-top:1px solid var(--line);backdrop-filter:blur(16px)}.nav-item{padding:10px 22px;color:#8195a7;text-decoration:none;font:10px var(--mono);letter-spacing:1.4px;border:1px solid transparent;transition:.2s}.nav-item:hover,.nav-item.active{color:var(--cyan);border-color:#2b6273;background:#102638}
+    .overlay{display:none;position:fixed;z-index:50;inset:0;align-items:center;justify-content:center;padding:18px;background:rgba(1,7,13,.82);backdrop-filter:blur(9px)}
+    .dossier-paper,.book{position:relative;width:min(820px,100%);max-height:min(88vh,900px);overflow:auto;background:#f2f0e8;color:#1d2a32;box-shadow:0 30px 100px #0009;border:1px solid #d4d1c7}
+    .dossier-paper{padding:34px clamp(20px,5vw,48px)}.dossier-paper:before,.book:before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.18;background:repeating-linear-gradient(0deg,transparent 0 27px,#a8b3b5 28px)}
+    .dossier-paper h3,.page h3{position:relative;font:700 25px var(--display);letter-spacing:2px;color:#163b4c;border-bottom:2px solid #315b69;padding-bottom:12px;margin:0 0 20px}.dossier-paper p{position:relative;font:12px var(--mono);margin:8px 0}.dossier-paper b{color:#315b69}.close-btn{position:absolute;z-index:3;right:15px;top:15px;width:34px;height:34px;border:1px solid #9aa9aa;background:#e4e8e5;color:#203a46;font:15px var(--mono);cursor:pointer}.close-btn:hover{background:#d6e4e5}
+    .dossier-meta-grid{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:20px 0}.dossier-meta-grid div{padding:12px;border:1px solid #c6ceca;background:#e9eee9}.dossier-meta-grid span{display:block;font:9px var(--mono);letter-spacing:1px;color:#687b7e}.dossier-meta-grid b{display:block;margin-top:5px;font:600 12px var(--mono);color:#183d4d}.status-live{color:#24734e!important}
+    .document-rule{position:relative;display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid #9ba9a5;padding:10px 0;font:10px var(--mono);letter-spacing:1px;color:#315b69}.operation-log{position:relative;max-height:270px;overflow:auto}.operation-row{display:flex;justify-content:space-between;gap:15px;padding:11px 2px;border-bottom:1px dotted #b3bbb5;font-size:12px}.operation-row div{display:flex;flex-direction:column;gap:4px}.operation-row div span{font:9px var(--mono);color:#718184}.operation-row div b{font-weight:600}.operation-row strong{white-space:nowrap;color:#1d4657;font:600 12px var(--mono)}.empty-log{padding:25px;text-align:center;color:#7b8886;font:10px var(--mono)}
+    .terminate-action{position:relative;display:flex;justify-content:flex-end;margin-top:22px}.btn-terminate{padding:11px 16px;border:1px solid #b45c62;background:#f5e7e5;color:#8f303b;font:600 10px var(--mono);letter-spacing:1px;cursor:pointer}.btn-terminate:hover{background:#efd2d0}
+    .book{display:grid;grid-template-columns:1fr 1fr;overflow:hidden;min-height:620px;perspective:1400px}.page{position:relative;display:flex;flex-direction:column;min-width:0;padding:30px 25px 22px;background:#f4f2e9;overflow:auto}.page-front{border-right:1px solid #c4c9c2}.page-back{display:none;background:#ecefe9}.page h3{font-size:21px;margin:0 0 8px}.page-kicker{position:relative;font:9px var(--mono);letter-spacing:1.5px;color:#738385;margin-bottom:15px}.document-subtitle{display:block;margin-top:5px;font:9px var(--mono);letter-spacing:1px;color:#76878a}.month-controls{position:relative;display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin:12px 0 15px;padding:10px;background:#e6ebe6;border:1px solid #c6d0c9}.month-controls label{display:flex;align-items:center;gap:5px;margin-right:4px;font:9px var(--mono);letter-spacing:1px;color:#42616b}.month-controls svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5}.month-controls select,.month-controls button{min-height:32px;padding:5px 8px;border:1px solid #aabbb7;background:#f8f8f2;color:#284957;font:10px var(--mono)}.month-controls button{background:#214b5a;color:#fff;cursor:pointer}.memoirs-document-head{display:grid;grid-template-columns:82px 1fr auto;gap:8px;padding:7px 5px;border-bottom:1px solid #829a99;font:8px var(--mono);letter-spacing:.6px;color:#668087}.audit-list{position:relative;flex:1;min-height:180px}.memoir-entry{position:relative;display:grid;grid-template-columns:82px 1fr auto;gap:8px;align-items:start;padding:10px 5px;border-bottom:1px dotted #c0c8c0;font-size:10px}.memoir-date b{display:block;font:600 10px var(--mono);color:#315b69}.memoir-date small,.memoir-description small{display:block;margin-top:4px;font:8px var(--mono);color:#7a8986}.memoir-description b{display:block;font-size:10px;font-weight:600;color:#263c42}.memoir-entry>strong{font:600 10px var(--mono);white-space:nowrap;color:#234d5b}.memoir-entry.is-terminated .memoir-description small{color:#a24d55}.memoirs-empty{display:flex;flex-direction:column;align-items:center;gap:10px;padding:42px 12px;text-align:center;color:#7d8d89}.memoirs-empty svg{width:30px;height:30px;stroke:#668b91;fill:none;stroke-width:1.3}.memoirs-empty b{font:600 12px var(--mono);color:#3c5a61}.memoirs-empty span{font-size:10px}.document-total{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:auto;padding:13px 10px;border-top:2px solid #315b69;background:#e7ece6}.document-total span{font:9px var(--mono);letter-spacing:.7px;color:#536d70}.document-total b{font:700 15px var(--display);color:#193e4c}.page-counter{display:block;text-align:right;margin-top:7px;font:8px var(--mono);color:#87938f}.document-pagination{position:relative;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 0;border-top:1px solid #c5ccc5}.document-pagination button{display:flex;align-items:center;gap:4px;padding:7px 9px;border:1px solid #9eaeaa;background:#e4eae4;color:#315663;font:9px var(--mono);cursor:pointer}.document-pagination button:disabled{opacity:.35;cursor:not-allowed}.document-pagination svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.5}.document-pagination span{font:9px var(--mono);color:#70817e}.swipe-hint{position:relative;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px;padding:10px;border:1px solid #9caaa5;background:#e5ebe5;color:#315b69;font:10px var(--mono);cursor:pointer}.summary-cover{position:relative;padding:20px 14px;margin:18px 0;background:#dfe8e2;border:1px solid #b8c9c0}.summary-cover span,.summary-breakdown>span{font:9px var(--mono);letter-spacing:1.5px;color:#607d7c}.summary-cover h4{font:700 25px var(--display);color:#234b58;margin:7px 0}.summary-cover p{font-size:10px;color:#71817b;margin:0}.summary-stat{position:relative;display:flex;justify-content:space-between;padding:11px 3px;border-bottom:1px dotted #b7c2b9;font:9px var(--mono);color:#637875}.summary-stat b{font:600 13px var(--mono);color:#294f5b}.summary-breakdown{position:relative;margin-top:18px}.summary-breakdown>div{display:flex;justify-content:space-between;gap:10px;padding:9px 3px;border-bottom:1px dotted #b7c2b9;font-size:10px;color:#405b5e}.summary-breakdown>div b{font:600 10px var(--mono);color:#294f5b}.summary-breakdown p{font-size:10px;color:#7b8984}.summary-grand{position:relative;display:flex;justify-content:space-between;gap:10px;margin-top:auto;padding:14px 10px;background:#214b5a;color:white}.summary-grand span{font:9px var(--mono);letter-spacing:1px}.summary-grand b{font:700 16px var(--display)}
+    @media(max-width:720px){body{padding:15px 12px 90px}header{padding:15px;align-items:flex-start}.header-seal{font-size:0}.header-seal svg{width:24px}.book{display:block;min-height:0;max-height:88vh;overflow:auto}.page{min-height:590px;padding:26px 18px 18px}.page-back{min-height:520px}.dossier-paper{padding:30px 18px}.section-heading h2{font-size:26px}.folder-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.dossier-folder{min-height:190px;padding:18px 13px 13px}.folder-title{font-size:18px}.folder-meta{font-size:8px}.nav-item{padding:10px 13px;font-size:9px}.month-controls{gap:5px}.month-controls label{width:100%}.month-controls select{flex:1}.memoir-entry{grid-template-columns:66px 1fr auto;gap:5px}.memoirs-document-head{grid-template-columns:66px 1fr auto;font-size:7px}.memoir-entry>strong{font-size:9px}}
+    @media(max-width:390px){.folder-grid{grid-template-columns:1fr}.dossier-folder{min-height:170px}.operation-row{font-size:11px}}
+  </style>
 </head>
 <body>
-  <div class="container">
+  <main class="container">
     <header>
-      <h2 id="display-agent" style="color: var(--cia-cyan); letter-spacing: 2px">AUTHENTICATING...</h2>
-      <p style="font-size: 9px; opacity: 0.5">MEMOIRS_PROTOCOL_ACTIVE</p>
+      <div>
+        <h2 id="display-agent">AUTHENTICATING...</h2>
+        <p>PERSONNEL RECORDS // ARCHIVE ACCESS GRANTED</p>
+      </div>
+      <div class="header-seal">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 20 5v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z"/><path d="m8 12 2.5 2.5L16 9"/></svg>
+        SECURE NODE / PROFILE
+      </div>
     </header>
 
-    <div id="deviceSection" class="device-grid"></div>
-    <div id="vagentSection" class="vagent-grid"></div>
-    <div id="deviceMemoirsContainer" style="margin-top: 10px;"></div>
-    <button id="btnBack" onclick="location.reload()">[ EXIT_DEVICE_SYSTEM ]</button>
-    <div id="memoirsBtnContainer">
-      <button onclick="openMemoirs('ALL')">[ VIEW_MASTER_MEMOIRS ]</button>
-    </div>
-  </div>
+    <section id="vagentSection"></section>
 
-  <!-- NOIR MODAL -->
-  <div id="noirOverlay" class="overlay">
+    <div class="primary-actions">
+      <button class="action-btn" onclick="openMemoirs('ALL')">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h11l3 3v15H5z"/><path d="M16 3v4h4M8 12h8M8 16h8"/></svg>
+        OPEN MASTER MEMOIRS
+      </button>
+      <button class="action-btn" id="btnBack" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+        CLOSE ACTIVE VIEW
+      </button>
+    </div>
+  </main>
+
+  <div id="noirOverlay" class="overlay" role="dialog" aria-modal="true" aria-label="Agent dossier">
     <div class="dossier-paper">
-      <button class="close-btn" onclick="closeNoir()">X</button>
-      <h3>vAGENT_DOSSIER</h3>
-      <p><b>MO#:</b> <span id="n-order">---</span></p>
-      <p><b>vAgent#:</b> <span id="n-vagent">---</span></p>
+      <button class="close-btn" onclick="closeNoir()" aria-label="Close">×</button>
+      <h3>PERSONNEL DOSSIER</h3>
+      <p><b>MISSION REF:</b> <span id="n-order">---</span></p>
+      <p><b>vAGENT ID:</b> <span id="n-vagent">---</span></p>
       <div id="n-content"></div>
-      <div style="text-align: right;"><b>Total:</b> <span id="n-total">₱0.00</span></div>
+      <div class="terminate-action">
+        <button class="btn-terminate" onclick="terminateAgent(window.currentDossierId)">TERMINATE DOSSIER</button>
+      </div>
+      <div style="position:relative;text-align:right;margin-top:15px;font:600 12px var(--mono);color:#244d5a">TOTAL EXPENSES: <span id="n-total">₱0.00</span></div>
     </div>
   </div>
 
-  <!-- MEMOIRS MODAL -->
-  <div id="memoirsOverlay" class="overlay">
+  <div id="memoirsOverlay" class="overlay" role="dialog" aria-modal="true" aria-label="Master memoirs archive">
     <div class="book" id="dossierBook">
-      <div id="p1" class="page page-front">
-        <button class="close-btn" onclick="closeMemoirs()">X</button>
-        <h3>AUDIT REPORT</h3>
-        <p>NODE: <span id="target-name">---</span></p>
+      <section id="p1" class="page page-front">
+        <button class="close-btn" onclick="closeMemoirs()" aria-label="Close">×</button>
+        <div class="page-kicker">CENTRAL INTELLIGENCE ARCHIVE / FINANCIAL RECORDS</div>
+        <h3>AUDIT MEMOIRS</h3>
+        <p id="target-name">MASTER MEMOIRS</p>
         <div id="active-list" class="audit-list"></div>
-        <div id="total-container" style="margin-top: auto; text-align: center; padding-top: 10px;">
-          <span id="total-val"></span>
+        <div id="total-container" style="margin-top:auto;padding-top:12px">
+          <div id="total-val"></div>
         </div>
-        <div id="flipNextBtn" class="swipe-hint" onclick="flipPage(true)">[ VIEW SUMMARY ] &gt;&gt;</div>
-      </div>
-      <div id="p2" class="page page-back">
-        <button class="close-btn" onclick="closeMemoirs()">X</button>
-        <h3>SUMMARY CONTINUATION</h3>
+        <button id="flipNextBtn" class="swipe-hint" onclick="flipPage(true)">VIEW ARCHIVE SUMMARY <span>→</span></button>
+      </section>
+      <section id="p2" class="page page-back">
+        <button class="close-btn" onclick="closeMemoirs()" aria-label="Close">×</button>
+        <div class="page-kicker">CENTRAL INTELLIGENCE ARCHIVE / REPORT 02</div>
+        <h3>PERIOD SUMMARY</h3>
         <div id="weapon-system-breakdown" class="audit-list"></div>
-        <div style="margin-top: auto; text-align: center;"><b>GRAND TOTAL:</b> ₱<span id="total-val-p2">0.00</span></div>
-        <div class="swipe-hint" onclick="flipPage(false)">&lt;&lt; BACK</div>
-      </div>
+        <div style="position:relative;margin-top:auto;text-align:center;padding-top:12px">
+          <b style="font:600 10px var(--mono);color:#526e70">ARCHIVE GRAND TOTAL</b>
+          <div style="font:700 23px var(--display);color:#214b5a">₱<span id="total-val-p2">0.00</span></div>
+        </div>
+        <button class="swipe-hint" onclick="flipPage(false)">← RETURN TO LEDGER</button>
+      </section>
     </div>
   </div>
 
@@ -63,8 +109,8 @@
     <a href="intel.html" class="nav-item">INTEL</a>
     <a href="profile.html" class="nav-item active">PROFILE</a>
   </nav>
-  
-<script type="module" src="js/config.js"></script>
-<script type="module" src="js/script.js"></script>
+
+  <script type="module" src="js/config.js"></script>
+  <script type="module" src="js/script.js"></script>
 </body>
 </html>

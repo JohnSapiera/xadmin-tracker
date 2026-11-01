@@ -1,495 +1,481 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AGENT_ACCESS_TERMINAL</title>
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    <style>
-        :root { --bg: #01080b; --cyan: #00f2ff; --red: #ff003c; --green: #00ff66; --yellow: #ffbd00; }
-        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
-        
-        body {
-            background: #01080b;
-            font-family: 'Share Tech Mono', monospace;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-image: radial-gradient(circle at center, #0a1f29 0%, #01080b 100%);
-            padding: 16px;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>BLACKSITE // ACCESS_TERMINAL</title>
 
-        .terminal {
-            width: 100%;
-            max-width: 400px;
-            background: rgba(2, 10, 13, 0.95);
-            border: 1px solid rgba(0, 242, 255, 0.3);
-            padding: 24px 20px;
-            position: relative;
-            border-radius: 8px;
-        }
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#01080b">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
 
-        .scan-line {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background: #00f2ff;
-            box-shadow: 0 0 10px #00f2ff;
-            animation: scanMove 2.5s ease-in-out infinite;
-            opacity: 0.6;
-            pointer-events: none;
-        }
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet" />
 
-        @keyframes scanMove {
-            0% { top: 0; opacity: 0; }
-            20% { opacity: 0.8; }
-            80% { opacity: 0.8; }
-            100% { top: 100%; opacity: 0; }
-        }
+  <style>
+    :root{
+      --bg:#01080b;
+      --cyan:#00f2ff;
+      --cyan-dim:rgba(0,242,255,0.15);
+      --red:#ff003c;
+      --green:#00ff66;
+      --yellow:#ffbd00;
+      --border:rgba(0,242,255,0.25);
+      --font-mono:'Share Tech Mono',monospace;
+      --font-main:'Rajdhani',sans-serif;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-tap-highlight-color:transparent;}
+    html,body{height:100%;overflow:hidden;}
+    body{
+      background:radial-gradient(circle at center,#0a1f29 0%,#01080b 70%);
+      font-family:var(--font-mono);
+      color:#e1f5f9;
+      display:flex;align-items:center;justify-content:center;
+      padding:16px;
+    }
 
-        .badge {
-            text-align: center;
-            font-size: 10px;
-            letter-spacing: 3px;
-            color: #4a5a61;
-            margin-bottom: 20px;
-        }
+    /* ===== TERMINAL SHELL ===== */
+    .terminal{
+      width:100%;max-width:420px;
+      background:rgba(2,10,13,0.95);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:26px 20px;
+      position:relative;
+      overflow:hidden;
+      box-shadow:0 0 40px rgba(0,242,255,0.08), inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+    .terminal::before{
+      content:'';position:absolute;inset:0;
+      background:repeating-linear-gradient(0deg,
+        rgba(0,242,255,0.03) 0px,
+        rgba(0,242,255,0.03) 1px,
+        transparent 1px,
+        transparent 3px);
+      pointer-events:none;
+      z-index:0;
+    }
 
-        .status-text {
-            text-align: center;
-            font-size: 12px;
-            font-weight: bold;
-            color: #00f2ff;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 20px;
-        }
+    /* ===== HEADER ===== */
+    .top-badge{
+      text-align:center;font-size:9px;letter-spacing:4px;
+      color:#4a5a61;margin-bottom:6px;
+    }
+    .top-title{
+      text-align:center;font-size:13px;letter-spacing:3px;
+      color:var(--cyan);font-weight:700;margin-bottom:4px;
+      text-shadow:0 0 8px rgba(0,242,255,0.4);
+    }
+    .top-sub{
+      text-align:center;font-size:8px;letter-spacing:2px;
+      color:#5c7882;margin-bottom:20px;
+    }
 
-        .trace-container {
-            background: #000;
-            border: 1px solid #1a2f37;
-            padding: 10px;
-            margin-bottom: 20px;
-            text-align: center;
-            border-radius: 4px;
-        }
+    /* ===== RADAR / BIO-SCAN ===== */
+    .scan-stage{
+      position:relative;
+      width:170px;height:170px;
+      margin:0 auto 18px;
+      display:flex;align-items:center;justify-content:center;
+    }
+    .radar-ring{
+      position:absolute;inset:0;
+      border:1px solid var(--cyan-dim);
+      border-radius:50%;
+    }
+    .radar-ring.r2{inset:20px;}
+    .radar-ring.r3{inset:40px;}
+    .radar-sweep{
+      position:absolute;inset:0;
+      border-radius:50%;
+      background:conic-gradient(from 0deg,
+        transparent 0deg,
+        transparent 300deg,
+        rgba(0,242,255,0.45) 340deg,
+        rgba(0,242,255,0.9) 360deg);
+      animation:sweep 2.4s linear infinite;
+      mask:radial-gradient(circle, transparent 42%, #000 43%);
+      -webkit-mask:radial-gradient(circle, transparent 42%, #000 43%);
+    }
+    @keyframes sweep{to{transform:rotate(360deg);}}
 
-        .trace-label {
-            font-size: 8px;
-            color: #5c7882;
-            letter-spacing: 1px;
-        }
+    .scan-core{
+      width:60px;height:60px;border-radius:50%;
+      background:radial-gradient(circle,#00f2ff 0%,#003a44 60%,transparent 100%);
+      box-shadow:0 0 30px rgba(0,242,255,0.6), inset 0 0 20px rgba(0,242,255,0.8);
+      animation:pulseCore 1.6s ease-in-out infinite;
+      z-index:2;
+    }
+    @keyframes pulseCore{
+      0%,100%{transform:scale(1);opacity:0.9;}
+      50%{transform:scale(1.08);opacity:1;}
+    }
 
-        .trace-value {
-            font-size: 10px;
-            color: #05ffa1;
-            word-break: break-all;
-            margin-top: 5px;
-        }
+    /* ===== STATUS ===== */
+    .status-line{
+      text-align:center;font-size:11px;letter-spacing:2px;
+      color:var(--cyan);margin-bottom:5px;text-transform:uppercase;
+      min-height:16px;font-weight:700;
+    }
+    .status-line.ok{color:var(--green);text-shadow:0 0 8px var(--green);}
+    .status-line.err{color:var(--red);text-shadow:0 0 8px var(--red);}
+    .status-line.warn{color:var(--yellow);text-shadow:0 0 8px var(--yellow);}
 
-        .keypad {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin: 20px 0;
-        }
+    .status-sub{
+      text-align:center;font-size:9px;letter-spacing:1px;
+      color:#5c7882;margin-bottom:18px;min-height:12px;
+    }
 
-        .key-btn {
-            aspect-ratio: 1 / 1;
-            background: #000;
-            border: 1px solid #1a2f37;
-            color: #00f2ff;
-            font-size: 24px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.1s ease;
-            border-radius: 50%;
-        }
+    /* ===== LOG BOX ===== */
+    .log-box{
+      background:#000;border:1px solid var(--border);
+      padding:10px 12px;border-radius:6px;
+      font-size:9.5px;color:#9ab4bc;line-height:1.55;
+      height:96px;overflow-y:auto;margin-bottom:16px;
+      scrollbar-width:thin;scrollbar-color:var(--cyan) transparent;
+    }
+    .log-box::-webkit-scrollbar{width:3px;}
+    .log-box::-webkit-scrollbar-thumb{background:var(--cyan);border-radius:2px;}
+    .log-line{opacity:0;animation:logIn 0.3s forwards;}
+    .log-line .t{color:#5c7882;}
+    .log-line.ok{color:var(--green);}
+    .log-line.err{color:var(--red);}
+    .log-line.warn{color:var(--yellow);}
+    @keyframes logIn{to{opacity:1;}}
 
-        .key-btn:active {
-            transform: scale(0.92);
-            background: #00f2ff;
-            color: #000;
-            border-color: #00f2ff;
-        }
+    /* ===== FINGERPRINT ===== */
+    .fp-block{
+      background:#000;border:1px solid var(--border);
+      border-radius:6px;padding:9px 12px;text-align:center;
+      margin-bottom:10px;
+    }
+    .fp-label{font-size:8px;color:#5c7882;letter-spacing:2px;margin-bottom:3px;}
+    .fp-value{
+      font-size:11px;color:var(--green);letter-spacing:1px;
+      word-break:break-all;font-weight:700;
+    }
 
-        .key-zero {
-            grid-column: 2 / 3;
-        }
+    /* ===== PROGRESS BAR ===== */
+    .progress-wrap{
+      height:3px;background:#0a1f29;border-radius:2px;
+      overflow:hidden;margin-bottom:16px;
+    }
+    .progress-fill{
+      height:100%;width:0%;
+      background:linear-gradient(90deg,var(--cyan),var(--green));
+      box-shadow:0 0 10px var(--cyan);
+      transition:width 0.4s ease;
+    }
 
-        .hidden {
-            display: none;
-        }
+    /* ===== FALLBACK KEYPAD ===== */
+    .fallback{display:none;}
+    .fallback.show{display:block;animation:fadeIn 0.3s;}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+    .fallback-label{
+      text-align:center;font-size:9px;color:var(--yellow);
+      letter-spacing:2px;margin-bottom:10px;font-weight:700;
+    }
+    .code-display{
+      text-align:center;font-size:26px;letter-spacing:8px;
+      color:var(--green);font-weight:700;margin-bottom:12px;
+      background:#000;border:1px solid var(--border);
+      padding:10px;border-radius:6px;
+    }
+    .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px;}
+    .key{
+      aspect-ratio:1;background:#000;border:1px solid #1a2f37;
+      color:var(--cyan);font-size:20px;font-weight:700;
+      display:flex;align-items:center;justify-content:center;
+      border-radius:50%;cursor:pointer;font-family:var(--font-mono);
+      transition:0.1s;
+    }
+    .key:active{background:var(--cyan);color:#000;transform:scale(0.92);}
+    .fallback-actions{display:flex;gap:10px;}
+    .fb-btn{
+      flex:1;background:transparent;border:1px solid #1a2f37;
+      color:#5c7882;padding:10px;font-size:10px;letter-spacing:1px;
+      border-radius:6px;cursor:pointer;font-family:var(--font-mono);
+      transition:0.2s;
+    }
+    .fb-btn.danger{border-color:var(--red);color:var(--red);}
+    .fb-btn.danger:active{background:var(--red);color:#000;}
 
-        .code-area {
-            background: #000;
-            border: 1px solid #1a2f37;
-            padding: 12px;
-            text-align: center;
-            margin-bottom: 15px;
-            border-radius: 4px;
-        }
-
-        .code-digits {
-            font-size: 28px;
-            letter-spacing: 8px;
-            color: #05ffa1;
-            font-weight: bold;
-        }
-
-        .helper-text {
-            font-size: 9px;
-            color: #5c7882;
-            margin-top: 5px;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 12px;
-            margin-top: 10px;
-        }
-
-        .btn {
-            flex: 1;
-            background: transparent;
-            border: 1px solid #1a2f37;
-            padding: 12px;
-            color: #5c7882;
-            font-family: monospace;
-            font-size: 12px;
-            cursor: pointer;
-            text-align: center;
-            border-radius: 4px;
-            transition: 0.2s;
-        }
-
-        .btn-clear {
-            border-color: #ff003c;
-            color: #ff003c;
-        }
-
-        .btn-clear:active {
-            background: #ff003c;
-            color: #000;
-        }
-
-        .message-area {
-            margin-top: 15px;
-            text-align: center;
-            font-size: 11px;
-            min-height: 40px;
-            padding: 8px;
-        }
-
-        .error-msg {
-            color: #ff003c;
-        }
-
-        .success-msg {
-            color: #00ff66;
-        }
-
-        .info-msg {
-            color: #ffbd00;
-        }
-    </style>
+    /* ===== BOTTOM HINT ===== */
+    .bottom-hint{
+      text-align:center;font-size:8px;letter-spacing:2px;
+      color:#3a4a51;margin-top:6px;
+    }
+  </style>
 </head>
 <body>
 
-<div class="terminal" id="app">
-    <div class="scan-line"></div>
-    
-    <div class="badge">HARDWARE_AUDIT_TERMINAL</div>
-    <div class="status-text" id="statusLabel">INITIALIZING_SCAN</div>
+<div class="terminal">
+  <div class="top-badge">◈ BLACKSITE ◈</div>
+  <div class="top-title">ACCESS_TERMINAL</div>
+  <div class="top-sub">BIOMETRIC // HARDWARE_BINDING</div>
 
-    <div class="trace-container">
-        <div class="trace-label">DEVICE_FINGERPRINT</div>
-        <div class="trace-value" id="deviceSig">-- SCANNING --</div>
+  <!-- RADAR SCAN -->
+  <div class="scan-stage">
+    <div class="radar-ring"></div>
+    <div class="radar-ring r2"></div>
+    <div class="radar-ring r3"></div>
+    <div class="radar-sweep"></div>
+    <div class="scan-core"></div>
+  </div>
+
+  <!-- STATUS -->
+  <div class="status-line" id="statusMain">INITIALIZING_SCAN</div>
+  <div class="status-sub" id="statusSub">Establishing secure uplink…</div>
+
+  <!-- PROGRESS -->
+  <div class="progress-wrap">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+
+  <!-- LOG -->
+  <div class="log-box" id="logBox"></div>
+
+  <!-- FINGERPRINT -->
+  <div class="fp-block">
+    <div class="fp-label">HARDWARE_FINGERPRINT</div>
+    <div class="fp-value" id="fpValue">-- PENDING --</div>
+  </div>
+
+  <!-- HIDDEN FALLBACK: 4-digit key -->
+  <div class="fallback" id="fallbackBox">
+    <div class="fallback-label">DEVICE NOT ENLISTED</div>
+    <div class="code-display" id="codeDisplay">----</div>
+    <div class="keypad" id="keypad"></div>
+    <div class="fallback-actions">
+      <button class="fb-btn danger" id="fbClear">CLEAR</button>
+      <button class="fb-btn" id="fbAbort">ABORT</button>
     </div>
+  </div>
 
-    <div id="keypadSection" class="hidden">
-        <div class="code-area">
-            <div class="code-digits" id="codeDisplay">----</div>
-            <div class="helper-text">ENTER 4-DIGIT SECRET KEY</div>
-        </div>
-        
-        <div class="keypad" id="numericKeypad"></div>
-        
-        <div class="action-buttons">
-            <div class="btn btn-clear" id="clearBtn">CLEAR</div>
-            <div class="btn" id="cancelBtn">CANCEL</div>
-        </div>
-    </div>
-
-    <div class="message-area" id="messageArea"></div>
+  <div class="bottom-hint">CLEARANCE_REQUIRED // 0x7F</div>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script type="module">
+/* =========================================================
+   BLACKSITE ACCESS TERMINAL — single-agent scan flow
+   ========================================================= */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, query, where, getDocs, setDoc, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-<script>
-    // ========== FIREBASE CONFIGURATION ==========
-    const firebaseConfig = { 
-        apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
-        authDomain: "my-admin-portal-12691.firebaseapp.com", 
-        projectId: "my-admin-portal-12691", 
-        storageBucket: "my-admin-portal-12691.firebasestorage.app", 
-        messagingSenderId: "317015091563", 
-        appId: "1:317015091563:web:baab5171d8e0a58acd442e" 
-    };
-    
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    
-    // ========== DOM ELEMENTS ==========
-    const statusLabel = document.getElementById('statusLabel');
-    const deviceSigSpan = document.getElementById('deviceSig');
-    const keypadSection = document.getElementById('keypadSection');
-    const codeDisplay = document.getElementById('codeDisplay');
-    const messageArea = document.getElementById('messageArea');
-    
-    // ========== STATE ==========
-    let currentSignature = "";
-    let enteredCode = "";
-    let isProcessing = false;
-    
-    // ========== HELPER FUNCTIONS ==========
-    function showMessage(text, type = 'info') {
-        let className = '';
-        if (type === 'error') className = 'error-msg';
-        else if (type === 'success') className = 'success-msg';
-        else className = 'info-msg';
-        
-        messageArea.innerHTML = `<div class="${className}">${text}</div>`;
-        setTimeout(() => {
-            if (messageArea.innerHTML === `<div class="${className}">${text}</div>`) {
-                messageArea.innerHTML = "";
-            }
-        }, 3000);
+const firebaseConfig = {
+  apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
+  authDomain: "my-admin-portal-12691.firebaseapp.com",
+  projectId: "my-admin-portal-12691",
+  storageBucket: "my-admin-portal-12691.firebasestorage.app",
+  messagingSenderId: "317015091563",
+  appId: "1:317015091563:web:baab5171d8e0a58acd442e"
+};
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+/* ---------- DOM ---------- */
+const statusMain  = document.getElementById('statusMain');
+const statusSub   = document.getElementById('statusSub');
+const logBox      = document.getElementById('logBox');
+const fpValue     = document.getElementById('fpValue');
+const progressFill= document.getElementById('progressFill');
+const fallbackBox = document.getElementById('fallbackBox');
+const codeDisplay = document.getElementById('codeDisplay');
+const keypad      = document.getElementById('keypad');
+
+/* ---------- STATE ---------- */
+let currentSignature = "";
+let enteredCode      = "";
+let isProcessing     = false;
+
+/* ---------- HELPERS ---------- */
+function log(text, type=''){
+  const line = document.createElement('div');
+  line.className = 'log-line ' + type;
+  const time = new Date().toLocaleTimeString('en-GB');
+  line.innerHTML = `<span class="t">[${time}]</span> ${text}`;
+  logBox.appendChild(line);
+  logBox.scrollTop = logBox.scrollHeight;
+}
+
+function setStatus(main, sub='', cls=''){
+  statusMain.className = 'status-line ' + cls;
+  statusMain.textContent = main;
+  statusSub.textContent = sub;
+}
+
+function setProgress(pct){
+  progressFill.style.width = Math.min(100, Math.max(0, pct)) + '%';
+}
+
+/* ---------- FINGERPRINT ---------- */
+function generateSignature(){
+  const c = document.createElement('canvas');
+  const gl = c.getContext('webgl');
+  const dbg = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
+  const gpu = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : 'GENERIC_GPU';
+
+  const brand = navigator.userAgent.match(/Android\s+([^\s;]+);?\s+([^\s;]+)/)?.[2] || 'NODE_STATION';
+  const raw = [
+    gpu.split('/').pop().trim(),
+    `${window.screen.width}x${window.screen.height}`,
+    navigator.platform,
+    brand,
+    navigator.hardwareConcurrency || 0,
+    navigator.deviceMemory || 0
+  ].join('|');
+
+  let hash = 0;
+  for (let i = 0; i < raw.length; i++){
+    hash = ((hash << 5) - hash) + raw.charCodeAt(i);
+    hash |= 0;
+  }
+  return 'SIG-' + Math.abs(hash).toString(16).toUpperCase().padStart(8,'0');
+}
+
+/* ---------- CHECK SIGNATURE ---------- */
+async function checkFingerprint(sig){
+  setStatus('SCANNING_DATABASE', 'Querying agent registry…');
+  setProgress(45);
+  log('Querying agent registry for signature…');
+
+  try{
+    const snap = await getDocs(
+      query(collection(db,'agents'), where('linkedSignature','==',sig))
+    );
+
+    if (!snap.empty){
+      const agent = snap.docs[0].data().agentName;
+      setStatus('ACCESS_GRANTED', `Welcome back, ${agent}`, 'ok');
+      setProgress(100);
+      log(`Identity confirmed: ${agent}`, 'ok');
+
+      localStorage.setItem('cia_agent', agent);
+      localStorage.setItem('agent', agent);
+      localStorage.setItem('agent_verified', 'true');
+      localStorage.setItem('device_signature', sig);
+
+      setTimeout(()=> location.href = 'dashboard.html', 1200);
+      return;
     }
-    
-    function clearCode() {
-        enteredCode = "";
-        codeDisplay.innerText = "----";
+
+    // Not enlisted
+    setStatus('DEVICE_NOT_ENLISTED', 'Fallback authentication required', 'warn');
+    setProgress(60);
+    log('Device not recognized. Fallback required.', 'warn');
+    fallbackBox.classList.add('show');
+    buildKeypad();
+
+  }catch(err){
+    console.error(err);
+    setStatus('UPLINK_ERROR', 'Registry unreachable', 'err');
+    log('Registry unreachable. Check connection.', 'err');
+    setProgress(0);
+  }
+}
+
+/* ---------- KEYPAD (fallback only) ---------- */
+function buildKeypad(){
+  if (keypad.dataset.built) return;
+  keypad.dataset.built = '1';
+  ['1','2','3','4','5','6','7','8','9','0'].forEach(d=>{
+    const b = document.createElement('div');
+    b.className = 'key';
+    b.textContent = d;
+    if (d === '0') b.style.gridColumn = '2';
+    b.onclick = ()=> addDigit(d);
+    keypad.appendChild(b);
+  });
+}
+
+function addDigit(d){
+  if (enteredCode.length >= 4 || isProcessing) return;
+  enteredCode += d;
+  codeDisplay.textContent = enteredCode.padEnd(4,'-');
+  if (enteredCode.length === 4) verifyKey(enteredCode);
+}
+
+async function verifyKey(key){
+  isProcessing = true;
+  setStatus('VERIFYING_KEY', 'Cross-checking…');
+  setProgress(75);
+  log(`Submitting fallback key…`);
+
+  try{
+    const snap = await getDocs(
+      query(collection(db,'agents'), where('secretKey','==',key))
+    );
+
+    if (snap.empty){
+      setStatus('ACCESS_DENIED', 'Invalid fallback key', 'err');
+      setProgress(60);
+      log('Fallback key rejected.', 'err');
+      enteredCode = '';
+      codeDisplay.textContent = '----';
+      isProcessing = false;
+      return;
     }
-    
-    function addDigit(digit) {
-        if (enteredCode.length < 4) {
-            enteredCode += digit;
-            let displayStr = enteredCode + "----".substring(enteredCode.length);
-            codeDisplay.innerText = displayStr;
-            
-            const buttons = document.querySelectorAll('.key-btn');
-            buttons.forEach(btn => {
-                if (btn.innerText === digit) {
-                    btn.style.transform = 'scale(0.92)';
-                    btn.style.background = '#00f2ff';
-                    btn.style.color = '#000';
-                    setTimeout(() => {
-                        btn.style.transform = '';
-                        btn.style.background = '';
-                        btn.style.color = '';
-                    }, 150);
-                }
-            });
-            
-            if (enteredCode.length === 4) {
-                verifySecretKey(enteredCode);
-            }
-        }
-    }
-    
-    // ========== DEVICE FINGERPRINT ==========
-    function generateSignature() {
-        const canvas = document.createElement('canvas');
-        const gl = canvas.getContext('webgl');
-        const debugInfo = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
-        const gpu = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "GENERIC_GPU";
-        
-        const specs = {
-            brand: navigator.userAgent.match(/Android\s+([^\s;]+);?\s+([^\s;]+)/)?.[2] || "NODE_STATION",
-            gpu: gpu.split('/').pop().trim(),
-            res: `${window.screen.width}x${window.screen.height}`,
-            plt: navigator.platform
-        };
-        
-        const raw = specs.gpu + specs.res + specs.plt + specs.brand;
-        let hash = 0;
-        for (let i = 0; i < raw.length; i++) {
-            hash = ((hash << 5) - hash) + raw.charCodeAt(i);
-            hash |= 0;
-        }
-        return "SIG-" + Math.abs(hash).toString(16).toUpperCase();
-    }
-    
-    // ========== REGISTER FINGERPRINT TO AGENT ==========
-    async function registerFingerprint(agentName, signature) {
-        try {
-            const agentRef = db.collection("agents").doc(agentName);
-            const agentDoc = await agentRef.get();
-            
-            if (agentDoc.exists) {
-                const currentSignatures = agentDoc.data().linkedSignatures || [];
-                if (!currentSignatures.includes(signature)) {
-                    currentSignatures.push(signature);
-                }
-                await agentRef.update({
-                    linkedSignatures: currentSignatures,
-                    lastFingerprint: signature,
-                    lastSync: firebase.firestore.FieldValue.serverTimestamp()
-                });
-            } else {
-                await agentRef.set({
-                    agentName: agentName,
-                    linkedSignatures: [signature],
-                    lastFingerprint: signature,
-                    lastSync: firebase.firestore.FieldValue.serverTimestamp()
-                });
-            }
-            return true;
-        } catch (error) {
-            console.error("Registration error:", error);
-            return false;
-        }
-    }
-    
-    // ========== VERIFY SECRET KEY ==========
-    async function verifySecretKey(secretKey) {
-        if (isProcessing) return;
-        isProcessing = true;
-        
-        statusLabel.innerHTML = "VERIFYING_KEY";
-        showMessage("Authenticating secret key...", 'info');
-        
-        try {
-            const snapshot = await db.collection("agents")
-                .where("secretKey", "==", secretKey)
-                .get();
-            
-            if (!snapshot.empty) {
-                const agentData = snapshot.docs[0].data();
-                const agentName = agentData.agentName;
-                
-                showMessage(`Key verified. Registering device...`, 'info');
-                statusLabel.innerHTML = "REGISTERING_DEVICE";
-                
-                const success = await registerFingerprint(agentName, currentSignature);
-                
-                if (success) {
-                    showMessage(`Device registered successfully. Access granted.`, 'success');
-                    statusLabel.innerHTML = "ACCESS_GRANTED";
-                    
-                    localStorage.setItem("cia_agent", agentName);
-                    localStorage.setItem("agent", agentName);
-                    localStorage.setItem("agent_verified", "true");
-                    localStorage.setItem("device_signature", currentSignature);
-                    localStorage.setItem("secret_key", secretKey);
-                    
-                    setTimeout(() => {
-                        window.location.href = "dashboard.html";
-                    }, 1500);
-                } else {
-                    showMessage("Registration failed. Please try again.", 'error');
-                    statusLabel.innerHTML = "REGISTRATION_FAILED";
-                    clearCode();
-                    isProcessing = false;
-                }
-            } else {
-                showMessage("Invalid secret key. Access denied.", 'error');
-                statusLabel.innerHTML = "ACCESS_DENIED";
-                clearCode();
-                isProcessing = false;
-            }
-        } catch (error) {
-            console.error("Verification error:", error);
-            showMessage("Connection error. Please try again.", 'error');
-            statusLabel.innerHTML = "ERROR";
-            isProcessing = false;
-        }
-    }
-    
-    // ========== CHECK EXISTING FINGERPRINT ==========
-    async function checkExistingFingerprint(signature) {
-        statusLabel.innerHTML = "SCANNING_DATABASE";
-        deviceSigSpan.innerText = signature;
-        
-        try {
-            const snapshot = await db.collection("agents")
-                .where("linkedSignatures", "array-contains", signature)
-                .get();
-            
-            if (!snapshot.empty) {
-                const agentData = snapshot.docs[0].data();
-                const agentName = agentData.agentName;
-                
-                statusLabel.innerHTML = "ACCESS_GRANTED";
-                showMessage(`Welcome back, ${agentName}. Redirecting...`, 'success');
-                
-                localStorage.setItem("cia_agent", agentName);
-                localStorage.setItem("agent", agentName);
-                localStorage.setItem("agent_verified", "true");
-                localStorage.setItem("device_signature", signature);
-                
-                setTimeout(() => {
-                    window.location.href = "dashboard.html";
-                }, 1200);
-            } else {
-                statusLabel.innerHTML = "DEVICE_NOT_REGISTERED";
-                showMessage("Device not recognized. Enter your 4-digit secret key to register.", 'error');
-                keypadSection.classList.remove("hidden");
-            }
-        } catch (error) {
-            console.error("Check error:", error);
-            statusLabel.innerHTML = "SCAN_ERROR";
-            showMessage("Database connection error. Please try again.", 'error');
-        }
-    }
-    
-    // ========== BUILD KEYPAD ==========
-    function buildKeypad() {
-        const keypadContainer = document.getElementById('numericKeypad');
-        const layout = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
-        keypadContainer.innerHTML = '';
-        
-        layout.forEach(digit => {
-            const btn = document.createElement('div');
-            btn.className = 'key-btn';
-            if (digit === '0') btn.classList.add('key-zero');
-            btn.innerText = digit;
-            btn.onclick = () => addDigit(digit);
-            keypadContainer.appendChild(btn);
-        });
-    }
-    
-    // ========== EVENT LISTENERS ==========
-    document.getElementById('clearBtn').onclick = () => {
-        clearCode();
-    };
-    
-    document.getElementById('cancelBtn').onclick = () => {
-        keypadSection.classList.add("hidden");
-        statusLabel.innerHTML = "SCAN_CANCELLED";
-        showMessage("Registration cancelled. Reloading...", 'error');
-        setTimeout(() => location.reload(), 1500);
-    };
-    
-    // ========== INITIALIZE ==========
-    function init() {
-        buildKeypad();
-        currentSignature = generateSignature();
-        deviceSigSpan.innerText = currentSignature;
-        setTimeout(() => {
-            checkExistingFingerprint(currentSignature);
-        }, 1000);
-    }
-    
-    init();
+
+    const agentRef = snap.docs[0].ref;
+    const agent    = snap.docs[0].data().agentName;
+
+    await setDoc(agentRef, {
+      linkedSignature: currentSignature,
+      lastFingerprint: currentSignature,
+      lastSync: serverTimestamp()
+    }, { merge:true });
+
+    setStatus('DEVICE_BOUND', `Enlisted to ${agent}`, 'ok');
+    setProgress(100);
+    log(`Device enlisted to ${agent}.`, 'ok');
+
+    localStorage.setItem('cia_agent', agent);
+    localStorage.setItem('agent', agent);
+    localStorage.setItem('agent_verified', 'true');
+    localStorage.setItem('device_signature', currentSignature);
+    localStorage.setItem('secret_key', key);
+
+    setTimeout(()=> location.href = 'dashboard.html', 1200);
+
+  }catch(err){
+    console.error(err);
+    setStatus('BIND_FAILED', 'Try again', 'err');
+    log('Enlistment failed.', 'err');
+    enteredCode = '';
+    codeDisplay.textContent = '----';
+    isProcessing = false;
+  }
+}
+
+/* ---------- INIT ---------- */
+async function init(){
+  setStatus('INITIALIZING_SCAN', 'Establishing secure uplink…');
+  log('Terminal boot sequence started.');
+
+  const steps = [
+    { t: 300,  msg: 'Hardware probe: GPU / RAM / display', p: 15 },
+    { t: 800,  msg: 'Computing identity signature…',       p: 30 },
+    { t: 1300, msg: 'Signature locked.',                    p: 45 }
+  ];
+  steps.forEach(s=> setTimeout(()=>{ log(s.msg); setProgress(s.p); }, s.t));
+
+  setTimeout(async ()=>{
+    currentSignature = generateSignature();
+    fpValue.textContent = currentSignature;
+    log(`Fingerprint: ${currentSignature}`, 'ok');
+    await checkFingerprint(currentSignature);
+  }, 1700);
+}
+
+/* Fallback actions */
+document.getElementById('fbClear').onclick = ()=>{
+  enteredCode = '';
+  codeDisplay.textContent = '----';
+};
+document.getElementById('fbAbort').onclick = ()=> location.reload();
+
+init();
 </script>
 
 </body>

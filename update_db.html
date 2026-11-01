@@ -1,178 +1,458 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TERMINAL_UPLINK_v19.0</title>
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
-    <style>
-        :root { --cyan: #00f2ff; --bg: #020a0d; --green: #00ff66; --border: rgba(0, 242, 255, 0.2); }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { 
-            background: var(--bg); color: #fff; font-family: 'Share Tech Mono', monospace; 
-            display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0;
-            background-image: radial-gradient(circle at center, #0a1f29 0%, #020a0d 100%);
-        }
-        .card { 
-            width: 360px; background: rgba(1, 15, 20, 0.95); padding: 30px; 
-            border: 1px solid var(--border); backdrop-filter: blur(10px);
-            box-shadow: 0 0 50px rgba(0,0,0,0.9); position: relative;
-        }
-        h2 { 
-            font-size: 16px; margin: 0 0 25px 0; color: var(--cyan); 
-            text-align: center; letter-spacing: 4px; text-transform: uppercase;
-            border-bottom: 2px solid var(--cyan); padding-bottom: 12px;
-        }
-        .form-container { display: flex; flex-direction: column; gap: 20px; }
-        label { font-size: 10px; color: var(--cyan); text-transform: uppercase; margin-bottom: 8px; display: block; opacity: 0.8; letter-spacing: 1px; }
-        .input-field {
-            width: 100%; padding: 14px; background: #000; border: 1px solid var(--border);
-            color: var(--green); font-family: 'Share Tech Mono'; font-size: 12px;
-            outline: none; border-radius: 0; appearance: none;
-        }
-        select.input-field { 
-            background-image: linear-gradient(45deg, transparent 50%, var(--cyan) 50%), linear-gradient(135deg, var(--cyan) 50%, transparent 50%); 
-            background-position: calc(100% - 20px) calc(1em + 2px), calc(100% - 15px) calc(1em + 2px); 
-            background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; 
-        }
-        .btn-auth {
-            width: 100%; padding: 18px; background: transparent; 
-            color: var(--green); border: 2px solid var(--green);
-            font-family: 'Rajdhani'; font-weight: 700; cursor: pointer;
-            text-transform: uppercase; letter-spacing: 3px; font-size: 14px;
-            margin-top: 10px; transition: 0.4s;
-        }
-        .btn-auth:hover { background: var(--green); color: #000; box-shadow: 0 0 30px rgba(0, 255, 102, 0.4); }
-        .ticker-wrap {
-            margin-top: 30px; background: rgba(0, 242, 255, 0.03);
-            border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
-            overflow: hidden; white-space: nowrap; padding: 10px 0;
-        }
-        .ticker-move { display: inline-block; animation: marquee 15s linear infinite; font-size: 10px; color: #556b73; }
-        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-        .ticker-item { display: inline-block; margin-right: 50px; }
-        .ticker-item span { color: var(--cyan); }
-        #status { font-size: 10px; text-align: center; margin-top: 20px; color: #4a5a61; min-height: 15px; font-weight: bold; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>BLACKSITE // ENLISTMENT_TERMINAL</title>
+
+  <meta name="theme-color" content="#01080b">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root{
+      --bg:#01080b;
+      --cyan:#00f2ff;
+      --cyan-dim:rgba(0,242,255,0.15);
+      --red:#ff003c;
+      --green:#00ff66;
+      --yellow:#ffbd00;
+      --border:rgba(0,242,255,0.25);
+      --font-mono:'Share Tech Mono',monospace;
+      --font-main:'Rajdhani',sans-serif;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-tap-highlight-color:transparent;}
+    html,body{height:100%;overflow:hidden;}
+    body{
+      background:radial-gradient(circle at center,#0a1f29 0%,#01080b 70%);
+      font-family:var(--font-mono);
+      color:#e1f5f9;
+      display:flex;align-items:center;justify-content:center;
+      padding:16px;
+    }
+
+    /* ===== TERMINAL SHELL ===== */
+    .terminal{
+      width:100%;max-width:420px;
+      background:rgba(2,10,13,0.95);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:26px 20px;
+      position:relative;
+      overflow:hidden;
+      box-shadow:0 0 40px rgba(0,242,255,0.08), inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+    .terminal::before{
+      content:'';position:absolute;inset:0;
+      background:repeating-linear-gradient(0deg,
+        rgba(0,242,255,0.03) 0px,
+        rgba(0,242,255,0.03) 1px,
+        transparent 1px,
+        transparent 3px);
+      pointer-events:none;
+      z-index:0;
+    }
+
+    /* ===== HEADER ===== */
+    .top-badge{
+      text-align:center;font-size:9px;letter-spacing:4px;
+      color:#4a5a61;margin-bottom:6px;
+    }
+    .top-title{
+      text-align:center;font-size:13px;letter-spacing:3px;
+      color:var(--cyan);font-weight:700;margin-bottom:4px;
+      text-shadow:0 0 8px rgba(0,242,255,0.4);
+    }
+    .top-sub{
+      text-align:center;font-size:8px;letter-spacing:2px;
+      color:#5c7882;margin-bottom:20px;
+    }
+
+    /* ===== RADAR ===== */
+    .scan-stage{
+      position:relative;
+      width:150px;height:150px;
+      margin:0 auto 16px;
+      display:flex;align-items:center;justify-content:center;
+    }
+    .radar-ring{
+      position:absolute;inset:0;
+      border:1px solid var(--cyan-dim);
+      border-radius:50%;
+    }
+    .radar-ring.r2{inset:18px;}
+    .radar-ring.r3{inset:36px;}
+    .radar-sweep{
+      position:absolute;inset:0;
+      border-radius:50%;
+      background:conic-gradient(from 0deg,
+        transparent 0deg,
+        transparent 300deg,
+        rgba(0,242,255,0.45) 340deg,
+        rgba(0,242,255,0.9) 360deg);
+      animation:sweep 2.4s linear infinite;
+      mask:radial-gradient(circle, transparent 42%, #000 43%);
+      -webkit-mask:radial-gradient(circle, transparent 42%, #000 43%);
+    }
+    @keyframes sweep{to{transform:rotate(360deg);}}
+    .scan-core{
+      width:50px;height:50px;border-radius:50%;
+      background:radial-gradient(circle,#00f2ff 0%,#003a44 60%,transparent 100%);
+      box-shadow:0 0 30px rgba(0,242,255,0.6), inset 0 0 20px rgba(0,242,255,0.8);
+      animation:pulseCore 1.6s ease-in-out infinite;
+      z-index:2;
+    }
+    @keyframes pulseCore{
+      0%,100%{transform:scale(1);opacity:0.9;}
+      50%{transform:scale(1.08);opacity:1;}
+    }
+
+    /* ===== STATUS ===== */
+    .status-line{
+      text-align:center;font-size:11px;letter-spacing:2px;
+      color:var(--cyan);margin-bottom:5px;text-transform:uppercase;
+      min-height:16px;font-weight:700;
+    }
+    .status-line.ok{color:var(--green);text-shadow:0 0 8px var(--green);}
+    .status-line.err{color:var(--red);text-shadow:0 0 8px var(--red);}
+    .status-line.warn{color:var(--yellow);text-shadow:0 0 8px var(--yellow);}
+    .status-sub{
+      text-align:center;font-size:9px;letter-spacing:1px;
+      color:#5c7882;margin-bottom:16px;min-height:12px;
+    }
+
+    /* ===== LOG BOX ===== */
+    .log-box{
+      background:#000;border:1px solid var(--border);
+      padding:10px 12px;border-radius:6px;
+      font-size:9.5px;color:#9ab4bc;line-height:1.55;
+      height:80px;overflow-y:auto;margin-bottom:14px;
+      scrollbar-width:thin;scrollbar-color:var(--cyan) transparent;
+    }
+    .log-box::-webkit-scrollbar{width:3px;}
+    .log-box::-webkit-scrollbar-thumb{background:var(--cyan);border-radius:2px;}
+    .log-line{opacity:0;animation:logIn 0.3s forwards;}
+    .log-line .t{color:#5c7882;}
+    .log-line.ok{color:var(--green);}
+    .log-line.err{color:var(--red);}
+    .log-line.warn{color:var(--yellow);}
+    @keyframes logIn{to{opacity:1;}}
+
+    /* ===== FINGERPRINT ===== */
+    .fp-block{
+      background:#000;border:1px solid var(--border);
+      border-radius:6px;padding:9px 12px;text-align:center;
+      margin-bottom:10px;
+    }
+    .fp-label{font-size:8px;color:#5c7882;letter-spacing:2px;margin-bottom:3px;}
+    .fp-value{
+      font-size:11px;color:var(--green);letter-spacing:1px;
+      word-break:break-all;font-weight:700;
+    }
+
+    /* ===== PROGRESS ===== */
+    .progress-wrap{
+      height:3px;background:#0a1f29;border-radius:2px;
+      overflow:hidden;margin-bottom:16px;
+    }
+    .progress-fill{
+      height:100%;width:0%;
+      background:linear-gradient(90deg,var(--cyan),var(--green));
+      box-shadow:0 0 10px var(--cyan);
+      transition:width 0.4s ease;
+    }
+
+    /* ===== ENLISTMENT FORM ===== */
+    .enlist-form{display:none;}
+    .enlist-form.show{display:block;animation:fadeIn 0.3s;}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+    .field-label{
+      font-size:9px;color:var(--cyan);letter-spacing:2px;
+      margin-bottom:6px;display:block;opacity:0.85;
+    }
+    .agent-select{
+      width:100%;padding:12px;background:#000;
+      border:1px solid var(--border);color:var(--green);
+      font-family:var(--font-mono);font-size:12px;
+      outline:none;border-radius:6px;margin-bottom:14px;
+      appearance:none;
+      background-image:
+        linear-gradient(45deg, transparent 50%, var(--cyan) 50%),
+        linear-gradient(135deg, var(--cyan) 50%, transparent 50%);
+      background-position: calc(100% - 20px) calc(1em + 2px),
+                           calc(100% - 15px) calc(1em + 2px);
+      background-size: 5px 5px, 5px 5px;
+      background-repeat: no-repeat;
+    }
+    .agent-select:focus{
+      border-color:var(--cyan);
+      box-shadow:0 0 10px rgba(0,242,255,0.3);
+    }
+    .btn-execute{
+      width:100%;padding:14px;background:transparent;
+      color:var(--green);border:2px solid var(--green);
+      font-family:var(--font-main);font-weight:700;
+      cursor:pointer;text-transform:uppercase;
+      letter-spacing:3px;font-size:13px;
+      border-radius:6px;transition:0.3s;
+    }
+    .btn-execute:active{
+      background:var(--green);color:#000;
+      box-shadow:0 0 25px rgba(0,255,102,0.5);
+      transform:scale(0.98);
+    }
+    .btn-execute:disabled{
+      opacity:0.4;cursor:not-allowed;
+    }
+
+    /* ===== BOTTOM HINT ===== */
+    .bottom-hint{
+      text-align:center;font-size:8px;letter-spacing:2px;
+      color:#3a4a51;margin-top:8px;
+    }
+  </style>
 </head>
 <body>
 
-    <div class="card">
-        <h2>HARDWARE_UPLINK</h2>
+<div class="terminal">
+  <div class="top-badge">◈ BLACKSITE ◈</div>
+  <div class="top-title">ENLISTMENT_TERMINAL</div>
+  <div class="top-sub">DEVICE_BINDING // AGENT_REGISTRY</div>
 
-        <div class="form-container">
-            <div class="field-group">
-                <label>NODE_SIGNATURE_DETECTED:</label>
-                <input type="text" id="val-fp" class="input-field" readonly>
-            </div>
+  <!-- RADAR -->
+  <div class="scan-stage">
+    <div class="radar-ring"></div>
+    <div class="radar-ring r2"></div>
+    <div class="radar-ring r3"></div>
+    <div class="radar-sweep"></div>
+    <div class="scan-core"></div>
+  </div>
 
-            <div class="field-group">
-                <label>AGENT_IDENTITY_PROFILE:</label>
-                <select id="agentSelect" class="input-field">
-                    <option value="AGENT_JFSN">AGENT_JFSN</option>
-                    <option value="AGENT_LZ">AGENT_LZ</option>
-                </select>
-            </div>
+  <!-- STATUS -->
+  <div class="status-line" id="statusMain">INITIALIZING_SCAN</div>
+  <div class="status-sub" id="statusSub">Probing hardware signature…</div>
 
-            <button class="btn-auth" id="syncBtn">EXECUTE_UPLINK</button>
-        </div>
+  <!-- PROGRESS -->
+  <div class="progress-wrap">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
 
-        <div id="status">> WAITING_FOR_COMMAND...</div>
+  <!-- LOG -->
+  <div class="log-box" id="logBox"></div>
 
-        <div class="ticker-wrap">
-            <div class="ticker-move" id="ticker-content"></div>
-        </div>
-    </div>
+  <!-- FINGERPRINT -->
+  <div class="fp-block">
+    <div class="fp-label">HARDWARE_FINGERPRINT</div>
+    <div class="fp-value" id="fpValue">-- PENDING --</div>
+  </div>
 
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <!-- ENLISTMENT FORM -->
+  <div class="enlist-form" id="enlistForm">
+    <label class="field-label" for="agentSelect">SELECT_AGENT_IDENTITY:</label>
+    <select id="agentSelect" class="agent-select">
+      <option value="AGENT_JFSN">AGENT_JFSN</option>
+      <option value="AGENT_LZ">AGENT_LZ</option>
+    </select>
+    <button class="btn-execute" id="syncBtn">EXECUTE_UPLINK</button>
+  </div>
 
-    <script>
-        const firebaseConfig = { 
-            apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI", 
-            authDomain: "my-admin-portal-12691.firebaseapp.com", 
-            projectId: "my-admin-portal-12691", 
-            storageBucket: "my-admin-portal-12691.firebasestorage.app", 
-            messagingSenderId: "317015091563", 
-            appId: "1:317015091563:web:baab5171d8e0a58acd442e" 
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+  <div class="bottom-hint">ENLISTMENT_PROTOCOL // 0x7F</div>
+</div>
 
-        // Hardware Fingerprinting
-        function getHardwareSpecs() {
-            const canvas = document.createElement('canvas');
-            const gl = canvas.getContext('webgl');
-            const debugInfo = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
-            const gpu = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "GENERIC_GPU";
-            
-            return {
-                brand: navigator.userAgent.match(/Android\s+([^\s;]+);?\s+([^\s;]+)/)?.[2] || "NODE_STATION",
-                gpu: gpu.split('/').pop().trim(),
-                res: `${window.screen.width}x${window.screen.height}`,
-                plt: navigator.platform
-            };
-        }
+<script type="module">
+/* =========================================================
+   BLACKSITE ENLISTMENT TERMINAL
+   Binds this device's fingerprint to an agent account
+   ========================================================= */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, query, where, getDocs, doc, setDoc, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-        function generateSignature(s) {
-            const raw = s.gpu + s.res + s.plt + s.brand;
-            let hash = 0;
-            for (let i = 0; i < raw.length; i++) {
-                hash = ((hash << 5) - hash) + raw.charCodeAt(i);
-                hash |= 0;
-            }
-            return "SIG-" + Math.abs(hash).toString(16).toUpperCase();
-        }
+const firebaseConfig = {
+  apiKey: "AIzaSyD7SFXKTIx3ocIBD9B5JfWiI_sJmZPpbAI",
+  authDomain: "my-admin-portal-12691.firebaseapp.com",
+  projectId: "my-admin-portal-12691",
+  storageBucket: "my-admin-portal-12691.firebasestorage.app",
+  messagingSenderId: "317015091563",
+  appId: "1:317015091563:web:baab5171d8e0a58acd442e"
+};
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
 
-        const specs = getHardwareSpecs();
-        const signature = generateSignature(specs);
+/* ---------- DOM ---------- */
+const statusMain  = document.getElementById('statusMain');
+const statusSub   = document.getElementById('statusSub');
+const logBox      = document.getElementById('logBox');
+const fpValue     = document.getElementById('fpValue');
+const progressFill= document.getElementById('progressFill');
+const enlistForm  = document.getElementById('enlistForm');
+const agentSelect = document.getElementById('agentSelect');
+const syncBtn     = document.getElementById('syncBtn');
 
-        // UI Initialization
-        document.getElementById('val-fp').value = signature;
-        const tickerHtml = `
-            <div class="ticker-item">DEVICE: <span>${specs.brand}</span></div>
-            <div class="ticker-item">GPU: <span>${specs.gpu}</span></div>
-            <div class="ticker-item">RESOLVE: <span>${specs.res}</span></div>
-            <div class="ticker-item">OS: <span>${specs.plt}</span></div>
-        `;
-        document.getElementById('ticker-content').innerHTML = tickerHtml + tickerHtml;
+/* ---------- STATE ---------- */
+let currentSignature = "";
+let hardwareSpecs    = {};
 
-        // Register Device Logic
-        document.getElementById('syncBtn').onclick = async () => {
-            const agent = document.getElementById('agentSelect').value;
-            const log = document.getElementById('status');
-            const btn = document.getElementById('syncBtn');
+/* ---------- HELPERS ---------- */
+function log(text, type=''){
+  const line = document.createElement('div');
+  line.className = 'log-line ' + type;
+  const time = new Date().toLocaleTimeString('en-GB');
+  line.innerHTML = `<span class="t">[${time}]</span> ${text}`;
+  logBox.appendChild(line);
+  logBox.scrollTop = logBox.scrollHeight;
+}
 
-            btn.disabled = true;
-            log.innerHTML = `> SYNCING_WITH_CORE_DATABASE...`;
+function setStatus(main, sub='', cls=''){
+  statusMain.className = 'status-line ' + cls;
+  statusMain.textContent = main;
+  statusSub.textContent = sub;
+}
 
-            try {
-                // I-register ang device signature sa agents collection
-                await db.collection("agents").doc(agent).set({
-                    agentName: agent,
-                    linkedSignatures: firebase.firestore.FieldValue.arrayUnion(signature),
-                    lastFingerprint: signature,
-                    brandName: specs.brand,
-                    lastSync: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true });
+function setProgress(pct){
+  progressFill.style.width = Math.min(100, Math.max(0, pct)) + '%';
+}
 
-                // I-save din sa browser storage para sa auto-login
-                localStorage.setItem("cia_agent", agent);
-                localStorage.setItem("agent_verified", "true");
-                localStorage.setItem("device_signature", signature);
+/* ---------- FINGERPRINT (same algorithm as index.html) ---------- */
+function getHardwareSpecs(){
+  const canvas = document.createElement('canvas');
+  const gl = canvas.getContext('webgl');
+  const dbg = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
+  const gpu = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : 'GENERIC_GPU';
 
-                log.innerHTML = `> <span style="color:var(--green)">UPLINK_SUCCESSFUL</span>`;
-                
-                setTimeout(() => {
-                    alert(`ACCESS GRANTED: Device ${signature} linked to ${agent}`);
-                    window.location.href = "dashboard.html";
-                }, 1000);
+  const brand = navigator.userAgent.match(/Android\s+([^\s;]+);?\s+([^\s;]+)/)?.[2] || 'NODE_STATION';
 
-            } catch (e) {
-                log.innerHTML = `> <span style="color:var(--red)">UPLINK_FAILED: ${e.message}</span>`;
-                btn.disabled = false;
-            }
-        };
-    </script>
+  return {
+    brand,
+    gpu: gpu.split('/').pop().trim(),
+    res: `${window.screen.width}x${window.screen.height}`,
+    plt: navigator.platform,
+    cores: navigator.hardwareConcurrency || 0,
+    mem: navigator.deviceMemory || 0
+  };
+}
+
+function generateSignature(s){
+  const raw = [s.gpu, s.res, s.plt, s.brand, s.cores, s.mem].join('|');
+  let hash = 0;
+  for (let i = 0; i < raw.length; i++){
+    hash = ((hash << 5) - hash) + raw.charCodeAt(i);
+    hash |= 0;
+  }
+  return 'SIG-' + Math.abs(hash).toString(16).toUpperCase().padStart(8,'0');
+}
+
+/* ---------- CHECK IF ALREADY ENLISTED ---------- */
+async function checkIfEnlisted(sig){
+  setStatus('SCANNING_REGISTRY', 'Checking if this device is already bound…');
+  setProgress(50);
+  log('Querying agents.linkedSignature…');
+
+  try{
+    const snap = await getDocs(
+      query(collection(db,'agents'), where('linkedSignature','==',sig))
+    );
+
+    if (!snap.empty){
+      const agent = snap.docs[0].data().agentName;
+      setStatus('ALREADY_ENLISTED', `Bound to ${agent}`, 'warn');
+      setProgress(100);
+      log(`Signature already bound to ${agent}.`, 'warn');
+      log('Redirecting to access terminal…');
+
+      // Sync localStorage para ready na ang index.html
+      localStorage.setItem('cia_agent', agent);
+      localStorage.setItem('agent', agent);
+      localStorage.setItem('agent_verified', 'true');
+      localStorage.setItem('device_signature', sig);
+
+      setTimeout(()=> location.href = 'index.html', 1800);
+      return true;
+    }
+
+    log('No existing binding found.', 'ok');
+    setStatus('AWAITING_ENLISTMENT', 'Select agent identity below');
+    setProgress(60);
+    enlistForm.classList.add('show');
+    return false;
+
+  }catch(err){
+    console.error(err);
+    setStatus('REGISTRY_ERROR', 'Cannot reach database', 'err');
+    log('Registry unreachable.', 'err');
+    setProgress(0);
+    return false;
+  }
+}
+
+/* ---------- EXECUTE UPLINK ---------- */
+async function executeUplink(){
+  const agent = agentSelect.value;
+  if (!agent) return;
+
+  syncBtn.disabled = true;
+  setStatus('BINDING_DEVICE', `Enlisting to ${agent}…`);
+  setProgress(75);
+  log(`Binding signature ${currentSignature} → ${agent}`);
+
+  try{
+    await setDoc(doc(db, 'agents', agent), {
+      agentName: agent,
+      linkedSignature: currentSignature,      // single string
+      lastFingerprint: currentSignature,
+      brandName: hardwareSpecs.brand,
+      gpuModel: hardwareSpecs.gpu,
+      lastSync: serverTimestamp()
+    }, { merge: true });
+
+    setStatus('ENLISTMENT_SUCCESSFUL', `Bound to ${agent}`, 'ok');
+    setProgress(100);
+    log(`Device successfully enlisted to ${agent}.`, 'ok');
+    log('Redirecting to access terminal…');
+
+    localStorage.setItem('cia_agent', agent);
+    localStorage.setItem('agent', agent);
+    localStorage.setItem('agent_verified', 'true');
+    localStorage.setItem('device_signature', currentSignature);
+
+    setTimeout(()=> location.href = 'index.html', 1500);
+
+  }catch(err){
+    console.error(err);
+    setStatus('BIND_FAILED', 'Uplink rejected', 'err');
+    log(`Bind failed: ${err.message}`, 'err');
+    syncBtn.disabled = false;
+  }
+}
+
+/* ---------- INIT ---------- */
+async function init(){
+  setStatus('INITIALIZING_SCAN', 'Probing hardware signature…');
+  log('Enlistment terminal boot sequence started.');
+
+  const steps = [
+    { t: 300,  msg: 'Probing GPU renderer…',        p: 15 },
+    { t: 700,  msg: 'Reading display matrix…',      p: 30 },
+    { t: 1100, msg: 'Hashing hardware identity…',   p: 45 }
+  ];
+  steps.forEach(s=> setTimeout(()=>{ log(s.msg); setProgress(s.p); }, s.t));
+
+  setTimeout(async ()=>{
+    hardwareSpecs    = getHardwareSpecs();
+    currentSignature = generateSignature(hardwareSpecs);
+    fpValue.textContent = currentSignature;
+    log(`Fingerprint locked: ${currentSignature}`, 'ok');
+    log(`GPU: ${hardwareSpecs.gpu}`);
+    log(`Brand: ${hardwareSpecs.brand} | OS: ${hardwareSpecs.plt}`);
+
+    await checkIfEnlisted(currentSignature);
+  }, 1400);
+}
+
+/* ---------- EVENTS ---------- */
+syncBtn.onclick = executeUplink;
+
+init();
+</script>
+
 </body>
 </html>
